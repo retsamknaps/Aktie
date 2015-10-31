@@ -1,0 +1,61 @@
+<project name="aktie" default="dist" basedir=".">
+	<description>
+        Build aktie
+    </description>
+  	<!-- set global properties for this build -->
+  	<property name="src" location="src"/>
+	<property name="lib" location="lib"/>
+	<property name="swt" location="swt"/>
+	<property name="aktie_node" location="aktie_node"/>
+  	<property name="bin" location="bin"/>
+
+  	<target name="init">
+    	<!-- Create the time stamp -->
+    	<tstamp/>
+    	<!-- Create the build directory structure used by compile -->
+    	<mkdir dir="${bin}"/>
+  	</target>
+
+	<path id="master-classpath">
+		<fileset dir="${lib}">
+	    	<include name="*.jar"/>
+	  	</fileset>
+		<fileset dir="${swt}">
+	    	<include name="swt_osx.jar"/>
+	  	</fileset>
+	</path>
+	
+	<target name="compile" depends="init"
+    	    description="compile the source " >
+    	<!-- Compile the java code from ${src} into ${build} -->
+    	<javac target="1.7" includeantruntime="false" srcdir="${src}" destdir="${bin}" classpathref="master-classpath" />
+	</target>
+
+ 	<target name="aktieapp" depends="compile"
+        	description="generate the aktieapp" >
+
+    	<jar jarfile="${lib}/aktieapp.jar" basedir="${bin}"/>
+  	</target>
+
+ 	<target name="dist" depends="aktieapp"
+        	description="generate the distribution" >
+    	<jar jarfile="aktie.jar" >
+    		<fileset dir="." includes="lib/**, swt/**, aktie_node/**"/>
+    		
+    		<!-- fileset dir="${lib}"/>
+    		<fileset dir="${swt}"/>
+    		<fileset dir="${aktie_node}"/ -->
+    		<fileset dir="${bin}" includes="aktie/gui/Wrapper.class,aktie/crypto/Utils.class,aktie/utils/FUtils.class"/>
+    	    <manifest>
+    	      <attribute name="Main-Class"
+    	            value="aktie.gui.Wrapper"/>
+    	    </manifest>
+    	</jar>
+  	</target>
+
+ 	<target name="clean"
+        description="clean up" >
+    	<!-- Delete the ${build} and ${dist} directory trees -->
+    	<delete dir="${bin}"/>
+  	</target>
+</project>
