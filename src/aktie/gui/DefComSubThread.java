@@ -16,7 +16,7 @@ public class DefComSubThread implements Runnable
     {
         node = n;
         seedCommunity = defsub;
-        Thread t = new Thread ( this );
+        Thread t = new Thread ( this, "Default Community Subscription Thread" );
         t.start();
     }
 

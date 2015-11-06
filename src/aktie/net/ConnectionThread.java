@@ -41,6 +41,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     Logger log = Logger.getLogger ( "aktie" );
 
     public static int MAXQUEUESIZE = 100; //Long lists should be in CObjList each one could have open indexreader!
+    public static long GUIUPDATEPERIOD = 10L * 1000L; // 10 seconds
 
     private boolean stop;
     private boolean fileOnly;
@@ -120,7 +121,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         inProcessor.addProcessor ( new ReqPostsProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqSubProcessor ( i, this ) );
         outproc = new OutputProcessor();
-        Thread t = new Thread ( this );
+        Thread t = new Thread ( this, "Input Connection Process Thread" );
         t.start();
     }
 
@@ -613,7 +614,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                             throw new RuntimeException ( "wtf? " + o.getClass().getName() );
                         }
 
-                        conListener.update ( This );
+                        updateGui();
                     }
 
                 }
@@ -1028,7 +1029,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             con.connect();
             outstream = con.getOutputStream();
             outproc = new OutputProcessor();
-            Thread t = new Thread ( outproc );
+            Thread t = new Thread ( outproc, "Output Connection Processor Thread" );
             t.start();
 
             InputStream is = con.getInputStream();
@@ -1147,7 +1148,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                     readFileData ( is );
                 }
 
-                conListener.update ( This );
+                updateGui();
             }
 
         }
@@ -1157,6 +1158,19 @@ public class ConnectionThread implements Runnable, GuiCallback
         }
 
         stop();
+    }
+
+    long nextupdate = 0;
+    private void updateGui()
+    {
+        long t = System.currentTimeMillis();
+
+        if ( t >= nextupdate )
+        {
+            nextupdate = t + GUIUPDATEPERIOD;
+            conListener.update ( This );
+        }
+
     }
 
     public long getInNonFileBytes()

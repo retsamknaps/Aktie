@@ -703,6 +703,9 @@ public class SWTApp
                                 {
                                     CObj ss = mysubs.get ( c );
                                     selid = ss.getString ( CObj.CREATOR );
+                                    CObj dl = co.clone();
+                                    dl.pushString ( CObj.CREATOR, selid );
+                                    node.enqueue ( dl );
                                 }
 
                                 catch ( Exception e )
@@ -716,8 +719,6 @@ public class SWTApp
 
                             if ( selid != null )
                             {
-                                co.pushString ( CObj.CREATOR, selid );
-                                node.enqueue ( co );
 
                                 Display.getDefault().asyncExec ( new Runnable()
                                 {
@@ -1297,6 +1298,19 @@ public class SWTApp
 
     }
 
+    private void updateCommunity ( CObj cm )
+    {
+        CObj u = new CObj();
+        u.setType ( CObj.USR_HASFILE_UPDATE );
+        u.pushString ( CObj.COMMUNITYID, cm.getDig() );
+        getNode().enqueue ( u );
+        u = new CObj();
+        u.setType ( CObj.USR_POST_UPDATE );
+        u.pushString ( CObj.COMMUNITYID, cm.getDig() );
+        getNode().enqueue ( u );
+        getNode().sendRequestsNow();
+    }
+
     private void updateAll()
     {
         CObj u = new CObj();
@@ -1687,14 +1701,13 @@ public class SWTApp
 
             }
 
-        } );
+        }, "Node start thread" );
 
         t.start();
     }
 
     private void startedSuccessfully()
     {
-        splash.reallyClose();
 
         identSubTreeModel = new IdentitySubTreeModel ( this );
         identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
@@ -1776,6 +1789,8 @@ public class SWTApp
         startUpdateTimer();
         saveVersionFile();
         startNetUpdateStatusTimer();
+
+        splash.reallyClose();
     }
 
     private void failedToStart()
@@ -2762,7 +2777,7 @@ public class SWTApp
         } );
 
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
-        mntmStartManualUpdate.setText ( "Force Update" );
+        mntmStartManualUpdate.setText ( "Refresh All Now" );
         mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
 
         MenuItem mntmI2Popts = new MenuItem ( menu_1, SWT.NONE );

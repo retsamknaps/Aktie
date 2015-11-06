@@ -54,7 +54,7 @@ public class DestinationThread implements Runnable
         sendData = sd;
         dest = d;
         connections = new HashMap<String, List<ConnectionThread>>();
-        Thread t = new Thread ( this );
+        Thread t = new Thread ( this, "Destination Connection Accept Thread" );
         t.start();
 
         synchronized ( threadlist )

@@ -36,7 +36,7 @@ public class ShareManager implements Runnable
         userQueue = pq;
         rfh = rf;
         rfh.setShareMan ( this );
-        Thread t = new Thread ( this );
+        Thread t = new Thread ( this, "Share Manager Thread" );
         t.setDaemon ( true );
         t.start();
     }
