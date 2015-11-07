@@ -329,6 +329,24 @@ public class Index
         return search ( bq, Integer.MAX_VALUE, s );
     }
 
+    public CObjList getMyValidMemberships ( Sort s )
+    {
+        BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
+        bq.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        bq.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
+
+        Term valterm = new Term ( CObj.docPrivate ( CObj.VALIDMEMBER ), "true" );
+        bq.add ( new TermQuery ( valterm ), BooleanClause.Occur.MUST );
+
+        Term privterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PRIVATE );
+        bq.add ( new TermQuery ( privterm ), BooleanClause.Occur.MUST );
+
+        return search ( bq, Integer.MAX_VALUE, s );
+    }
+
     public CObjList getMyMemberships ( String comid )
     {
         BooleanQuery bq = new BooleanQuery();

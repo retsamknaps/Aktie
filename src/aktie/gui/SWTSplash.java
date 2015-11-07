@@ -80,6 +80,7 @@ public class SWTSplash extends Dialog
     public int open()
     {
         openned = true;
+        //NOTE: Open will block, so we have to set opened true first
         return super.open();
     }
 
@@ -88,35 +89,39 @@ public class SWTSplash extends Dialog
         super.close();
     }
 
+    public boolean isClosed()
+    {
+        return isclosed;
+    }
+
+    boolean isclosed = false;
     public void reallyClose()
     {
-        do
+        if ( !isclosed )
         {
-            try
+            isclosed = true;
+
+            //Ugly..
+            do
             {
-                Thread.sleep ( 100 );
+
+                try
+                {
+                    Thread.sleep ( 100 );
+                }
+
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+
             }
 
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
+            while ( !openned );
 
+            superClose();
         }
 
-        while ( !openned );
-
-        try
-        {
-            Thread.sleep ( 100 );
-        }
-
-        catch ( InterruptedException e )
-        {
-            e.printStackTrace();
-        }
-
-        superClose();
     }
 
     /**

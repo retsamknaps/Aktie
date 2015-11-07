@@ -65,7 +65,6 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
     public ConnectionManager ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
                                GuiCallback cb )
     {
-        System.out.println ( "HERE!!!!!!!!!!!!!!!!! BLARG!" );
         callback = cb;
         identManager = id;
         index = i;
@@ -78,7 +77,6 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
         Thread t = new Thread ( this );
         t.setDaemon ( true );
         t.start();
-        System.out.println ( "HERE!!!!!!!!!!!!!!!!! BLARG 2222!" );
     }
 
     public List<DestinationThread> getDestList()
@@ -1656,7 +1654,6 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
     @Override
     public void run()
     {
-        System.out.println ( "HERE!!!!!!!!!!!!!!!!! BLARG! 333333" );
         log.info ( "CONMAN: START!" );
         resetupLastUpdateToForceDecode();
 

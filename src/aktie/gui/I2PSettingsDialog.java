@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -16,6 +18,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 
 public class I2PSettingsDialog extends Dialog
 {
@@ -28,6 +31,7 @@ public class I2PSettingsDialog extends Dialog
     private Properties i2pProps;
     private File propFile;
     private SWTApp app;
+    private Button btnExternalRouter;
 
     /**
         Create the dialog.
@@ -93,6 +97,10 @@ public class I2PSettingsDialog extends Dialog
 
         portTxt = new Text ( container, SWT.BORDER );
         portTxt.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        new Label ( container, SWT.NONE );
+
+        btnExternalRouter = new Button ( container, SWT.CHECK );
+        btnExternalRouter.setText ( "Only use External Router" );
 
         setFromProps();
 
@@ -118,7 +126,7 @@ public class I2PSettingsDialog extends Dialog
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 450, 242 );
+        return new Point ( 450, 275 );
     }
 
     public int open ( )
@@ -174,6 +182,13 @@ public class I2PSettingsDialog extends Dialog
                 portTxt.setText ( tmp );
             }
 
+            tmp = i2pProps.getProperty ( "aktie.externali2p" );
+
+            if ( tmp != null && btnExternalRouter != null && !btnExternalRouter.isDisposed() )
+            {
+                btnExternalRouter.setSelection ( Boolean.valueOf ( tmp ) );
+            }
+
         }
 
     }
@@ -226,14 +241,12 @@ public class I2PSettingsDialog extends Dialog
             {
             }
 
-            try
-            {
-                String num = String.valueOf ( hostTxt.getText() );
-                i2pProps.setProperty ( "i2cp.tcp.host", num );
-            }
+            String hst = hostTxt.getText();
+            Matcher hs = Pattern.compile ( "\\s*(\\S+)\\s*" ).matcher ( hst );
 
-            catch ( Exception e )
+            if ( hs.find() )
             {
+                i2pProps.setProperty ( "i2cp.tcp.host", hs.group ( 1 ) );
             }
 
             try
@@ -247,6 +260,8 @@ public class I2PSettingsDialog extends Dialog
             {
             }
 
+            boolean ext = btnExternalRouter.getSelection();
+            i2pProps.setProperty ( "aktie.externali2p", Boolean.toString ( ext ) );
 
             FileOutputStream fos = new FileOutputStream ( propFile );
             i2pProps.store ( fos, "Aktie I2P props" );
@@ -369,6 +384,11 @@ public class I2PSettingsDialog extends Dialog
     public Text getPortTxt()
     {
         return portTxt;
+    }
+
+    public Button getBtnExternalRouter()
+    {
+        return btnExternalRouter;
     }
 
 }

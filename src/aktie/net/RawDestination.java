@@ -53,7 +53,6 @@ public class RawDestination implements Destination
         String p[] = destination.split ( ":" );
         int prt = Integer.valueOf ( p[1] );
 
-        System.out.println ( "ATTEMPT CONNECTION: " + p[0] + ":" + prt );
         return new SocketConnection ( p[0], prt );
     }
 
@@ -63,7 +62,6 @@ public class RawDestination implements Destination
         try
         {
             Socket s = servsock.accept();
-            System.out.println ( "Connection accepted: " + s.getRemoteSocketAddress() );
             return new SocketConnection ( s );
         }
 

@@ -54,7 +54,6 @@ public class Node
     public Node ( String nodedir, Net net, GuiCallback uc,
                   GuiCallback nc, ConnectionListener cc ) throws IOException
     {
-        System.out.println ( "ABCD 1111111111111111111111111111111111" );
         usrCallback = uc;
         netCallback = nc;
         conCallback = cc;
@@ -69,9 +68,7 @@ public class Node
         identManager = new IdentityManager ( session, index );
         NewFileProcessor nfp = new NewFileProcessor ( session, index, usrCallback ) ;
         requestHandler = new RequestFileHandler ( session, nodedir + File.separator + "downloads", nfp, index );
-        System.out.println ( "ABCD 22222222222222222222222222222222222222222222" );
         conMan = new ConnectionManager ( session, index, requestHandler, identManager, usrCallback );
-        System.out.println ( "ABCD 33333333333333333333333333333333333333333333" );
         userQueue = new ProcessQueue();
         userQueue.addProcessor ( new NewCommunityProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( nfp );

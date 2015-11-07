@@ -167,7 +167,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void stop()
     {
-        System.out.println ( "STOPPING!" );
         boolean wasstopped = stop;
         stop = true;
         outproc.go();
@@ -1186,7 +1185,6 @@ public class ConnectionThread implements Runnable, GuiCallback
     @Override
     public void update ( Object o )
     {
-        System.out.println ( "CALLING UPDATE!" );
         guicallback.update ( o );
         lastMyRequest = System.currentTimeMillis();
     }

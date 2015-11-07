@@ -68,7 +68,6 @@ public class HasFileCreator
 
             CObjList wl = index.getHasFiles ( comid, wholedig, digofdigs );
             int numberhasfile = wl.size();
-            System.out.println ( "HASFILE: " + numberhasfile + " name: " + name );
             wl.close();
 
             String id = Utils.mergeIds ( comid, digofdigs, wholedig );
@@ -144,7 +143,6 @@ public class HasFileCreator
     public void updateHasFile()
     {
         CObjList hflst = index.getAllHasFiles();
-        System.out.println ( "UPDATING HASFILE: " + hflst.size() );
 
         for ( int c = 0; c < hflst.size(); c++ )
         {

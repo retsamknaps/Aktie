@@ -1790,7 +1790,6 @@ public class SWTApp
         saveVersionFile();
         startNetUpdateStatusTimer();
 
-        splash.reallyClose();
     }
 
     private void failedToStart()
@@ -2090,6 +2089,8 @@ public class SWTApp
 
         }
 
+        splash.reallyClose();
+
     }
 
     private void postSearch()
@@ -2272,7 +2273,7 @@ public class SWTApp
         CObjList oldlst = ( CObjList ) membershipTableViewer.getInput();
         Sort s = new Sort();
         s.setSort ( new SortField ( membershipSortField, membershipSortType, membershipSortReverse ) );
-        CObjList newlst = getNode().getIndex().getMyMemberships ( s );
+        CObjList newlst = getNode().getIndex().getMyValidMemberships ( s );
         membershipTableViewer.setInput ( newlst );
 
         if ( oldlst != null )
