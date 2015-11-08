@@ -118,6 +118,24 @@ public class SWTApp
 
     }
 
+    class ConnectionColumnDest extends ColumnLabelProvider
+    {
+        @Override
+        public String getText ( Object element )
+        {
+            ConnectionThread ct = ( ConnectionThread ) element;
+
+            if ( ct != null && ct.getLocalDestination() != null &&
+                    ct.getLocalDestination().getIdentity() != null )
+            {
+                return ct.getLocalDestination().getIdentity().getDisplayName();
+            }
+
+            return "?";
+        }
+
+    }
+
     class ConnectionColumnLastSent extends ColumnLabelProvider
     {
         @Override
@@ -262,42 +280,65 @@ public class SWTApp
                 ConnectionThread ct2 = ( ConnectionThread ) e2;
                 ColumnLabelProvider labprov = null;
 
-                if ( column == 0 )
+                int cc = 0;
+
+                if ( column == cc )
+                {
+                    labprov = new ConnectionColumnDest();
+                }
+
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnId();
                 }
 
-                if ( column == 1 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnUpload();
                 }
 
-                if ( column == 2 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnDownload();
                 }
 
-                if ( column == 3 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnTime();
                 }
 
-                if ( column == 4 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnLastSent();
                 }
 
-                if ( column == 5 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnLastRead();
                 }
 
-                if ( column == 6 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnPending();
                 }
 
-                if ( column == 7 )
+                cc++;
+
+                if ( column == cc )
                 {
                     labprov = new ConnectionColumnMode();
                 }
@@ -310,7 +351,7 @@ public class SWTApp
                     Comparable dn0 = s0;
                     Comparable dn1 = s1;
 
-                    if ( ( column > 0 && column < 4 ) || column == 6 )
+                    if ( ( column > 1 && column < 5 ) || column == 7 )
                     {
                         dn0 = Long.valueOf ( s0 );
                         dn1 = Long.valueOf ( s1 );
@@ -455,6 +496,39 @@ public class SWTApp
 
     }
 
+    private Map<String, String> idMap = new HashMap<String, String>();
+    class DownloadsColumnId extends ColumnLabelProvider
+    {
+        @Override
+        public String getText ( Object element )
+        {
+            RequestFile rf = ( RequestFile ) element;
+            String rid = rf.getRequestId();
+            String dn = idMap.get ( rid );
+
+            if ( dn == null )
+            {
+                dn = "";
+
+                if ( rid != null )
+                {
+                    CObj myid = getNode().getIndex().getMyIdentity ( rid );
+
+                    if ( myid != null )
+                    {
+                        dn = myid.getDisplayName();
+                    }
+
+                    idMap.put ( rid, dn );
+                }
+
+            }
+
+            return dn;
+        }
+
+    }
+
     class DownloadsSorter extends ViewerSorter
     {
         private int column;
@@ -515,6 +589,11 @@ public class SWTApp
                 if ( column == 5 )
                 {
                     labprov = new DownloadsColumnState();
+                }
+
+                if ( column == 6 )
+                {
+                    labprov = new DownloadsColumnId();
                 }
 
                 if ( labprov != null )
@@ -1300,15 +1379,19 @@ public class SWTApp
 
     private void updateCommunity ( CObj cm )
     {
-        CObj u = new CObj();
-        u.setType ( CObj.USR_HASFILE_UPDATE );
-        u.pushString ( CObj.COMMUNITYID, cm.getDig() );
-        getNode().enqueue ( u );
-        u = new CObj();
-        u.setType ( CObj.USR_POST_UPDATE );
-        u.pushString ( CObj.COMMUNITYID, cm.getDig() );
-        getNode().enqueue ( u );
-        getNode().sendRequestsNow();
+        if ( cm != null && cm.getDig() != null )
+        {
+            CObj u = new CObj();
+            u.setType ( CObj.USR_HASFILE_UPDATE );
+            u.pushString ( CObj.COMMUNITYID, cm.getDig() );
+            getNode().enqueue ( u );
+            u = new CObj();
+            u.setType ( CObj.USR_POST_UPDATE );
+            u.pushString ( CObj.COMMUNITYID, cm.getDig() );
+            getNode().enqueue ( u );
+            getNode().sendRequestsNow();
+        }
+
     }
 
     private void updateAll()
@@ -2810,6 +2893,7 @@ public class SWTApp
         lblError = new Label ( composite_header, SWT.NONE );
         lblError.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
         lblError.setText ( "" );
+        new Label ( composite_header, SWT.NONE );
 
         TabFolder tabFolder = new TabFolder ( shell, SWT.NONE );
         tabFolder.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
@@ -3033,6 +3117,27 @@ public class SWTApp
                 if ( selectedIdentity != null && selectedCommunity != null )
                 {
                     newMemberDialog.open ( selectedIdentity.getId(), selectedCommunity.getDig() );
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem mntmRefCom = new MenuItem ( menu_2, SWT.NONE );
+        mntmRefCom.setText ( "Refresh Community" );
+        mntmRefCom.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null && selectedCommunity != null )
+                {
+                    updateCommunity ( selectedCommunity );
                 }
 
             }
@@ -3329,7 +3434,7 @@ public class SWTApp
 
         Composite composite_7 = new Composite ( composite_5, SWT.NONE );
         composite_7.setLayoutData ( BorderLayout.NORTH );
-        composite_7.setLayout ( new GridLayout ( 6, false ) );
+        composite_7.setLayout ( new GridLayout ( 7, false ) );
         new Label ( composite_7, SWT.NONE );
 
         Button btnPost = new Button ( composite_7, SWT.NONE );
@@ -3387,6 +3492,27 @@ public class SWTApp
         Button btnAdvanced = new Button ( composite_7, SWT.NONE );
         btnAdvanced.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         btnAdvanced.setText ( "Advanced" );
+
+        Button btnRefresh = new Button ( composite_7, SWT.NONE );
+        btnRefresh.setText ( "Refresh" );
+        btnRefresh.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null && selectedCommunity != null )
+                {
+                    updateCommunity ( selectedCommunity );
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         postTableViewer = new TableViewer ( composite_5, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
         postTable = postTableViewer.getTable();
@@ -4026,7 +4152,7 @@ public class SWTApp
 
         Composite composite_9 = new Composite ( composite_4, SWT.NONE );
         composite_9.setLayoutData ( BorderLayout.NORTH );
-        composite_9.setLayout ( new GridLayout ( 5, false ) );
+        composite_9.setLayout ( new GridLayout ( 6, false ) );
 
         Button btnAddFiles = new Button ( composite_9, SWT.NONE );
         btnAddFiles.setText ( "Add File(s)" );
@@ -4080,6 +4206,28 @@ public class SWTApp
                 if ( selectedCommunity != null )
                 {
                     filesSearch();
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+
+        Button btnRefresh_1 = new Button ( composite_9, SWT.NONE );
+        btnRefresh_1.setText ( "Refresh" );
+        btnRefresh_1.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null && selectedCommunity != null )
+                {
+                    updateCommunity ( selectedCommunity );
                 }
 
             }
@@ -4763,6 +4911,27 @@ public class SWTApp
 
         } );
 
+        TableViewerColumn dlcol6 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
+        dlcol6.getColumn().setText ( "Requested by" );
+        dlcol6.getColumn().setWidth ( 200 );
+        dlcol6.setLabelProvider ( new DownloadsColumnId() );
+        dlcol6.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
+                srt.doSort ( 6 );
+                downloadTableViewer.refresh();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         Menu menu_4 = new Menu ( downloadTable );
         downloadTable.setMenu ( menu_4 );
 
@@ -4857,8 +5026,29 @@ public class SWTApp
         } );
 
 
+        TableViewerColumn concol00 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
+        concol00.getColumn().setText ( "Local" );
+        concol00.getColumn().setWidth ( 200 );
+        concol00.setLabelProvider ( new ConnectionColumnDest() );
+        concol00.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
+                srt.doSort ( 0 );
+                connectionTableViewer.refresh();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         TableViewerColumn concol0 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol0.getColumn().setText ( "Id" );
+        concol0.getColumn().setText ( "Remote" );
         concol0.getColumn().setWidth ( 200 );
         concol0.setLabelProvider ( new ConnectionColumnId() );
         concol0.getColumn().addSelectionListener ( new SelectionListener()
@@ -4867,7 +5057,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 0 );
+                srt.doSort ( 1 );
                 connectionTableViewer.refresh();
             }
 
@@ -4888,7 +5078,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 1 );
+                srt.doSort ( 2 );
                 connectionTableViewer.refresh();
             }
 
@@ -4910,7 +5100,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 2 );
+                srt.doSort ( 3 );
                 connectionTableViewer.refresh();
             }
 
@@ -4932,7 +5122,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 3 );
+                srt.doSort ( 4 );
                 connectionTableViewer.refresh();
             }
 
@@ -4954,7 +5144,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 4 );
+                srt.doSort ( 5 );
                 connectionTableViewer.refresh();
             }
 
@@ -4976,7 +5166,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 5 );
+                srt.doSort ( 6 );
                 connectionTableViewer.refresh();
             }
 
@@ -4998,7 +5188,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 6 );
+                srt.doSort ( 7 );
                 connectionTableViewer.refresh();
             }
 
@@ -5020,7 +5210,7 @@ public class SWTApp
             public void widgetSelected ( SelectionEvent e )
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 7 );
+                srt.doSort ( 8 );
                 connectionTableViewer.refresh();
             }
 
