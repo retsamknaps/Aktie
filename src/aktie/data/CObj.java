@@ -12,9 +12,13 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.LongField;
+import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.NumericUtils;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 import org.bouncycastle.crypto.encodings.PKCS1Encoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
@@ -76,6 +80,7 @@ public class CObj
     public static String PRV_CLEAR_ERR   = "prv_clear_err";
     public static String PRV_PUSH_REQ    = "prv_push_req";
     public static String PRV_PUSH_TIME   = "prv_push_time";
+    public static String PRV_DISPLAY_NAME = "prv_display_name";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 
@@ -457,6 +462,7 @@ public class CObj
                 for ( Entry<String, String> e : strings.entrySet() )
                 {
                     d.add ( new StringField ( docString ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedDocValuesField ( docString ( e.getKey() ), new BytesRef ( e.getValue() ) ) );
                     d.add ( new TextField ( docStringText ( e.getKey() ), e.getValue(), Store.NO ) );
                 }
 
@@ -484,6 +490,7 @@ public class CObj
                 for ( Entry<String, Long> e : numbers.entrySet() )
                 {
                     d.add ( new LongField ( docNumber ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedNumericDocValuesField ( docNumber ( e.getKey() ), e.getValue() ) );
                 }
 
             }
@@ -497,6 +504,7 @@ public class CObj
                 for ( Entry<String, Double> e : decimals.entrySet() )
                 {
                     d.add ( new DoubleField ( docDecimal ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedNumericDocValuesField ( docDecimal ( e.getKey() ), NumericUtils.doubleToSortableLong ( e.getValue() ) ) );
                 }
 
             }
@@ -506,6 +514,15 @@ public class CObj
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        String dispname = getDisplayName();
+
+        if ( dispname != null )
+        {
+            d.add ( new StringField ( docPrivate ( PRV_DISPLAY_NAME ), dispname, Store.YES ) );
+            d.add ( new SortedDocValuesField ( docPrivate ( PRV_DISPLAY_NAME ), new BytesRef ( dispname ) ) );
+            d.add ( new TextField ( docPrivateText ( PRV_DISPLAY_NAME ), dispname, Store.NO ) );
+        }
+
         if ( privatedata != null )
         {
             if ( privatedata.size() > 0 )
@@ -513,6 +530,7 @@ public class CObj
                 for ( Entry<String, String> e : privatedata.entrySet() )
                 {
                     d.add ( new StringField ( docPrivate ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedDocValuesField ( docPrivate ( e.getKey() ), new BytesRef ( e.getValue() ) ) );
                     d.add ( new TextField ( docPrivateText ( e.getKey() ), e.getValue(), Store.NO ) );
                 }
 
@@ -527,6 +545,7 @@ public class CObj
                 for ( Entry<String, Long> e : privatenumbers.entrySet() )
                 {
                     d.add ( new LongField ( docPrivateNumber ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedNumericDocValuesField ( docPrivateNumber ( e.getKey() ), e.getValue() ) );
                 }
 
             }

@@ -4,26 +4,28 @@ import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexUpgrader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.SimpleFSDirectory;
+import org.apache.lucene.uninverting.UninvertingReader;
 import org.apache.lucene.analysis.Analyzer;
 //import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.util.Version;
 
 import aktie.data.CObj;
 
@@ -34,6 +36,7 @@ public class Index
     // This IS thread safe!
     private Analyzer analyzer;
     private IndexWriter writer;
+    private AktieSearcher searcher;
 
     private File indexdir;
 
@@ -75,17 +78,121 @@ public class Index
 
     public void init() throws IOException
     {
+        SimpleFSDirectory fsdir = new SimpleFSDirectory ( indexdir.toPath() );
         //analyzer = new StandardAnalyzer();
         analyzer = new GenenskapAnalyzer();
-        IndexWriterConfig idxconf = new IndexWriterConfig ( Version.LUCENE_4_10_2, analyzer );
-        SimpleFSDirectory fsdir = new SimpleFSDirectory ( indexdir );
+        IndexWriterConfig idxconf = new IndexWriterConfig ( analyzer );
         writer = new IndexWriter ( fsdir, idxconf );
         writer.commit();
+        buildNewSearcher();
+
+    }
+
+    public static long MIN_TIME_BETWEEN_SEARCHERS = 10L * 1000L; //10 seconds
+    private long lastNewSearcher;
+
+    private void buildNewSearcher() throws IOException
+    {
+        AktieSearcher old = searcher;
+        lastNewSearcher = System.currentTimeMillis();
+        searcher = AktieSearcher.newSearcher ( writer );
+
+        if ( old != null )
+        {
+            old.shutdown();
+        }
+
+    }
+
+    boolean newpending = false;
+
+    private synchronized boolean grabNewPending()
+    {
+        if ( !newpending )
+        {
+            newpending = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void waitToForce()
+    {
+        while ( !grabNewPending() )
+        {
+            try
+            {
+                Thread.sleep ( 100 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    /**
+        This is used to force a new searcher so that
+        newly saved documents are immediately available
+    */
+    public void forceNewSearcher()
+    {
+        waitToForce();
+
+        try
+        {
+            buildNewSearcher();
+        }
+
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+
+        newpending = false;
+    }
+
+    private synchronized void initiateNewSearcher()
+    {
+        if ( !newpending )
+        {
+            newpending = true;
+            long ctime = System.currentTimeMillis();
+            long nt = lastNewSearcher + MIN_TIME_BETWEEN_SEARCHERS;
+            long dl = Math.max ( 0, nt - ctime );
+            Timer t = new Timer ( "New Index Searcher Builder Timer", true );
+            t.schedule ( new TimerTask()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        buildNewSearcher();
+                        newpending = false;
+                    }
+
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }, dl );
+
+        }
 
     }
 
     public void close()
     {
+        newpending = false;
+
         try
         {
             writer.close();
@@ -106,9 +213,11 @@ public class Index
     {
         try
         {
-            DirectoryReader reader = DirectoryReader.open ( writer, true );
-            IndexSearcher searcher = new IndexSearcher ( reader );
-            CObjList l = new CObjList ( reader, searcher, q, srt );
+            //DirectoryReader reader = DirectoryReader.open ( writer, true );
+            //IndexSearcher searcher = new IndexSearcher ( reader );
+            while ( !searcher.incrNumOpen() );
+
+            CObjList l = new CObjList ( searcher, q, srt );
             l.executeQuery ( max );
             return l;
         }
@@ -127,13 +236,16 @@ public class Index
         return search ( qs, max, null );
     }
 
+
     public CObjList search ( String qs, int max, Sort s )
     {
         try
         {
-            DirectoryReader reader = DirectoryReader.open ( writer, true );
-            IndexSearcher searcher = new IndexSearcher ( reader );
-            CObjList l = new CObjList ( reader, searcher, analyzer, qs, s );
+            //DirectoryReader reader = DirectoryReader.open ( writer, true );
+            //IndexSearcher searcher = new IndexSearcher ( reader );
+            while ( !searcher.incrNumOpen() );
+
+            CObjList l = new CObjList ( searcher, analyzer, qs, s );
             l.executeQuery ( max );
             return l;
         }
@@ -151,9 +263,11 @@ public class Index
     {
         try
         {
-            DirectoryReader reader = DirectoryReader.open ( writer, true );
-            IndexSearcher searcher = new IndexSearcher ( reader );
-            CObjList l = new CObjList ( bq, reader, searcher, analyzer, qs, s );
+            //DirectoryReader reader = DirectoryReader.open ( writer, true );
+            //IndexSearcher searcher = new IndexSearcher ( reader );
+            while ( !searcher.incrNumOpen() );
+
+            CObjList l = new CObjList ( bq, searcher, analyzer, qs, s );
             l.executeQuery ( max );
             return l;
         }
@@ -171,9 +285,11 @@ public class Index
     {
         try
         {
-            DirectoryReader reader = DirectoryReader.open ( writer, true );
-            IndexSearcher searcher = new IndexSearcher ( reader );
-            CObjList l = new CObjList ( bq, reader, searcher, analyzer, qs, null );
+            //DirectoryReader reader = DirectoryReader.open ( writer, true );
+            //IndexSearcher searcher = new IndexSearcher ( reader );
+            while ( !searcher.incrNumOpen() );
+
+            CObjList l = new CObjList ( bq, searcher, analyzer, qs, null );
             l.executeQuery ( max );
             return l;
         }
@@ -331,27 +447,34 @@ public class Index
 
     public CObjList getMyValidMemberships ( Sort s )
     {
-    	BooleanQuery bq = new BooleanQuery();
+        BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
         bq.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
         Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
         bq.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
 
-    	BooleanQuery bq2 = new BooleanQuery();
+        BooleanQuery bq2 = new BooleanQuery();
         CObjList mlst = this.getMyIdentities();
-        for (int c = 0; c < mlst.size(); c++) {
-        	try {
-        		CObj mi = mlst.get(c);
-            	Term tt = new Term ( CObj.docPrivate(mi.getId()), "true");
-            	bq2.add(new TermQuery(tt), BooleanClause.Occur.SHOULD);
-        	}
-        	catch (Exception e) {
-        	}
+
+        for ( int c = 0; c < mlst.size(); c++ )
+        {
+            try
+            {
+                CObj mi = mlst.get ( c );
+                Term tt = new Term ( CObj.docPrivate ( mi.getId() ), "true" );
+                bq2.add ( new TermQuery ( tt ), BooleanClause.Occur.SHOULD );
+            }
+
+            catch ( Exception e )
+            {
+            }
+
         }
+
         mlst.close();
-        bq.add(bq2, BooleanClause.Occur.MUST);
-        
+        bq.add ( bq2, BooleanClause.Occur.MUST );
+
         Term privterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PRIVATE );
         bq.add ( new TermQuery ( privterm ), BooleanClause.Occur.MUST );
 
@@ -696,7 +819,7 @@ public class Index
         Term ddig = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
         bq.add ( new TermQuery ( ddig ), BooleanClause.Occur.MUST );
 
-        SortField field = new SortField ( CObj.docNumber ( CObj.FRAGOFFSET ), SortField.Type.LONG );
+        SortedNumericSortField field = new SortedNumericSortField ( CObj.docNumber ( CObj.FRAGOFFSET ), SortField.Type.LONG );
         Sort sort = new Sort ( field );
 
         return search ( bq, Integer.MAX_VALUE, sort );
@@ -1186,7 +1309,7 @@ public class Index
         bq.add ( new TermQuery ( nocterm ), BooleanClause.Occur.SHOULD );
 
         Sort s = new Sort();
-        s.setSort ( new SortField ( CObj.docPrivateNumber ( CObj.PRV_PUSH_TIME ), SortField.Type.LONG, false ) );
+        s.setSort ( new SortedNumericSortField ( CObj.docPrivateNumber ( CObj.PRV_PUSH_TIME ), SortField.Type.LONG, false ) );
 
         return search ( bq, Integer.MAX_VALUE, s );
     }
@@ -1199,7 +1322,7 @@ public class Index
         bq.add ( new TermQuery ( decterm ), BooleanClause.Occur.MUST );
 
         Sort s = new Sort();
-        s.setSort ( new SortField ( CObj.docPrivateNumber ( CObj.PRV_PUSH_TIME ), SortField.Type.LONG, false ) );
+        s.setSort ( new SortedNumericSortField ( CObj.docPrivateNumber ( CObj.PRV_PUSH_TIME ), SortField.Type.LONG, false ) );
 
         return search ( bq, Integer.MAX_VALUE, s );
     }
@@ -1315,7 +1438,7 @@ public class Index
         return r;
     }
 
-    private void indexNoCommit ( CObj o, boolean onlynew ) throws IOException
+    public void indexNoCommit ( IndexWriter idx, CObj o, boolean onlynew ) throws IOException
     {
         if ( o.getDig() == null && o.getId() == null )
         {
@@ -1356,7 +1479,7 @@ public class Index
         if ( indexit )
         {
             Document d = o.getDocument();
-            writer.updateDocument ( updateterm, d );
+            idx.updateDocument ( updateterm, d );
         }
 
     }
@@ -1384,40 +1507,45 @@ public class Index
         {
             writer.deleteDocuments ( updateterm );
             writer.commit();
+            initiateNewSearcher();
         }
 
     }
 
     public void index ( CObj o, boolean onlynew ) throws IOException
     {
-        indexNoCommit ( o, onlynew );
+        indexNoCommit ( writer, o, onlynew );
         writer.commit();
+        initiateNewSearcher();
     }
 
     public void index ( List<CObj> l, boolean onlynew ) throws IOException
     {
         for ( CObj o : l )
         {
-            indexNoCommit ( o, onlynew );
+            indexNoCommit ( writer, o, onlynew );
         }
 
         writer.commit();
+        initiateNewSearcher();
     }
 
     public void index ( CObj o ) throws IOException
     {
-        indexNoCommit ( o, false );
+        indexNoCommit ( writer, o, false );
         writer.commit();
+        initiateNewSearcher();
     }
 
     public void index ( List<CObj> l ) throws IOException
     {
         for ( CObj o : l )
         {
-            indexNoCommit ( o, false );
+            indexNoCommit ( writer, o, false );
         }
 
         writer.commit();
+        initiateNewSearcher();
     }
 
 }

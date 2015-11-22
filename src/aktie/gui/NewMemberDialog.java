@@ -7,6 +7,7 @@ import aktie.index.CObjList;
 
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.events.SelectionEvent;
@@ -337,7 +338,7 @@ public class NewMemberDialog extends Dialog
 
         else
         {
-            s.setSort ( new SortField ( CObj.docNumber ( CObj.CREATEDON ), SortField.Type.LONG, true ) );
+            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortField.Type.LONG, true ) );
         }
 
         CObjList oldl = ( CObjList ) tableViewer.getInput();

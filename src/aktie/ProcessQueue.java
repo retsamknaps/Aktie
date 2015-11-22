@@ -29,41 +29,45 @@ public class ProcessQueue implements Runnable
 
     private void process()
     {
-        Object o = queue.poll();
-
-        try
+        if ( !stop )
         {
-            if ( o != null )
+            Object o = queue.poll();
+
+            try
             {
-                if ( o instanceof CObj )
+                if ( o != null )
                 {
-                    processCObj ( ( CObj ) o );
-                }
-
-                else if ( o instanceof CObjList )
-                {
-                    CObjList cl = ( CObjList ) o;
-
-                    for ( int c = 0; c < cl.size(); c++ )
+                    if ( o instanceof CObj )
                     {
-                        processCObj ( cl.get ( c ) );
+                        processCObj ( ( CObj ) o );
                     }
 
-                    cl.close();
-                }
+                    else if ( o instanceof CObjList )
+                    {
+                        CObjList cl = ( CObjList ) o;
 
-                else
-                {
-                    processor.processObj ( o );
+                        for ( int c = 0; c < cl.size(); c++ )
+                        {
+                            processCObj ( cl.get ( c ) );
+                        }
+
+                        cl.close();
+                    }
+
+                    else
+                    {
+                        processor.processObj ( o );
+                    }
+
                 }
 
             }
 
-        }
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
 
-        catch ( Exception e )
-        {
-            e.printStackTrace();
         }
 
     }
@@ -101,6 +105,17 @@ public class ProcessQueue implements Runnable
     {
         stop = true;
         notifyAll();
+
+        for ( Object o : queue )
+        {
+            if ( o instanceof CObjList )
+            {
+                CObjList l = ( CObjList ) o;
+                l.close();
+            }
+
+        }
+
     }
 
     private synchronized void waitForData()

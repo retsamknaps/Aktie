@@ -82,11 +82,12 @@ public class GenenskapAnalyzer extends StopwordAnalyzerBase
     }
 
     @Override
-    protected TokenStreamComponents createComponents ( final String fieldName, final Reader reader )
+    protected TokenStreamComponents createComponents ( final String fieldName )
     {
         //final StandardTokenizer src = new StandardTokenizer(matchVersion, reader);
         //src.setMaxTokenLength(maxTokenLength);
-        Tokenizer src = new WhitespaceTokenizer ( reader );
+
+        Tokenizer src = new WhitespaceTokenizer ( );
         TokenStream wtok = new WordDelimiterFilter ( src,
                 WordDelimiterFilter.GENERATE_WORD_PARTS |
                 WordDelimiterFilter.GENERATE_NUMBER_PARTS |
@@ -114,5 +115,6 @@ public class GenenskapAnalyzer extends StopwordAnalyzerBase
 
         */
     }
+
 
 }

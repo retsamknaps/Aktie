@@ -44,6 +44,11 @@ public class HasFileCreator
             throw new RuntimeException ( "This should only be called with hasfile." );
         }
 
+        //This makes the hasfile immediately available
+        //so that it is counted correctly for updating
+        //the file info
+        index.forceNewSearcher();
+
         //Create FILE type CObj.  only index if new
         String comid = f.getString ( CObj.COMMUNITYID );
         Long filesize = f.getNumber ( CObj.FILESIZE );

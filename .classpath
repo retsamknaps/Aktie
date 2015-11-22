@@ -4,11 +4,8 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="lib/bcprov-jdk16-146.jar"/>
-	<classpathentry kind="lib" path="lib/lucene-core-4.10.2.jar"/>
 	<classpathentry kind="lib" path="lib/jsonobject.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="lib/lucene-analyzers-common-4.10.2.jar"/>
-	<classpathentry kind="lib" path="lib/lucene-queryparser-4.10.2.jar"/>
 	<classpathentry kind="lib" path="lib/hibernate-core-4.3.7.Final.jar"/>
 	<classpathentry kind="lib" path="lib/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib/hibernate-commons-annotations-4.0.5.Final.jar"/>
@@ -34,5 +31,10 @@
 	<classpathentry kind="lib" path="lib/org.eclipse.jface_3.11.0.v20150602-1400.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.osgi_3.10.100.v20150529-1857.jar"/>
 	<classpathentry kind="lib" path="lib/org.eclipse.ui.workbench_3.107.0.v20150510-1732.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-analyzers-common-5.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-core-5.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-queryparser-5.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-backward-codecs-5.3.1.jar"/>
+	<classpathentry kind="lib" path="lib/lucene-misc-5.3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

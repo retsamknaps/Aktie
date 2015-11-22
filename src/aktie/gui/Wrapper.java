@@ -224,7 +224,7 @@ public class Wrapper
             cmd.add ( "-XstartOnFirstThread" );
         }
 
-        cmd.add ( "-Xmx128m" );
+        cmd.add ( "-Xmx256m" );
         cmd.add ( "-cp" );
         StringBuilder sb = new StringBuilder();
         File libd = new File ( LIBDIR );

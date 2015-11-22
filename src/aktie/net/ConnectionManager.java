@@ -177,12 +177,23 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
     @Override
     public List<String> getConnectedIds ( CObj fromid )
     {
-        String dest = fromid.getString ( CObj.DEST );
         List<String> conids = null;
 
-        synchronized ( destinations )
+        if ( fromid != null )
         {
-            conids = destinations.get ( dest ).getConnectedIds();
+            String dest = fromid.getString ( CObj.DEST );
+
+            synchronized ( destinations )
+            {
+                DestinationThread d = destinations.get ( dest );
+
+                if ( d != null )
+                {
+                    conids = d.getConnectedIds();
+                }
+
+            }
+
         }
 
         if ( conids == null )
@@ -507,15 +518,20 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
         for ( String d : digs )
         {
             CObj o = index.getByDig ( d );
-            String pushstr = o.getPrivate ( CObj.PRV_PUSH_REQ );
 
-            if ( pushstr == null || "false".equals ( pushstr ) )
+            if ( o != null )
             {
-                pushLoops.remove ( d );
+                String pushstr = o.getPrivate ( CObj.PRV_PUSH_REQ );
 
-                synchronized ( pushMap )
+                if ( pushstr == null || "false".equals ( pushstr ) )
                 {
-                    pushMap.remove ( d );
+                    pushLoops.remove ( d );
+
+                    synchronized ( pushMap )
+                    {
+                        pushMap.remove ( d );
+                    }
+
                 }
 
             }
@@ -918,6 +934,8 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
                                         }
 
                                     }
+
+                                    memlst.close();
 
                                 }
 
@@ -1497,6 +1515,8 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
                 index.index ( co );
             }
 
+            unlst.close();
+
         }
 
         catch ( Exception e )
@@ -1671,6 +1691,8 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
 
             log.info ( "CONMAN [[[[[[[[[[[[[[[[[[[[[[[[[[[[[ STOP? " + stop + " ]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]" );
             delay();
+
+            CObjList.displayAllStillOpen();
 
         }
 

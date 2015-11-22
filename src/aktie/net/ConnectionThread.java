@@ -40,7 +40,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 {
     Logger log = Logger.getLogger ( "aktie" );
 
-    public static int MAXQUEUESIZE = 100; //Long lists should be in CObjList each one could have open indexreader!
+    public static int MAXQUEUESIZE = 1000; //Long lists should be in CObjList each one could have open indexreader!
     public static long GUIUPDATEPERIOD = 10L * 1000L; // 10 seconds
 
     private boolean stop;
@@ -276,14 +276,13 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         if ( outqueue.size() < MAXQUEUESIZE )
         {
-            if ( !checkType ( o ) )
+            if ( checkType ( o ) )
             {
-                return false;
+                outqueue.add ( o );
+                outproc.go();
+                return true;
             }
 
-            outqueue.add ( o );
-            outproc.go();
-            return true;
         }
 
         log.info ( "CONTHREAD: DROPPED! " + o );
@@ -357,7 +356,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             {
                 try
                 {
-                    wait ( 5000 );
+                    wait ( 30000 );
                 }
 
                 catch ( InterruptedException e )
@@ -1147,7 +1146,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                     readFileData ( is );
                 }
 
-                updateGui();
+                //updateGui();
+                outproc.go();
             }
 
         }

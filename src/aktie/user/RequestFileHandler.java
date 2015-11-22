@@ -1024,11 +1024,11 @@ public class RequestFileHandler
 
                             }
 
-                            else
-                            {
-                                lf = new File ( localpath );
-                            }
+                        }
 
+                        if ( lf == null )
+                        {
+                            lf = new File ( localpath );
                         }
 
                         //See if the destination file is in a share, and set the share name
