@@ -516,9 +516,14 @@ public class CObj
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         String dispname = getDisplayName();
 
+        if ( dispname == null )
+        {
+            dispname = getPrivateDisplayName();
+        }
+
         if ( dispname != null )
         {
-            d.add ( new StringField ( docPrivate ( PRV_DISPLAY_NAME ), dispname, Store.YES ) );
+            //d.add ( new StringField ( docPrivate ( PRV_DISPLAY_NAME ), dispname, Store.NO ) );
             d.add ( new SortedDocValuesField ( docPrivate ( PRV_DISPLAY_NAME ), new BytesRef ( dispname ) ) );
             d.add ( new TextField ( docPrivateText ( PRV_DISPLAY_NAME ), dispname, Store.NO ) );
         }

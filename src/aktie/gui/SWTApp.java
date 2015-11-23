@@ -28,6 +28,7 @@ import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
 import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
 import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
+import aktie.index.Upgrade0301;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager;
 import aktie.net.ConnectionThread;
@@ -37,6 +38,7 @@ import aktie.utils.FUtils;
 
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.FillLayout;
@@ -1886,12 +1888,17 @@ public class SWTApp
     private void startNode()
     {
 
+        String lastversion = lastVersion();
+
+        if ( lastversion != null )
+        {
+            upgrade0301 ( lastversion );
+        }
+
         // new RawNet ( new File ( nodeDir ) )
         Properties p = getI2PReady();
 
         startNodeThread ( p );
-
-        String lastversion = lastVersion();
 
         if ( lastversion != null )
         {
@@ -2062,6 +2069,15 @@ public class SWTApp
 
     }
 
+    private void upgrade0301 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0301 ) < 0 )
+        {
+            Upgrade0301.upgrade ( nodeDir + File.separator + "index" );
+        }
+
+    }
+
     private boolean isSameOrNewer()
     {
         String vl = lastVersion();
@@ -2199,20 +2215,51 @@ public class SWTApp
             {
                 if ( sortPostField2 == null )
                 {
-                    s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType1 ) )
+                    {
+                        s.setSort ( new SortedNumericSortField ( sortPostField1, sortPostType1, sortPostReverse ) );
+                    }
+
+                    else
+                    {
+                        s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
+                    }
+
                 }
 
                 else
                 {
-                    s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ),
-                                new SortField ( sortPostField2, sortPostType2, sortPostReverse ) );
+                    SortField sf1 = null;
+                    SortField sf2 = null;
+
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType1 ) )
+                    {
+                        sf1 = new SortedNumericSortField ( sortPostField1, sortPostType1, sortPostReverse );
+                    }
+
+                    else
+                    {
+                        sf1 = new SortField ( sortPostField1, sortPostType1, sortPostReverse );
+                    }
+
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType2 ) )
+                    {
+                        sf2 = new SortedNumericSortField ( sortPostField2, sortPostType2, sortPostReverse );
+                    }
+
+                    else
+                    {
+                        sf2 = new SortField ( sortPostField2, sortPostType2, sortPostReverse );
+                    }
+
+                    s.setSort ( sf1, sf2 );
                 }
 
             }
 
             else
             {
-                s.setSort ( new SortField ( CObj.docNumber ( CObj.CREATEDON ), SortField.Type.LONG, true ) );
+                s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
             }
 
             CObjList clst = getNode().getIndex().searchPosts ( selectedCommunity.getDig(), srch, s );
@@ -2312,13 +2359,44 @@ public class SWTApp
             {
                 if ( sortFileField2 == null )
                 {
-                    s.setSort ( new SortField ( sortFileField1, sortFileType1, sortFileReverse ) );
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType1 ) )
+                    {
+                        s.setSort ( new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse ) );
+                    }
+
+                    else
+                    {
+                        s.setSort ( new SortField ( sortFileField1, sortFileType1, sortFileReverse ) );
+                    }
+
                 }
 
                 else
                 {
-                    s.setSort ( new SortField ( sortFileField1, sortFileType1, sortFileReverse ),
-                                new SortField ( sortFileField2, sortFileType2, sortFileReverse ) );
+                    SortField sf1 = null;
+                    SortField sf2 = null;
+
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType1 ) )
+                    {
+                        sf1 = new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse );
+                    }
+
+                    else
+                    {
+                        sf1 = new SortField ( sortFileField1, sortFileType1, sortFileReverse );
+                    }
+
+                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType2 ) )
+                    {
+                        sf2 = new SortedNumericSortField ( sortFileField2, sortFileType2, sortFileReverse );
+                    }
+
+                    else
+                    {
+                        sf2 = new SortField ( sortFileField2, sortFileType2, sortFileReverse );
+                    }
+
+                    s.setSort ( sf1, sf2 );
                 }
 
             }
@@ -2348,7 +2426,7 @@ public class SWTApp
     }
 
     private SortField.Type membershipSortType = SortField.Type.STRING;
-    private String membershipSortField = CObj.docPrivate ( CObj.NAME );
+    private String membershipSortField = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
     private boolean membershipSortReverse = false;
 
     private void updateMembership()
@@ -3612,7 +3690,7 @@ public class SWTApp
                 {
                     sortPostField1 = ns;
                     sortPostReverse = true;
-                    sortPostType1 = SortField.Type.LONG;
+                    sortPostType1 = SortedNumericSortField.Type.LONG;
                     sortPostField2 = null;
                     sortPostType2 = null;
                 }
@@ -4304,7 +4382,7 @@ public class SWTApp
                 {
                     sortFileField1 = ns;
                     sortFileReverse = false;
-                    sortFileType1 = SortField.Type.LONG;
+                    sortFileType1 = SortedNumericSortField.Type.LONG;
                     sortFileField2 = null;
                     sortFileType2 = null;
                 }

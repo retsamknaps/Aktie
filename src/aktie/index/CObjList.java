@@ -187,7 +187,10 @@ public class CObjList
 
     public void close()
     {
-        searcher.closeSearch();
+        if ( searcher != null )
+        {
+            searcher.closeSearch();
+        }
 
         synchronized ( alllists )
         {

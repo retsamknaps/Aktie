@@ -22,9 +22,9 @@ public class Wrapper
     public static int RESTART_RC = 7;
 
     public static String VERSION_0115 = "version 0.1.15";
-    public static String VERSION_0300 = "version 0.3.0";
+    public static String VERSION_0301 = "version 0.3.1";
 
-    public static String VERSION = VERSION_0300;
+    public static String VERSION = VERSION_0301;
 
     public static String VERSION_FILE = "version.txt";
     //ADD ONE HOUR TO TIME.

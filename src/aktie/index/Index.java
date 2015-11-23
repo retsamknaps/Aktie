@@ -510,7 +510,7 @@ public class Index
         if ( m.find() )
         {
             StringBuilder sb = new StringBuilder();
-            sb.append ( CObj.docStringText ( CObj.NAME ) );
+            sb.append ( CObj.docPrivateText ( CObj.PRV_DISPLAY_NAME ) );
             sb.append ( ":\"" );
             sb.append ( squery );
             sb.append ( "\" OR " );
@@ -550,7 +550,7 @@ public class Index
             if ( m.find() )
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append ( CObj.docStringText ( CObj.NAME ) );
+                sb.append ( CObj.docPrivateText ( CObj.PRV_DISPLAY_NAME ) );
                 sb.append ( ":\"" );
                 sb.append ( squery );
                 sb.append ( "\" OR " );
@@ -607,7 +607,7 @@ public class Index
             if ( m.find() )
             {
                 StringBuilder sb = new StringBuilder();
-                sb.append ( CObj.docPrivateText ( CObj.NAME ) );
+                sb.append ( CObj.docPrivateText ( CObj.PRV_DISPLAY_NAME ) );
                 sb.append ( ":\"" );
                 sb.append ( squery );
                 sb.append ( "\" OR " );
@@ -646,7 +646,7 @@ public class Index
             sb.append ( ":\"" );
             sb.append ( qstr );
             sb.append ( "\" OR " );
-            sb.append ( CObj.docStringText ( CObj.NAME ) );
+            sb.append ( CObj.docStringText ( CObj.NAME ) ); //File name
             sb.append ( ":\"" );
             sb.append ( qstr );
             sb.append ( "\"" );

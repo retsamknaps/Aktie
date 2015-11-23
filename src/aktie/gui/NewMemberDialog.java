@@ -239,7 +239,8 @@ public class NewMemberDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                String ns = CObj.docString ( CObj.NAME );
+                //String ns = CObj.docString ( CObj.NAME );
+                String ns = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
 
                 if ( ns.equals ( sortPostField1 ) )
                 {
@@ -332,13 +333,15 @@ public class NewMemberDialog extends Dialog
 
         if ( sortPostField1 != null )
         {
+            System.out.println ( "sort00000" );
             s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
 
         }
 
         else
         {
-            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortField.Type.LONG, true ) );
+            System.out.println ( "sort00001" );
+            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
         }
 
         CObjList oldl = ( CObjList ) tableViewer.getInput();

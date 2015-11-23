@@ -103,7 +103,7 @@ public class ShowPrivComDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                String ns = CObj.docString ( CObj.NAME );
+                String ns = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
 
                 if ( ns.equals ( sortPostField1 ) )
                 {
@@ -190,13 +190,15 @@ public class ShowPrivComDialog extends Dialog
 
         if ( sortPostField1 != null )
         {
+            System.out.println ( "sort00004" );
             SortField sf = new SortField ( sortPostField1, sortPostType1, sortPostReverse );
             s.setSort ( sf );
         }
 
         else
         {
-            SortField sf = new SortField ( CObj.docString ( CObj.NAME ), SortField.Type.STRING, false );
+            System.out.println ( "sort00005" );
+            SortField sf = new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, false );
             s.setSort ( sf );
         }
 
