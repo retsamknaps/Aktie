@@ -558,7 +558,7 @@ public class NewPostDialog extends Dialog
 
             if ( newPreview == null && newAttachment == null )
             {
-                app.getNode().enqueue ( p );
+                app.getNode().priorityEnqueue ( p );
             }
 
             else
@@ -574,7 +574,7 @@ public class NewPostDialog extends Dialog
                         nf.pushString ( CObj.COMMUNITYID, community.getDig() );
                         nf.pushString ( CObj.CREATOR, postIdentity.getId() );
                         nf.pushPrivate ( CObj.LOCALFILE, newPreview.getCanonicalPath() );
-                        app.getNode().enqueue ( nf );
+                        app.getNode().priorityEnqueue ( nf );
                     }
 
                     catch ( Exception e )
@@ -593,7 +593,7 @@ public class NewPostDialog extends Dialog
                         nf.pushString ( CObj.COMMUNITYID, community.getDig() );
                         nf.pushString ( CObj.CREATOR, postIdentity.getId() );
                         nf.pushPrivate ( CObj.LOCALFILE, newAttachment.getCanonicalPath() );
-                        app.getNode().enqueue ( nf );
+                        app.getNode().priorityEnqueue ( nf );
                     }
 
                     catch ( Exception e )

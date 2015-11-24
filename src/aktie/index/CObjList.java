@@ -47,20 +47,22 @@ public class CObjList
     {
         QueryParser qp = new QueryParser ( "text_title", a );
         Query sq = qp.parse ( q );
-        BooleanQuery bq = new BooleanQuery();
-        bq.add ( sq, BooleanClause.Occur.MUST );
-        bq.add ( baseq, BooleanClause.Occur.MUST );
-        init ( s, bq, srt );
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        builder.add ( sq, BooleanClause.Occur.MUST );
+        builder.add ( baseq, BooleanClause.Occur.MUST );
+        init ( s, builder.build(), srt );
     }
 
     public CObjList ( Query baseq, AktieSearcher s, Analyzer a, String q ) throws ParseException
     {
         QueryParser qp = new QueryParser ( "text_title", a );
         Query sq = qp.parse ( q );
-        BooleanQuery bq = new BooleanQuery();
-        bq.add ( sq, BooleanClause.Occur.MUST );
-        bq.add ( baseq, BooleanClause.Occur.MUST );
-        init ( s, bq, null );
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        builder.add ( sq, BooleanClause.Occur.MUST );
+        builder.add ( baseq, BooleanClause.Occur.MUST );
+        init ( s, builder.build(), null );
     }
 
     public CObjList ( AktieSearcher s, Query q )
@@ -86,10 +88,10 @@ public class CObjList
         createdOn = System.currentTimeMillis();
         creationStack = Thread.currentThread().getStackTrace();
 
-        synchronized ( alllists )
-        {
-            alllists.add ( this );
-        }
+        //        synchronized ( alllists )
+        //        {
+        //            alllists.add ( this );
+        //        }
 
     }
 
@@ -192,10 +194,10 @@ public class CObjList
             searcher.closeSearch();
         }
 
-        synchronized ( alllists )
-        {
-            alllists.remove ( this );
-        }
+        //        synchronized ( alllists )
+        //        {
+        //            alllists.remove ( this );
+        //        }
 
     }
 

@@ -168,7 +168,6 @@ public class ShowMembersDialog extends Dialog
     {
         Sort s = new Sort();
 
-        System.out.println ( "sort00002" );
         s.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, subReverseSort ) );
 
         CObjList ol = ( CObjList ) subTableViewer.getInput();
@@ -201,7 +200,6 @@ public class ShowMembersDialog extends Dialog
         {
             Sort s = new Sort();
 
-            System.out.println ( "sort00003" );
             s.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, memberReverseSort ) );
 
             CObjList memlst =

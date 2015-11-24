@@ -74,9 +74,9 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
         fileHandler = r;
         symdec = new SymDecoder();
         memvalid = new MembershipValidator ( index );
-        Thread t = new Thread ( this );
-        t.setDaemon ( true );
-        t.start();
+        //Thread t = new Thread ( this );
+        //t.setDaemon ( true );
+        //t.start();
     }
 
     public List<DestinationThread> getDestList()

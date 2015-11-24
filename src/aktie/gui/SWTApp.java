@@ -2071,7 +2071,7 @@ public class SWTApp
 
     private void upgrade0301 ( String lastversion )
     {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0301 ) < 0 )
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0400 ) < 0 )
         {
             Upgrade0301.upgrade ( nodeDir + File.separator + "index" );
         }

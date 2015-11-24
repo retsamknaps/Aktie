@@ -42,6 +42,8 @@ public class I2PNet  implements Net
     {
         customProps = p;
 
+        System.out.println ( "I2P VERSION: " + getRouterVersion() );
+
         i2pdir = new File ( nodedir + File.separator + "i2p" );
 
         if ( i2pdir.exists() )

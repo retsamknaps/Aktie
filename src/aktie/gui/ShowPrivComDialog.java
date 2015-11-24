@@ -190,14 +190,12 @@ public class ShowPrivComDialog extends Dialog
 
         if ( sortPostField1 != null )
         {
-            System.out.println ( "sort00004" );
             SortField sf = new SortField ( sortPostField1, sortPostType1, sortPostReverse );
             s.setSort ( sf );
         }
 
         else
         {
-            System.out.println ( "sort00005" );
             SortField sf = new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, false );
             s.setSort ( sf );
         }

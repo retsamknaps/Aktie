@@ -333,14 +333,12 @@ public class NewMemberDialog extends Dialog
 
         if ( sortPostField1 != null )
         {
-            System.out.println ( "sort00000" );
             s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
 
         }
 
         else
         {
-            System.out.println ( "sort00001" );
             s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
         }
 

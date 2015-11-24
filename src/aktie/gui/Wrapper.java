@@ -22,9 +22,9 @@ public class Wrapper
     public static int RESTART_RC = 7;
 
     public static String VERSION_0115 = "version 0.1.15";
-    public static String VERSION_0301 = "version 0.3.1";
+    public static String VERSION_0400 = "version 0.4.0";
 
-    public static String VERSION = VERSION_0301;
+    public static String VERSION = VERSION_0400;
 
     public static String VERSION_FILE = "version.txt";
     //ADD ONE HOUR TO TIME.
@@ -32,12 +32,11 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1446998804L * 1000L ) + 3600000;
+    public static long RELEASETIME = ( 1448382131L * 1000L ) + 3600000;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
     public static String JARFILE = "aktie.jar";
-
 
     public static void main ( String args[] )
     {
@@ -85,6 +84,8 @@ public class Wrapper
 
         if ( !f.exists() || isNewer() )
         {
+
+            deleteLibDir(); //Delete old jar files in case of upgrade file names not matching
             unZipIt();
 
             List<String> cmd = new LinkedList<String>();
@@ -238,17 +239,21 @@ public class Wrapper
 
             for ( int c = 1; c < ll.length; c++ )
             {
-                if ( usesemi )
+                if ( ll[c].getPath().endsWith ( ".jar" ) )
                 {
-                    sb.append ( ";" );
+                    if ( usesemi )
+                    {
+                        sb.append ( ";" );
+                    }
+
+                    else
+                    {
+                        sb.append ( ":" );
+                    }
+
+                    sb.append ( ll[c] );
                 }
 
-                else
-                {
-                    sb.append ( ":" );
-                }
-
-                sb.append ( ll[c] );
             }
 
         }
@@ -394,6 +399,23 @@ public class Wrapper
         return true;
     }
 
+    public static void deleteLibDir()
+    {
+        File f = new File ( LIBDIR );
+
+        if ( f.exists() && f.isDirectory() )
+        {
+            File fl[] = f.listFiles();
+
+            for ( int c = 0; c < fl.length; c++ )
+            {
+                fl[c].delete();
+            }
+
+        }
+
+    }
+
     public static void unZipIt()
     {
 
@@ -521,6 +543,31 @@ public class Wrapper
                     }
 
                     fos.close();
+                }
+
+                if ( "DELETELIST".equals ( fileName ) )
+                {
+                    BufferedReader br = new BufferedReader ( new FileReader ( newFile ) );
+                    String ln = br.readLine();
+
+                    while ( ln != null )
+                    {
+                        File df = new File ( LIBDIR + File.separator + ln );
+
+                        if ( df.exists() )
+                        {
+                            if ( !df.delete() )
+                            {
+                                System.out.println ( "WARNING: COULD NOT REMOVE " + df + " Please do so manually." );
+                            }
+
+                        }
+
+                        ln = br.readLine();
+                    }
+
+                    br.close();
+                    newFile.delete();
                 }
 
                 ze = zis.getNextEntry();

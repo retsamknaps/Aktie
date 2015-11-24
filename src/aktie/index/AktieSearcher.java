@@ -1,11 +1,9 @@
 package aktie.index;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,8 +14,8 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.uninverting.UninvertingReader;
-import org.apache.lucene.uninverting.UninvertingReader.Type;
+import org.apache.lucene.search.TopFieldCollector;
+import org.apache.lucene.search.TopScoreDocCollector;
 
 public class AktieSearcher
 {
@@ -119,8 +117,17 @@ public class AktieSearcher
             throw new IOException ( "AktieSearcher already closed." );
         }
 
-        TopDocs d = searcher.search ( query, max );
-        return d;
+        if ( max == Integer.MAX_VALUE )
+        {
+            max = searcher.count ( query );
+        }
+
+        max = Math.max ( 1, max );
+
+        TopScoreDocCollector collector = TopScoreDocCollector.create ( max );
+        searcher.search ( query, collector );
+
+        return collector.topDocs();
     }
 
     public TopDocs search ( Query query, int max, Sort s ) throws IOException
@@ -131,8 +138,17 @@ public class AktieSearcher
             throw new IOException ( "AktieSearcher already closed." );
         }
 
-        TopDocs d = searcher.search ( query, max, s );
-        return d;
+        if ( max == Integer.MAX_VALUE )
+        {
+            max = searcher.count ( query );
+        }
+
+        max = Math.max ( 1, max );
+
+        TopFieldCollector collector = TopFieldCollector.create ( s, max, false, false, false );
+        searcher.search ( query, collector );
+
+        return collector.topDocs();
     }
 
     public void shutdown()
