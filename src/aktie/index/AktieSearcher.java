@@ -87,15 +87,15 @@ public class AktieSearcher
         closed = false;
     }
 
-    public synchronized boolean incrNumOpen()
+    public synchronized AktieSearcher incrNumOpen()
     {
         if ( closeAll )
         {
-            return false;
+            return null;
         }
 
         numOpen++;
-        return true;
+        return this;
     }
 
     public Document doc ( int id ) throws IOException

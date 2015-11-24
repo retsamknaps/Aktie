@@ -213,9 +213,14 @@ public class Index
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            while ( !searcher.incrNumOpen() );
+            AktieSearcher cs = searcher.incrNumOpen();
 
-            CObjList l = new CObjList ( searcher, q, srt );
+            while ( cs == null )
+            {
+                cs = searcher.incrNumOpen();
+            }
+
+            CObjList l = new CObjList ( cs, q, srt );
             l.executeQuery ( max );
             return l;
         }
@@ -241,9 +246,14 @@ public class Index
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            while ( !searcher.incrNumOpen() );
+            AktieSearcher cs = searcher.incrNumOpen();
 
-            CObjList l = new CObjList ( searcher, analyzer, qs, s );
+            while ( cs == null )
+            {
+                cs = searcher.incrNumOpen();
+            }
+
+            CObjList l = new CObjList ( cs, analyzer, qs, s );
             l.executeQuery ( max );
             return l;
         }
@@ -263,9 +273,14 @@ public class Index
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            while ( !searcher.incrNumOpen() );
+            AktieSearcher cs = searcher.incrNumOpen();
 
-            CObjList l = new CObjList ( bq, searcher, analyzer, qs, s );
+            while ( cs == null )
+            {
+                cs = searcher.incrNumOpen();
+            }
+
+            CObjList l = new CObjList ( bq, cs, analyzer, qs, s );
             l.executeQuery ( max );
             return l;
         }
@@ -285,9 +300,14 @@ public class Index
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            while ( !searcher.incrNumOpen() );
+            AktieSearcher cs = searcher.incrNumOpen();
 
-            CObjList l = new CObjList ( bq, searcher, analyzer, qs, null );
+            while ( cs == null )
+            {
+                cs = searcher.incrNumOpen();
+            }
+
+            CObjList l = new CObjList ( bq, cs, analyzer, qs, null );
             l.executeQuery ( max );
             return l;
         }
