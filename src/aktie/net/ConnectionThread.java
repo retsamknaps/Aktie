@@ -796,6 +796,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                         fg.pushPrivate ( CObj.COMPLETE, "true" );
                         fg.pushPrivate ( CObj.LOCALFILE, lf );
                         index.index ( fg );
+                        index.forceNewSearcher(); //So we see immediately if we have all frags.
                     }
 
                     //Refresh the list of RequestFiles in case we deleted any.
