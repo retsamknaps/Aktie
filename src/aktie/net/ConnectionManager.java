@@ -1090,6 +1090,7 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
                             }
 
                             cl.close();
+                            index.forceNewSearcher();
                             //Get the new list of fragments to request after resetting
                             cl = index.getFragmentsToRequest ( rf.getCommunityId(),
                                                                rf.getWholeDigest(), rf.getFragmentDigest() );
@@ -1109,6 +1110,7 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
                                 co.pushPrivate ( CObj.COMPLETE, "req" );
                                 co.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
                                 index.index ( co );
+                                index.forceNewSearcher();
                                 CObj sr = new CObj();
                                 sr.setType ( CObj.CON_REQ_FRAG );
                                 sr.pushString ( CObj.COMMUNITYID, co.getString ( CObj.COMMUNITYID ) );
