@@ -42,6 +42,7 @@ public class CObj
     public static String HASFILE = "hasfile";
     public static String FRAGMENT = "fragment";
     public static String FILEF = "filef";
+    // public static String
 
     //Temporary types - requests to other nodes.
     public static String CON_CHALLENGE = "con_challenge";
@@ -81,6 +82,7 @@ public class CObj
     public static String PRV_PUSH_REQ    = "prv_push_req";
     public static String PRV_PUSH_TIME   = "prv_push_time";
     public static String PRV_DISPLAY_NAME = "prv_display_name";
+    public static String PRV_USER_RANK   = "prv_user_rank";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 

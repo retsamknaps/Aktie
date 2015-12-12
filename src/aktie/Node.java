@@ -2,7 +2,10 @@ package aktie;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
+import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
@@ -109,7 +112,7 @@ public class Node
         requestHandler.setRequestedOn();
     }
 
-    public void startDestinations()
+    public void startDestinations ( int delay )
     {
 
         CObjList myids = index.getMyIdentities();
@@ -118,9 +121,19 @@ public class Node
         {
             try
             {
-                CObj myid = myids.get ( c );
+                final CObj myid = myids.get ( c ).clone();
                 myid.setType ( CObj.USR_START_DEST );
-                enqueue ( myid );
+                Timer t = new Timer ( true );
+                t.schedule ( new TimerTask()
+                {
+                    @Override
+                    public void run()
+                    {
+                        enqueue ( myid );
+                    }
+
+                }, ( long ) Utils.Random.nextInt ( delay ) );
+
             }
 
             catch ( Exception e )

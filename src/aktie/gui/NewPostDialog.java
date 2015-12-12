@@ -384,7 +384,7 @@ public class NewPostDialog extends Dialog
                 {
                     try
                     {
-                        fileText.setText ( newPreview.getCanonicalPath() );
+                        previewText.setText ( newPreview.getCanonicalPath() );
                     }
 
                     catch ( Exception e2 )

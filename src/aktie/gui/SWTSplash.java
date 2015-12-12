@@ -1,18 +1,23 @@
 package aktie.gui;
 
+import java.io.InputStream;
+
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.custom.StyledText;
 
 public class SWTSplash extends Dialog
 {
+
+    private Image splashImg;
 
     /**
         Create the dialog.
@@ -21,6 +26,19 @@ public class SWTSplash extends Dialog
     public SWTSplash ( Shell parentShell )
     {
         super ( parentShell );
+
+        try
+        {
+            InputStream is  = SWTSplash.class.getClassLoader().getResourceAsStream ( "images/aktie.png" );
+            splashImg = new Image ( Display.getDefault(), is );
+            is.close();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -45,17 +63,13 @@ public class SWTSplash extends Dialog
         lblIfYouSelected.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
         lblIfYouSelected.setText ( "If you selected to use and external router make sure it is running" );
 
-        StyledText styledText = new StyledText ( container, SWT.BORDER );
-        styledText.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        styledText.setEditable ( false );
-        styledText.setWordWrap ( true );
-        styledText.setText (
-            "Here is a riddle while you wait: I end the race. I am "
-            + "the beginning of the end. "
-            + "The start of eternity and the end of space. There are "
-            + "two of me in Heaven and one in hell. I am in water, fire, "
-            + "sunshine and darkness. I am the beginning of earth and "
-            + "the end of life. What am I?" );
+        if ( splashImg != null )
+        {
+            Label lblImg = new Label ( container, SWT.NONE );
+            lblImg.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
+            lblImg.setImage ( splashImg );
+        }
+
         return container;
     }
 
@@ -119,6 +133,11 @@ public class SWTSplash extends Dialog
 
             while ( !openned );
 
+            if ( splashImg != null && !splashImg.isDisposed() )
+            {
+                splashImg.dispose();
+            }
+
             superClose();
         }
 
@@ -130,7 +149,7 @@ public class SWTSplash extends Dialog
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 450, 220 );
+        return new Point ( 450, 400 );
     }
 
 }

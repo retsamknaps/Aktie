@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashMap;
@@ -57,6 +58,7 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -1860,7 +1862,11 @@ public class SWTApp
 
             mlst.close();
 
-            node.startDestinations();
+            if ( Wrapper.getStartDestinationsOnStartup() )
+            {
+                node.startDestinations ( Wrapper.getStartDestinationDelay() );
+            }
+
         }
 
         catch ( Exception e )
@@ -2867,6 +2873,8 @@ public class SWTApp
         return rf;
     }
 
+    public static ImageRegistry imgReg;
+
     /**
         Create contents of the window.
     */
@@ -2877,8 +2885,60 @@ public class SWTApp
             new CocoaUIEnhancer().earlyStartup();
         }
 
+        imgReg = new ImageRegistry();
+
         shell = new Shell();
         shell.setSize ( 750, 550 );
+
+        try
+        {
+            Image icons[] = new Image[5];
+            ClassLoader loader = SWTApp.class.getClassLoader();
+
+            InputStream is16  = loader.getResourceAsStream ( "images/aktie16.png" );
+            icons[0] = new Image ( Display.getDefault(), is16 );
+            is16.close();
+
+            InputStream is32  = loader.getResourceAsStream ( "images/aktie32.png" );
+            icons[1] = new Image ( Display.getDefault(), is32 );
+            is32.close();
+
+            InputStream is64  = loader.getResourceAsStream ( "images/aktie64.png" );
+            icons[2] = new Image ( Display.getDefault(), is64 );
+            is64.close();
+
+            InputStream is128  = loader.getResourceAsStream ( "images/aktie128.png" );
+            icons[3] = new Image ( Display.getDefault(), is128 );
+            is128.close();
+
+            InputStream is  = loader.getResourceAsStream ( "images/aktie.png" );
+            icons[4] = new Image ( Display.getDefault(), is );
+            is.close();
+
+            shell.setImages ( icons );
+
+            InputStream pi  = loader.getResourceAsStream ( "images/icons/user.png" );
+            Image pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "identity", pimg );
+
+            pi  = loader.getResourceAsStream ( "images/icons/database.png" );
+            pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "pubsub", pimg );
+
+            pi  = loader.getResourceAsStream ( "images/icons/key.png" );
+            pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "privsub", pimg );
+
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
         shell.setText ( "aktie" );
         shell.setLayout ( new GridLayout ( 1, false ) );
 

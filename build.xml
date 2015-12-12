@@ -8,6 +8,7 @@
 	<property name="swt" location="swt"/>
 	<property name="aktie_node" location="aktie_node"/>
   	<property name="bin" location="bin"/>
+	<property name="images" location="images"/>
 
   	<target name="init">
     	<!-- Create the time stamp -->
@@ -34,7 +35,10 @@
  	<target name="aktieapp" depends="compile"
         	description="generate the aktieapp" >
 
-    	<jar jarfile="${lib}/aktieapp.jar" basedir="${bin}"/>
+    	<jar jarfile="${lib}/aktieapp.jar">
+    		<fileset dir="${bin}" includes="**"/>
+    		<fileset dir="." includes="images/**"/>
+    	</jar>
   	</target>
 
  	<target name="dist" depends="aktieapp"

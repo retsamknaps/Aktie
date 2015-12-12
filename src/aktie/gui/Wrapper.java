@@ -687,6 +687,68 @@ public class Wrapper
         savePropsFile ( p );
     }
 
+    public static int getStartDestinationDelay()
+    {
+        int r = 20 * 60; // default of 20 minutes
+        Properties p = loadExistingProps();
+        String m = p.getProperty ( "aktie.startdestdelay" );
+
+        if ( m != null )
+        {
+            try
+            {
+                r = Integer.valueOf ( m );
+            }
+
+            catch ( Exception e )
+            {
+            }
+
+        }
+
+        return r;
+    }
+
+    public static void setStartDestinationDelay ( int d )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.startdestdelay", Integer.toString ( d ) );
+
+        savePropsFile ( p );
+    }
+
+    public static boolean getStartDestinationsOnStartup()
+    {
+        boolean r = true;
+        Properties p = loadExistingProps();
+        String m = p.getProperty ( "aktie.startdestonstartup" );
+
+        if ( m != null )
+        {
+            try
+            {
+                r = Boolean.valueOf ( m );
+            }
+
+            catch ( Exception e )
+            {
+            }
+
+        }
+
+        return r;
+    }
+
+    public void saveStartDestinationOnStartup ( boolean s )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.startdestonstartup", Boolean.toString ( s ) );
+
+        savePropsFile ( p );
+    }
+
     public static String getUpdateLength ( String file )
     {
         Properties p = loadExistingProps();

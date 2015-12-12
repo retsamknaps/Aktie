@@ -1,6 +1,7 @@
 package aktie.gui;
 
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
+
 import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.StyledString.Styler;
@@ -67,8 +68,38 @@ public class IdentitySubTreeLabelProvider implements IStyledLabelProvider
     }
 
     @Override
-    public Image getImage ( Object arg0 )
+    public Image getImage ( Object a )
     {
+        if ( a instanceof TreeIdentity )
+        {
+            if ( SWTApp.imgReg != null )
+            {
+                return SWTApp.imgReg.get ( "identity" );
+            }
+
+        }
+
+        else if ( a instanceof TreeSubscription )
+        {
+            if ( SWTApp.imgReg != null )
+            {
+                TreeSubscription ts = ( TreeSubscription ) a;
+                String scope = ts.community.getString ( CObj.SCOPE );
+
+                if ( CObj.SCOPE_PRIVATE.equals ( scope ) )
+                {
+                    return SWTApp.imgReg.get ( "privsub" );
+                }
+
+                else
+                {
+                    return SWTApp.imgReg.get ( "pubsub" );
+                }
+
+            }
+
+        }
+
         return null;
     }
 
@@ -97,13 +128,7 @@ public class IdentitySubTreeLabelProvider implements IStyledLabelProvider
         else if ( a instanceof TreeSubscription )
         {
             TreeSubscription ts = ( TreeSubscription ) a;
-            String scope = ts.community.getString ( CObj.SCOPE );
             String name = ts.community.getPrivateDisplayName();
-
-            if ( CObj.SCOPE_PRIVATE.equals ( scope ) )
-            {
-                name = "* " + name;
-            }
 
             Long np = ts.community.getPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS );
 
