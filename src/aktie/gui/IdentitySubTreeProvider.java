@@ -13,6 +13,10 @@ import org.eclipse.jface.viewers.Viewer;
 public class IdentitySubTreeProvider implements ITreeContentProvider
 {
 
+    public IdentitySubTreeProvider()
+    {
+    }
+
     public class TreeSubscription
     {
         public TreeSubscription ( TreeIdentity p, CObj c )

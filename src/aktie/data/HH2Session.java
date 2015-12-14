@@ -11,6 +11,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
+import aktie.gui.subtree.SubTreeEntity;
+
 public class HH2Session
 {
 
@@ -48,6 +50,8 @@ public class HH2Session
             configuration.addAnnotatedClass ( CommunityMember.class );
             configuration.addAnnotatedClass ( CommunityMyMember.class );
             configuration.addAnnotatedClass ( DirectoryShare.class );
+            //--- Gui mappings
+            configuration.addAnnotatedClass ( SubTreeEntity.class );
             configuration.buildMapping();
 
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().

@@ -25,8 +25,15 @@ import aktie.Node;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.RequestFile;
-import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
-import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
+//import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
+//import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
+import aktie.gui.subtree.SubTreeDragListener;
+import aktie.gui.subtree.SubTreeDropListener;
+import aktie.gui.subtree.SubTreeEntity;
+import aktie.gui.subtree.SubTreeEntityDBTest;
+import aktie.gui.subtree.SubTreeLabelProvider;
+import aktie.gui.subtree.SubTreeModel;
+import aktie.gui.subtree.SubTreeSorter;
 import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
@@ -79,6 +86,9 @@ import swing2swt.layout.BorderLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -1455,7 +1465,8 @@ public class SWTApp
     private NewDirectoryShareDialog shareDialog;
     private DownloadToShareDialog downloadToShareDialog;
     private I2PSettingsDialog i2pDialog;
-    private IdentitySubTreeModel identSubTreeModel;
+    //private IdentitySubTreeModel identSubTreeModel;
+    private SubTreeModel identModel;
 
     private Node node;
     private String nodeDir;
@@ -1597,14 +1608,14 @@ public class SWTApp
         return node;
     }
 
-    public void setSelected ( CObj id, CObj comid, ISelection sel )
+    public void setSelected ( CObj id, CObj comid )
     {
         selectedIdentity = id;
         selectedCommunity = comid;
         lblIdentCommunity.setText ( "Identity: " + selectedIdentity.getDisplayName() +
                                     "  Community: " + selectedCommunity.getPrivateDisplayName() );
 
-        identSubTreeModel.clearNew ( comid );
+        //TODO: Do this again identSubTreeModel.clearNew ( comid );
         identTreeViewer.refresh ( true );
 
         setShares ( comid.getDig(), id.getId() );
@@ -1796,14 +1807,29 @@ public class SWTApp
     private void startedSuccessfully()
     {
 
-        identSubTreeModel = new IdentitySubTreeModel ( this );
-        identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
+        //identSubTreeModel = new IdentitySubTreeModel ( this );
+        //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
+        //
+        identModel = new SubTreeModel ( node.getIndex(),
+                                        new SubTreeEntityDBTest() );
+        identTreeViewer.setContentProvider ( identModel );
+        //identTreeViewer.setLabelProvider();
+        identTreeViewer.setSorter ( new SubTreeSorter() );
+        int operations = DND.DROP_COPY | DND.DROP_MOVE;
+        Transfer[] transferTypes = new Transfer[] {TextTransfer.getInstance() };
+
+        identTreeViewer.addDragSupport ( operations, transferTypes ,
+                                         new SubTreeDragListener ( identTreeViewer ) );
+        identTreeViewer.addDropSupport ( operations, transferTypes,
+                                         new SubTreeDropListener ( identTreeViewer, identModel ) );
 
         TreeViewerColumn tvc1 = new TreeViewerColumn ( identTreeViewer, SWT.NONE );
         tvc1.getColumn().setText ( "Name" ); //$NON-NLS-1$
         tvc1.getColumn().setWidth ( 200 );
         tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
-                                    new IdentitySubTreeLabelProvider() ) );
+                                    new SubTreeLabelProvider() ) );
+        //tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
+        //                            new IdentitySubTreeLabelProvider() ) );
 
         try
         {
@@ -2163,27 +2189,32 @@ public class SWTApp
 
     private void addData ( CObj co )
     {
-        IdentitySubTreeProvider prov = ( IdentitySubTreeProvider ) identTreeViewer.getContentProvider();
-        Map<TreeIdentity, Boolean> tm = new HashMap<TreeIdentity, Boolean>();
-        Object oa[] = prov.getElements ( identSubTreeModel );
+        SubTreeModel prov = ( SubTreeModel ) identTreeViewer.getContentProvider();
+        prov.update ( co );
+        identTreeViewer.setInput ( "Here is some data" );
 
-        for ( int c = 0; c < oa.length; c++ )
-        {
+        /**
+            IdentitySubTreeProvider prov = ( IdentitySubTreeProvider ) identTreeViewer.getContentProvider();
+            Map<TreeIdentity, Boolean> tm = new HashMap<TreeIdentity, Boolean>();
+            Object oa[] = prov.getElements ( identSubTreeModel );
+
+            for ( int c = 0; c < oa.length; c++ )
+            {
             TreeIdentity ti = ( TreeIdentity ) oa[c];
             boolean exp = identTreeViewer.getExpandedState ( ti );
             tm.put ( ti, exp );
-        }
+            }
 
-        if ( co != null )
-        {
+            if ( co != null )
+            {
             identSubTreeModel.update ( co );
-        }
+            }
 
-        identTreeViewer.setInput ( identSubTreeModel );
-        oa = prov.getElements ( identSubTreeModel );
+            identTreeViewer.setInput ( identSubTreeModel );
+            oa = prov.getElements ( identSubTreeModel );
 
-        for ( int c = 0; c < oa.length; c++ )
-        {
+            for ( int c = 0; c < oa.length; c++ )
+            {
             TreeIdentity ti = ( TreeIdentity ) oa[c];
             Boolean exp = tm.get ( ti );
 
@@ -2192,7 +2223,9 @@ public class SWTApp
                 identTreeViewer.setExpandedState ( ti, true );
             }
 
-        }
+            }
+
+        */
 
         splash.reallyClose();
 
@@ -3070,19 +3103,22 @@ public class SWTApp
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof TreeSubscription )
+                    if ( selo instanceof SubTreeEntity )
                     {
-                        TreeSubscription ts = ( TreeSubscription ) selo;
-                        String idstr = ts.parent.identity.getId();
-                        id = identSubTreeModel.getIdentities().get ( idstr );
-                        com = ts.community;
+                        SubTreeEntity sm = ( SubTreeEntity ) selo;
+                        CObj co = identModel.getCObj ( sm.getId() );
 
-                    }
+                        if ( CObj.IDENTITY.equals ( co.getType() ) )
+                        {
+                            id = co;
+                        }
 
-                    if ( selo instanceof TreeIdentity )
-                    {
-                        TreeIdentity ti = ( TreeIdentity ) selo;
-                        id = ti.identity;
+                        if ( CObj.COMMUNITY.equals ( co.getType() ) )
+                        {
+                            com = co;
+                            id = identModel.getCObj ( sm.getIdentity() );
+                        }
+
                     }
 
                 }
@@ -3093,7 +3129,7 @@ public class SWTApp
 
                     if ( com != null )
                     {
-                        setSelected ( id, com, sel );
+                        setSelected ( id, com );
                     }
 
                 }
@@ -3143,17 +3179,29 @@ public class SWTApp
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof TreeSubscription )
+                    if ( selo instanceof SubTreeEntity )
                     {
-                        TreeSubscription ts = ( TreeSubscription ) selo;
-                        String identid = ts.parent.identity.getId();
-                        String comid = ts.community.getDig();
-                        CObj unsub = new CObj();
-                        unsub.setType ( CObj.SUBSCRIPTION );
-                        unsub.pushString ( CObj.COMMUNITYID, comid );
-                        unsub.pushString ( CObj.CREATOR, identid );
-                        unsub.pushString ( CObj.SUBSCRIBED, "flase" );
-                        getNode().enqueue ( unsub );
+                        SubTreeEntity ts = ( SubTreeEntity ) selo;
+
+                        if ( SubTreeEntity.PRVCOMMUNITY_TYPE == ts.getType() ||
+                                SubTreeEntity.PUBCOMMUNITY_TYPE == ts.getType() )
+                        {
+                            String identid = ts.getIdentity();
+                            CObj com = identModel.getCObj ( ts.getRefId() );
+
+                            if ( com != null )
+                            {
+                                String comid = com.getDig();
+                                CObj unsub = new CObj();
+                                unsub.setType ( CObj.SUBSCRIPTION );
+                                unsub.pushString ( CObj.COMMUNITYID, comid );
+                                unsub.pushString ( CObj.CREATOR, identid );
+                                unsub.pushString ( CObj.SUBSCRIBED, "flase" );
+                                getNode().enqueue ( unsub );
+                            }
+
+                        }
+
                     }
 
                 }
@@ -3204,16 +3252,10 @@ public class SWTApp
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof TreeIdentity )
+                    if ( selo instanceof SubTreeEntity )
                     {
-                        TreeIdentity ti = ( TreeIdentity ) selo;
-                        selid = ti.identity.getId();
-                    }
-
-                    if ( selo instanceof TreeSubscription )
-                    {
-                        TreeSubscription ts = ( TreeSubscription ) selo;
-                        selid = ts.parent.identity.getId();
+                        SubTreeEntity ti = ( SubTreeEntity ) selo;
+                        selid = ti.getIdentity();
                     }
 
                 }
@@ -3303,16 +3345,10 @@ public class SWTApp
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof TreeIdentity )
+                    if ( selo instanceof SubTreeEntity )
                     {
-                        TreeIdentity ti = ( TreeIdentity ) selo;
-                        selid = ti.identity;
-                    }
-
-                    if ( selo instanceof TreeSubscription )
-                    {
-                        TreeSubscription ts = ( TreeSubscription ) selo;
-                        selid = ts.parent.identity;
+                        SubTreeEntity ti = ( SubTreeEntity ) selo;
+                        selid = identModel.getCObj ( ti.getIdentity() );
                     }
 
                 }
@@ -3355,17 +3391,12 @@ public class SWTApp
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof TreeIdentity )
+                    if ( selo instanceof SubTreeEntity )
                     {
-                        TreeIdentity ti = ( TreeIdentity ) selo;
-                        selid = ti.identity;
+                        SubTreeEntity ti = ( SubTreeEntity ) selo;
+                        selid = identModel.getCObj ( ti.getIdentity() );
                     }
 
-                    if ( selo instanceof TreeSubscription )
-                    {
-                        TreeSubscription ts = ( TreeSubscription ) selo;
-                        selid = ts.parent.identity;
-                    }
 
                 }
 
