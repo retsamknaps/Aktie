@@ -1465,6 +1465,7 @@ public class SWTApp
     private NewDirectoryShareDialog shareDialog;
     private DownloadToShareDialog downloadToShareDialog;
     private I2PSettingsDialog i2pDialog;
+    private AddFolderDialog addFolderDialog;
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
@@ -1802,6 +1803,17 @@ public class SWTApp
         }, "Node start thread" );
 
         t.start();
+    }
+
+    public SubTreeModel getIdentModel()
+    {
+        return identModel;
+    }
+
+    public void addFolder ( SubTreeEntity e, String name )
+    {
+        identModel.addFolder ( e, name );
+        identTreeViewer.setInput ( "folder added" );
     }
 
     private void startedSuccessfully()
@@ -2696,6 +2708,8 @@ public class SWTApp
         shareDialog.create();
         downloadToShareDialog = new DownloadToShareDialog ( shell, this );
         downloadToShareDialog.create();
+        addFolderDialog = new AddFolderDialog ( shell, this );
+        addFolderDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -3108,15 +3122,20 @@ public class SWTApp
                         SubTreeEntity sm = ( SubTreeEntity ) selo;
                         CObj co = identModel.getCObj ( sm.getId() );
 
-                        if ( CObj.IDENTITY.equals ( co.getType() ) )
+                        if ( co != null )
                         {
-                            id = co;
-                        }
 
-                        if ( CObj.COMMUNITY.equals ( co.getType() ) )
-                        {
-                            com = co;
-                            id = identModel.getCObj ( sm.getIdentity() );
+                            if ( CObj.IDENTITY.equals ( co.getType() ) )
+                            {
+                                id = co;
+                            }
+
+                            if ( CObj.COMMUNITY.equals ( co.getType() ) )
+                            {
+                                com = co;
+                                id = identModel.getCObj ( sm.getIdentity() );
+                            }
+
                         }
 
                     }
@@ -3202,6 +3221,39 @@ public class SWTApp
 
                         }
 
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem mntmNewflder = new MenuItem ( menu_2, SWT.NONE );
+        mntmNewflder.setText ( "New Folder" );
+        mntmNewflder.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) identTreeViewer.getSelection();
+                String selid = null;
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                if ( i.hasNext() && selid == null )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof SubTreeEntity )
+                    {
+                        SubTreeEntity et = ( SubTreeEntity ) selo;
+                        addFolderDialog.open ( et );
                     }
 
                 }

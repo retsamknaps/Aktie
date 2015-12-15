@@ -120,6 +120,29 @@ public class SubTreeModel implements ITreeContentProvider
         return null;
     }
 
+    public synchronized void addFolder ( SubTreeEntity parent, String name )
+    {
+        System.out.println ( "Add folder... " + name + " parent " + parent.getText() );
+        SubTreeEntity ne = new SubTreeEntity();
+        ne.setType ( SubTreeEntity.FOLDER_TYPE );
+        ne.setText ( name );
+
+        if ( SubTreeEntity.FOLDER_TYPE == parent.getType() ||
+                SubTreeEntity.IDENTITY_TYPE == parent.getType() )
+        {
+            ne.setParent ( parent.getId() );
+        }
+
+        else
+        {
+            ne.setParent ( parent.getParent() );
+        }
+
+        ne.setIdentity ( parent.getIdentity() );
+        db.saveEntity ( ne );
+        addSubTreeElement ( ne );
+    }
+
     public synchronized void update ( CObj c )
     {
         System.out.println ( "UPDATE!!!!!!!! " );
