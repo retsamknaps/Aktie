@@ -11,7 +11,7 @@ public class SubTreeEntity implements Comparable<Object>
     public static int IDENTITY_TYPE = 0;
     public static int FOLDER_TYPE = 1;
     public static int PUBCOMMUNITY_TYPE = 2;
-    public static int PRVCOMMUNITY_TYPE = 2;
+    public static int PRVCOMMUNITY_TYPE = 3;
 
     @Id
     @GeneratedValue

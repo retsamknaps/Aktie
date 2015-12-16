@@ -8,6 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -118,6 +119,49 @@ public class SubTreeModel implements ITreeContentProvider
         }
 
         return null;
+    }
+
+    public synchronized void removeFolder ( SubTreeEntity e )
+    {
+        if ( e != null && e.getType() == SubTreeEntity.FOLDER_TYPE )
+        {
+            removeFromChildren ( e );
+            entities.remove ( e.getId() );
+            parents.remove ( e.getId() );
+            fullObj.remove ( e.getId() );
+            idMap.remove ( e.getRefId() );
+            sorted.remove ( e );
+
+            List<SubTreeEntity> chlst = children.get ( e.getParent() );
+
+            if ( chlst != null )
+            {
+                for ( SubTreeEntity s : sorted )
+                {
+                    if ( s.getParent() == e.getId() )
+                    {
+                        s.setParent ( e.getParent() );
+                        chlst.add ( s );
+                    }
+
+                }
+
+                Collections.sort ( chlst );
+            }
+
+            for ( Entry<Long, Long> t : parents.entrySet() )
+            {
+                if ( t.getValue() == e.getId() )
+                {
+                    t.setValue ( e.getParent() );
+                }
+
+            }
+
+            saveEntities();
+            db.deleteElement ( e );
+        }
+
     }
 
     public synchronized void addFolder ( SubTreeEntity parent, String name )

@@ -5,6 +5,8 @@ import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.swt.graphics.Image;
 
+import aktie.gui.SWTApp;
+
 public class SubTreeLabelProvider implements IStyledLabelProvider
 {
 
@@ -37,6 +39,36 @@ public class SubTreeLabelProvider implements IStyledLabelProvider
     {
         if ( c != null && c instanceof SubTreeEntity )
         {
+            SubTreeEntity s = ( SubTreeEntity ) c;
+
+            if ( SubTreeEntity.IDENTITY_TYPE == s.getType() )
+            {
+                if ( s.isConnected() )
+                {
+                    return SWTApp.imgReg.get ( "online" );
+                }
+
+                else
+                {
+                    return SWTApp.imgReg.get ( "offline" );
+                }
+
+            }
+
+            if ( SubTreeEntity.FOLDER_TYPE == s.getType() )
+            {
+                return SWTApp.imgReg.get ( "folder" );
+            }
+
+            if ( SubTreeEntity.PRVCOMMUNITY_TYPE == s.getType() )
+            {
+                return SWTApp.imgReg.get ( "privsub" );
+            }
+
+            if ( SubTreeEntity.PUBCOMMUNITY_TYPE == s.getType() )
+            {
+                return SWTApp.imgReg.get ( "pubsub" );
+            }
 
         }
 

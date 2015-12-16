@@ -2979,6 +2979,21 @@ public class SWTApp
             pi.close();
             imgReg.put ( "privsub", pimg );
 
+            pi  = loader.getResourceAsStream ( "images/icons/folder.png" );
+            pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "folder", pimg );
+
+            pi  = loader.getResourceAsStream ( "images/icons/bullet-red.png" );
+            pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "offline", pimg );
+
+            pi  = loader.getResourceAsStream ( "images/icons/bullet-green.png" );
+            pimg = new Image ( Display.getDefault(), pi );
+            pi.close();
+            imgReg.put ( "online", pimg );
+
         }
 
         catch ( Exception e )
@@ -3254,6 +3269,40 @@ public class SWTApp
                     {
                         SubTreeEntity et = ( SubTreeEntity ) selo;
                         addFolderDialog.open ( et );
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem mntmRmFolder = new MenuItem ( menu_2, SWT.NONE );
+        mntmRmFolder.setText ( "Remove Folder" );
+        mntmRmFolder.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) identTreeViewer.getSelection();
+                String selid = null;
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                if ( i.hasNext() && selid == null )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof SubTreeEntity )
+                    {
+                        SubTreeEntity et = ( SubTreeEntity ) selo;
+                        identModel.removeFolder ( et );
+                        identTreeViewer.setInput ( "Folder removed" );
                     }
 
                 }
