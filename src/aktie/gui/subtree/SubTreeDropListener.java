@@ -1,5 +1,6 @@
 package aktie.gui.subtree;
 
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.dnd.TransferData;
@@ -26,6 +27,14 @@ public class SubTreeDropListener extends ViewerDropAdapter
         {
             model.dropped ( d, tar, getCurrentLocation() );
             getViewer().setInput ( "Here's some dropped data man" );
+            Viewer vr = getViewer();
+
+            if ( vr instanceof TreeViewer )
+            {
+                TreeViewer tv = ( TreeViewer ) vr;
+                model.setCollaspseState ( tv );
+            }
+
             return true;
         }
 

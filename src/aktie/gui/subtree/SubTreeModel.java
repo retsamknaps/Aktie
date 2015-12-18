@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 
@@ -459,6 +460,20 @@ public class SubTreeModel implements ITreeContentProvider
         return rl.toArray();
     }
 
+    public synchronized void setCollaspseState ( TreeViewer v )
+    {
+        for ( SubTreeEntity e : sorted )
+        {
+            v.setExpandedState ( e, !e.isCollapsed() );
+        }
+
+    }
+
+    public synchronized void setCollapsed ( SubTreeEntity e, boolean collapse )
+    {
+        e.setCollapsed ( collapse );
+        addSubTreeElement ( e );
+    }
 
     @Override
 

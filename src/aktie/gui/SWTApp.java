@@ -32,6 +32,7 @@ import aktie.gui.subtree.SubTreeDropListener;
 import aktie.gui.subtree.SubTreeEntity;
 import aktie.gui.subtree.SubTreeEntityDBTest;
 import aktie.gui.subtree.SubTreeLabelProvider;
+import aktie.gui.subtree.SubTreeListener;
 import aktie.gui.subtree.SubTreeModel;
 import aktie.gui.subtree.SubTreeSorter;
 import aktie.i2p.I2PNet;
@@ -1814,6 +1815,7 @@ public class SWTApp
     {
         identModel.addFolder ( e, name );
         identTreeViewer.setInput ( "folder added" );
+        identModel.setCollaspseState ( identTreeViewer );
     }
 
     private void startedSuccessfully()
@@ -1825,6 +1827,8 @@ public class SWTApp
         identModel = new SubTreeModel ( node.getIndex(),
                                         new SubTreeEntityDBTest() );
         identTreeViewer.setContentProvider ( identModel );
+        SubTreeListener stl = new SubTreeListener ( identModel );
+        identTreeViewer.addTreeListener ( stl );
         //identTreeViewer.setLabelProvider();
         identTreeViewer.setSorter ( new SubTreeSorter() );
         int operations = DND.DROP_COPY | DND.DROP_MOVE;
@@ -2204,6 +2208,8 @@ public class SWTApp
         SubTreeModel prov = ( SubTreeModel ) identTreeViewer.getContentProvider();
         prov.update ( co );
         identTreeViewer.setInput ( "Here is some data" );
+        identModel.setCollaspseState ( identTreeViewer );
+
 
         /**
             IdentitySubTreeProvider prov = ( IdentitySubTreeProvider ) identTreeViewer.getContentProvider();
@@ -3303,6 +3309,7 @@ public class SWTApp
                         SubTreeEntity et = ( SubTreeEntity ) selo;
                         identModel.removeFolder ( et );
                         identTreeViewer.setInput ( "Folder removed" );
+                        identModel.setCollaspseState ( identTreeViewer );
                     }
 
                 }
