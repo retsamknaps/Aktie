@@ -30,7 +30,7 @@ import aktie.data.RequestFile;
 import aktie.gui.subtree.SubTreeDragListener;
 import aktie.gui.subtree.SubTreeDropListener;
 import aktie.gui.subtree.SubTreeEntity;
-import aktie.gui.subtree.SubTreeEntityDBTest;
+import aktie.gui.subtree.SubTreeEntityDB;
 import aktie.gui.subtree.SubTreeLabelProvider;
 import aktie.gui.subtree.SubTreeListener;
 import aktie.gui.subtree.SubTreeModel;
@@ -1618,6 +1618,7 @@ public class SWTApp
                                     "  Community: " + selectedCommunity.getPrivateDisplayName() );
 
         //TODO: Do this again identSubTreeModel.clearNew ( comid );
+        identModel.clearBlue ( comid );
         identTreeViewer.refresh ( true );
 
         setShares ( comid.getDig(), id.getId() );
@@ -1825,7 +1826,8 @@ public class SWTApp
         //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
         //
         identModel = new SubTreeModel ( node.getIndex(),
-                                        new SubTreeEntityDBTest() );
+                                        new SubTreeEntityDB ( node.getSession() ) );
+        identModel.init();
         identTreeViewer.setContentProvider ( identModel );
         SubTreeListener stl = new SubTreeListener ( identModel );
         identTreeViewer.addTreeListener ( stl );
@@ -1843,7 +1845,7 @@ public class SWTApp
         tvc1.getColumn().setText ( "Name" ); //$NON-NLS-1$
         tvc1.getColumn().setWidth ( 200 );
         tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
-                                    new SubTreeLabelProvider() ) );
+                                    new SubTreeLabelProvider ( identModel ) ) );
         //tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
         //                            new IdentitySubTreeLabelProvider() ) );
 

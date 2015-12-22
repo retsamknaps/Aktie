@@ -31,6 +31,8 @@ public class SubTreeListener implements ITreeViewerListener
     {
         Object o = ev.getElement();
 
+        System.out.println ( "SET TREE EXPANDED: " + o );
+
         if ( o instanceof SubTreeEntity )
         {
             SubTreeEntity et = ( SubTreeEntity ) o;

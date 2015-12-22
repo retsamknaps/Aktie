@@ -8,6 +8,11 @@ public class SubTreeEntityDBTest implements SubTreeEntityDBInterface
 
     private long curId = 0;
 
+    public SubTreeEntityDBTest()
+    {
+
+    }
+
     @Override
 
     public synchronized void saveEntity ( SubTreeEntity e )

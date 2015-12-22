@@ -93,8 +93,9 @@ public class SubTreeModel implements ITreeContentProvider
         db.saveAll ( sorted );
     }
 
-    private void displayAll()
-    {
+    /*
+        private void displayAll()
+        {
         System.out.println ( "=================================================" );
 
         for ( SubTreeEntity e : sorted )
@@ -103,7 +104,7 @@ public class SubTreeModel implements ITreeContentProvider
         }
 
         System.out.println ( "=================================================" );
-    }
+        }*/
 
     public synchronized CObj getCObj ( long id )
     {
@@ -167,7 +168,6 @@ public class SubTreeModel implements ITreeContentProvider
 
     public synchronized void addFolder ( SubTreeEntity parent, String name )
     {
-        System.out.println ( "Add folder... " + name + " parent " + parent.getText() );
         SubTreeEntity ne = new SubTreeEntity();
         ne.setType ( SubTreeEntity.FOLDER_TYPE );
         ne.setText ( name );
@@ -188,9 +188,57 @@ public class SubTreeModel implements ITreeContentProvider
         addSubTreeElement ( ne );
     }
 
+    private synchronized void setBlue ( SubTreeEntity e, boolean t )
+    {
+        if ( e != null )
+        {
+            e.setBlue ( t );
+            db.saveEntity ( e );
+            SubTreeEntity p = entities.get ( e.getParent() );
+            setBlue ( p, t );
+        }
+
+    }
+
+    public synchronized void clearBlue ( CObj com )
+    {
+        if ( com != null )
+        {
+            for ( Entry<Long, CObj> et : fullObj.entrySet() )
+            {
+                CObj ob = et.getValue();
+
+                if ( ob.getDig().equals ( com.getDig() ) )
+                {
+                    SubTreeEntity ste = entities.get ( et.getKey() );
+                    setBlue ( ste, false );
+                }
+
+            }
+
+        }
+
+    }
+
     public synchronized void update ( CObj c )
     {
-        System.out.println ( "UPDATE!!!!!!!! " );
+        if ( CObj.POST.equals ( c.getType() ) )
+        {
+            String comid = c.getString ( CObj.COMMUNITYID );
+
+            for ( Entry<Long, CObj> et : fullObj.entrySet() )
+            {
+                CObj ob = et.getValue();
+
+                if ( ob.getDig().equals ( comid ) )
+                {
+                    SubTreeEntity ste = entities.get ( et.getKey() );
+                    setBlue ( ste, true );
+                }
+
+            }
+
+        }
 
         if ( CObj.IDENTITY.equals ( c.getType() ) )
         {
@@ -256,12 +304,12 @@ public class SubTreeModel implements ITreeContentProvider
                             se.setType ( SubTreeEntity.PUBCOMMUNITY_TYPE );
                         }
 
-                        System.out.println ( "ident: " + cid + " has id: " + prt.getId() + " obj: " + prt + " txt: " + prt.getText() );
                         se.setParent ( prt.getId() );
                         db.saveEntity ( se );
-                        fullObj.put ( se.getId(), com );
-                        addSubTreeElement ( se );
                     }
+
+                    fullObj.put ( se.getId(), com );
+                    addSubTreeElement ( se );
 
                 }
 
@@ -285,7 +333,7 @@ public class SubTreeModel implements ITreeContentProvider
 
         }
 
-        displayAll();
+        //displayAll();
     }
 
     private synchronized void putToLocation ( int idx, SubTreeEntity ent )
@@ -398,7 +446,7 @@ public class SubTreeModel implements ITreeContentProvider
             }
 
             putToLocation ( tolocation, dropent );
-            displayAll();
+            //displayAll();
         }
 
         saveEntities();
@@ -427,7 +475,6 @@ public class SubTreeModel implements ITreeContentProvider
             if ( cd != null )
             {
                 Object r[] = cd.toArray();
-                System.out.println ( "Children of: " + s.getText() + " size: " + r.length );
                 return r;
             }
 
@@ -442,7 +489,6 @@ public class SubTreeModel implements ITreeContentProvider
 
     public synchronized Object[] getElements ( Object o )
     {
-        System.out.println ( "!!!!!!!!!!!! getElements() " + o );
         List<SubTreeEntity> rl = new ArrayList<SubTreeEntity>();
         Iterator<SubTreeEntity> i = sorted.iterator();
 
@@ -473,6 +519,7 @@ public class SubTreeModel implements ITreeContentProvider
     {
         e.setCollapsed ( collapse );
         addSubTreeElement ( e );
+        db.saveEntity ( e );
     }
 
     @Override
@@ -504,7 +551,6 @@ public class SubTreeModel implements ITreeContentProvider
             SubTreeEntity s = ( SubTreeEntity ) o;
             List<SubTreeEntity> cd = children.get ( s.getId() );
             boolean haschil = cd != null && !cd.isEmpty();
-            System.out.println ( "Has children: " + s.getText() + " ? " + haschil );
             return haschil;
         }
 
