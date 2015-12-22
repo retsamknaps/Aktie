@@ -2212,41 +2212,6 @@ public class SWTApp
         identTreeViewer.setInput ( "Here is some data" );
         identModel.setCollaspseState ( identTreeViewer );
 
-
-        /**
-            IdentitySubTreeProvider prov = ( IdentitySubTreeProvider ) identTreeViewer.getContentProvider();
-            Map<TreeIdentity, Boolean> tm = new HashMap<TreeIdentity, Boolean>();
-            Object oa[] = prov.getElements ( identSubTreeModel );
-
-            for ( int c = 0; c < oa.length; c++ )
-            {
-            TreeIdentity ti = ( TreeIdentity ) oa[c];
-            boolean exp = identTreeViewer.getExpandedState ( ti );
-            tm.put ( ti, exp );
-            }
-
-            if ( co != null )
-            {
-            identSubTreeModel.update ( co );
-            }
-
-            identTreeViewer.setInput ( identSubTreeModel );
-            oa = prov.getElements ( identSubTreeModel );
-
-            for ( int c = 0; c < oa.length; c++ )
-            {
-            TreeIdentity ti = ( TreeIdentity ) oa[c];
-            Boolean exp = tm.get ( ti );
-
-            if ( exp != null && exp )
-            {
-                identTreeViewer.setExpandedState ( ti, true );
-            }
-
-            }
-
-        */
-
         splash.reallyClose();
 
     }
