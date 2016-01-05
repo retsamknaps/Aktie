@@ -35,6 +35,7 @@ public class UserTest implements GuiCallback, GetSendData, ConnectionListener, D
     @Test
     public void dotest()
     {
+        Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
         File tmpdir = new File ( "h2dbtest" );
         FUtils.deleteDir ( tmpdir );
         assertTrue ( tmpdir.mkdirs() );

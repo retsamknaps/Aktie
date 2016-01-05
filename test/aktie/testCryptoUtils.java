@@ -133,6 +133,7 @@ public class testCryptoUtils
         //o.pushText("t0", "text0");
         //o.pushText("t1", "test1");
         Document d = o.getDocument();
+
         CObj o2 = new CObj();
         o2.loadDocument ( d );
         assertTrue ( o.whoopyEquals ( o2 ) );

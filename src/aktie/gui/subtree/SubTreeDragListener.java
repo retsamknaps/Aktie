@@ -19,13 +19,11 @@ public class SubTreeDragListener implements DragSourceListener
     @Override
     public void dragStart ( DragSourceEvent event )
     {
-        System.out.println ( "Such a drag man" );
     }
 
     @Override
     public void dragSetData ( DragSourceEvent event )
     {
-        System.out.println ( "Take a drag of this man" );
         IStructuredSelection selection = viewer.getStructuredSelection();
         SubTreeEntity firstElement = ( SubTreeEntity ) selection.getFirstElement();
 
@@ -39,7 +37,6 @@ public class SubTreeDragListener implements DragSourceListener
     @Override
     public void dragFinished ( DragSourceEvent event )
     {
-        System.out.println ( "Mmm.. that was a good drag man" );
     }
 
 }

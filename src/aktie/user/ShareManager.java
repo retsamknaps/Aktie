@@ -1,19 +1,24 @@
 package aktie.user;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bouncycastle.crypto.digests.RIPEMD256Digest;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.ProcessQueue;
+import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.HH2Session;
+import aktie.data.RequestFile;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.FUtils;
@@ -21,6 +26,8 @@ import aktie.utils.HasFileCreator;
 
 public class ShareManager implements Runnable
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private Index index;
     private HasFileCreator hfc;
@@ -315,6 +322,115 @@ public class ShareManager implements Runnable
                 catch ( Exception e2 )
                 {
                 }
+
+            }
+
+        }
+
+    }
+
+    /*
+        If a file has been requested and not done, but yet
+        all fragments say they are done.
+    */
+    private void checkFragments()
+    {
+        List<RequestFile> rl = rfh.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+
+        for ( RequestFile rf : rl )
+        {
+            File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
+
+            if ( rlp.exists() )
+            {
+                //Find the fragments that haven't been requested yet.
+                CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
+                              rf.getWholeDigest(), rf.getFragmentDigest() );
+
+                if ( cl.size() == 0 )
+                {
+                    //If there are no fragments that have not be requested yet,
+                    //then let's reset the ones that in the req status, and not
+                    //complete, in case we just failed to get it back after
+                    //requesting.
+                    cl.close();
+                    cl = index.getFragmentsToReset ( rf.getCommunityId(),
+                                                     rf.getWholeDigest(), rf.getFragmentDigest() );
+
+                    if ( cl.size() == 0 )
+                    {
+                        //Welp, that sucks.  Let's make sure they're really done.
+                        cl.close();
+                        cl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
+                        log.warning ( "FOUND FILE TO CHECK FRAGMENTS: " + rf.getLocalFile() + " checking: " + cl.size() + " vs " + rf.getFragsTotal() );
+
+                        if ( rf.getFragsTotal() != cl.size() )
+                        {
+                            log.warning ( "REREQUESTING FRAGMENT LIST" );
+                            rfh.setReRequestList ( rf );
+
+                        }
+
+                        else
+                        {
+                            for ( int c = 0; c < cl.size(); c++ )
+                            {
+                                try
+                                {
+                                    CObj fg = cl.get ( c );
+                                    log.warning ( "CHECKING FRAGMENT: " + c );
+                                    String fdig = fg.getString ( CObj.FRAGDIG );
+                                    Long fidx = fg.getNumber ( CObj.FRAGOFFSET );
+                                    Long flen = fg.getNumber ( CObj.FRAGSIZE );
+                                    FileInputStream fis = new FileInputStream ( rlp );
+                                    fis.skip ( fidx );
+                                    byte buf[] = new byte[4096];
+                                    RIPEMD256Digest pdig = new RIPEMD256Digest();
+                                    long lflen = flen;
+                                    int iflen = ( int ) lflen;
+                                    int nr = 0;
+
+                                    while ( iflen > 0 && nr >= 0 )
+                                    {
+                                        int len = Math.min ( iflen, buf.length );
+                                        nr = fis.read ( buf, 0, len );
+
+                                        if ( nr > 0 )
+                                        {
+                                            pdig.update ( buf, 0, nr );
+                                            iflen -= nr;
+                                        }
+
+                                    }
+
+                                    fis.close();
+                                    byte digb[] = new byte[pdig.getDigestSize()];
+                                    pdig.doFinal ( digb, 0 );
+                                    String cdig =  Utils.toString ( digb );
+
+                                    if ( !cdig.equals ( fdig ) )
+                                    {
+                                        log.warning ( "FRAGMENT INCORRECT: " + cdig + " != " + fdig );
+                                        fg.pushPrivate ( CObj.COMPLETE, "false" );
+                                        index.index ( fg );
+                                    }
+
+                                }
+
+                                catch ( IOException e )
+                                {
+                                    e.printStackTrace();
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                cl.close();
 
             }
 
@@ -751,6 +867,7 @@ public class ShareManager implements Runnable
             if ( curtime >= nextcheckhasfile )
             {
                 checkAllHasFile();
+                checkFragments();
                 nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
             }
 

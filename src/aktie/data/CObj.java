@@ -2,6 +2,7 @@ package aktie.data;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.DoubleField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.IndexableFieldType;
 import org.apache.lucene.util.BytesRef;
 import org.apache.lucene.util.NumericUtils;
 import org.bouncycastle.crypto.InvalidCipherTextException;
@@ -34,7 +36,6 @@ public class CObj
     //Types - indexed
     public static String IDENTITY = "identity";
     public static String COMMUNITY = "community";
-    public static String TEMPLATE = "template";
     public static String MEMBERSHIP = "membership";
     public static String SUBSCRIPTION = "subscription";
     public static String POST = "post";
@@ -42,7 +43,8 @@ public class CObj
     public static String HASFILE = "hasfile";
     public static String FRAGMENT = "fragment";
     public static String FILEF = "filef";
-    // public static String
+    public static String QUERY = "query";
+    public static String FIELD = "field";
 
     //Temporary types - requests to other nodes.
     public static String CON_CHALLENGE = "con_challenge";
@@ -69,7 +71,9 @@ public class CObj
     public static String USR_SEED = "usr_seed";
     public static String USR_COMMUNITY = "usr_com";
     public static String USR_START_DEST = "start_dest";
+    public static String USR_SET_RANK = "set_rank";
 
+    //Private fields
     public static String PRV_LOCALFILE   = "prv_localfile";
     public static String PRV_NAME        = "prv_name";
     public static String PRV_FILESIZE    = "prv_filesize";
@@ -131,6 +135,209 @@ public class CObj
     public static String UPGRADEFLAG = "upgrade";
     public static String SHARE_NAME = "sharename";
     public static String STATUS = "fstatus";
+
+    //Field prefixes
+    //Fields are added to posts.  They are specific to communities.
+    //Any user can define fields for a community.
+    //A special post defining a field or fields is created.
+    //The field definition post contains these fields:
+    //
+    //  fld_id_<subid>      :  full string id of the field
+    //  fld_type_<subid>    :  the field type
+    //  fld_name_<subid>    :  short name of the field shown in tables
+    //  fld_desc_<subid>    :  longer description of the field
+    //  fld_val_<subid>_<x> :  allowable value x for type opt
+    //  fld_def_<subid>     :  default value for field
+    //  fld_max_<subid>     :  maximum value for number or decimal types
+    //  fld_min_<subid>     :  minimum value for number or decimal types
+    //
+    // type is either: string, text, number, decimal, bool, opt
+    //   string type is not parsed.  String must match exactly in query
+    //   text type is parsed, and wild card queries can be used
+    //   number is an integer
+    //   decimal is a floating point number
+    //   bool is either true or false string value
+    //   opt can only have one value of specified _val_ strings
+    //
+    // When a field definition is encountered in a post, a field CObj is
+    // created.  It is associated with the community and the creating user.
+    // so fields can be searched by creator or by creator rank.
+    //
+    // In posts a field is added by doing;
+    //    fld_id_<subid> : <full field id>
+    //    fld_<subid> : <value>
+    //
+    // So information about the field can only be shown if the post defining the field
+    // has been received.
+    //
+    //
+
+    public static int SUBID_LEN = 12;
+    public static String FLD = "fld_";
+    public static String FLD_ID = FLD + "id_";
+    public static String FLD_TYPE = FLD + "type_";
+    public static String FLD_NAME = FLD + "name_";
+    public static String FLD_DESC = FLD + "desc_";
+    public static String FLD_VAL = FLD + "val_";
+    public static String FLD_DEF = FLD + "def_";
+    public static String FLD_MAX = FLD + "max_";
+    public static String FLD_MIN = FLD + "min_";
+
+    //string, text, number, decimal, bool, opt
+    public static String FLD_TYPE_STRING = "string";
+    public static String FLD_TYPE_TEXT = "text";
+    public static String FLD_TYPE_NUMBER = "number";
+    public static String FLD_TYPE_DECIMAL = "decimal";
+    public static String FLD_TYPE_BOOL = "bool";
+    public static String FLD_TYPE_OPT = "opt";
+
+    public static String getSubid ( String id )
+    {
+        if ( id != null )
+        {
+            return id.substring ( 0, Math.min ( SUBID_LEN, id.length() ) );
+        }
+
+        return "";
+    }
+
+    public Long getFieldNumberMax ( String id )
+    {
+        String kv = FLD_MAX + getSubid ( id );
+        return getNumber ( kv );
+    }
+
+    public Long getFieldNumberMin ( String id )
+    {
+        String kv = FLD_MIN + getSubid ( id );
+        return getNumber ( kv );
+    }
+
+    public Double getFieldDecimalMax ( String id )
+    {
+        String kv = FLD_MAX + getSubid ( id );
+        return getDecimal ( kv );
+    }
+
+    public Double getFieldDecimalMin ( String id )
+    {
+        String kv = FLD_MIN + getSubid ( id );
+        return getDecimal ( kv );
+    }
+
+    public Set<String> getFieldOptVals ( String id )
+    {
+        Set<String> r = new HashSet<String>();
+
+        if ( strings != null )
+        {
+            String kv = FLD_VAL + getSubid ( id );
+
+            for ( Entry<String, String> e : strings.entrySet() )
+            {
+                String k = e.getKey();
+                String v = e.getValue();
+
+                if ( k.startsWith ( kv ) )
+                {
+                    r.add ( v );
+                }
+
+            }
+
+        }
+
+        return r;
+    }
+
+    public String getFieldDesc ( String id )
+    {
+        String kv = FLD_DESC + getSubid ( id );
+        return getString ( kv );
+    }
+
+    public String getFieldName ( String id )
+    {
+        String kv = FLD_NAME + getSubid ( id );
+        return getString ( kv );
+    }
+
+    public String getFieldType ( String id )
+    {
+        String kv = FLD_TYPE + getSubid ( id );
+        return getString ( kv );
+    }
+
+    public Long getFieldNumberDef ( String id )
+    {
+        String kv = FLD_DEF + getSubid ( id );
+        return getNumber ( kv );
+    }
+
+    public Double getFieldDecimalDef ( String id )
+    {
+        String kv = FLD_DEF + getSubid ( id );
+        return getDecimal ( kv );
+    }
+
+    public String getFieldStringDef ( String id )
+    {
+        String kv = FLD_DEF + getSubid ( id );
+        return getString ( kv );
+    }
+
+    public String getFieldTextDef ( String id )
+    {
+        String kv = FLD_DEF + getSubid ( id );
+        return getText ( kv );
+    }
+
+    public Long getFieldNumber ( String id )
+    {
+        String kv = FLD + getSubid ( id );
+        return getNumber ( kv );
+    }
+
+    public Double getFieldDecimal ( String id )
+    {
+        String kv = FLD + getSubid ( id );
+        return getDecimal ( kv );
+    }
+
+    public String getFieldString ( String id )
+    {
+        String kv = FLD + getSubid ( id );
+        return getString ( kv );
+    }
+
+    public String getFieldText ( String id )
+    {
+        String kv = FLD + getSubid ( id );
+        return getText ( kv );
+    }
+
+    public Set<String> listFields()
+    {
+        Set<String> r = new HashSet<String>();
+
+        if ( strings != null )
+        {
+            for ( Entry<String, String> s : strings.entrySet() )
+            {
+                String k = s.getKey();
+                String v = s.getValue();
+
+                if ( k.startsWith ( FLD_ID ) )
+                {
+                    r.add ( v );
+                }
+
+            }
+
+        }
+
+        return r;
+    }
 
     public static String PARAM_ID = "id";
     public static String PARAM_TYPE = "type";
@@ -613,99 +820,107 @@ public class CObj
         for ( IndexableField i : l )
         {
             String k = i.name();
+            IndexableFieldType ft = i.fieldType();
 
-            if ( PARAM_ID.equals ( k ) )
+            if ( ft.stored() )
             {
-                id = i.stringValue();
-            }
 
-            if ( PARAM_TYPE.equals ( k ) )
-            {
-                type = i.stringValue();
-            }
-
-            if ( PARAM_DIG.equals ( k ) )
-            {
-                dig = i.stringValue();
-            }
-
-            if ( PARAM_SIG.equals ( k ) )
-            {
-                signature = i.stringValue();
-            }
-
-            if ( k.startsWith ( "strings_" ) )
-            {
-                if ( strings == null )
+                if ( PARAM_ID.equals ( k ) )
                 {
-                    strings = new HashMap<String, String>();
+                    id = i.stringValue();
                 }
 
-                String nk = k.substring ( "strings_".length() );
-                strings.put ( nk, i.stringValue() );
-            }
-
-            if ( k.startsWith ( "text_" ) )
-            {
-                if ( text == null )
+                if ( PARAM_TYPE.equals ( k ) )
                 {
-                    text = new HashMap<String, String>();
+                    type = i.stringValue();
                 }
 
-                String nk = k.substring ( "text_".length() );
-                text.put ( nk, i.stringValue() );
-            }
-
-            if ( k.startsWith ( "numbers_" ) )
-            {
-                if ( numbers == null )
+                if ( PARAM_DIG.equals ( k ) )
                 {
-                    numbers = new HashMap<String, Long>();
+                    dig = i.stringValue();
                 }
 
-                String nk = k.substring ( "numbers_".length() );
-                numbers.put ( nk, i.numericValue().longValue() );
-            }
-
-            if ( k.startsWith ( "decimals_" ) )
-            {
-                if ( decimals == null )
+                if ( PARAM_SIG.equals ( k ) )
                 {
-                    decimals = new HashMap<String, Double>();
+                    signature = i.stringValue();
                 }
 
-                String nk = k.substring ( "decimals_".length() );
-                decimals.put ( nk, i.numericValue().doubleValue() );
-            }
-
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            if ( k.startsWith ( "PRIVATE_" ) )
-            {
-                if ( privatedata == null )
+                if ( k.startsWith ( "strings_" ) )
                 {
-                    privatedata = new HashMap<String, String>();
+                    if ( strings == null )
+                    {
+                        strings = new HashMap<String, String>();
+                    }
+
+                    String nk = k.substring ( "strings_".length() );
+                    strings.put ( nk, i.stringValue() );
                 }
 
-                String nk = k.substring ( "PRIVATE_".length() );
-                privatedata.put ( nk, i.stringValue() );
-            }
-
-            if ( k.startsWith ( "PRIVNUM_" ) )
-            {
-                if ( privatenumbers == null )
+                if ( k.startsWith ( "text_" ) )
                 {
-                    privatenumbers = new HashMap<String, Long>();
+                    if ( text == null )
+                    {
+                        text = new HashMap<String, String>();
+                    }
+
+                    String nk = k.substring ( "text_".length() );
+                    text.put ( nk, i.stringValue() );
                 }
 
-                String nk = k.substring ( "PRIVNUM_".length() );
-                privatenumbers.put ( nk, i.numericValue().longValue() );
+                if ( k.startsWith ( "numbers_" ) )
+                {
+                    if ( numbers == null )
+                    {
+                        numbers = new HashMap<String, Long>();
+                    }
+
+                    String nk = k.substring ( "numbers_".length() );
+                    Long v = i.numericValue().longValue();
+                    numbers.put ( nk, v );
+                }
+
+                if ( k.startsWith ( "decimals_" ) )
+                {
+                    if ( decimals == null )
+                    {
+                        decimals = new HashMap<String, Double>();
+                    }
+
+                    String nk = k.substring ( "decimals_".length() );
+                    Double dv = i.numericValue().doubleValue();
+                    decimals.put ( nk, dv );
+                }
+
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                if ( k.startsWith ( "PRIVATE_" ) )
+                {
+                    if ( privatedata == null )
+                    {
+                        privatedata = new HashMap<String, String>();
+                    }
+
+                    String nk = k.substring ( "PRIVATE_".length() );
+                    privatedata.put ( nk, i.stringValue() );
+                }
+
+                if ( k.startsWith ( "PRIVNUM_" ) )
+                {
+                    if ( privatenumbers == null )
+                    {
+                        privatenumbers = new HashMap<String, Long>();
+                    }
+
+                    String nk = k.substring ( "PRIVNUM_".length() );
+                    privatenumbers.put ( nk, i.numericValue().longValue() );
+                }
+
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
+                //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             }
 
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
-            //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         }
 
     }

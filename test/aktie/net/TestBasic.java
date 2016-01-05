@@ -9,6 +9,7 @@ import java.util.List;
 import aktie.data.CObj;
 import aktie.data.RequestFile;
 import aktie.index.CObjList;
+import aktie.index.Index;
 import aktie.utils.FUtils;
 
 import org.hibernate.Session;
@@ -89,6 +90,8 @@ public class TestBasic
     @Test
     public void testIt()
     {
+        Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
+
         TestNode Tn0 = newId ( "n0" );
         TestNode Tn1 = newId ( "n1" );
 
@@ -155,6 +158,7 @@ public class TestBasic
 
         o0 = pollForData ( Tn0 );
 
+        System.out.println ( "Class: " + o0.getClass().getName() );
         assertTrue ( o0 instanceof CObj );
         oc0 = ( CObj ) o0;
         System.out.println ( "COM0: ERROR: " + oc0.getString ( CObj.ERROR ) );

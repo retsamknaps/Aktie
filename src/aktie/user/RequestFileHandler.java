@@ -94,6 +94,26 @@ public class RequestFileHandler
 
         }
 
+        //Delete all the fragments
+        CObjList cl = index.getFragments ( f.getWholeDigest(), f.getFragmentDigest() );
+
+        for ( int c = 0; c < cl.size(); c++ )
+        {
+            try
+            {
+                CObj co = cl.get ( c );
+                index.delete ( co );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        cl.close();
+
     }
 
     public void setPriority ( RequestFile f, int pri )
@@ -130,6 +150,62 @@ public class RequestFileHandler
                 {
                 }
 
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    public void setReRequestList ( RequestFile f )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            RequestFile rf = ( RequestFile ) s.get ( RequestFile.class, f.getId() );
+            rf.setState ( RequestFile.REQUEST_FRAG_LIST );
+            s.merge ( rf );
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
                 try
                 {
                     s.close();

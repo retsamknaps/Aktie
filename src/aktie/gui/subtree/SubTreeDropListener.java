@@ -19,9 +19,7 @@ public class SubTreeDropListener extends ViewerDropAdapter
     @Override
     public boolean performDrop ( Object d )
     {
-        int loc = this.getCurrentLocation();
         Object tar = this.getCurrentTarget();
-        System.out.println ( "Drop it like it's hot.. loc: " + loc + " obj: " + tar + " d.cls: " + d.getClass().getName() + " is " + d );
 
         if ( tar != null && tar instanceof SubTreeEntity )
         {

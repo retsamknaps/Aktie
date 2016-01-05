@@ -86,7 +86,7 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
     @Override
     public void update ( Object o )
     {
-        System.out.println ( "UPDATE: " + o );
+        System.out.println ( "UPDATE (**): " + o );
 
         if ( o instanceof CObj )
         {
@@ -95,6 +95,11 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
             if ( co.getType() != null && co.getString ( CObj.ERROR ) == null )
             {
                 updateQueue.add ( o );
+            }
+
+            else
+            {
+                System.out.println ( "ERROR: " + co.getString ( CObj.ERROR ) );
             }
 
         }
@@ -108,7 +113,8 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
 
     public Object pollGuiQueue()
     {
-        return updateQueue.poll();
+        Object r = updateQueue.poll();
+        return r ;
     }
 
     public CObj getNodeData()

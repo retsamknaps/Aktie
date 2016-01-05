@@ -156,7 +156,22 @@ public class Index
 
     private synchronized void initiateNewSearcher()
     {
-        if ( !newpending )
+        if ( MIN_TIME_BETWEEN_SEARCHERS == 0 )
+        {
+            //Only used for test!
+            try
+            {
+                buildNewSearcher();
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        else if ( !newpending )
         {
             newpending = true;
             long ctime = System.currentTimeMillis();
@@ -321,12 +336,30 @@ public class Index
 
     }
 
+    public CObjList searchQuery ( CObj query )
+    {
+        return null;
+    }
+
     public CObjList getIdentities()
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getCreatedBy ( String id )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term cterm = new Term ( CObj.docString ( CObj.CREATOR ), id );
+        builder.add ( new TermQuery ( cterm ), BooleanClause.Occur.SHOULD );
+
+        Term pcterm = new Term ( CObj.docPrivate ( CObj.CREATOR ), id );
+        builder.add ( new TermQuery ( pcterm ), BooleanClause.Occur.SHOULD );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }

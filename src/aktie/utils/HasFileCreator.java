@@ -94,6 +94,30 @@ public class HasFileCreator
             }
 
             fi.pushNumber ( CObj.NUMBER_HAS, numberhasfile );
+            String creatorid = f.getString ( CObj.CREATOR );
+
+            if ( creatorid != null )
+            {
+                CObj creator = index.getIdentity ( creatorid );
+
+                if ( creator != null )
+                {
+                    Long rnk = creator.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                    if ( rnk != null )
+                    {
+                        Long crnk = fi.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                        if ( crnk == null || crnk < rnk )
+                        {
+                            fi.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                        }
+
+                    }
+
+                }
+
+            }
 
             try
             {

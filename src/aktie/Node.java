@@ -30,6 +30,7 @@ import aktie.user.UsrReqHasFileProcessor;
 import aktie.user.UsrReqIdentityProcessor;
 import aktie.user.UsrReqMemProcessor;
 import aktie.user.UsrReqPostProcessor;
+import aktie.user.UsrReqSetRankProcessor;
 import aktie.user.UsrReqSubProcessor;
 import aktie.user.UsrSeed;
 import aktie.user.UsrSeedCommunity;
@@ -89,6 +90,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqMemProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqPostProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
+        userQueue.addProcessor ( new UsrReqSetRankProcessor ( index ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );
         userQueue.addProcessor ( new NewPushProcessor ( index, conMan ) );
