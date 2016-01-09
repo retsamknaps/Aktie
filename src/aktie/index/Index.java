@@ -727,6 +727,44 @@ public class Index
 
     }
 
+    public CObj getField ( String id )
+    {
+        return null;
+    }
+
+    public CObjList searchFields ( String comid, String qstr, Sort srt )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery query = new BooleanQuery();
+
+        Term pstterm = new Term ( CObj.PARAM_TYPE, CObj.FIELD );
+        builder.add ( new TermQuery ( pstterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        Matcher m = Pattern.compile ( "\\S+" ).matcher ( qstr );
+
+        if ( m.find() )
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.append ( CObj.docStringText ( CObj.FLD_NAME ) );
+            sb.append ( ":\"" );
+            sb.append ( qstr );
+            sb.append ( "\" OR " );
+            sb.append ( CObj.docText ( CObj.FLD_DESC ) );
+            sb.append ( ":\"" );
+            sb.append ( qstr );
+            return search ( builder.build(), sb.toString(), Integer.MAX_VALUE, srt );
+        }
+
+        else
+        {
+            return search ( builder.build(), Integer.MAX_VALUE, srt );
+        }
+
+    }
+
     public CObj getFileInfo ( String id )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

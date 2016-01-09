@@ -1,6 +1,7 @@
 package aktie.net;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.hibernate.Session;
 
@@ -131,7 +132,17 @@ public class InPostProcessor extends GenericProcessor
 
                             b.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 1L );
                             index.index ( b );
+
+                            //Save any new fields listed by the post
+                            List<CObj> fldlist = b.listNewFields();
+
+                            for ( CObj fld : fldlist )
+                            {
+                                index.index ( fld );
+                            }
+
                             guicallback.update ( b );
+
                         }
 
                         catch ( IOException e )

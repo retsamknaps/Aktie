@@ -16,18 +16,24 @@ public class CObjFieldTest
     public void testStringField()
     {
         CObj fld = new CObj();
+        fld.setType ( CObj.FIELD );
+        fld.pushString ( CObj.COMMUNITYID, "community0000" );
         fld.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_STRING );
         fld.pushString ( CObj.FLD_NAME, "Test field" );
         fld.pushString ( CObj.FLD_DESC, "This is a test field it is for testing" );
         fld.simpleDigest();
 
         CObj fld2 = new CObj();
+        fld2.setType ( CObj.FIELD );
+        fld2.pushString ( CObj.COMMUNITYID, "community0000" );
         fld2.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_BOOL );
         fld2.pushString ( CObj.FLD_NAME, "Test bool" );
         fld2.pushString ( CObj.FLD_DESC, "This is a test bool" );
         fld2.simpleDigest();
 
         CObj fld3 = new CObj();
+        fld3.setType ( CObj.FIELD );
+        fld3.pushString ( CObj.COMMUNITYID, "community0000" );
         fld3.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
         fld3.pushString ( CObj.FLD_NAME, "Test dec" );
         fld3.pushString ( CObj.FLD_DESC, "This is a test dec" );
@@ -36,6 +42,8 @@ public class CObjFieldTest
         fld3.simpleDigest();
 
         CObj fld4 = new CObj();
+        fld4.setType ( CObj.FIELD );
+        fld4.pushString ( CObj.COMMUNITYID, "community0000" );
         fld4.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_NUMBER );
         fld4.pushString ( CObj.FLD_NAME, "Test num" );
         fld4.pushString ( CObj.FLD_DESC, "This is a test num" );
@@ -44,6 +52,8 @@ public class CObjFieldTest
         fld4.simpleDigest();
 
         CObj fld5 = new CObj();
+        fld5.setType ( CObj.FIELD );
+        fld5.pushString ( CObj.COMMUNITYID, "community0000" );
         fld5.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_OPT );
         fld5.pushString ( CObj.FLD_NAME, "Test opt" );
         fld5.pushString ( CObj.FLD_DESC, "This is a test opt" );
@@ -54,18 +64,24 @@ public class CObjFieldTest
         fld5.simpleDigest();
 
         CObj fld6 = new CObj();
+        fld6.setType ( CObj.FIELD );
+        fld6.pushString ( CObj.COMMUNITYID, "community0000" );
         fld6.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_TEXT );
         fld6.pushString ( CObj.FLD_NAME, "Test text" );
         fld6.pushString ( CObj.FLD_DESC, "This is a test text" );
         fld6.simpleDigest();
 
         CObj fld7 = new CObj();
+        fld7.setType ( CObj.FIELD );
+        fld7.pushString ( CObj.COMMUNITYID, "community0000" );
         fld7.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
         fld7.pushString ( CObj.FLD_NAME, "Not used" );
         fld7.pushString ( CObj.FLD_DESC, "This is not used" );
         fld7.simpleDigest();
 
         CObj pst = new CObj();
+        pst.setType ( CObj.POST );
+        pst.pushString ( CObj.COMMUNITYID, "community0000" );
         pst.pushString ( CObj.SUBJECT, "here is the subject" );
         pst.pushString ( CObj.BODY, "This is the body" );
         pst.pushString ( CObj.CREATOR, "0123456789abcd" );

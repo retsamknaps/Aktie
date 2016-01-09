@@ -1,6 +1,7 @@
 package aktie.user;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.hibernate.Session;
@@ -164,19 +165,31 @@ public class NewPostProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
+
+
             //Sign it.
             o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
             log.info ( "NEW POST: " + o.getDig() );
 
+            //List any new fields that were added by the post
+            //save them.
+            List<CObj> fldlist = o.listNewFields();
+
             try
             {
                 index.index ( o );
+
+                for ( CObj fld : fldlist )
+                {
+                    index.index ( fld );
+                }
+
             }
 
             catch ( Exception e )
             {
                 e.printStackTrace();
-                o.pushString ( CObj.ERROR, "subscription could not be indexed" );
+                o.pushString ( CObj.ERROR, "Post could not be indexed" );
                 guicallback.update ( o );
                 return true;
             }

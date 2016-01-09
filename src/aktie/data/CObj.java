@@ -223,6 +223,7 @@ public class CObj
             for ( String sid : sublst )
             {
                 CObj no = new CObj();
+                no.setType ( CObj.FIELD );
 
                 for ( Entry<String, String> e : strings.entrySet() )
                 {
@@ -321,6 +322,9 @@ public class CObj
 
                 }
 
+                no.pushString ( COMMUNITYID, getString ( COMMUNITYID ) );
+                //Creator is private so that we allow two different
+                //people define the same field and don't list them twice
                 no.pushPrivate ( CREATOR, getString ( CREATOR ) );
                 no.pushPrivateNumber ( PRV_USER_RANK, getPrivateNumber ( PRV_USER_RANK ) );
                 no.simpleDigest();
@@ -335,6 +339,7 @@ public class CObj
     private String setNewFields ( CObj fo )
     {
         String subid = getSubid ( fo.getDig() );
+
         Map<String, String> ov = fo.getStrings();
 
         if ( ov != null )
