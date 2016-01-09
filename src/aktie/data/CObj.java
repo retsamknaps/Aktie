@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -201,6 +202,285 @@ public class CObj
         return "";
     }
 
+    public List<CObj> listNewFields()
+    {
+        List<CObj> r = new LinkedList<CObj>();
+        Set<String> sublst = new HashSet<String>();
+
+        if ( strings != null )
+        {
+            for ( Entry<String, String> e : strings.entrySet() )
+            {
+                String k = e.getKey();
+
+                if ( k.startsWith ( FLD_TYPE ) )
+                {
+                    sublst.add ( k.substring ( FLD_TYPE.length() ) );
+                }
+
+            }
+
+            for ( String sid : sublst )
+            {
+                CObj no = new CObj();
+
+                for ( Entry<String, String> e : strings.entrySet() )
+                {
+                    String k = e.getKey();
+                    String v = e.getValue();
+                    int sidx = k.indexOf ( sid );
+
+                    //Do not save fld_id
+                    if ( sidx > 0 && !k.startsWith ( FLD_ID ) )
+                    {
+                        String fldk = k.substring ( 0, sidx );
+
+                        if ( sidx + sid.length() < k.length() )
+                        {
+                            fldk = fldk + k.substring ( sidx + sid.length() );
+                        }
+
+                        if ( !FLD.equals ( fldk ) ) //Do not save value
+                        {
+                            no.pushString ( fldk, v );
+                        }
+
+                    }
+
+                }
+
+                if ( text != null )
+                {
+                    for ( Entry<String, String> e : text.entrySet() )
+                    {
+                        String k = e.getKey();
+                        String v = e.getValue();
+                        int sidx = k.indexOf ( sid );
+
+                        //Do not save fld_id
+                        if ( sidx > 0 && !k.startsWith ( FLD_ID ) )
+                        {
+                            String fldk = k.substring ( 0, sidx );
+
+                            if ( !FLD.equals ( fldk ) ) //Do not save value
+                            {
+                                no.pushText ( fldk, v );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                if ( numbers != null )
+                {
+                    for ( Entry<String, Long> e : numbers.entrySet() )
+                    {
+                        String k = e.getKey();
+                        Long v = e.getValue();
+                        int sidx = k.indexOf ( sid );
+
+                        //Do not save fld_id
+                        if ( sidx > 0 && !k.startsWith ( FLD_ID ) )
+                        {
+                            String fldk = k.substring ( 0, sidx );
+
+                            if ( !FLD.equals ( fldk ) ) //Do not save value
+                            {
+                                no.pushNumber ( fldk, v );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                if ( decimals != null )
+                {
+                    for ( Entry<String, Double> e : decimals.entrySet() )
+                    {
+                        String k = e.getKey();
+                        Double v = e.getValue();
+                        int sidx = k.indexOf ( sid );
+
+                        //Do not save fld_id
+                        if ( sidx > 0 && !k.startsWith ( FLD_ID ) )
+                        {
+                            String fldk = k.substring ( 0, sidx );
+
+                            if ( !FLD.equals ( fldk ) ) //Do not save value
+                            {
+                                no.pushDecimal ( fldk, v );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                no.pushPrivate ( CREATOR, getString ( CREATOR ) );
+                no.pushPrivateNumber ( PRV_USER_RANK, getPrivateNumber ( PRV_USER_RANK ) );
+                no.simpleDigest();
+                r.add ( no );
+            }
+
+        }
+
+        return r;
+    }
+
+    private String setNewFields ( CObj fo )
+    {
+        String subid = getSubid ( fo.getDig() );
+        Map<String, String> ov = fo.getStrings();
+
+        if ( ov != null )
+        {
+            for ( Entry<String, String> e : ov.entrySet() )
+            {
+                String ky = e.getKey();
+                String vl = e.getValue();
+
+                if ( ky.startsWith ( FLD_VAL ) )
+                {
+                    String ev = ky.substring ( FLD_VAL.length() );
+                    pushString ( FLD_VAL + subid + ev, vl );
+                }
+
+                else if ( ky.startsWith ( FLD ) )
+                {
+                    pushString ( ky + subid, vl );
+                }
+
+            }
+
+        }
+
+        Map<String, String> ot = fo.getText();
+
+        if ( ot != null )
+        {
+            for ( Entry<String, String> e : ot.entrySet() )
+            {
+                String ky = e.getKey();
+                String vl = e.getValue();
+
+                if ( ky.startsWith ( FLD ) )
+                {
+                    pushText ( ky + subid, vl );
+                }
+
+            }
+
+        }
+
+        Map<String, Long> lv = fo.getNumbers();
+
+        if ( lv != null )
+        {
+            for ( Entry<String, Long> e : lv.entrySet() )
+            {
+                String ky = e.getKey();
+                Long vl = e.getValue();
+
+                if ( ky.startsWith ( FLD ) )
+                {
+                    pushNumber ( ky + subid, vl );
+                }
+
+            }
+
+        }
+
+        Map<String, Double> dv = fo.getDecimals();
+
+        if ( dv != null )
+        {
+            for ( Entry<String, Double> e : dv.entrySet() )
+            {
+                String ky = e.getKey();
+                Double vl = e.getValue();
+
+                if ( ky.startsWith ( FLD ) )
+                {
+                    pushDecimal ( ky + subid, vl );
+                }
+
+            }
+
+        }
+
+        return fo.getDig();
+    }
+
+    public void setNewFieldString ( CObj fo, String v )
+    {
+        String id = setNewFields ( fo );
+        setFieldString ( id, v );
+    }
+
+    public void setNewFieldText ( CObj fo, String v )
+    {
+        String id = setNewFields ( fo );
+        setFieldText ( id, v );
+    }
+
+    public void setNewFieldBool ( CObj fo, boolean v )
+    {
+        String id = setNewFields ( fo );
+        setFieldBool ( id, v );
+    }
+
+    public void setNewFieldNumber ( CObj fo, long v )
+    {
+        String id = setNewFields ( fo );
+        setFieldNumber ( id, v );
+    }
+
+    public void setNewFieldDecimal ( CObj fo, double v )
+    {
+        String id = setNewFields ( fo );
+        setFieldDecimal ( id, v );
+    }
+
+    public void setFieldString ( String id, String value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushString ( FLD + subid, value );
+    }
+
+    public void setFieldText ( String id, String value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushText ( FLD + subid, value );
+    }
+
+    public void setFieldBool ( String id, boolean value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushString ( FLD + subid, Boolean.toString ( value ) );
+    }
+
+    public void setFieldNumber ( String id, long value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushNumber ( FLD + subid, value );
+    }
+
+    public void setFieldDecimal ( String id, double value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushDecimal ( FLD + subid, value );
+    }
+
     public Long getFieldNumberMax ( String id )
     {
         String kv = FLD_MAX + getSubid ( id );
@@ -314,6 +594,19 @@ public class CObj
     {
         String kv = FLD + getSubid ( id );
         return getText ( kv );
+    }
+
+    public Boolean getFieldBoolean ( String id )
+    {
+        String kv = FLD + getSubid ( id );
+        String v = getString ( kv );
+
+        if ( v != null )
+        {
+            return Boolean.valueOf ( v );
+        }
+
+        return null;
     }
 
     public Set<String> listFields()
@@ -1330,6 +1623,31 @@ public class CObj
         if ( !mapEq ( privatedata, b.getPrivatedata() ) ) { return false; }
 
         if ( !mapEq ( privatenumbers, b.getPrivateNumbers() ) ) { return false; }
+
+        return true;
+    }
+
+    public boolean whoopyPubEquals ( Object o )
+    {
+        if ( ! ( o instanceof CObj ) ) { return false; }
+
+        CObj b = ( CObj ) o;
+
+        if ( !strEq ( id, b.getId() ) ) { return false; }
+
+        if ( !strEq ( dig, b.getDig() ) ) { return false; }
+
+        if ( !strEq ( type, b.getType() ) ) { return false; }
+
+        if ( !strEq ( signature, b.getSignature() ) ) { return false; }
+
+        if ( !mapEq ( decimals, b.getDecimals() ) ) { return false; }
+
+        if ( !mapEq ( numbers, b.getNumbers() ) ) { return false; }
+
+        if ( !mapEq ( strings, b.getStrings() ) ) { return false; }
+
+        if ( !mapEq ( text, b.getText() ) ) { return false; }
 
         return true;
     }
