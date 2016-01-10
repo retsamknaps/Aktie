@@ -192,6 +192,13 @@ public class CObj
     public static String FLD_TYPE_BOOL = "bool";
     public static String FLD_TYPE_OPT = "opt";
 
+    public static String QRY_MIN_USER_RANK = "q_min_ur";
+    public static String QRY_MAX_USER_RANK = "q_max_ur";
+    public static String QRY_MIN_FILE_SIZE = "q_min_fs";
+    public static String QRY_MAX_FILE_SIZE = "q_max_fs";
+    public static String QRY_MIN_DATE = "q_min_dt";
+    public static String QRY_MAX_DATE = "q_max_dt";
+
     public static String getSubid ( String id )
     {
         if ( id != null )

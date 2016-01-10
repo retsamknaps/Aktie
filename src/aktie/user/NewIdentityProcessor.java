@@ -26,6 +26,8 @@ import aktie.net.Net;
 public class NewIdentityProcessor extends GenericProcessor
 {
 
+    public static long DEF_USER_RANK = 4;
+
     private Net net;
     private GuiCallback guicallback;
     private GuiCallback netcallback;
@@ -96,6 +98,7 @@ public class NewIdentityProcessor extends GenericProcessor
                 try
                 {
                     dt.setIdentity ( o );
+                    o.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
                     index.index ( o );
                     connectionMan.addDestination ( dt );
                 }

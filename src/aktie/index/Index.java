@@ -2,6 +2,7 @@ package aktie.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
@@ -334,11 +335,6 @@ public class Index
 
         return null;
 
-    }
-
-    public CObjList searchQuery ( CObj query )
-    {
-        return null;
     }
 
     public CObjList getIdentities()
@@ -687,6 +683,137 @@ public class Index
         }
 
         return search ( builder.build(), Integer.MAX_VALUE, s );
+    }
+
+    public CObjList searchPostsQuery ( List<CObj> qlst )
+    {
+        BooleanQuery.Builder topbuild = new BooleanQuery.Builder();
+        Iterator<CObj> qi = qlst.iterator();
+
+        while ( qi.hasNext() )
+        {
+            CObj query = qi.next();
+
+            BooleanQuery.Builder builder = new BooleanQuery.Builder();
+            //BooleanQuery query = new BooleanQuery();
+            Term pstterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
+            builder.add ( new TermQuery ( pstterm ), BooleanClause.Occur.MUST );
+
+            String comid = query.getString ( CObj.COMMUNITYID );
+
+            if ( comid != null )
+            {
+                Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+                builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+            }
+
+            String creator = query.getString ( CObj.CREATOR );
+
+            if ( creator != null )
+            {
+                Term crterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+                builder.add ( new TermQuery ( crterm ), BooleanClause.Occur.MUST );
+            }
+
+            Long minusrrank = query.getNumber ( CObj.QRY_MIN_USER_RANK );
+            Long maxusrrank = query.getNumber ( CObj.QRY_MAX_USER_RANK );
+
+            if ( minusrrank != null || maxusrrank != null )
+            {
+                long min = 0L;
+                long max = Long.MAX_VALUE;
+
+                if ( minusrrank != null )
+                {
+                    min = Long.valueOf ( minusrrank );
+                }
+
+                if ( maxusrrank != null )
+                {
+                    max = Long.valueOf ( maxusrrank );
+                }
+
+                NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                                 CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                                 min, max, true, true );
+                builder.add ( nq, BooleanClause.Occur.MUST );
+            }
+
+            Long mindate = query.getNumber ( CObj.QRY_MIN_DATE );
+            Long maxdate = query.getNumber ( CObj.QRY_MAX_DATE );
+
+            if ( mindate != null || maxdate != null )
+            {
+                long min = 0L;
+                long max = Long.MAX_VALUE;
+
+                if ( mindate != null )
+                {
+                    min = Long.valueOf ( mindate );
+                }
+
+                if ( maxdate != null )
+                {
+                    max = Long.valueOf ( maxdate );
+                }
+
+                NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                                 CObj.docNumber ( CObj.CREATEDON ),
+                                                 min, max, true, true );
+                builder.add ( nq, BooleanClause.Occur.MUST );
+            }
+
+            Long minsize = query.getNumber ( CObj.QRY_MIN_FILE_SIZE );
+            Long maxsize = query.getNumber ( CObj.QRY_MAX_FILE_SIZE );
+
+            if ( minsize != null || maxsize != null )
+            {
+                long min = 0L;
+                long max = Long.MAX_VALUE;
+
+                if ( minsize != null )
+                {
+                    min = Long.valueOf ( minsize );
+                }
+
+                if ( maxsize != null )
+                {
+                    max = Long.valueOf ( maxsize );
+                }
+
+                NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                                 CObj.docNumber ( CObj.FILESIZE ),
+                                                 min, max, true, true );
+                builder.add ( nq, BooleanClause.Occur.MUST );
+            }
+
+            List<CObj> fq = query.listNewFields();
+            Iterator<CObj> i = fq.iterator();
+
+            while ( i.hasNext() )
+            {
+                CObj qf = i.next();
+                String qid = qf.getDig();
+                String queryval = CObj.FLD + CObj.getSubid ( qid );
+
+                String typ = qf.getType();
+
+                if ( CObj.FLD_TYPE_BOOL.equals ( typ ) )
+                {
+
+                }
+
+            }
+
+            //File size
+            //Date range
+            //Creator rank
+            //General query term.
+            //    - search body/subject/filename
+
+        }
+
+        return null;
     }
 
     public CObjList searchPosts ( String comid, String qstr, Sort srt )

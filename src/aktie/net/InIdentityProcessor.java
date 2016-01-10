@@ -16,6 +16,8 @@ import aktie.index.Index;
 public class InIdentityProcessor extends GenericProcessor
 {
 
+    public static long DEF_USER_RANK = 4;
+
     private GuiCallback guicallback;
     private Index index;
     private HH2Session session;
@@ -76,6 +78,7 @@ public class InIdentityProcessor extends GenericProcessor
 
                     if ( insert )
                     {
+                        b.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
                         index.index ( b, true );
                         guicallback.update ( b );
                     }
