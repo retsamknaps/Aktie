@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.NumericRangeQuery;
@@ -685,8 +686,10 @@ public class Index
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
-    public CObjList searchPostsQuery ( List<CObj> qlst )
+    public CObjList searchPostsQuery ( List<CObj> qlst, Sort srt )
     {
+        Matcher sm = Pattern.compile ( "\\S+" ).matcher ( "" );
+
         BooleanQuery.Builder topbuild = new BooleanQuery.Builder();
         Iterator<CObj> qi = qlst.iterator();
 
@@ -696,6 +699,7 @@ public class Index
 
             BooleanQuery.Builder builder = new BooleanQuery.Builder();
             //BooleanQuery query = new BooleanQuery();
+
             Term pstterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
             builder.add ( new TermQuery ( pstterm ), BooleanClause.Occur.MUST );
 
@@ -788,32 +792,103 @@ public class Index
             }
 
             List<CObj> fq = query.listNewFields();
+            System.out.println ( "NUMFLDS: " + fq.size() );
             Iterator<CObj> i = fq.iterator();
 
             while ( i.hasNext() )
             {
                 CObj qf = i.next();
-                String qid = qf.getDig();
-                String queryval = CObj.FLD + CObj.getSubid ( qid );
 
-                String typ = qf.getType();
+                String valuekey = CObj.FLD + CObj.getSubid ( qf.getDig() );
 
-                if ( CObj.FLD_TYPE_BOOL.equals ( typ ) )
+                String typ = qf.getString ( CObj.FLD_TYPE );
+
+                if ( CObj.FLD_TYPE_BOOL.equals ( typ ) ||
+                        CObj.FLD_TYPE_OPT.equals ( typ ) ||
+                        CObj.FLD_TYPE_STRING.equals ( typ ) )
                 {
+                    String val = qf.getString ( valuekey );
+
+                    if ( val != null )
+                    {
+                        Term term = new Term ( CObj.docString ( valuekey ), val );
+                        builder.add ( new TermQuery ( term ), BooleanClause.Occur.MUST );
+
+                    }
+
+                }
+
+                if ( CObj.FLD_TYPE_DECIMAL.equals ( typ ) )
+                {
+                    Double max = qf.getDecimal ( CObj.FLD_MAX );
+                    Double min = qf.getDecimal ( CObj.FLD_MIN );
+
+                    if ( max != null && min != null )
+                    {
+                        NumericRangeQuery<Double> rq = NumericRangeQuery.newDoubleRange (
+                                                           CObj.docDecimal ( valuekey ),
+                                                           min, max, true, true );
+                        builder.add ( rq, BooleanClause.Occur.MUST );
+                    }
+
+                }
+
+                if ( CObj.FLD_TYPE_NUMBER.equals ( typ ) )
+                {
+                    Long max = qf.getNumber ( CObj.FLD_MAX );
+                    Long min = qf.getNumber ( CObj.FLD_MIN );
+
+                    System.out.println ( "QUERY FIELD NUMBER: min: " + min + " max: " + max );
+
+                    if ( max != null && min != null )
+                    {
+                        NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                                         CObj.docNumber ( valuekey ),
+                                                         min, max, true, true );
+                        builder.add ( nq, BooleanClause.Occur.MUST );
+                    }
 
                 }
 
             }
 
-            //File size
-            //Date range
-            //Creator rank
-            //General query term.
-            //    - search body/subject/filename
+            String subj = query.getString ( CObj.SUBJECT );
 
+            if ( subj != null )
+            {
+                sm.reset ( subj );
+
+                if ( sm.find() )
+                {
+                    try
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append ( CObj.docStringText ( CObj.SUBJECT ) );
+                        sb.append ( ":\"" );
+                        sb.append ( subj );
+                        sb.append ( "\" OR " );
+                        sb.append ( CObj.docText ( CObj.BODY ) );
+                        sb.append ( ":\"" );
+                        sb.append ( subj );
+                        sb.append ( "\"" );
+                        QueryParser qp = new QueryParser ( "text_title", analyzer );
+                        Query sq = qp.parse ( sb.toString() );
+                        builder.add ( sq, BooleanClause.Occur.MUST );
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
+            topbuild.add ( builder.build(), BooleanClause.Occur.SHOULD );
         }
 
-        return null;
+        return search ( topbuild.build(), Integer.MAX_VALUE, srt );
     }
 
     public CObjList searchPosts ( String comid, String qstr, Sort srt )

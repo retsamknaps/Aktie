@@ -213,6 +213,7 @@ public class CObj
     {
         List<CObj> r = new LinkedList<CObj>();
         Set<String> sublst = new HashSet<String>();
+        Map<String, String> fidmap = new HashMap<String, String>();
 
         if ( strings != null )
         {
@@ -222,7 +223,15 @@ public class CObj
 
                 if ( k.startsWith ( FLD_TYPE ) )
                 {
-                    sublst.add ( k.substring ( FLD_TYPE.length() ) );
+                    String sbi = k.substring ( FLD_TYPE.length() );
+                    sublst.add ( sbi );
+                    String fid = getString ( CObj.FLD_ID + sbi );
+
+                    if ( fid != null )
+                    {
+                        fidmap.put ( sbi, fid );
+                    }
+
                 }
 
             }
@@ -334,8 +343,14 @@ public class CObj
                 //people define the same field and don't list them twice
                 no.pushPrivate ( CREATOR, getString ( CREATOR ) );
                 no.pushPrivateNumber ( PRV_USER_RANK, getPrivateNumber ( PRV_USER_RANK ) );
-                no.simpleDigest();
-                r.add ( no );
+                String fid = fidmap.get ( sid );
+
+                if ( fid != null )
+                {
+                    no.setDig ( fid );
+                    r.add ( no );
+                }
+
             }
 
         }
@@ -486,11 +501,39 @@ public class CObj
         pushNumber ( FLD + subid, value );
     }
 
+    public void setFieldNumberMax ( String id, long value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushNumber ( FLD_MAX + subid, value );
+    }
+
+    public void setFieldNumberMin ( String id, long value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushNumber ( FLD_MIN + subid, value );
+    }
+
     public void setFieldDecimal ( String id, double value )
     {
         String subid = getSubid ( id );
         pushString ( FLD_ID + subid, id );
         pushDecimal ( FLD + subid, value );
+    }
+
+    public void setFieldDecimalMax ( String id, double value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushDecimal ( FLD_MAX + subid, value );
+    }
+
+    public void setFieldDecimalMin ( String id, double value )
+    {
+        String subid = getSubid ( id );
+        pushString ( FLD_ID + subid, id );
+        pushDecimal ( FLD_MIN + subid, value );
     }
 
     public Long getFieldNumberMax ( String id )
