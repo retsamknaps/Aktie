@@ -25,6 +25,13 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.swt.layout.RowData;
 
 public class NewPostDialog extends Dialog
 {
@@ -43,7 +50,21 @@ public class NewPostDialog extends Dialog
     private CObj replyPost;
     private Text previewText;
     private Text fileText;
+    private NewFieldStringDialog newStringDialog;
+    private NewFieldBooleanDialog newBooleanDialog;
+    private TableViewer fieldTableViewer;
+    private CObjContentProvider fieldProvider;
     private Shell shell;
+
+    public TableViewer getFieldTable()
+    {
+        return fieldTableViewer;
+    }
+
+    public CObj getCommunity()
+    {
+        return community;
+    }
 
     /**
         Create the dialog.
@@ -55,6 +76,10 @@ public class NewPostDialog extends Dialog
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
         shell = parentShell;
+        newStringDialog = new NewFieldStringDialog ( shell );
+        newStringDialog.create();
+        newBooleanDialog = new NewFieldBooleanDialog ( shell, this );
+        newBooleanDialog.create();
     }
 
     private File selectFile()
@@ -328,11 +353,76 @@ public class NewPostDialog extends Dialog
         new Label ( container, SWT.NONE );
 
         Label lblBody = new Label ( container, SWT.NONE );
-        lblBody.setLayoutData ( new GridData ( SWT.LEFT, SWT.CENTER, false, true, 1, 1 ) );
+        lblBody.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, true, 1, 1 ) );
         lblBody.setText ( "Body" );
 
         postBody = new StyledText ( container, SWT.WRAP | SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL );
         postBody.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
+        new Label ( container, SWT.NONE );
+        new Label ( container, SWT.NONE );
+
+        Composite composite_1 = new Composite ( container, SWT.NONE );
+        composite_1.setLayout ( new RowLayout ( SWT.HORIZONTAL ) );
+
+        Button btnAddAllFields = new Button ( composite_1, SWT.NONE );
+        btnAddAllFields.setText ( "Add All Fields" );
+
+        ComboViewer comboViewer = new ComboViewer ( composite_1, SWT.NONE );
+        Combo combo = comboViewer.getCombo();
+        combo.setLayoutData ( new RowData ( 85, SWT.DEFAULT ) );
+
+        Button btnAddField = new Button ( composite_1, SWT.NONE );
+        btnAddField.setText ( "Add Field" );
+
+        Button btnAddDefaultField = new Button ( composite_1, SWT.NONE );
+        btnAddDefaultField.setText ( "Add Default Field" );
+
+        ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.NONE );
+        Combo combo_1 = comboViewer_1.getCombo();
+        combo_1.setLayoutData ( new RowData ( 79, SWT.DEFAULT ) );
+
+        Button btnNewField = new Button ( composite_1, SWT.NONE );
+        btnNewField.setText ( "New Field" );
+        btnNewField.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                newBooleanDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        new Label ( container, SWT.NONE );
+
+        Label lblFields = new Label ( container, SWT.NONE );
+        lblFields.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
+        lblFields.setText ( "Fields" );
+        fieldTableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
+        fieldProvider = new CObjContentProvider();
+        fieldTableViewer.setContentProvider ( fieldProvider );
+        table = fieldTableViewer.getTable();
+        GridData gd_table = new GridData ( SWT.FILL, SWT.FILL, true, false, 1, 1 );
+        gd_table.heightHint = 100;
+        table.setLayoutData ( gd_table );
+        table.setHeaderVisible ( true );
+        table.setLinesVisible ( true );
+
+        TableViewerColumn col0 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
+        col0.getColumn().setText ( "Field" );
+        col0.getColumn().setWidth ( 100 );
+        col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_NAME ) );
+
+        TableViewerColumn col1 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
+        col1.getColumn().setText ( "Description" );
+        col1.getColumn().setWidth ( 100 );
+        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
+
         new Label ( container, SWT.NONE );
         new Label ( container, SWT.NONE );
 
@@ -444,6 +534,7 @@ public class NewPostDialog extends Dialog
         new Label ( container, SWT.NONE );
 
         Label lblFile = new Label ( container, SWT.NONE );
+        lblFile.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         lblFile.setText ( "Preview File" );
 
         previewText = new Text ( container, SWT.BORDER );
@@ -453,6 +544,7 @@ public class NewPostDialog extends Dialog
         new Label ( container, SWT.NONE );
 
         Label lblFile_1 = new Label ( container, SWT.NONE );
+        lblFile_1.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         lblFile_1.setText ( "Complete File" );
 
         fileText = new Text ( container, SWT.BORDER );
@@ -482,6 +574,7 @@ public class NewPostDialog extends Dialog
 
     private File newAttachment;
     private File newPreview;
+    private Table table;
 
     @Override
     protected void okPressed()
@@ -616,7 +709,7 @@ public class NewPostDialog extends Dialog
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 700, 500 );
+        return new Point ( 820, 500 );
     }
 
     public Label getLblPostingToCommunity()

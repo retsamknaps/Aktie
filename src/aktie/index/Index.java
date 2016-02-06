@@ -792,7 +792,6 @@ public class Index
             }
 
             List<CObj> fq = query.listNewFields();
-            System.out.println ( "NUMFLDS: " + fq.size() );
             Iterator<CObj> i = fq.iterator();
 
             while ( i.hasNext() )
@@ -837,8 +836,6 @@ public class Index
                 {
                     Long max = qf.getNumber ( CObj.FLD_MAX );
                     Long min = qf.getNumber ( CObj.FLD_MIN );
-
-                    System.out.println ( "QUERY FIELD NUMBER: min: " + min + " max: " + max );
 
                     if ( max != null && min != null )
                     {

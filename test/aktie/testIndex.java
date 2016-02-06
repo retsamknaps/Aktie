@@ -265,6 +265,18 @@ public class testIndex
 
             cl.close();
 
+
+            ql = new LinkedList<CObj>();
+            ql.add ( qrynum );
+            ql.add ( qrydecmax );
+            cl = i.searchPostsQuery ( ql, null );
+
+            assertEquals ( 2, cl.size() );
+
+            cl.close();
+
+
+
         }
 
         catch ( Exception e )
