@@ -12,18 +12,22 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Text;
 
+import aktie.data.CObj;
+
 public class NewFieldStringDialog extends Dialog
 {
     private Text text;
     private Text text_1;
+    private NewPostDialog postDialog;
 
     /**
         Create the dialog.
         @param parentShell
     */
-    public NewFieldStringDialog ( Shell parentShell )
+    public NewFieldStringDialog ( Shell parentShell, NewPostDialog p )
     {
         super ( parentShell );
+        postDialog = p;
     }
 
     @Override
@@ -58,6 +62,22 @@ public class NewFieldStringDialog extends Dialog
         text_1.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         return container;
+    }
+
+    protected void okPressed()
+    {
+        CObjContentProvider cc = ( CObjContentProvider ) postDialog.getFieldTable().getContentProvider();
+        CObj nf = new CObj();
+        nf.setType ( CObj.FIELD );
+        nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
+        nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_STRING );
+        nf.pushString ( CObj.FLD_NAME, text.getText() );
+        nf.pushString ( CObj.FLD_DESC, text_1.getText() );
+        nf.simpleDigest();
+        cc.addCObj ( nf );
+        super.okPressed();
+        //Just update the damn table with new data
+        postDialog.getFieldTable().setInput ( nf );
     }
 
     /**

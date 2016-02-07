@@ -171,6 +171,23 @@ public class NewPostProcessor extends GenericProcessor
             o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
             log.info ( "NEW POST: " + o.getDig() );
 
+            //Set the rank of the post based on the rank of the
+            //user
+            CObj idty = index.getIdentity ( creator );
+
+            Long rnk = null;
+
+            if ( idty != null )
+            {
+                rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                if ( rnk != null )
+                {
+                    o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                }
+
+            }
+
             //List any new fields that were added by the post
             //save them.
             List<CObj> fldlist = o.listNewFields();

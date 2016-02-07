@@ -30,7 +30,11 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.layout.RowData;
 
 public class NewPostDialog extends Dialog
@@ -50,6 +54,8 @@ public class NewPostDialog extends Dialog
     private CObj replyPost;
     private Text previewText;
     private Text fileText;
+    private NewFieldNumberDialog newNumberDialog;
+    private NewFieldDecimalDialog newDecimalDialog;
     private NewFieldStringDialog newStringDialog;
     private NewFieldBooleanDialog newBooleanDialog;
     private TableViewer fieldTableViewer;
@@ -76,10 +82,14 @@ public class NewPostDialog extends Dialog
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
         shell = parentShell;
-        newStringDialog = new NewFieldStringDialog ( shell );
+        newStringDialog = new NewFieldStringDialog ( shell, this );
         newStringDialog.create();
         newBooleanDialog = new NewFieldBooleanDialog ( shell, this );
         newBooleanDialog.create();
+        newNumberDialog = new NewFieldNumberDialog ( shell, this );
+        newNumberDialog.create();
+        newDecimalDialog = new NewFieldDecimalDialog ( shell, this );
+        newDecimalDialog.create();
     }
 
     private File selectFile()
@@ -366,6 +376,7 @@ public class NewPostDialog extends Dialog
 
         Button btnAddAllFields = new Button ( composite_1, SWT.NONE );
         btnAddAllFields.setText ( "Add All Fields" );
+        btnAddAllFields.setToolTipText ( "Add all available fields to the post." );
 
         ComboViewer comboViewer = new ComboViewer ( composite_1, SWT.NONE );
         Combo combo = comboViewer.getCombo();
@@ -373,22 +384,54 @@ public class NewPostDialog extends Dialog
 
         Button btnAddField = new Button ( composite_1, SWT.NONE );
         btnAddField.setText ( "Add Field" );
+        btnAddField.setToolTipText ( "Add the selected field to the post." );
 
         Button btnAddDefaultField = new Button ( composite_1, SWT.NONE );
-        btnAddDefaultField.setText ( "Add Default Field" );
+        btnAddDefaultField.setText ( "Set Default" );
+        btnAddDefaultField.setToolTipText ( "Set the current set of fields as the default.\n"
+                                            + "They will be added automatically to all new posts." );
 
-        ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.NONE );
+        final ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.NONE );
+        comboViewer_1.setContentProvider ( ArrayContentProvider.getInstance() );
+        comboViewer_1.setLabelProvider ( new LabelProvider() );
         Combo combo_1 = comboViewer_1.getCombo();
         combo_1.setLayoutData ( new RowData ( 79, SWT.DEFAULT ) );
+        combo_1.setToolTipText ( "Select the type of new field you want to add." );
+        comboViewer_1.setInput ( new String[] {"String", "Number", "Decimal", "Checkbox"} );
+
+        comboViewer_1.setSelection ( new StructuredSelection ( "String" ) );
 
         Button btnNewField = new Button ( composite_1, SWT.NONE );
         btnNewField.setText ( "New Field" );
+        btnNewField.setToolTipText ( "Create a new field of the type selected." );
         btnNewField.addSelectionListener ( new SelectionListener()
         {
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                newBooleanDialog.open();
+                IStructuredSelection selection = comboViewer_1.getStructuredSelection();
+                String s = ( String ) selection.getFirstElement();
+
+                if ( "Checkbox".equals ( s ) )
+                {
+                    newBooleanDialog.open();
+                }
+
+                if ( "Decimal".equals ( s ) )
+                {
+                    newDecimalDialog.open();
+                }
+
+                if ( "Number".equals ( s ) )
+                {
+                    newNumberDialog.open();
+                }
+
+                if ( "String".equals ( s ) )
+                {
+                    newStringDialog.open();
+                }
+
             }
 
             @Override
@@ -422,6 +465,11 @@ public class NewPostDialog extends Dialog
         col1.getColumn().setText ( "Description" );
         col1.getColumn().setWidth ( 100 );
         col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
+
+        TableViewerColumn col2 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
+        col2.getColumn().setText ( "Value" );
+        col2.getColumn().setWidth ( 100 );
+        col2.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_VAL ) );
 
         new Label ( container, SWT.NONE );
         new Label ( container, SWT.NONE );
@@ -709,7 +757,7 @@ public class NewPostDialog extends Dialog
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 820, 500 );
+        return new Point ( 820, 700 );
     }
 
     public Label getLblPostingToCommunity()

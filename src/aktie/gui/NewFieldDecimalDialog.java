@@ -10,6 +10,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
+
+import aktie.data.CObj;
+
 import org.eclipse.swt.layout.GridData;
 
 public class NewFieldDecimalDialog extends Dialog
@@ -18,14 +21,16 @@ public class NewFieldDecimalDialog extends Dialog
     private Text text_1;
     private Text text_2;
     private Text text_3;
+    private NewPostDialog postDialog;
 
     /**
         Create the dialog.
         @param parentShell
     */
-    public NewFieldDecimalDialog ( Shell parentShell )
+    public NewFieldDecimalDialog ( Shell parentShell, NewPostDialog p )
     {
         super ( parentShell );
+        postDialog = p;
     }
 
     @Override
@@ -74,6 +79,37 @@ public class NewFieldDecimalDialog extends Dialog
         text_3.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         return container;
+    }
+
+    protected void okPressed()
+    {
+        CObjContentProvider cc = ( CObjContentProvider ) postDialog.getFieldTable().getContentProvider();
+        CObj nf = new CObj();
+        nf.setType ( CObj.FIELD );
+        nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
+        nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
+        nf.pushString ( CObj.FLD_NAME, text.getText() );
+        nf.pushString ( CObj.FLD_DESC, text_1.getText() );
+
+        try
+        {
+            nf.pushNumber ( CObj.FLD_MIN, Long.valueOf ( text_2.getText() ) );
+        }
+
+        catch ( Exception e ) { }
+
+        try
+        {
+            nf.pushNumber ( CObj.FLD_MAX, Long.valueOf ( text_3.getText() ) );
+        }
+
+        catch ( Exception e ) { }
+
+        nf.simpleDigest();
+        cc.addCObj ( nf );
+        super.okPressed();
+        //Just update the damn table with new data
+        postDialog.getFieldTable().setInput ( nf );
     }
 
     /**
