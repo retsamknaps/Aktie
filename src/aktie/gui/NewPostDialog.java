@@ -60,6 +60,7 @@ public class NewPostDialog extends Dialog
     private NewFieldBooleanDialog newBooleanDialog;
     private TableViewer fieldTableViewer;
     private CObjContentProvider fieldProvider;
+    private NewPostFieldEditorSupport fieldEditor;
     private Shell shell;
 
     public TableViewer getFieldTable()
@@ -391,7 +392,7 @@ public class NewPostDialog extends Dialog
         btnAddDefaultField.setToolTipText ( "Set the current set of fields as the default.\n"
                                             + "They will be added automatically to all new posts." );
 
-        final ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.NONE );
+        final ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.READ_ONLY );
         comboViewer_1.setContentProvider ( ArrayContentProvider.getInstance() );
         comboViewer_1.setLabelProvider ( new LabelProvider() );
         Combo combo_1 = comboViewer_1.getCombo();
@@ -459,17 +460,22 @@ public class NewPostDialog extends Dialog
         TableViewerColumn col0 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
         col0.getColumn().setText ( "Field" );
         col0.getColumn().setWidth ( 100 );
+        col0.getColumn().setMoveable ( false );
         col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_NAME ) );
 
         TableViewerColumn col1 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
         col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 100 );
+        col1.getColumn().setWidth ( 250 );
+        col1.getColumn().setMoveable ( false );
         col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
 
         TableViewerColumn col2 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
         col2.getColumn().setText ( "Value" );
         col2.getColumn().setWidth ( 100 );
+        col2.getColumn().setMoveable ( false );
         col2.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_VAL ) );
+        fieldEditor = new NewPostFieldEditorSupport ( fieldTableViewer );
+        col2.setEditingSupport ( fieldEditor );
 
         new Label ( container, SWT.NONE );
         new Label ( container, SWT.NONE );
