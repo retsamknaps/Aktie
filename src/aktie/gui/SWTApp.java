@@ -1770,6 +1770,12 @@ public class SWTApp
         return i2pDialog.getI2PProps();
     }
 
+    private IdentityCache idCache;
+    public IdentityCache getIdCache()
+    {
+        return idCache;
+    }
+
     private void startNodeThread ( final Properties p )
     {
         Thread t = new Thread ( new Runnable()
@@ -1783,6 +1789,9 @@ public class SWTApp
                 {
                     node = new Node ( nodeDir, i2pnet, usrcallback,
                                       netcallback, concallback );
+
+                    idCache = new IdentityCache ( node.getIndex() );
+
                     Display.getDefault().asyncExec ( new Runnable()
                     {
                         public void run()

@@ -2,6 +2,7 @@ package aktie.gui;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -18,9 +19,31 @@ public class CObjContentProvider implements IStructuredContentProvider
         rowList = new ArrayList<CObjElement>();
     }
 
+    public void clear()
+    {
+        rowList.clear();
+    }
+
+    public List<CObj> getCObjList()
+    {
+        List<CObj> r = new LinkedList<CObj>();
+
+        for ( CObjElement e : rowList )
+        {
+            r.add ( e.getCObj() );
+        }
+
+        return r;
+    }
+
     public void addCObj ( CObj f )
     {
         rowList.add ( new CObjElement ( f ) );
+    }
+
+    public void removeElement ( CObjElement e )
+    {
+        rowList.remove ( e );
     }
 
     @Override

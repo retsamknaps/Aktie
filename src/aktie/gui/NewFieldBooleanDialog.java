@@ -82,6 +82,7 @@ public class NewFieldBooleanDialog extends Dialog
         CObj nf = new CObj();
         nf.setType ( CObj.FIELD );
         nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
+        nf.pushPrivate ( CObj.CREATOR, postDialog.getIdentity().getId() );
         nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_BOOL );
         nf.pushString ( CObj.FLD_NAME, text.getText() );
         nf.pushString ( CObj.FLD_DESC, text_1.getText() );

@@ -951,9 +951,10 @@ public class Index
             sb.append ( ":\"" );
             sb.append ( qstr );
             sb.append ( "\" OR " );
-            sb.append ( CObj.docText ( CObj.FLD_DESC ) );
+            sb.append ( CObj.docStringText ( CObj.FLD_DESC ) );
             sb.append ( ":\"" );
             sb.append ( qstr );
+            sb.append ( "\"" );
             return search ( builder.build(), sb.toString(), Integer.MAX_VALUE, srt );
         }
 
@@ -1081,6 +1082,22 @@ public class Index
         builder.add ( new TermQuery ( subterm ), BooleanClause.Occur.MUST );
 
         Term mustterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        builder.add ( new TermQuery ( mustterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getDefFields ( String comid )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FIELD );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        Term mustterm = new Term ( CObj.docPrivate ( CObj.PRV_DEF_FIELD ), "true" );
         builder.add ( new TermQuery ( mustterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );

@@ -2,11 +2,14 @@ package aktie.gui;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import aktie.crypto.Utils;
 import aktie.data.CObj;
+import aktie.index.CObjList;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -61,6 +64,7 @@ public class NewPostDialog extends Dialog
     private TableViewer fieldTableViewer;
     private CObjContentProvider fieldProvider;
     private NewPostFieldEditorSupport fieldEditor;
+    private AddFieldDialog addFieldDialog;
     private Shell shell;
 
     public TableViewer getFieldTable()
@@ -71,6 +75,16 @@ public class NewPostDialog extends Dialog
     public CObj getCommunity()
     {
         return community;
+    }
+
+    public CObj getIdentity()
+    {
+        return postIdentity;
+    }
+
+    public SWTApp getApp()
+    {
+        return app;
     }
 
     /**
@@ -91,6 +105,8 @@ public class NewPostDialog extends Dialog
         newNumberDialog.create();
         newDecimalDialog = new NewFieldDecimalDialog ( shell, this );
         newDecimalDialog.create();
+        addFieldDialog = new AddFieldDialog ( shell, this );
+        addFieldDialog.create();
     }
 
     private File selectFile()
@@ -239,6 +255,28 @@ public class NewPostDialog extends Dialog
                     lblNewLabel != null && !lblNewLabel.isDisposed() &&
                     community != null && postIdentity != null )
             {
+                fieldProvider.clear();
+                CObjList dlst = app.getNode().getIndex().getDefFields ( community.getDig() );
+                CObj lf = null;
+
+                for ( int c = 0; c < dlst.size(); c++ )
+                {
+                    try
+                    {
+                        CObj d = dlst.get ( c );
+                        lf = d;
+                        fieldProvider.addCObj ( d );
+                    }
+
+                    catch ( Exception e )
+                    {
+                    }
+
+                }
+
+                dlst.close();
+                fieldTableViewer.setInput ( lf );
+
                 lblPostingToCommunity.setText ( "Posting to community: " + community.getPrivateDisplayName() );
                 lblNewLabel.setText ( "Posting as: " + postIdentity.getDisplayName() );
 
@@ -375,22 +413,113 @@ public class NewPostDialog extends Dialog
         Composite composite_1 = new Composite ( container, SWT.NONE );
         composite_1.setLayout ( new RowLayout ( SWT.HORIZONTAL ) );
 
-        Button btnAddAllFields = new Button ( composite_1, SWT.NONE );
-        btnAddAllFields.setText ( "Add All Fields" );
-        btnAddAllFields.setToolTipText ( "Add all available fields to the post." );
-
-        ComboViewer comboViewer = new ComboViewer ( composite_1, SWT.NONE );
-        Combo combo = comboViewer.getCombo();
-        combo.setLayoutData ( new RowData ( 85, SWT.DEFAULT ) );
-
         Button btnAddField = new Button ( composite_1, SWT.NONE );
         btnAddField.setText ( "Add Field" );
         btnAddField.setToolTipText ( "Add the selected field to the post." );
+        btnAddField.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                addFieldDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        Button btnDeleteField = new Button ( composite_1, SWT.NONE );
+        btnDeleteField.setText ( "Delete Field" );
+        btnDeleteField.setToolTipText ( "Delete the selected fields from this post." );
+        btnDeleteField.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) fieldTableViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                while ( i.hasNext() )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof CObjElement )
+                    {
+                        CObjElement em = ( CObjElement ) selo;
+                        fieldProvider.removeElement ( em );
+                        fieldTableViewer.setInput ( em );
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         Button btnAddDefaultField = new Button ( composite_1, SWT.NONE );
         btnAddDefaultField.setText ( "Set Default" );
         btnAddDefaultField.setToolTipText ( "Set the current set of fields as the default.\n"
                                             + "They will be added automatically to all new posts." );
+        btnAddDefaultField.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                CObjList deflst = app.getNode().getIndex().getDefFields ( community.getDig() );
+
+                for ( int c = 0; c < deflst.size(); c++ )
+                {
+                    try
+                    {
+                        CObj df = deflst.get ( c );
+                        df.pushPrivate ( CObj.PRV_DEF_FIELD, "false" );
+                        app.getNode().getIndex().index ( df );
+                    }
+
+                    catch ( IOException e1 )
+                    {
+                        e1.printStackTrace();
+                    }
+
+                }
+
+                deflst.close();
+                List<CObj> nl = fieldProvider.getCObjList();
+
+                for ( CObj d : nl )
+                {
+                    d.pushPrivate ( CObj.PRV_DEF_FIELD, "true" );
+
+                    try
+                    {
+                        app.getNode().getIndex().index ( d );
+                    }
+
+                    catch ( IOException e1 )
+                    {
+                        e1.printStackTrace();
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         final ComboViewer comboViewer_1 = new ComboViewer ( composite_1, SWT.READ_ONLY );
         comboViewer_1.setContentProvider ( ArrayContentProvider.getInstance() );
@@ -398,7 +527,7 @@ public class NewPostDialog extends Dialog
         Combo combo_1 = comboViewer_1.getCombo();
         combo_1.setLayoutData ( new RowData ( 79, SWT.DEFAULT ) );
         combo_1.setToolTipText ( "Select the type of new field you want to add." );
-        comboViewer_1.setInput ( new String[] {"String", "Number", "Decimal", "Checkbox"} );
+        comboViewer_1.setInput ( new String[] {"String", "Number", "Decimal", "Boolean"} );
 
         comboViewer_1.setSelection ( new StructuredSelection ( "String" ) );
 
@@ -465,7 +594,7 @@ public class NewPostDialog extends Dialog
 
         TableViewerColumn col1 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
         col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 250 );
+        col1.getColumn().setWidth ( 450 );
         col1.getColumn().setMoveable ( false );
         col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
 

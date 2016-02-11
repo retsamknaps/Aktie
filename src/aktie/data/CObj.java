@@ -88,6 +88,7 @@ public class CObj
     public static String PRV_PUSH_TIME   = "prv_push_time";
     public static String PRV_DISPLAY_NAME = "prv_display_name";
     public static String PRV_USER_RANK   = "prv_user_rank";
+    public static String PRV_DEF_FIELD   = "prv_def_field";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 

@@ -87,20 +87,21 @@ public class NewFieldNumberDialog extends Dialog
         CObj nf = new CObj();
         nf.setType ( CObj.FIELD );
         nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
-        nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
+        nf.pushPrivate ( CObj.CREATOR, postDialog.getIdentity().getId() );
+        nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_NUMBER );
         nf.pushString ( CObj.FLD_NAME, text.getText() );
         nf.pushString ( CObj.FLD_DESC, text_1.getText() );
 
         try
         {
-            nf.pushDecimal ( CObj.FLD_MIN, Double.valueOf ( text_2.getText() ) );
+            nf.pushNumber ( CObj.FLD_MIN, Long.valueOf ( text_2.getText() ) );
         }
 
         catch ( Exception e ) { }
 
         try
         {
-            nf.pushDecimal ( CObj.FLD_MAX, Double.valueOf ( text_3.getText() ) );
+            nf.pushNumber ( CObj.FLD_MAX, Long.valueOf ( text_3.getText() ) );
         }
 
         catch ( Exception e ) { }
