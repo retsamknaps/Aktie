@@ -67,6 +67,7 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageRegistry;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -2517,6 +2518,74 @@ public class SWTApp
 
             msg.append ( "--------------------------------------------\n" );
 
+            Set<String> fld = pst.listFields();
+
+            for ( String fid : fld )
+            {
+                CObj f = getNode().getIndex().getByDig ( fid );
+                String nm = f.getString ( CObj.FLD_NAME );
+                String tp = f.getString ( CObj.FLD_TYPE );
+                String dsc = f.getString ( CObj.FLD_DESC );
+                System.out.println ( ">>>>>>>>>>>>>>>>>>> " + nm + " " + tp );
+                String vs = null;
+
+                if ( CObj.FLD_TYPE_BOOL.equals ( tp ) )
+                {
+                    Boolean bv = pst.getFieldBoolean ( fid );
+
+                    if ( bv != null )
+                    {
+                        vs = bv.toString();
+                    }
+
+                }
+
+                if ( CObj.FLD_TYPE_DECIMAL.equals ( tp ) )
+                {
+                    Double db = pst.getFieldDecimal ( fid );
+
+                    if ( db != null )
+                    {
+                        vs = db.toString();
+                    }
+
+                }
+
+                if ( CObj.FLD_TYPE_NUMBER.equals ( tp ) )
+                {
+                    Long lv = pst.getFieldNumber ( fid );
+
+                    if ( lv != null )
+                    {
+                        vs = lv.toString();
+                    }
+
+                }
+
+                if ( CObj.FLD_TYPE_STRING.equals ( tp ) )
+                {
+                    vs = pst.getFieldString ( fid );
+                }
+
+                if ( vs != null )
+                {
+                    vs.replace ( "\n", " " );
+                    vs.replace ( "\r", "" );
+                    dsc.replace ( "\n", " " );
+                    dsc.replace ( "\r", "" );
+                    String fldline = String.format ( "%15s:%-20s | %20s | %s",
+                                                     nm, vs,
+                                                     idCache.getName ( pst.getString ( CObj.CREATOR ) ),
+                                                     dsc );
+                    fldline = fldline.substring ( 0, Math.min ( fldline.length(), 79 ) );
+                    msg.append ( fldline );
+                    msg.append ( "\n" );
+                }
+
+            }
+
+            msg.append ( "--------------------------------------------\n" );
+
             if ( body != null )
             {
                 msg.append ( body );
@@ -4281,7 +4350,9 @@ public class SWTApp
         composite_6 = new Composite ( sashForm_1, SWT.NONE );
         composite_6.setLayout ( new GridLayout() );
 
-        postText = new StyledText ( composite_6, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL );
+        postText = new StyledText ( composite_6, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI );
+        postText.setFont ( JFaceResources.getFont ( JFaceResources.TEXT_FONT ) );
+
         postText.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true ) );
         postText.setEditable ( false );
         postText.setCaret ( null );

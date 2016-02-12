@@ -71,6 +71,7 @@ public class NewFieldStringDialog extends Dialog
         nf.setType ( CObj.FIELD );
         nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
         nf.pushPrivate ( CObj.CREATOR, postDialog.getIdentity().getId() );
+        nf.pushPrivate ( CObj.PRV_FLD_NEW, "true" );
         nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_STRING );
         nf.pushString ( CObj.FLD_NAME, text.getText() );
         nf.pushString ( CObj.FLD_DESC, text_1.getText() );

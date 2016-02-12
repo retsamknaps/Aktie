@@ -1,5 +1,7 @@
 package aktie.gui;
 
+import java.util.Iterator;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.graphics.Point;
@@ -21,6 +23,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 
@@ -146,6 +149,36 @@ public class AddFieldDialog extends Dialog
         return container;
     }
 
+    @Override
+    protected void okPressed()
+    {
+        IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+
+        @SuppressWarnings ( "rawtypes" )
+        Iterator i = sel.iterator();
+
+        CObj lt = null;
+
+        while ( i.hasNext() )
+        {
+            Object selo = i.next();
+
+            if ( selo instanceof CObjListArrayElement )
+            {
+                CObjListArrayElement ce = ( CObjListArrayElement ) selo;
+                lt = ce.getCObj();
+                postDialog.getFieldProvider().addCObj ( lt );
+            }
+
+        }
+
+        if ( lt != null )
+        {
+            postDialog.getFieldTable().setInput ( lt );
+        }
+
+    }
+
     /**
         Create contents of the button bar.
         @param parent
@@ -154,7 +187,7 @@ public class AddFieldDialog extends Dialog
     protected void createButtonsForButtonBar ( Composite parent )
     {
         createButton ( parent, IDialogConstants.OK_ID, "Add Selected Fields", false );
-        createButton ( parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false );
+        createButton ( parent, IDialogConstants.CANCEL_ID, "Close", false );
     }
 
     /**

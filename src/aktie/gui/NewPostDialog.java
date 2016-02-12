@@ -72,6 +72,11 @@ public class NewPostDialog extends Dialog
         return fieldTableViewer;
     }
 
+    public CObjContentProvider getFieldProvider()
+    {
+        return fieldProvider;
+    }
+
     public CObj getCommunity()
     {
         return community;
@@ -415,7 +420,7 @@ public class NewPostDialog extends Dialog
 
         Button btnAddField = new Button ( composite_1, SWT.NONE );
         btnAddField.setText ( "Add Field" );
-        btnAddField.setToolTipText ( "Add the selected field to the post." );
+        btnAddField.setToolTipText ( "Add existing fields to this post." );
         btnAddField.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -828,6 +833,76 @@ public class NewPostDialog extends Dialog
                 {
                     e.printStackTrace();
                     newPreview = null;
+                }
+
+            }
+
+            List<CObj> fl = fieldProvider.getCObjList();
+
+            for ( CObj f : fl )
+            {
+                String v = f.getPrivate ( CObj.FLD_VAL );
+                String t = f.getString ( CObj.FLD_TYPE );
+
+
+                if ( v != null && t != null )
+                {
+                    if ( CObj.FLD_TYPE_BOOL.equals ( t ) )
+                    {
+                        if ( "true".equals ( f.getPrivate ( CObj.PRV_FLD_NEW ) ) )
+                        {
+                            p.setNewFieldBool ( f, Boolean.valueOf ( v ) );
+                        }
+
+                        else
+                        {
+                            p.setFieldBool ( f.getDig(), Boolean.valueOf ( v ) );
+                        }
+
+                    }
+
+                    if ( CObj.FLD_TYPE_STRING.equals ( t ) )
+                    {
+                        if ( "true".equals ( f.getPrivate ( CObj.PRV_FLD_NEW ) ) )
+                        {
+                            p.setNewFieldString ( f, v );
+                        }
+
+                        else
+                        {
+                            p.setFieldString ( f.getDig(), v );
+                        }
+
+                    }
+
+                    if ( CObj.FLD_TYPE_NUMBER.equals ( t ) )
+                    {
+                        if ( "true".equals ( f.getPrivate ( CObj.PRV_FLD_NEW ) ) )
+                        {
+                            p.setNewFieldNumber ( f, Long.valueOf ( v ) );
+                        }
+
+                        else
+                        {
+                            p.setFieldNumber ( f.getDig(), Long.valueOf ( v ) );
+                        }
+
+                    }
+
+                    if ( CObj.FLD_TYPE_DECIMAL.equals ( t ) )
+                    {
+                        if ( "true".equals ( f.getPrivate ( CObj.PRV_FLD_NEW ) ) )
+                        {
+                            p.setNewFieldDecimal ( f, Double.valueOf ( v ) );
+                        }
+
+                        else
+                        {
+                            p.setFieldDecimal ( f.getDig(), Double.valueOf ( v ) );
+                        }
+
+                    }
+
                 }
 
             }

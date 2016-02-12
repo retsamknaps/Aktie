@@ -87,6 +87,7 @@ public class NewFieldDecimalDialog extends Dialog
         CObj nf = new CObj();
         nf.setType ( CObj.FIELD );
         nf.pushString ( CObj.COMMUNITYID, postDialog.getCommunity().getDig() );
+        nf.pushPrivate ( CObj.PRV_FLD_NEW, "true" );
         nf.pushPrivate ( CObj.CREATOR, postDialog.getIdentity().getId() );
         nf.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
         nf.pushString ( CObj.FLD_NAME, text.getText() );
