@@ -2523,63 +2523,67 @@ public class SWTApp
             for ( String fid : fld )
             {
                 CObj f = getNode().getIndex().getByDig ( fid );
-                String nm = f.getString ( CObj.FLD_NAME );
-                String tp = f.getString ( CObj.FLD_TYPE );
-                String dsc = f.getString ( CObj.FLD_DESC );
-                System.out.println ( ">>>>>>>>>>>>>>>>>>> " + nm + " " + tp );
-                String vs = null;
 
-                if ( CObj.FLD_TYPE_BOOL.equals ( tp ) )
+                if ( f != null )
                 {
-                    Boolean bv = pst.getFieldBoolean ( fid );
+                    String nm = f.getString ( CObj.FLD_NAME );
+                    String tp = f.getString ( CObj.FLD_TYPE );
+                    String dsc = f.getString ( CObj.FLD_DESC );
+                    String vs = null;
 
-                    if ( bv != null )
+                    if ( CObj.FLD_TYPE_BOOL.equals ( tp ) )
                     {
-                        vs = bv.toString();
+                        Boolean bv = pst.getFieldBoolean ( fid );
+
+                        if ( bv != null )
+                        {
+                            vs = bv.toString();
+                        }
+
                     }
 
-                }
-
-                if ( CObj.FLD_TYPE_DECIMAL.equals ( tp ) )
-                {
-                    Double db = pst.getFieldDecimal ( fid );
-
-                    if ( db != null )
+                    if ( CObj.FLD_TYPE_DECIMAL.equals ( tp ) )
                     {
-                        vs = db.toString();
+                        Double db = pst.getFieldDecimal ( fid );
+
+                        if ( db != null )
+                        {
+                            vs = db.toString();
+                        }
+
                     }
 
-                }
-
-                if ( CObj.FLD_TYPE_NUMBER.equals ( tp ) )
-                {
-                    Long lv = pst.getFieldNumber ( fid );
-
-                    if ( lv != null )
+                    if ( CObj.FLD_TYPE_NUMBER.equals ( tp ) )
                     {
-                        vs = lv.toString();
+                        Long lv = pst.getFieldNumber ( fid );
+
+                        if ( lv != null )
+                        {
+                            vs = lv.toString();
+                        }
+
                     }
 
-                }
+                    if ( CObj.FLD_TYPE_STRING.equals ( tp ) )
+                    {
+                        vs = pst.getFieldString ( fid );
+                    }
 
-                if ( CObj.FLD_TYPE_STRING.equals ( tp ) )
-                {
-                    vs = pst.getFieldString ( fid );
-                }
+                    if ( vs != null )
+                    {
+                        vs.replace ( "\n", " " );
+                        vs.replace ( "\r", "" );
+                        dsc.replace ( "\n", " " );
+                        dsc.replace ( "\r", "" );
+                        String fldline = String.format ( "%15s:%-20s | %20s | %s",
+                                                         nm, vs,
+                                                         idCache.getName ( pst.getString ( CObj.CREATOR ) ),
+                                                         dsc );
+                        fldline = fldline.substring ( 0, Math.min ( fldline.length(), 79 ) );
+                        msg.append ( fldline );
+                        msg.append ( "\n" );
+                    }
 
-                if ( vs != null )
-                {
-                    vs.replace ( "\n", " " );
-                    vs.replace ( "\r", "" );
-                    dsc.replace ( "\n", " " );
-                    dsc.replace ( "\r", "" );
-                    String fldline = String.format ( "%15s:%-20s | %20s | %s",
-                                                     nm, vs,
-                                                     idCache.getName ( pst.getString ( CObj.CREATOR ) ),
-                                                     dsc );
-                    fldline = fldline.substring ( 0, Math.min ( fldline.length(), 79 ) );
-                    msg.append ( fldline );
-                    msg.append ( "\n" );
                 }
 
             }

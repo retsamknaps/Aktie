@@ -581,7 +581,7 @@ public class NewPostDialog extends Dialog
         Label lblFields = new Label ( container, SWT.NONE );
         lblFields.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         lblFields.setText ( "Fields" );
-        fieldTableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
+        fieldTableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
         fieldProvider = new CObjContentProvider();
         fieldTableViewer.setContentProvider ( fieldProvider );
         table = fieldTableViewer.getTable();
@@ -857,6 +857,7 @@ public class NewPostDialog extends Dialog
                         else
                         {
                             p.setFieldBool ( f.getDig(), Boolean.valueOf ( v ) );
+                            System.out.println ( "NOT NEW BOOL FIELD!" );
                         }
 
                     }
@@ -871,6 +872,7 @@ public class NewPostDialog extends Dialog
                         else
                         {
                             p.setFieldString ( f.getDig(), v );
+                            System.out.println ( "NOT NEW STRING FIELD!" );
                         }
 
                     }
@@ -885,6 +887,7 @@ public class NewPostDialog extends Dialog
                         else
                         {
                             p.setFieldNumber ( f.getDig(), Long.valueOf ( v ) );
+                            System.out.println ( "NOT NEW NUMBER FIELD!" );
                         }
 
                     }
@@ -899,6 +902,7 @@ public class NewPostDialog extends Dialog
                         else
                         {
                             p.setFieldDecimal ( f.getDig(), Double.valueOf ( v ) );
+                            System.out.println ( "NOT NEW DECIMAL FIELD!" );
                         }
 
                     }

@@ -199,11 +199,16 @@ public class NewPostProcessor extends GenericProcessor
                 for ( CObj fld : fldlist )
                 {
                     CObj ft = index.getByDig ( fld.getDig() );
-                    String deflt = ft.getPrivate ( CObj.PRV_DEF_FIELD );
 
-                    if ( deflt != null )
+                    if ( ft != null )
                     {
-                        fld.pushPrivate ( CObj.PRV_DEF_FIELD, deflt );
+                        String deflt = ft.getPrivate ( CObj.PRV_DEF_FIELD );
+
+                        if ( deflt != null )
+                        {
+                            fld.pushPrivate ( CObj.PRV_DEF_FIELD, deflt );
+                        }
+
                     }
 
                     index.index ( fld );

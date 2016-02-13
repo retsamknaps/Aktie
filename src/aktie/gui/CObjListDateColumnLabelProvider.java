@@ -1,5 +1,6 @@
 package aktie.gui;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
@@ -13,10 +14,13 @@ public class CObjListDateColumnLabelProvider extends StyledCellLabelProvider
 {
 
     private String key;
+    private SimpleDateFormat dateformat;
+
 
     public CObjListDateColumnLabelProvider ( String k )
     {
         key = k;
+        dateformat = new SimpleDateFormat ( "d MMM yyyy HH:mm z" );
     }
 
     @Override
@@ -33,7 +37,7 @@ public class CObjListDateColumnLabelProvider extends StyledCellLabelProvider
 
             if ( cl != null )
             {
-                r = ( new Date ( cl ) ).toString();
+                r = dateformat.format ( new Date ( cl ) );
             }
 
             cell.setText ( r );
