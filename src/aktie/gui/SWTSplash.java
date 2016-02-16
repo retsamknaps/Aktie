@@ -61,7 +61,7 @@ public class SWTSplash extends Dialog
 
         Label lblIfYouSelected = new Label ( container, SWT.NONE );
         lblIfYouSelected.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
-        lblIfYouSelected.setText ( "If you selected to use and external router make sure it is running" );
+        lblIfYouSelected.setText ( "If you selected to use and external router make sure it is running." );
 
         if ( splashImg != null )
         {
