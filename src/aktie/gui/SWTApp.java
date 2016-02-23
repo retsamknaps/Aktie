@@ -5066,10 +5066,10 @@ public class SWTApp
         txtAShareIs.setEditable ( false );
         txtAShareIs.setText ( "A Share is a directory or folder on your system, where all "
                               + "files are automatically shared with the community. "
-                              + "Any new files copied to the directory will automatically "
-                              + "be shared.  You can move and rename files within a share, "
-                              + "and ohters will still be able to download.  You can also "
-                              + "do download new files to Share directories." );
+                              + "Any new files copied intoto this directory will automatically "
+                              + "be shared. You can move and rename files within a share, "
+                              + "and others users will still be able to download these. You can also "
+                              + "download new files to Share directories." );
         txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         btnDelete.addSelectionListener ( new SelectionListener()
         {
