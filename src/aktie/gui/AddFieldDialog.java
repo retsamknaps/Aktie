@@ -31,7 +31,8 @@ public class AddFieldDialog extends Dialog
 {
     private Text text;
 
-    private NewPostDialog postDialog;
+    //private NewPostDialog postDialog;
+    private AddFieldInterface fieldAdder;
     private Table table;
     private TableViewer tableViewer;
 
@@ -39,23 +40,23 @@ public class AddFieldDialog extends Dialog
         Create the dialog.
         @param parentShell
     */
-    public AddFieldDialog ( Shell parentShell, NewPostDialog pd )
+    public AddFieldDialog ( Shell parentShell, AddFieldInterface fv )
     {
         super ( parentShell );
-        postDialog = pd;
+        fieldAdder = fv;
     }
 
     private void doSearch()
     {
         if ( text != null && tableViewer != null &&
-                postDialog.getCommunity() != null &&
+                fieldAdder.getCommunity() != null &&
                 !text.isDisposed() && !tableViewer.getTable().isDisposed() )
         {
             Object inp = tableViewer.getInput();
 
             String ss = text.getText();
-            CObjList sl = postDialog.getApp().getNode().getIndex().searchFields (
-                              postDialog.getCommunity().getDig(), ss, null );
+            CObjList sl = fieldAdder.getIndex().searchFields (
+                              fieldAdder.getCommunity().getDig(), ss, null );
             tableViewer.setInput ( sl );
 
             if ( inp != null && inp instanceof CObjList )
@@ -142,7 +143,7 @@ public class AddFieldDialog extends Dialog
         col2.getColumn().setWidth ( 100 );
         col2.getColumn().setMoveable ( false );
         col2.setLabelProvider ( new CObjListCachePrivateIdentityLableProvider (
-                                    postDialog.getApp().getIdCache(), CObj.CREATOR ) );
+                                    fieldAdder.getIdCache(), CObj.CREATOR ) );
 
         doSearch();
 
@@ -167,14 +168,16 @@ public class AddFieldDialog extends Dialog
             {
                 CObjListArrayElement ce = ( CObjListArrayElement ) selo;
                 lt = ce.getCObj();
-                postDialog.getFieldProvider().addCObj ( lt );
+                CObjContentProvider prv = ( CObjContentProvider ) fieldAdder.
+                                          getTableViewer().getContentProvider();
+                prv.addCObj ( lt );
             }
 
         }
 
         if ( lt != null )
         {
-            postDialog.getFieldTable().setInput ( lt );
+            fieldAdder.getTableViewer().setInput ( lt );
         }
 
     }

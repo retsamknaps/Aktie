@@ -20,6 +20,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import aktie.Node;
 import aktie.data.CObj;
@@ -1468,6 +1470,7 @@ public class SWTApp
     private DownloadToShareDialog downloadToShareDialog;
     private I2PSettingsDialog i2pDialog;
     private AddFolderDialog addFolderDialog;
+    private AdvancedSearchDialog advancedDialog;
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
@@ -1493,6 +1496,7 @@ public class SWTApp
     private String exportCommunitiesFile;
     private CObj developerIdentity;
     private Map<String, List<CObj>> pendingPosts = new HashMap<String, List<CObj>>();
+    private CObj advQuery;
 
     //Should be a HASFILE
     private void checkPendingPosts ( CObj c )
@@ -1626,7 +1630,8 @@ public class SWTApp
 
         searchText.setText ( "" );
         fileSearch.setText ( "" );
-        postSearch ( "" );
+        advQuery = null;
+        postSearch ( );
         filesSearch ( "" );
         postText.setText ( "" );
     }
@@ -2226,20 +2231,16 @@ public class SWTApp
 
     }
 
-    private void postSearch()
-    {
-        String srch = searchText.getText();
-        postSearch ( srch );
-    }
-
     private String sortPostField1;
     private String sortPostField2;
     private boolean sortPostReverse;
     private SortField.Type sortPostType1;
     private SortField.Type sortPostType2;
 
-    private void postSearch ( String srch )
+    private void postSearch ( )
     {
+        String srch = searchText.getText();
+
         if ( selectedCommunity != null )
         {
             CObjList oldlst = ( CObjList ) postTableViewer.getInput();
@@ -2296,8 +2297,19 @@ public class SWTApp
                 s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
             }
 
-            CObjList clst = getNode().getIndex().searchPosts ( selectedCommunity.getDig(), srch, s );
-            postTableViewer.setInput ( clst );
+            if ( advQuery == null )
+            {
+                CObjList clst = getNode().getIndex().searchPosts ( selectedCommunity.getDig(), srch, s );
+                postTableViewer.setInput ( clst );
+            }
+
+            else
+            {
+                List<CObj> ql = new LinkedList<CObj>();
+                ql.add ( advQuery );
+                CObjList clst = getNode().getIndex().searchPostsQuery ( ql, s );
+                postTableViewer.setInput ( clst );
+            }
 
             if ( oldlst != null )
             {
@@ -2765,6 +2777,8 @@ public class SWTApp
         downloadToShareDialog.create();
         addFolderDialog = new AddFolderDialog ( shell, this );
         addFolderDialog.create();
+        advancedDialog = new AdvancedSearchDialog ( shell, this );
+        advancedDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -2976,6 +2990,13 @@ public class SWTApp
     }
 
     public static ImageRegistry imgReg;
+
+    public void setAdvancedQuery ( CObj q )
+    {
+        advQuery = q;
+        searchText.setText ( "" );
+        postSearch();
+    }
 
     /**
         Create contents of the window.
@@ -3796,6 +3817,21 @@ public class SWTApp
 
         searchText = new Text ( composite_7, SWT.BORDER );
         searchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        searchText.addKeyListener ( null );
+        searchText.addListener ( SWT.Traverse, new Listener()
+        {
+            @Override
+            public void handleEvent ( Event event )
+            {
+                if ( event.detail == SWT.TRAVERSE_RETURN )
+                {
+                    advQuery = null;
+                    postSearch();
+                }
+
+            }
+
+        } );
 
         Button btnSearch = new Button ( composite_7, SWT.NONE );
         btnSearch.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
@@ -3805,6 +3841,14 @@ public class SWTApp
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
+                String st = searchText.getText();
+                Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( st );
+
+                if ( m.find() )
+                {
+                    advQuery = null;
+                }
+
                 postSearch();
             }
 
@@ -3818,6 +3862,20 @@ public class SWTApp
         Button btnAdvanced = new Button ( composite_7, SWT.NONE );
         btnAdvanced.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         btnAdvanced.setText ( "Advanced" );
+        btnAdvanced.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                advancedDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         Button btnRefresh = new Button ( composite_7, SWT.NONE );
         btnRefresh.setText ( "Refresh" );

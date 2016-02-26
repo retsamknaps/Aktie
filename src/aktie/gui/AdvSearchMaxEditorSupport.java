@@ -8,30 +8,19 @@ import org.eclipse.jface.viewers.TextCellEditor;
 
 import aktie.data.CObj;
 
-import org.eclipse.jface.viewers.CheckboxCellEditor;
-
-//import org.eclipse.swt.SWT;
-
-//import aktie.data.CObj;
-
-public class NewPostFieldEditorSupport extends EditingSupport
+public class AdvSearchMaxEditorSupport extends EditingSupport
 {
 
-    private TextCellEditor text;
     private FieldNumValidator numValidator;
     private TextCellEditor textNum;
     private FieldDecValidator decValidator;
     private TextCellEditor textDec;
-    private CheckboxCellEditor checkbox;
     private TableViewer tviewer;
 
-
-    public NewPostFieldEditorSupport ( ColumnViewer viewer )
+    public AdvSearchMaxEditorSupport ( ColumnViewer viewer )
     {
         super ( viewer );
         tviewer = ( TableViewer ) viewer;
-        text = new TextCellEditor ( tviewer.getTable() );
-        checkbox = new CheckboxCellEditor ( tviewer.getTable() );
         textNum = new TextCellEditor ( tviewer.getTable() );
         numValidator = new FieldNumValidator();
         textNum.setValidator ( numValidator );
@@ -48,16 +37,6 @@ public class NewPostFieldEditorSupport extends EditingSupport
             CObjListGetter gt = ( CObjListGetter ) c;
             CObj co = gt.getCObj();
             String fdtyp = co.getString ( CObj.FLD_TYPE );
-
-            if ( CObj.FLD_TYPE_STRING.equals ( fdtyp ) )
-            {
-                return true;
-            }
-
-            if ( CObj.FLD_TYPE_BOOL.equals ( fdtyp ) )
-            {
-                return true;
-            }
 
             if ( CObj.FLD_TYPE_NUMBER.equals ( fdtyp ) )
             {
@@ -82,16 +61,6 @@ public class NewPostFieldEditorSupport extends EditingSupport
             CObjListGetter gt = ( CObjListGetter ) c;
             CObj co = gt.getCObj();
             String fdtyp = co.getString ( CObj.FLD_TYPE );
-
-            if ( CObj.FLD_TYPE_STRING.equals ( fdtyp ) )
-            {
-                return text;
-            }
-
-            if ( CObj.FLD_TYPE_BOOL.equals ( fdtyp ) )
-            {
-                return checkbox;
-            }
 
             if ( CObj.FLD_TYPE_NUMBER.equals ( fdtyp ) )
             {
@@ -149,24 +118,9 @@ public class NewPostFieldEditorSupport extends EditingSupport
             CObj co = gt.getCObj();
             String fdtyp = co.getString ( CObj.FLD_TYPE );
 
-            if ( CObj.FLD_TYPE_STRING.equals ( fdtyp ) )
-            {
-                String v = co.getPrivate ( CObj.FLD_VAL );
-
-                if ( v == null ) { v = ""; }
-
-                return v;
-            }
-
-            if ( CObj.FLD_TYPE_BOOL.equals ( fdtyp ) )
-            {
-                String v = co.getPrivate ( CObj.FLD_VAL );
-                return "true".equals ( v );
-            }
-
             if ( CObj.FLD_TYPE_NUMBER.equals ( fdtyp ) )
             {
-                String v = co.getPrivate ( CObj.FLD_VAL );
+                String v = co.getPrivate ( CObj.FLD_MAX );
 
                 if ( v == null )
                 {
@@ -200,7 +154,7 @@ public class NewPostFieldEditorSupport extends EditingSupport
 
             if ( CObj.FLD_TYPE_DECIMAL.equals ( fdtyp ) )
             {
-                String v = co.getPrivate ( CObj.FLD_VAL );
+                String v = co.getPrivate ( CObj.FLD_MAX );
 
                 if ( v == null )
                 {
@@ -244,7 +198,7 @@ public class NewPostFieldEditorSupport extends EditingSupport
         {
             CObjListGetter gt = ( CObjListGetter ) c;
             CObj co = gt.getCObj();
-            co.pushPrivate ( CObj.FLD_VAL, v.toString() );
+            co.pushPrivate ( CObj.FLD_MAX, v.toString() );
             tviewer.refresh();
         }
 

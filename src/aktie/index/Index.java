@@ -806,7 +806,7 @@ public class Index
                         CObj.FLD_TYPE_OPT.equals ( typ ) ||
                         CObj.FLD_TYPE_STRING.equals ( typ ) )
                 {
-                    String val = qf.getString ( valuekey );
+                    String val = query.getString ( valuekey );
 
                     if ( val != null )
                     {

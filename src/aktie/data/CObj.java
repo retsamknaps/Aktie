@@ -713,6 +713,7 @@ public class CObj
 
     private Map<String, String> privatedata;
     private Map<String, Long> privatenumbers;
+    private Map<String, Double> privatedecimals;
 
     public void clear()
     {
@@ -726,6 +727,7 @@ public class CObj
         signature = null;
         privatedata = null;
         privatenumbers = null;
+        privatedecimals = null;
     }
 
     public CObj clone()
@@ -786,6 +788,15 @@ public class CObj
             for ( Entry<String, Long> e : privatenumbers.entrySet() )
             {
                 c.pushPrivateNumber ( e.getKey(), e.getValue() );
+            }
+
+        }
+
+        if ( privatedecimals != null )
+        {
+            for ( Entry<String, Double> e : privatedecimals.entrySet() )
+            {
+                c.pushPrivateDecimal ( e.getKey(), e.getValue() );
             }
 
         }
@@ -1116,6 +1127,20 @@ public class CObj
 
         }
 
+        if ( privatedecimals != null )
+        {
+            if ( privatedecimals.size() > 0 )
+            {
+                for ( Entry<String, Double> e : privatedecimals.entrySet() )
+                {
+                    d.add ( new DoubleField ( docPrivateDecimal ( e.getKey() ), e.getValue(), Store.YES ) );
+                    d.add ( new SortedNumericDocValuesField ( docPrivateDecimal ( e.getKey() ), NumericUtils.doubleToSortableLong ( e.getValue() ) ) );
+                }
+
+            }
+
+        }
+
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // DO NOT SAVE/RESTORE privatedata in JSON!!  Document ONLY!!!
         //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1135,6 +1160,11 @@ public class CObj
     public static String docPrivateNumber ( String t )
     {
         return "PRIVNUM_" + t;
+    }
+
+    public static String docPrivateDecimal ( String t )
+    {
+        return "PRIVDEC_" + t;
     }
 
     public static String docDecimal ( String t )
@@ -1264,6 +1294,17 @@ public class CObj
 
                     String nk = k.substring ( "PRIVNUM_".length() );
                     privatenumbers.put ( nk, i.numericValue().longValue() );
+                }
+
+                if ( k.startsWith ( "PRIVDEC_" ) )
+                {
+                    if ( privatedecimals == null )
+                    {
+                        privatedecimals = new HashMap<String, Double>();
+                    }
+
+                    String nk = k.substring ( "PRIVDEC_".length() );
+                    privatedecimals.put ( nk, i.numericValue().doubleValue() );
                 }
 
                 //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1436,6 +1477,27 @@ public class CObj
         return privatenumbers.get ( key );
     }
 
+    public void pushPrivateDecimal ( String key, Double v )
+    {
+        if ( v != null )
+        {
+            if ( privatedecimals == null )
+            {
+                privatedecimals = new HashMap<String, Double>();
+            }
+
+            privatedecimals.put ( key, v );
+        }
+
+    }
+
+    public Double getPrivateDecimal ( String key )
+    {
+        if ( privatedecimals == null ) { return null; }
+
+        return privatedecimals.get ( key );
+    }
+
     public void pushString ( String key, String v )
     {
         if ( v != null )
@@ -1540,6 +1602,11 @@ public class CObj
     public Map<String, Long> getPrivateNumbers()
     {
         return privatenumbers;
+    }
+
+    public Map<String, Double> getPrivateDecimals()
+    {
+        return privatedecimals;
     }
 
     public String getId()
@@ -1680,6 +1747,8 @@ public class CObj
         if ( !mapEq ( privatedata, b.getPrivatedata() ) ) { return false; }
 
         if ( !mapEq ( privatenumbers, b.getPrivateNumbers() ) ) { return false; }
+
+        if ( !mapEq ( privatedecimals, b.getPrivateDecimals() ) ) { return false; }
 
         return true;
     }

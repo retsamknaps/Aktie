@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.index.CObjList;
+import aktie.index.Index;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -40,7 +41,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.layout.RowData;
 
-public class NewPostDialog extends Dialog
+public class NewPostDialog extends Dialog implements AddFieldInterface
 {
 
     public static int REPLY_WRAP_LENGTH = 80;
@@ -75,11 +76,6 @@ public class NewPostDialog extends Dialog
     public CObjContentProvider getFieldProvider()
     {
         return fieldProvider;
-    }
-
-    public CObj getCommunity()
-    {
-        return community;
     }
 
     public CObj getIdentity()
@@ -1002,6 +998,30 @@ public class NewPostDialog extends Dialog
     public Text getFile2Text()
     {
         return fileText;
+    }
+
+    @Override
+    public CObj getCommunity()
+    {
+        return community;
+    }
+
+    @Override
+    public Index getIndex()
+    {
+        return app.getNode().getIndex();
+    }
+
+    @Override
+    public IdentityCache getIdCache()
+    {
+        return app.getIdCache();
+    }
+
+    @Override
+    public TableViewer getTableViewer()
+    {
+        return fieldTableViewer;
     }
 
 }

@@ -36,5 +36,8 @@
 	<classpathentry kind="lib" path="lib/lucene-backward-codecs-5.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/lucene-misc-5.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/bcprov-jdk15on-153.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.nebula.jface.cdatetime_0.14.0.201602111357.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.nebula.widgets.cdatetime_0.14.0.201602111357.jar"/>
+	<classpathentry kind="lib" path="lib/org.eclipse.nebula.widgets.cdatetime.feature_0.14.0.201602111357.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
