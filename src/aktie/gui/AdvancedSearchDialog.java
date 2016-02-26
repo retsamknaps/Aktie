@@ -240,9 +240,11 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         btnDeleteField.setText ( "Delete Field" );
 
         fieldProvider = new CObjContentProvider();
-        fieldTableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
+        fieldTableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
         fieldTableViewer.setContentProvider ( fieldProvider );
         table = fieldTableViewer.getTable();
+        table.setHeaderVisible ( true );
+        table.setLinesVisible ( true );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
 
         TableViewerColumn col0 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
@@ -280,6 +282,8 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     @Override
     protected void okPressed()
     {
+        //TODO: Build the search query
+        super.okPressed();
     }
 
     /**
@@ -299,7 +303,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 650, 500 );
+        return new Point ( 810, 500 );
     }
 
     @Override

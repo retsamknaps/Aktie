@@ -119,7 +119,7 @@ public class AddFieldDialog extends Dialog
 
         btnNewButton.setText ( "Search" );
 
-        tableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
+        tableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
         tableViewer.setContentProvider ( new CObjListContentProvider() );
         table = tableViewer.getTable();
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
