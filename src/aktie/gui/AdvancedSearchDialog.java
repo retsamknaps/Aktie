@@ -74,6 +74,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     public void open ( CObj comid )
     {
         community = comid;
+        setCommunity ( comid );
         super.open();
     }
 
@@ -272,6 +273,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         fieldMaxEditor = new AdvSearchMaxEditorSupport ( fieldTableViewer );
         col3.setEditingSupport ( fieldMaxEditor );
 
+        setCommunity ( community );
         return container;
     }
 

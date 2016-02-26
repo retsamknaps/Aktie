@@ -3306,7 +3306,7 @@ public class SWTApp
                                 unsub.setType ( CObj.SUBSCRIPTION );
                                 unsub.pushString ( CObj.COMMUNITYID, comid );
                                 unsub.pushString ( CObj.CREATOR, identid );
-                                unsub.pushString ( CObj.SUBSCRIBED, "flase" );
+                                unsub.pushString ( CObj.SUBSCRIBED, "false" );
                                 getNode().enqueue ( unsub );
                             }
 
@@ -3817,7 +3817,6 @@ public class SWTApp
 
         searchText = new Text ( composite_7, SWT.BORDER );
         searchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
-        searchText.addKeyListener ( null );
         searchText.addListener ( SWT.Traverse, new Listener()
         {
             @Override
@@ -3867,7 +3866,11 @@ public class SWTApp
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                advancedDialog.open();
+                if ( selectedCommunity != null )
+                {
+                    advancedDialog.open ( selectedCommunity );
+                }
+
             }
 
             @Override
@@ -5124,10 +5127,10 @@ public class SWTApp
         txtAShareIs.setEditable ( false );
         txtAShareIs.setText ( "A Share is a directory or folder on your system, where all "
                               + "files are automatically shared with the community. "
-                              + "Any new files copied to the directory will automatically "
+                              + "Any new files copied into the directory will automatically "
                               + "be shared.  You can move and rename files within a share, "
-                              + "and ohters will still be able to download.  You can also "
-                              + "do download new files to Share directories." );
+                              + "and ohter users will still be able to download these.  "
+                              + "You can also do download new files to Share directories." );
         txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         btnDelete.addSelectionListener ( new SelectionListener()
         {

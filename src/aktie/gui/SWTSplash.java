@@ -57,11 +57,11 @@ public class SWTSplash extends Dialog
 
         Label lblItCanTake = new Label ( container, SWT.NONE );
         lblItCanTake.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
-        lblItCanTake.setText ( "It can take quite a while the first time you start it." );
+        lblItCanTake.setText ( "It can take up to 20 minutes the first time you start it." );
 
         Label lblIfYouSelected = new Label ( container, SWT.NONE );
         lblIfYouSelected.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
-        lblIfYouSelected.setText ( "If you selected to use and external router make sure it is running" );
+        lblIfYouSelected.setText ( "If you selected to use and external router make sure it is running." );
 
         if ( splashImg != null )
         {
