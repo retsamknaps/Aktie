@@ -740,7 +740,7 @@ public class Index
                 NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                                  CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
                                                  min, max, true, true );
-                builder.add ( nq, BooleanClause.Occur.MUST );
+                //builder.add ( nq, BooleanClause.Occur.MUST );
             }
 
             Long mindate = query.getNumber ( CObj.QRY_MIN_DATE );
