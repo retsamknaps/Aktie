@@ -10,6 +10,10 @@ public class CObjListContentProvider implements IStructuredContentProvider
 
     private CObjList list;
 
+    public CObjListContentProvider()
+    {
+    }
+
     @Override
     public void dispose()
     {

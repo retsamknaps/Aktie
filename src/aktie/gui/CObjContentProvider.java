@@ -38,7 +38,13 @@ public class CObjContentProvider implements IStructuredContentProvider
 
     public void addCObj ( CObj f )
     {
-        rowList.add ( new CObjElement ( f ) );
+        CObjElement ne = new CObjElement ( f );
+
+        if ( !rowList.contains ( ne ) )
+        {
+            rowList.add ( ne );
+        }
+
     }
 
     public void removeElement ( CObjElement e )

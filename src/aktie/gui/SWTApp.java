@@ -40,6 +40,7 @@ import aktie.gui.subtree.SubTreeSorter;
 import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
+import aktie.index.Upgrade0405;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager;
 import aktie.net.ConnectionThread;
@@ -1471,6 +1472,7 @@ public class SWTApp
     private I2PSettingsDialog i2pDialog;
     private AddFolderDialog addFolderDialog;
     private AdvancedSearchDialog advancedDialog;
+    private SetUserRankDialog userRankDialog;
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
@@ -1958,6 +1960,7 @@ public class SWTApp
         if ( lastversion != null )
         {
             upgrade0301 ( lastversion );
+            upgrade0405 ( lastversion );
         }
 
         // new RawNet ( new File ( nodeDir ) )
@@ -1969,7 +1972,6 @@ public class SWTApp
         {
             upgrade0115 ( lastversion );
         }
-
 
     }
 
@@ -2139,6 +2141,15 @@ public class SWTApp
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0403 ) < 0 )
         {
             Upgrade0301.upgrade ( nodeDir + File.separator + "index" );
+        }
+
+    }
+
+    public void upgrade0405 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0405 ) < 0 )
+        {
+            Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
         }
 
     }
@@ -2779,6 +2790,8 @@ public class SWTApp
         addFolderDialog.create();
         advancedDialog = new AdvancedSearchDialog ( shell, this );
         advancedDialog.create();
+        userRankDialog = new SetUserRankDialog ( shell, this );
+        userRankDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -3824,8 +3837,17 @@ public class SWTApp
             {
                 if ( event.detail == SWT.TRAVERSE_RETURN )
                 {
-                    advQuery = null;
-                    postSearch();
+                    if ( selectedIdentity == null && selectedCommunity == null )
+                    {
+                        MessageDialog.openWarning ( shell, "Select a community.", "Sorry, you have to select a community first." );
+                    }
+
+                    else
+                    {
+                        advQuery = null;
+                        postSearch();
+                    }
+
                 }
 
             }
@@ -3840,15 +3862,25 @@ public class SWTApp
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                String st = searchText.getText();
-                Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( st );
-
-                if ( m.find() )
+                if ( selectedIdentity == null && selectedCommunity == null )
                 {
-                    advQuery = null;
+                    MessageDialog.openWarning ( shell, "Select a community.", "Sorry, you have to select a community first." );
                 }
 
-                postSearch();
+                else
+                {
+
+                    String st = searchText.getText();
+                    Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( st );
+
+                    if ( m.find() )
+                    {
+                        advQuery = null;
+                    }
+
+                    postSearch();
+                }
+
             }
 
             @Override
@@ -3866,9 +3898,14 @@ public class SWTApp
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                if ( selectedCommunity != null )
+                if ( selectedIdentity == null && selectedCommunity == null )
                 {
-                    advancedDialog.open ( selectedCommunity );
+                    MessageDialog.openWarning ( shell, "Select a community.", "Sorry, you have to select a community first." );
+                }
+
+                else
+                {
+                    advancedDialog.open ( selectedCommunity, selectedIdentity );
                 }
 
             }
@@ -3943,6 +3980,11 @@ public class SWTApp
             }
 
         } );
+
+        TableViewerColumn col05 = new TableViewerColumn ( postTableViewer, SWT.NONE );
+        col05.getColumn().setText ( "Rank" );
+        col05.getColumn().setWidth ( 20 );
+        col05.setLabelProvider ( new CObjListPrivateNumColumnLabelProvider ( CObj.PRV_USER_RANK ) );
 
         TableViewerColumn col1 = new TableViewerColumn ( postTableViewer, SWT.NONE );
         col1.getColumn().setText ( "Subject" );
@@ -4089,6 +4131,7 @@ public class SWTApp
         TableViewerColumn col4 = new TableViewerColumn ( postTableViewer, SWT.NONE );
         col4.getColumn().setText ( "Local File" );
         col4.getColumn().setWidth ( 100 );
+        col4.getColumn().setAlignment ( SWT.RIGHT );
         col4.setLabelProvider ( localFileColumnProvider );
         col4.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -4373,6 +4416,65 @@ public class SWTApp
 
         } );
 
+        MenuItem mntmSetrank = new MenuItem ( menu_5, SWT.NONE );
+        mntmSetrank.setText ( "Set user rank" );
+        mntmSetrank.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null )
+                {
+                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+
+                    @SuppressWarnings ( "rawtypes" )
+                    Iterator i = sel.iterator();
+
+                    Set<String> userids = new HashSet<String>();
+
+                    while ( i.hasNext() )
+                    {
+                        Object selo = i.next();
+
+                        if ( selo instanceof CObjListArrayElement )
+                        {
+                            CObjListArrayElement ae = ( CObjListArrayElement ) selo;
+                            CObj fr = ae.getCObj();
+                            String id = fr.getString ( CObj.CREATOR );
+
+                            if ( id != null )
+                            {
+                                userids.add ( id );
+                            }
+
+                        }
+
+                    }
+
+                    Set<CObj> users = new HashSet<CObj>();
+
+                    for ( String id : userids )
+                    {
+                        CObj u = node.getIndex().getIdentity ( id );
+                        users.add ( u );
+                    }
+
+                    if ( users.size() > 0 )
+                    {
+                        userRankDialog.open ( users );
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         MenuItem mntmReply = new MenuItem ( menu_5, SWT.NONE );
         mntmReply.setText ( "Reply" );
         mntmReply.addSelectionListener ( new SelectionListener()
@@ -4641,6 +4743,7 @@ public class SWTApp
         TableViewerColumn fcol0 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
         fcol0.getColumn().setText ( "File" );
         fcol0.getColumn().setWidth ( 100 );
+        fcol0.getColumn().setAlignment ( SWT.RIGHT );
         fcol0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.NAME ) );
         fcol0.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -5177,6 +5280,7 @@ public class SWTApp
         TableViewerColumn dlcol0 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
         dlcol0.getColumn().setText ( "File" );
         dlcol0.getColumn().setWidth ( 200 );
+        dlcol0.getColumn().setAlignment ( SWT.RIGHT );
         dlcol0.setLabelProvider ( new DownloadsColumnFileName() );
         dlcol0.getColumn().addSelectionListener ( new SelectionListener()
         {

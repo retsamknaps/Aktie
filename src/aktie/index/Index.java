@@ -2,6 +2,7 @@ package aktie.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,6 +40,10 @@ public class Index
     private AktieSearcher searcher;
 
     private File indexdir;
+
+    public Index()
+    {
+    }
 
     public static List<CObj> list ( CObjList cl )
     {
@@ -217,6 +222,15 @@ public class Index
         {
         }
 
+        try
+        {
+            searcher.closeSearch();
+        }
+
+        catch ( Exception e )
+        {
+        }
+        
     }
 
     public CObjList search ( Query q, int max )
@@ -686,6 +700,32 @@ public class Index
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
+    public CObjList getQueries ( String comid )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.QUERY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getAutodownloadQueries()
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.QUERY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docPrivate ( CObj.PRV_QRY_AUTODOWNLOAD ), "true" );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList searchPostsQuery ( List<CObj> qlst, Sort srt )
     {
         Matcher sm = Pattern.compile ( "\\S+" ).matcher ( "" );
@@ -711,13 +751,17 @@ public class Index
                 builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
             }
 
-            String creator = query.getString ( CObj.CREATOR );
-
-            if ( creator != null )
-            {
-                Term crterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
-                builder.add ( new TermQuery ( crterm ), BooleanClause.Occur.MUST );
-            }
+            // Queries have to have a local creator identity for auto
+            // downloads, so another field beside CREATOR will have to
+            // be used if we want to actually do this.  No support
+            // right now though.
+            //String creator = query.getString ( CObj.CREATOR );
+            //
+            //if ( creator != null )
+            //{
+            //    Term crterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+            //    builder.add ( new TermQuery ( crterm ), BooleanClause.Occur.MUST );
+            //}
 
             Long minusrrank = query.getNumber ( CObj.QRY_MIN_USER_RANK );
             Long maxusrrank = query.getNumber ( CObj.QRY_MAX_USER_RANK );
@@ -740,11 +784,20 @@ public class Index
                 NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                                  CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
                                                  min, max, true, true );
-                //builder.add ( nq, BooleanClause.Occur.MUST );
+                builder.add ( nq, BooleanClause.Occur.MUST );
             }
 
             Long mindate = query.getNumber ( CObj.QRY_MIN_DATE );
             Long maxdate = query.getNumber ( CObj.QRY_MAX_DATE );
+
+            Long db = query.getNumber ( CObj.QRY_DAYS_BACK );
+
+            if ( db != null && db > 0 )
+            {
+                maxdate = null;
+                Date today = new Date();
+                mindate = today.getTime() - ( db * 24L * 60L * 60L * 1000L );
+            }
 
             if ( mindate != null || maxdate != null )
             {
@@ -801,12 +854,14 @@ public class Index
                 String valuekey = CObj.FLD + CObj.getSubid ( qf.getDig() );
 
                 String typ = qf.getString ( CObj.FLD_TYPE );
+                System.out.println ( "SEARCH QUERY: " + typ );
 
                 if ( CObj.FLD_TYPE_BOOL.equals ( typ ) ||
                         CObj.FLD_TYPE_OPT.equals ( typ ) ||
                         CObj.FLD_TYPE_STRING.equals ( typ ) )
                 {
                     String val = query.getString ( valuekey );
+                    System.out.println ( "QUERY " + valuekey + " val: " + val );
 
                     if ( val != null )
                     {
@@ -1771,6 +1826,34 @@ public class Index
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term midterm = new Term ( CObj.PARAM_DIG, dig );
+        builder.add ( new TermQuery ( midterm ), BooleanClause.Occur.MUST );
+
+        CObj r = null;
+        CObjList l = search ( builder.build(), 1 );
+
+        if ( l.size() > 0 )
+        {
+            try
+            {
+                r = l.get ( 0 );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        l.close();
+        return r;
+    }
+
+    public CObj getById ( String dig )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term midterm = new Term ( CObj.PARAM_ID, dig );
         builder.add ( new TermQuery ( midterm ), BooleanClause.Occur.MUST );
 
         CObj r = null;

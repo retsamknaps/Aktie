@@ -44,6 +44,7 @@ public class AddFieldDialog extends Dialog
     {
         super ( parentShell );
         fieldAdder = fv;
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
     }
 
     private void doSearch()
@@ -136,7 +137,7 @@ public class AddFieldDialog extends Dialog
         col1.getColumn().setText ( "Description" );
         col1.getColumn().setWidth ( 200 );
         col1.getColumn().setMoveable ( false );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
+        col1.setLabelProvider ( new AdvSearchFieldDescriptionLabelProvider() );
 
         TableViewerColumn col2 = new TableViewerColumn ( tableViewer, SWT.NONE );
         col2.getColumn().setText ( "Creator" );

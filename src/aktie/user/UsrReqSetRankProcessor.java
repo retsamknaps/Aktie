@@ -55,7 +55,7 @@ public class UsrReqSetRankProcessor extends GenericProcessor
                         CObj co = cl.get ( c );
                         Long or = co.getPrivateNumber ( CObj.PRV_USER_RANK );
 
-                        if ( or != null && !or.equals ( rnk ) )
+                        if ( !rnk.equals ( or ) )
                         {
                             co.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                             index.index ( co );

@@ -1,5 +1,6 @@
 package aktie.gui;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -8,6 +9,8 @@ import java.util.regex.Pattern;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -17,10 +20,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.nebula.widgets.cdatetime.CDT;
 import org.eclipse.nebula.widgets.cdatetime.CDateTime;
 import org.eclipse.swt.widgets.Button;
@@ -31,7 +34,6 @@ import org.eclipse.swt.widgets.Text;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 import aktie.index.Index;
-import swing2swt.layout.FlowLayout;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.TableViewer;
@@ -48,12 +50,16 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     private ComboViewer comboViewer;
     private SWTApp app;
     private CObj community;
+    private CObj identity;
     private AddFieldDialog addFieldDialog;
     private Shell shell;
     private TableViewer fieldTableViewer;
     private CObjContentProvider fieldProvider;
     private NewPostFieldEditorSupport fieldEditor;
     private AdvSearchMaxEditorSupport fieldMaxEditor;
+    private CObjListContentProvider queryProvider;
+    private Button btnAutodownload;
+    private CObj lastQuery;
 
     /**
         Create the dialog.
@@ -69,21 +75,52 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         addFieldDialog.create();
     }
 
-    public void open ( CObj comid )
+    public void open ( CObj comid, CObj id )
     {
         community = comid;
+        identity = id;
         setCommunity ( comid );
         super.open();
     }
 
-    private boolean newCommunity;
+
+    private void loadDefFields()
+    {
+        if ( community != null )
+        {
+            fieldProvider.clear();
+            CObjList dlst = app.getNode().getIndex().getDefFields ( community.getDig() );
+            CObj lf = null;
+
+            for ( int i = 0; i < dlst.size(); i++ )
+            {
+                try
+                {
+                    CObj d = dlst.get ( i );
+                    lf = d;
+                    fieldProvider.addCObj ( d );
+                }
+
+                catch ( Exception e )
+                {
+                }
+
+            }
+
+            dlst.close();
+            fieldTableViewer.setInput ( lf );
+        }
+
+    }
+
     private Button btnEarliest;
     private Button btnLatest;
+    private Button btnNewWithinDays;
     private Text maxFileSize;
     private Text minFileSize;
+    private Text daysNew;
     public void setCommunity ( CObj c )
     {
-        newCommunity = newCommunity || community == null || !community.equals ( c );
         community = c;
 
         if ( app != null && community != null )
@@ -91,32 +128,27 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
             if ( table != null && !table.isDisposed() &&
                     searchText != null && !searchText.isDisposed() )
             {
-                if ( newCommunity )
+
+                boolean loaddefs = true;
+
+                if ( lastQuery != null )
                 {
-                    newCommunity = false;
-                    fieldProvider.clear();
-                    CObjList dlst = app.getNode().getIndex().getDefFields ( community.getDig() );
-                    CObj lf = null;
+                    String comid = lastQuery.getString ( CObj.COMMUNITYID );
 
-                    for ( int i = 0; i < dlst.size(); i++ )
+                    if ( community.getDig().equals ( comid ) )
                     {
-                        try
-                        {
-                            CObj d = dlst.get ( i );
-                            lf = d;
-                            fieldProvider.addCObj ( d );
-                        }
-
-                        catch ( Exception e )
-                        {
-                        }
-
+                        setQuery ( lastQuery );
+                        loaddefs = false;
                     }
 
-                    dlst.close();
-                    fieldTableViewer.setInput ( lf );
-
                 }
+
+                if ( loaddefs )
+                {
+                    loadDefFields();
+                }
+
+                updateQueries();
 
             }
 
@@ -135,21 +167,159 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         container.setLayout ( new GridLayout ( 1, false ) );
 
         Group composite = new Group ( container, SWT.NONE );
-        composite.setLayout ( new GridLayout ( 6, false ) );
+        composite.setLayout ( new GridLayout ( 7, false ) );
         composite.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         comboViewer = new ComboViewer ( composite, SWT.NONE );
-        comboViewer.setContentProvider ( ArrayContentProvider.getInstance() );
-        comboViewer.setLabelProvider ( new LabelProvider() );
+        queryProvider = new CObjListContentProvider();
+        comboViewer.setContentProvider ( queryProvider );
+        comboViewer.setLabelProvider ( new ILabelProvider()
+        {
+            @Override
+            public void addListener ( ILabelProviderListener arg0 )
+            {
+            }
+
+            @Override
+            public void dispose()
+            {
+            }
+
+            @Override
+            public boolean isLabelProperty ( Object arg0, String arg1 )
+            {
+                return false;
+            }
+
+            @Override
+            public void removeListener ( ILabelProviderListener arg0 )
+            {
+            }
+
+            @Override
+            public Image getImage ( Object arg0 )
+            {
+                return null;
+            }
+
+            @Override
+            public String getText ( Object c )
+            {
+                CObjListArrayElement e = ( CObjListArrayElement ) c;
+
+                if ( e != null )
+                {
+                    return e.getCObj().getString ( CObj.NAME );
+                }
+
+                return "";
+            }
+
+        } );
+
         Combo combo = comboViewer.getCombo();
         GridData gd_combo = new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 );
         gd_combo.widthHint = 80;
         combo.setLayoutData ( gd_combo );
         combo.setToolTipText ( "Select a previously saved query." );
-        comboViewer.setInput ( new String[] {} );
 
         Button btnLoadQuery = new Button ( composite, SWT.NONE );
         btnLoadQuery.setText ( "Load Query" );
+        btnLoadQuery.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) comboViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                if ( i.hasNext() )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof CObjListArrayElement )
+                    {
+                        CObjListArrayElement ce = ( CObjListArrayElement ) selo;
+                        setQuery ( ce.getCObj() );
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        Button btnDelQuery = new Button ( composite, SWT.NONE );
+        btnDelQuery.setText ( "Delete Query" );
+        btnDelQuery.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) comboViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                String id = null;
+
+                if ( i.hasNext() )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof CObjListArrayElement )
+                    {
+                        CObjListArrayElement ce = ( CObjListArrayElement ) selo;
+                        id = ce.getCObj().getId();
+                    }
+
+                }
+
+                if ( id == null )
+                {
+                    String qname = text.getText();
+                    Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( qname );
+
+                    if ( !m.find() )
+                    {
+                        id = "QUERY_ID_" + m.group ( 1 );
+                    }
+
+                }
+
+                CObj c = app.getNode().getIndex().getById ( id );
+
+                if ( c != null )
+                {
+                    try
+                    {
+                        app.getNode().getIndex().delete ( c );
+                        app.getNode().getIndex().forceNewSearcher();
+                        updateQueries();
+                    }
+
+                    catch ( IOException e1 )
+                    {
+                        e1.printStackTrace();
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         Label lblQueryName = new Label ( composite, SWT.NONE );
         lblQueryName.setText ( "Query name" );
@@ -158,7 +328,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         text.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         text.setSize ( 150, 32 );
 
-        Button btnAutodownload = new Button ( composite, SWT.CHECK );
+        btnAutodownload = new Button ( composite, SWT.CHECK );
         btnAutodownload.setText ( "Auto-download" );
 
         Button btnSaveQuery = new Button ( composite, SWT.NONE );
@@ -168,16 +338,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                String v[] = ( String[] ) comboViewer.getInput();
-                String na[] = new String[v.length + 1];
-
-                for ( int c = 0; c < v.length; c++ )
-                {
-                    na[c] = v[c];
-                }
-
-                na[v.length] = text.getText();
-                comboViewer.setInput ( na );
+                saveQuery();
             }
 
             @Override
@@ -199,27 +360,84 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         searchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         Composite composite_2 = new Composite ( container, SWT.NONE );
-        composite_2.setLayout ( new FlowLayout ( FlowLayout.CENTER, 5, 5 ) );
+        composite_2.setLayout ( new GridLayout ( 6, false ) );
         composite_2.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+
+        btnNewWithinDays = new Button ( composite_2, SWT.CHECK );
+        btnNewWithinDays.setText ( "New within days" );
+        btnNewWithinDays.setToolTipText ( "Only show posts that are new within "
+                                          + "the last number of days specified." );
+        btnNewWithinDays.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                btnEarliest.setSelection ( false );
+                btnLatest.setSelection ( false );
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        daysNew = new Text ( composite_2, SWT.BORDER );
+        daysNew.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        daysNew.setText ( "30" );
 
         btnEarliest = new Button ( composite_2, SWT.CHECK );
         btnEarliest.setText ( "Set earliest post date" );
+        btnEarliest.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                btnNewWithinDays.setSelection ( false );
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         earliest = new CDateTime ( composite_2, CDT.BORDER | CDT.DROP_DOWN );
+        earliest.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        earliest.setPattern ( "d MMM yyyy" );
 
         btnLatest = new Button ( composite_2, SWT.CHECK );
         btnLatest.setText ( "Set latest post date" );
+        btnLatest.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                btnNewWithinDays.setSelection ( false );
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         latest = new CDateTime ( composite_2, CDT.BORDER | CDT.DROP_DOWN );
+        latest.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        latest.setPattern ( "d MMM yyyy" );
 
         Composite composite_5 = new Composite ( container, SWT.NONE );
-        composite_5.setLayout ( new FlowLayout ( FlowLayout.CENTER, 5, 5 ) );
+        composite_5.setLayout ( new GridLayout ( 9, false ) );
         composite_5.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         Label lblMinUserRank = new Label ( composite_5, SWT.NONE );
         lblMinUserRank.setText ( "Min User Rank" );
 
         minUserRank = new Text ( composite_5, SWT.BORDER );
+        minUserRank.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
         Button btnAddField = new Button ( composite_5, SWT.NONE );
         btnAddField.setText ( "Add Search Field" );
@@ -238,20 +456,28 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
 
         } );
 
+        Button btnDefaultFields = new Button ( composite_5, SWT.NONE );
+        btnDefaultFields.setText ( "Default Fields" );
+        btnDefaultFields.setToolTipText ( "Load the default fields for this community." );
+        btnDefaultFields.addSelectionListener ( new SelectionListener()
+        {
+
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                loadDefFields();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         Button btnDeleteField = new Button ( composite_5, SWT.NONE );
         btnDeleteField.setText ( "Delete Field" );
         btnDeleteField.setToolTipText ( "Delete fields you do not wish to search by." );
-
-        Label lblFileSizeMin = new Label ( composite_5, SWT.NONE );
-        lblFileSizeMin.setText ( "File size min" );
-
-        minFileSize = new Text ( composite_5, SWT.BORDER );
-
-        Label lblMax = new Label ( composite_5, SWT.NONE );
-        lblMax.setText ( "max" );
-
-        maxFileSize = new Text ( composite_5, SWT.BORDER );
-
         btnDeleteField.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -284,6 +510,19 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
 
         } );
 
+        Label lblFileSizeMin = new Label ( composite_5, SWT.NONE );
+        lblFileSizeMin.setText ( "File size min" );
+
+        minFileSize = new Text ( composite_5, SWT.BORDER );
+        minFileSize.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+
+        Label lblMax = new Label ( composite_5, SWT.NONE );
+        lblMax.setText ( "max" );
+
+        maxFileSize = new Text ( composite_5, SWT.BORDER );
+        maxFileSize.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+
+
         fieldProvider = new CObjContentProvider();
         fieldTableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
         fieldTableViewer.setContentProvider ( fieldProvider );
@@ -302,7 +541,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         col1.getColumn().setText ( "Description" );
         col1.getColumn().setWidth ( 450 );
         col1.getColumn().setMoveable ( false );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
+        col1.setLabelProvider ( new AdvSearchFieldDescriptionLabelProvider() );
 
         TableViewerColumn col2 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
         col2.getColumn().setText ( "Value/Minimum" );
@@ -313,7 +552,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         col2.setEditingSupport ( fieldEditor );
 
         TableViewerColumn col3 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col3.getColumn().setText ( "Value/Minimum" );
+        col3.getColumn().setText ( "Maximum" );
         col3.getColumn().setWidth ( 100 );
         col3.getColumn().setMoveable ( false );
         col3.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_MAX ) );
@@ -321,13 +560,311 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         col3.setEditingSupport ( fieldMaxEditor );
 
         setCommunity ( community );
+
         return container;
+    }
+
+    private void setQuery ( CObj c )
+    {
+        if ( c != null )
+        {
+            lastQuery = c;
+
+            if ( app != null && community != null )
+            {
+                if ( table != null && !table.isDisposed() &&
+                        searchText != null && !searchText.isDisposed() )
+                {
+                    String nm = c.getString ( CObj.NAME );
+
+                    if ( nm != null )
+                    {
+                        text.setText ( nm );
+                    }
+
+                    String ad = c.getPrivate ( CObj.PRV_QRY_AUTODOWNLOAD );
+
+                    if ( ad == null || "false".equals ( ad ) )
+                    {
+                        btnAutodownload.setSelection ( false );
+                    }
+
+                    else
+                    {
+                        btnAutodownload.setSelection ( true );
+                    }
+
+                    Long rnk = c.getNumber ( CObj.QRY_MIN_USER_RANK );
+
+                    if ( rnk != null )
+                    {
+                        minUserRank.setText ( rnk.toString() );
+                    }
+
+                    else
+                    {
+                        minUserRank.setText ( "" );
+                    }
+
+                    String sbj = c.getString ( CObj.SUBJECT );
+
+                    if ( sbj != null )
+                    {
+                        searchText.setText ( sbj );
+                    }
+
+                    else
+                    {
+                        searchText.setText ( "" );
+                    }
+
+                    Long daysago = c.getNumber ( CObj.QRY_DAYS_BACK );
+
+                    if ( daysago != null && daysago > 0 )
+                    {
+                        btnNewWithinDays.setSelection ( true );
+                        daysNew.setText ( daysago.toString() );
+                        btnEarliest.setSelection ( false );
+                        btnLatest.setSelection ( false );
+                    }
+
+                    else
+                    {
+                        btnNewWithinDays.setSelection ( false );
+                        Long erl = c.getNumber ( CObj.QRY_MIN_DATE );
+
+                        if ( erl != null )
+                        {
+                            Date d = new Date ( erl );
+                            earliest.setSelection ( d );
+                            btnEarliest.setSelection ( true );
+                        }
+
+                        else
+                        {
+                            btnEarliest.setSelection ( false );
+                        }
+
+                        Long lts = c.getNumber ( CObj.QRY_MAX_DATE );
+
+                        if ( lts != null )
+                        {
+                            Date d = new Date ( lts );
+                            latest.setSelection ( d );
+                            btnLatest.setSelection ( true );
+                        }
+
+                        else
+                        {
+                            btnLatest.setSelection ( false );
+                        }
+
+                    }
+
+
+                    Long nfs = c.getNumber ( CObj.QRY_MIN_FILE_SIZE );
+
+                    if ( nfs != null )
+                    {
+                        minFileSize.setText ( nfs.toString() );
+                    }
+
+                    else
+                    {
+                        minFileSize.setText ( "" );
+                    }
+
+                    Long mfs = c.getNumber ( CObj.QRY_MAX_FILE_SIZE );
+
+                    if ( mfs != null )
+                    {
+                        maxFileSize.setText ( mfs.toString() );
+                    }
+
+                    else
+                    {
+                        maxFileSize.setText ( "" );
+                    }
+
+
+                    Object lt = new String[] {};
+
+                    fieldProvider.clear();
+
+                    List<CObj> fq = c.listNewFields();
+                    Iterator<CObj> i = fq.iterator();
+
+                    while ( i.hasNext() )
+                    {
+                        //Queries store the min/max of the query using the fields
+                        //MIN and MAX, so we need to load the original field to get
+                        //the MIN and MAX allowed by the field, while adding the
+                        // MIN and MAX values for the query.
+                        CObj ct = i.next();
+                        CObj act = app.getNode().getIndex().getByDig ( ct.getDig() );
+
+                        String val = null;
+                        String max = null;
+
+                        String ft = ct.getString ( CObj.FLD_TYPE );
+
+                        if ( CObj.FLD_TYPE_BOOL.equals ( ft ) )
+                        {
+                            Boolean b = c.getFieldBoolean ( ct.getDig() );
+
+                            if ( b != null )
+                            {
+                                val = b.toString();
+                            }
+
+                        }
+
+                        if ( CObj.FLD_TYPE_DECIMAL.equals ( ft ) )
+                        {
+                            Double vd = ct.getDecimal ( CObj.FLD_MIN );
+
+                            if ( vd != null )
+                            {
+                                val = vd.toString();
+                            }
+
+                            Double md = ct.getDecimal ( CObj.FLD_MAX );
+
+                            if ( md != null )
+                            {
+                                max = md.toString();
+                            }
+
+                        }
+
+                        if ( CObj.FLD_TYPE_NUMBER.equals ( ft ) )
+                        {
+                            Long vd = ct.getNumber ( CObj.FLD_MIN );
+
+                            if ( vd != null )
+                            {
+                                val = vd.toString();
+                            }
+
+                            Long md = ct.getNumber ( CObj.FLD_MAX );
+
+                            if ( md != null )
+                            {
+                                max = md.toString();
+                            }
+
+                        }
+
+                        if ( CObj.FLD_TYPE_STRING.equals ( ft ) )
+                        {
+                            val = c.getFieldString ( ct.getDig() );
+                        }
+
+                        act.pushPrivate ( CObj.FLD_VAL, val );
+
+                        if ( max != null )
+                        {
+                            act.pushPrivate ( CObj.FLD_MAX, max );
+                        }
+
+                        fieldProvider.addCObj ( act );
+                        lt = ct;
+                    }
+
+                    fieldTableViewer.setInput ( lt );
+
+                }
+
+            }
+
+        }
+
+    }
+
+    private void updateQueries()
+    {
+        if ( app != null && community != null )
+        {
+            if ( comboViewer != null )
+            {
+                CObjList oldl = ( CObjList ) comboViewer.getInput();
+                CObjList l = app.getNode().getIndex().getQueries ( community.getDig() );
+                comboViewer.setInput ( l );
+
+                if ( oldl != null )
+                {
+                    oldl.close();
+                }
+
+            }
+
+        }
+
+    }
+
+    private void saveQuery()
+    {
+        if ( app != null )
+        {
+            if ( text != null && !text.isDisposed() )
+            {
+                lastQuery = getQuery();
+                String qname = lastQuery.getString ( CObj.NAME );
+                Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( qname );
+
+                if ( !m.find() )
+                {
+                    MessageDialog.openWarning ( shell, "Set query name", "Please give the query a name." );
+                }
+
+                else
+                {
+                    try
+                    {
+                        app.getNode().getIndex().index ( lastQuery );
+                        app.getNode().getIndex().forceNewSearcher();
+                        updateQueries();
+                    }
+
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
+        }
+
     }
 
     private CObj getQuery()
     {
         CObj so = new CObj();
+        so.setType ( CObj.QUERY );
         so.pushString ( CObj.COMMUNITYID, community.getDig() );
+        so.pushString ( CObj.CREATOR, identity.getId() );
+
+        if ( btnAutodownload.getSelection() )
+        {
+            so.pushPrivate ( CObj.PRV_QRY_AUTODOWNLOAD, "true" );
+        }
+
+        else
+        {
+            so.pushPrivate ( CObj.PRV_QRY_AUTODOWNLOAD, "false" );
+        }
+
+        String qname = text.getText();
+        Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( qname );
+
+        if ( m.find() )
+        {
+            String nm = m.group ( 1 );
+            so.pushString ( CObj.NAME, nm );
+            so.setId ( "QUERY_ID_" + nm );
+        }
 
         long minrank = 0;
 
@@ -381,17 +918,38 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
 
         }
 
-        if ( btnEarliest.getSelection() && earliest.hasSelection() )
+        long daysnew = 0L; //If zero, not used
+
+        if ( btnNewWithinDays.getSelection() )
         {
-            Date e = earliest.getSelection();
-            so.pushNumber ( CObj.QRY_MIN_DATE, e.getTime() );
+            try
+            {
+                daysnew = Long.valueOf ( daysNew.getText() );
+            }
+
+            catch ( Exception e )
+            {
+            }
+
         }
 
-        if ( btnLatest.getSelection() && latest.hasSelection() )
+        else
         {
-            Date e = latest.getSelection();
-            so.pushNumber ( CObj.QRY_MAX_DATE, e.getTime() );
+            if ( btnEarliest.getSelection() && earliest.hasSelection() )
+            {
+                Date e = earliest.getSelection();
+                so.pushNumber ( CObj.QRY_MIN_DATE, e.getTime() );
+            }
+
+            if ( btnLatest.getSelection() && latest.hasSelection() )
+            {
+                Date e = latest.getSelection();
+                so.pushNumber ( CObj.QRY_MAX_DATE, e.getTime() );
+            }
+
         }
+
+        so.pushNumber ( CObj.QRY_DAYS_BACK, daysnew );
 
         so.pushString ( CObj.SUBJECT, searchText.getText() );
 
@@ -402,7 +960,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
             //Clone the field because we overwrite the min/max values
             //for numbers
             CObj cf = f.clone();
-            String tp = cf.getType();
+            String tp = cf.getString ( CObj.FLD_TYPE );
 
             String val = cf.getPrivate ( CObj.FLD_VAL );
             String max = cf.getPrivate ( CObj.FLD_MAX );
@@ -428,14 +986,15 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                 if ( CObj.FLD_TYPE_NUMBER.equals ( tp ) )
                 {
 
-                    long minn = Long.MIN_VALUE;
-                    long maxn = Long.MAX_VALUE;
+                    long minn = cf.getNumber ( CObj.FLD_MIN );
+                    long maxn = cf.getNumber ( CObj.FLD_MAX );
 
                     if ( val != null )
                     {
                         try
                         {
-                            minn = Long.valueOf ( val );
+                            Long tv = Long.valueOf ( val );
+                            minn = Math.max ( minn, tv );
                         }
 
                         catch ( Exception e )
@@ -448,7 +1007,8 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                     {
                         try
                         {
-                            maxn = Long.valueOf ( max );
+                            Long tv = Long.valueOf ( max );
+                            maxn = Math.min ( maxn, tv );
                         }
 
                         catch ( Exception e )
@@ -466,14 +1026,15 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                 if ( CObj.FLD_TYPE_DECIMAL.equals ( tp ) )
                 {
 
-                    double minn = Double.MIN_VALUE;
-                    double maxn = Double.MAX_VALUE;
+                    double minn = cf.getDecimal ( CObj.FLD_MIN );
+                    double maxn = cf.getDecimal ( CObj.FLD_MAX );
 
                     if ( val != null )
                     {
                         try
                         {
-                            minn = Double.valueOf ( val );
+                            double tv = Double.valueOf ( val );
+                            minn = Math.max ( minn, tv );
                         }
 
                         catch ( Exception e )
@@ -486,7 +1047,8 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                     {
                         try
                         {
-                            maxn = Double.valueOf ( max );
+                            double tv = Double.valueOf ( max );
+                            maxn = Math.min ( maxn, tv );
                         }
 
                         catch ( Exception e )
@@ -511,8 +1073,8 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     @Override
     protected void okPressed()
     {
-        CObj q = getQuery();
-        app.setAdvancedQuery ( q );
+        lastQuery = getQuery();
+        app.setAdvancedQuery ( lastQuery );
         super.okPressed();
     }
 
@@ -588,6 +1150,11 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     public Text getSearchText()
     {
         return searchText;
+    }
+
+    public Text getDaysNew()
+    {
+        return daysNew;
     }
 
 }

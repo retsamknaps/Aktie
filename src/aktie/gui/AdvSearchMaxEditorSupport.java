@@ -124,7 +124,7 @@ public class AdvSearchMaxEditorSupport extends EditingSupport
 
                 if ( v == null )
                 {
-                    Long mn = co.getNumber ( CObj.FLD_MIN );
+                    Long mn = co.getNumber ( CObj.FLD_MAX );
 
                     if ( mn != null )
                     {
@@ -133,23 +133,18 @@ public class AdvSearchMaxEditorSupport extends EditingSupport
 
                     else
                     {
-                        mn = co.getNumber ( CObj.FLD_MAX );
-
-                        if ( mn != null )
-                        {
-                            v = mn.toString();
-                        }
-
-                        else
-                        {
-                            v = "0";
-                        }
-
+                        v = Long.toString ( Long.MAX_VALUE );
                     }
 
                 }
 
+                if ( Long.MAX_VALUE == Long.valueOf ( v ) )
+                {
+                    v = "";
+                }
+
                 return v;
+
             }
 
             if ( CObj.FLD_TYPE_DECIMAL.equals ( fdtyp ) )
@@ -158,7 +153,7 @@ public class AdvSearchMaxEditorSupport extends EditingSupport
 
                 if ( v == null )
                 {
-                    Double mn = co.getDecimal ( CObj.FLD_MIN );
+                    Double mn = co.getDecimal ( CObj.FLD_MAX );
 
                     if ( mn != null )
                     {
@@ -167,20 +162,14 @@ public class AdvSearchMaxEditorSupport extends EditingSupport
 
                     else
                     {
-                        mn = co.getDecimal ( CObj.FLD_MAX );
-
-                        if ( mn != null )
-                        {
-                            v = mn.toString();
-                        }
-
-                        else
-                        {
-                            v = "0";
-                        }
-
+                        v = Double.toString ( Long.MAX_VALUE );
                     }
 
+                }
+
+                if ( Double.MAX_VALUE == Double.valueOf ( v ) )
+                {
+                    v = "";
                 }
 
                 return v;

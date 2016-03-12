@@ -90,6 +90,7 @@ public class CObj
     public static String PRV_USER_RANK   = "prv_user_rank";
     public static String PRV_DEF_FIELD   = "prv_def_field";
     public static String PRV_FLD_NEW     = "prv_fld_new";
+    public static String PRV_QRY_AUTODOWNLOAD = "prv_auto_dl";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 
@@ -200,6 +201,7 @@ public class CObj
     public static String QRY_MAX_FILE_SIZE = "q_max_fs";
     public static String QRY_MIN_DATE = "q_min_dt";
     public static String QRY_MAX_DATE = "q_max_dt";
+    public static String QRY_DAYS_BACK = "q_days_old";
 
     public static String getSubid ( String id )
     {

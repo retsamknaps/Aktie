@@ -48,6 +48,80 @@ public class ShareManager implements Runnable
         t.start();
     }
 
+    private void autoDownload()
+    {
+        try
+        {
+            CObjList autodl = index.getAutodownloadQueries();
+            log.info ( "autoDownload: found " + autodl.size() + " queries for auto download" );
+
+            for ( int c = 0; c < autodl.size(); c++ )
+            {
+                try
+                {
+                    CObj co = autodl.get ( c );
+                    List<CObj> ql = new LinkedList<CObj>();
+                    ql.add ( co );
+                    CObjList psts = index.searchPostsQuery ( ql, null );
+                    log.info ( "autoDownload: found " + psts.size() + " matching posts" );
+
+                    for ( int c0 = 0; c0 < psts.size(); c0++ )
+                    {
+                        try
+                        {
+                            CObj pst = psts.get ( c0 );
+
+                            String name = pst.getString ( CObj.NAME );
+
+                            if ( name != null )
+                            {
+
+                                log.info ( "autoDownload: Downloading: " + name );
+
+                                CObj p = new CObj();
+                                p.setType ( CObj.USR_DOWNLOAD_FILE );
+                                p.pushString ( CObj.CREATOR, co.getString ( CObj.CREATOR ) );
+                                p.pushString ( CObj.NAME, name );
+                                p.pushString ( CObj.COMMUNITYID, pst.getString ( CObj.COMMUNITYID ) );
+                                p.pushNumber ( CObj.FILESIZE, pst.getNumber ( CObj.FILESIZE ) );
+                                p.pushString ( CObj.FRAGDIGEST, pst.getString ( CObj.FRAGDIGEST ) );
+                                p.pushNumber ( CObj.FRAGSIZE, pst.getNumber ( CObj.FRAGSIZE ) );
+                                p.pushNumber ( CObj.FRAGNUMBER, pst.getNumber ( CObj.FRAGNUMBER ) );
+                                p.pushString ( CObj.FILEDIGEST, pst.getString ( CObj.FILEDIGEST ) );
+                                p.pushString ( CObj.SHARE_NAME, pst.getString ( CObj.SHARE_NAME ) );
+
+                                userQueue.enqueue ( p );
+                            }
+
+                        }
+
+                        catch ( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+
+                    }
+
+                    psts.close();
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            autodl.close();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
+    }
+
     private void addFile ( DirectoryShare s, File f )
     {
         CObj hf = new CObj();
@@ -868,6 +942,7 @@ public class ShareManager implements Runnable
             {
                 checkAllHasFile();
                 checkFragments();
+                autoDownload();
                 nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
             }
 
