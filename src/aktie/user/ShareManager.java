@@ -32,15 +32,21 @@ public class ShareManager implements Runnable
     private Index index;
     private HasFileCreator hfc;
     private ProcessQueue userQueue;
+    private NewFileProcessor fileProc;
     private HH2Session session;
     private RequestFileHandler rfh;
+    private boolean running;
+    private boolean enabled;
 
-    public ShareManager ( HH2Session s, RequestFileHandler rf, Index i, HasFileCreator h, ProcessQueue pq )
+    public ShareManager ( HH2Session s, RequestFileHandler rf, Index i, HasFileCreator h, NewFileProcessor n, ProcessQueue pq )
     {
         session = s;
         index = i;
         hfc = h;
+        fileProc = n;
         userQueue = pq;
+        enabled = true;
+        running = false;
         rfh = rf;
         rfh.setShareMan ( this );
         Thread t = new Thread ( this, "Share Manager Thread" );
@@ -130,58 +136,62 @@ public class ShareManager implements Runnable
         hf.pushString ( CObj.COMMUNITYID, s.getCommunityId() );
         hf.pushString ( CObj.SHARE_NAME, s.getShareName() );
         hf.pushPrivate ( CObj.LOCALFILE, f.getPath() ); //Canonical name gotten during processing
-        userQueue.enqueue ( hf );
+        fileProc.process ( hf );
     }
 
     private void checkFoundFile ( DirectoryShare s, File f )
     {
-        String fp = f.getAbsolutePath();
-
-        try
+        if ( enabled )
         {
-            fp = f.getCanonicalPath();
-        }
+            String fp = f.getAbsolutePath();
 
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
+            try
+            {
+                fp = f.getCanonicalPath();
+            }
 
-        if ( !fp.endsWith ( ".aktiepart" ) && !fp.endsWith ( ".aktiebackup" ) )
-        {
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
 
-            if ( null == rfh.findFileByName ( fp ) )
+            if ( !fp.endsWith ( ".aktiepart" ) && !fp.endsWith ( ".aktiebackup" ) )
             {
 
-                CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
-
-                if ( mlst.size() == 0 )
+                if ( null == rfh.findFileByName ( fp ) )
                 {
-                    addFile ( s, f );
-                }
 
-                else
-                {
-                    try
+                    CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+
+                    if ( mlst.size() == 0 )
                     {
-                        CObj mhf = mlst.get ( 0 );
-                        String shr = mhf.getString ( CObj.SHARE_NAME );
+                        addFile ( s, f );
+                    }
 
-                        if ( !s.getShareName().equals ( shr ) )
+                    else
+                    {
+                        try
                         {
-                            addFile ( s, f );
+                            CObj mhf = mlst.get ( 0 );
+                            String shr = mhf.getString ( CObj.SHARE_NAME );
+
+                            if ( !s.getShareName().equals ( shr ) )
+                            {
+                                addFile ( s, f );
+                            }
+
+                        }
+
+                        catch ( IOException e )
+                        {
+                            e.printStackTrace();
                         }
 
                     }
 
-                    catch ( IOException e )
-                    {
-                        e.printStackTrace();
-                    }
-
+                    mlst.close();
                 }
 
-                mlst.close();
             }
 
         }
@@ -240,7 +250,7 @@ public class ShareManager implements Runnable
 
     private void crawlDirectory ( DirectoryShare s, File df )
     {
-        if ( df != null && df.exists() && df.isDirectory() )
+        if ( df != null && df.exists() && df.isDirectory() && enabled )
         {
             File lsd[] = df.listFiles();
 
@@ -277,17 +287,21 @@ public class ShareManager implements Runnable
 
     private void crawlShare ( DirectoryShare s )
     {
-        String ds = s.getDirectory();
-
-        if ( ds != null )
+        if ( enabled )
         {
-            File df = new File ( ds );
-            crawlDirectory ( s, df );
-        }
+            String ds = s.getDirectory();
 
-        else
-        {
-            s.setMessage ( "Directory not set." );
+            if ( ds != null )
+            {
+                File df = new File ( ds );
+                crawlDirectory ( s, df );
+            }
+
+            else
+            {
+                s.setMessage ( "Directory not set." );
+            }
+
         }
 
     }
@@ -295,50 +309,58 @@ public class ShareManager implements Runnable
     @SuppressWarnings ( "unchecked" )
     private void processShares()
     {
-        Session s = null;
-
-        try
+        if ( enabled )
         {
-            s = session.getSession();
-            List<DirectoryShare> l = s.createCriteria ( DirectoryShare.class ).list();
+            Session s = null;
 
-            for ( DirectoryShare ds : l )
+            try
             {
-                ds.setNumberSubFolders ( 0 );
-                ds.setNumberFiles ( 0 );
-                crawlShare ( ds );
-                saveShare ( s, ds );
-            }
+                s = session.getSession();
+                List<DirectoryShare> l = s.createCriteria ( DirectoryShare.class ).list();
 
-            s.close();
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-
-            if ( s != null )
-            {
-                try
+                for ( DirectoryShare ds : l )
                 {
-                    if ( s.getTransaction().isActive() )
+                    if ( enabled )
                     {
-                        s.getTransaction().rollback();
+                        ds.setNumberSubFolders ( 0 );
+                        ds.setNumberFiles ( 0 );
+                        crawlShare ( ds );
+                        saveShare ( s, ds );
                     }
 
                 }
 
-                catch ( Exception e2 )
-                {
-                }
+                s.close();
+            }
 
-                try
-                {
-                    s.close();
-                }
+            catch ( Exception e )
+            {
+                e.printStackTrace();
 
-                catch ( Exception e2 )
+                if ( s != null )
                 {
+                    try
+                    {
+                        if ( s.getTransaction().isActive() )
+                        {
+                            s.getTransaction().rollback();
+                        }
+
+                    }
+
+                    catch ( Exception e2 )
+                    {
+                    }
+
+                    try
+                    {
+                        s.close();
+                    }
+
+                    catch ( Exception e2 )
+                    {
+                    }
+
                 }
 
             }
@@ -349,24 +371,29 @@ public class ShareManager implements Runnable
 
     private void checkAllHasFile()
     {
-        CObjList myhf = index.getAllMyHasFiles();
-
-        try
+        if ( enabled )
         {
-            for ( int c = 0; c < myhf.size(); c++ )
+
+            CObjList myhf = index.getAllMyHasFiles();
+
+            try
             {
-                CObj hf = myhf.get ( c );
-                checkHasFile ( hf );
+                for ( int c = 0; c < myhf.size() && enabled; c++ )
+                {
+                    CObj hf = myhf.get ( c );
+                    checkHasFile ( hf );
+                }
+
             }
 
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+            myhf.close();
         }
 
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-        }
-
-        myhf.close();
     }
 
     private void saveShare ( Session s, DirectoryShare d )
@@ -409,91 +436,95 @@ public class ShareManager implements Runnable
     */
     private void checkFragments()
     {
-        List<RequestFile> rl = rfh.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
-
-        for ( RequestFile rf : rl )
+        if ( enabled )
         {
-            File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
+            List<RequestFile> rl = rfh.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
-            if ( rlp.exists() )
+            for ( RequestFile rf : rl )
             {
-                //Find the fragments that haven't been requested yet.
-                CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                              rf.getWholeDigest(), rf.getFragmentDigest() );
+                File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
 
-                if ( cl.size() == 0 )
+                if ( rlp.exists() && enabled )
                 {
-                    //If there are no fragments that have not be requested yet,
-                    //then let's reset the ones that in the req status, and not
-                    //complete, in case we just failed to get it back after
-                    //requesting.
-                    cl.close();
-                    cl = index.getFragmentsToReset ( rf.getCommunityId(),
-                                                     rf.getWholeDigest(), rf.getFragmentDigest() );
+                    //Find the fragments that haven't been requested yet.
+                    CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
+                                  rf.getWholeDigest(), rf.getFragmentDigest() );
 
                     if ( cl.size() == 0 )
                     {
-                        //Welp, that sucks.  Let's make sure they're really done.
+                        //If there are no fragments that have not be requested yet,
+                        //then let's reset the ones that in the req status, and not
+                        //complete, in case we just failed to get it back after
+                        //requesting.
                         cl.close();
-                        cl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
-                        log.warning ( "FOUND FILE TO CHECK FRAGMENTS: " + rf.getLocalFile() + " checking: " + cl.size() + " vs " + rf.getFragsTotal() );
+                        cl = index.getFragmentsToReset ( rf.getCommunityId(),
+                                                         rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                        if ( rf.getFragsTotal() != cl.size() )
+                        if ( cl.size() == 0 )
                         {
-                            log.warning ( "REREQUESTING FRAGMENT LIST" );
-                            rfh.setReRequestList ( rf );
+                            //Welp, that sucks.  Let's make sure they're really done.
+                            cl.close();
+                            cl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
+                            log.warning ( "FOUND FILE TO CHECK FRAGMENTS: " + rf.getLocalFile() + " checking: " + cl.size() + " vs " + rf.getFragsTotal() );
 
-                        }
-
-                        else
-                        {
-                            for ( int c = 0; c < cl.size(); c++ )
+                            if ( rf.getFragsTotal() != cl.size() )
                             {
-                                try
+                                log.warning ( "REREQUESTING FRAGMENT LIST" );
+                                rfh.setReRequestList ( rf );
+
+                            }
+
+                            else
+                            {
+                                for ( int c = 0; c < cl.size() && enabled; c++ )
                                 {
-                                    CObj fg = cl.get ( c );
-                                    log.warning ( "CHECKING FRAGMENT: " + c );
-                                    String fdig = fg.getString ( CObj.FRAGDIG );
-                                    Long fidx = fg.getNumber ( CObj.FRAGOFFSET );
-                                    Long flen = fg.getNumber ( CObj.FRAGSIZE );
-                                    FileInputStream fis = new FileInputStream ( rlp );
-                                    fis.skip ( fidx );
-                                    byte buf[] = new byte[4096];
-                                    RIPEMD256Digest pdig = new RIPEMD256Digest();
-                                    long lflen = flen;
-                                    int iflen = ( int ) lflen;
-                                    int nr = 0;
-
-                                    while ( iflen > 0 && nr >= 0 )
+                                    try
                                     {
-                                        int len = Math.min ( iflen, buf.length );
-                                        nr = fis.read ( buf, 0, len );
+                                        CObj fg = cl.get ( c );
+                                        log.warning ( "CHECKING FRAGMENT: " + c );
+                                        String fdig = fg.getString ( CObj.FRAGDIG );
+                                        Long fidx = fg.getNumber ( CObj.FRAGOFFSET );
+                                        Long flen = fg.getNumber ( CObj.FRAGSIZE );
+                                        FileInputStream fis = new FileInputStream ( rlp );
+                                        fis.skip ( fidx );
+                                        byte buf[] = new byte[4096];
+                                        RIPEMD256Digest pdig = new RIPEMD256Digest();
+                                        long lflen = flen;
+                                        int iflen = ( int ) lflen;
+                                        int nr = 0;
 
-                                        if ( nr > 0 )
+                                        while ( iflen > 0 && nr >= 0 )
                                         {
-                                            pdig.update ( buf, 0, nr );
-                                            iflen -= nr;
+                                            int len = Math.min ( iflen, buf.length );
+                                            nr = fis.read ( buf, 0, len );
+
+                                            if ( nr > 0 )
+                                            {
+                                                pdig.update ( buf, 0, nr );
+                                                iflen -= nr;
+                                            }
+
+                                        }
+
+                                        fis.close();
+                                        byte digb[] = new byte[pdig.getDigestSize()];
+                                        pdig.doFinal ( digb, 0 );
+                                        String cdig =  Utils.toString ( digb );
+
+                                        if ( !cdig.equals ( fdig ) )
+                                        {
+                                            log.warning ( "FRAGMENT INCORRECT: " + cdig + " != " + fdig );
+                                            fg.pushPrivate ( CObj.COMPLETE, "false" );
+                                            index.index ( fg );
                                         }
 
                                     }
 
-                                    fis.close();
-                                    byte digb[] = new byte[pdig.getDigestSize()];
-                                    pdig.doFinal ( digb, 0 );
-                                    String cdig =  Utils.toString ( digb );
-
-                                    if ( !cdig.equals ( fdig ) )
+                                    catch ( IOException e )
                                     {
-                                        log.warning ( "FRAGMENT INCORRECT: " + cdig + " != " + fdig );
-                                        fg.pushPrivate ( CObj.COMPLETE, "false" );
-                                        index.index ( fg );
+                                        e.printStackTrace();
                                     }
 
-                                }
-
-                                catch ( IOException e )
-                                {
-                                    e.printStackTrace();
                                 }
 
                             }
@@ -502,9 +533,9 @@ public class ShareManager implements Runnable
 
                     }
 
-                }
+                    cl.close();
 
-                cl.close();
+                }
 
             }
 
@@ -924,12 +955,35 @@ public class ShareManager implements Runnable
 
     }
 
+    private ShareListener listener;
+    public void setShareListener ( ShareListener l )
+    {
+        listener = l;
+    }
+
+    private void setRunning ( boolean t )
+    {
+        running = t;
+
+        if ( listener != null )
+        {
+            listener.shareManagerRunning ( t );
+        }
+
+    }
+
     public void run()
     {
         while ( !stop )
         {
             newshare = false;
-            processShares();
+
+            if ( enabled )
+            {
+                setRunning ( true );
+                processShares();
+                setRunning ( false );
+            }
 
             if ( !newshare )
             {
@@ -940,14 +994,36 @@ public class ShareManager implements Runnable
 
             if ( curtime >= nextcheckhasfile )
             {
-                checkAllHasFile();
-                checkFragments();
+                if ( enabled )
+                {
+                    setRunning ( true );
+                    checkAllHasFile();
+                    checkFragments();
+                    nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
+                    setRunning ( false );
+                }
+
                 autoDownload();
-                nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
+
             }
 
         }
 
+    }
+
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
+
+    public void setEnabled ( boolean enabled )
+    {
+        this.enabled = enabled;
+    }
+
+    public boolean isRunning()
+    {
+        return running;
     }
 
 

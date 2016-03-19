@@ -54,6 +54,11 @@ public class SubTreeModel implements ITreeContentProvider
 
     private synchronized void addSubTreeElement ( SubTreeEntity se )
     {
+        if ( se.getType() == SubTreeEntity.IDENTITY_TYPE )
+        {
+            se.setParent ( 0 );
+        }
+
         entities.put ( se.getId(), se );
         removeFromChildren ( se );
         List<SubTreeEntity> cl = children.get ( se.getParent() );
@@ -194,8 +199,13 @@ public class SubTreeModel implements ITreeContentProvider
         {
             e.setBlue ( t );
             db.saveEntity ( e );
-            SubTreeEntity p = entities.get ( e.getParent() );
-            setBlue ( p, t );
+
+            if ( e.getId() != e.getParent() )
+            {
+                SubTreeEntity p = entities.get ( e.getParent() );
+                setBlue ( p, t );
+            }
+
         }
 
     }
@@ -388,8 +398,16 @@ public class SubTreeModel implements ITreeContentProvider
                 target != null && target instanceof SubTreeEntity )
         {
             int tolocation = 0;
-            SubTreeEntity dropent = entities.get ( Long.valueOf ( ( String ) dstr ) );
             SubTreeEntity tarent = ( SubTreeEntity ) target;
+            long did = Long.valueOf ( ( String ) dstr );
+
+            //Don't drop to one's self
+            if ( tarent.getId() == did )
+            {
+                return;
+            }
+
+            SubTreeEntity dropent = entities.get ( did );
             //Remove from children list
             List<SubTreeEntity> cl = children.get ( dropent.getParent() );
 
@@ -401,7 +419,8 @@ public class SubTreeModel implements ITreeContentProvider
             parents.remove ( dropent.getId() );
             sorted.remove ( dropent );
 
-            if ( dropent.getIdentity().equals ( tarent.getIdentity() ) )
+            if ( dropent.getIdentity().equals ( tarent.getIdentity() ) &&
+                    dropent.getType() != SubTreeEntity.IDENTITY_TYPE )
             {
                 if ( dir == ViewerDropAdapter.LOCATION_ON ||
                         dir == ViewerDropAdapter.LOCATION_AFTER )

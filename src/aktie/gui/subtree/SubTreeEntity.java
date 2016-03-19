@@ -27,6 +27,10 @@ public class SubTreeEntity implements Comparable<Object>
     private String refId;
     private boolean connected;
 
+    public SubTreeEntity()
+    {
+    }
+
     public long getSortOrder()
     {
         return sortOrder;

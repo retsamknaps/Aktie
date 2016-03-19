@@ -14,7 +14,7 @@ public class Upgrade0405
             try
             {
                 System.out.println ( "Updating Lucene index user ranks." );
-                System.out.println ( "Please be patient.");
+                System.out.println ( "Please be patient." );
                 File idxdir = new File ( indexdir );
 
                 Index index = new Index();
@@ -25,7 +25,7 @@ public class Upgrade0405
 
                 for ( int c = 0; c < idlst.size(); c++ )
                 {
-                	System.out.print(".");
+                    System.out.print ( "." );
                     CObj co = idlst.get ( c );
                     co.pushPrivateNumber ( CObj.PRV_USER_RANK, 5L );
                     index.index ( co );
@@ -39,10 +39,11 @@ public class Upgrade0405
                     }
 
                 }
+
                 System.out.println();
 
-                Thread.sleep(Index.MIN_TIME_BETWEEN_SEARCHERS);
-                
+                Thread.sleep ( Index.MIN_TIME_BETWEEN_SEARCHERS );
+
                 idlst.close();
                 index.close();
 

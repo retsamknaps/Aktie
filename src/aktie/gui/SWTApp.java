@@ -46,6 +46,7 @@ import aktie.net.ConnectionManager;
 import aktie.net.ConnectionThread;
 //import aktie.net.RawNet;
 import aktie.user.RequestFileHandler;
+import aktie.user.ShareListener;
 import aktie.utils.FUtils;
 
 import org.apache.lucene.search.Sort;
@@ -1800,11 +1801,56 @@ public class SWTApp
 
                     idCache = new IdentityCache ( node.getIndex() );
 
+                    node.getShareManager().setShareListener ( new ShareListener()
+                    {
+
+                        @Override
+                        public void shareManagerRunning ( final boolean running )
+                        {
+                            Display.getDefault().asyncExec ( new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    if ( running )
+                                    {
+                                        lblNotRunning.setText ( "Share Manager RUNNING" );
+                                    }
+
+                                    else
+                                    {
+                                        lblNotRunning.setText ( "Share Manger Not Running" );
+                                    }
+
+                                }
+
+                            } );
+
+                        }
+
+                    } );
+
+                    final boolean en = Wrapper.getEnabledShareManager();
+                    node.getShareManager().setEnabled ( en );
+
                     Display.getDefault().asyncExec ( new Runnable()
                     {
                         public void run()
                         {
                             startedSuccessfully();
+
+                            if ( node.getShareManager().isRunning() )
+                            {
+                                lblNotRunning.setText ( "Share Manager RUNNING" );
+                            }
+
+                            else
+                            {
+                                lblNotRunning.setText ( "Share Manger Not Running" );
+                            }
+
+                            btnEnableShareManager.setSelection ( en );
+
                         }
 
                     } );
@@ -3003,6 +3049,8 @@ public class SWTApp
     }
 
     public static ImageRegistry imgReg;
+    private Button btnEnableShareManager;
+    private Label lblNotRunning;
 
     public void setAdvancedQuery ( CObj q )
     {
@@ -3172,7 +3220,7 @@ public class SWTApp
         } );
 
         composite_header = new Composite ( shell, SWT.NONE );
-        composite_header.setLayout ( new GridLayout ( 3, false ) );
+        composite_header.setLayout ( new GridLayout ( 5, false ) );
         composite_header.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
 
         lblVersion = new Label ( composite_header, SWT.NONE );
@@ -3182,7 +3230,33 @@ public class SWTApp
         lblError = new Label ( composite_header, SWT.NONE );
         lblError.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
         lblError.setText ( "" );
+
+        lblNotRunning = new Label ( composite_header, SWT.NONE );
+        lblNotRunning.setText ( "Share Manger Not Running" );
+
+        btnEnableShareManager = new Button ( composite_header, SWT.CHECK );
+        btnEnableShareManager.setText ( "Enabled" );
         new Label ( composite_header, SWT.NONE );
+        btnEnableShareManager.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                boolean en = btnEnableShareManager.getSelection();
+                //CObj ce = new CObj();
+                //ce.setType(CObj.USR_SHARE_MGR);
+                //ce.pushString(CObj.ENABLED, Boolean.toString(en));
+                //node.enqueue(ce);
+                Wrapper.saveEnabledShareManager ( en );
+                node.getShareManager().setEnabled ( en );
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         TabFolder tabFolder = new TabFolder ( shell, SWT.NONE );
         tabFolder.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
@@ -4884,6 +4958,7 @@ public class SWTApp
         TableViewerColumn fcol3 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
         fcol3.getColumn().setText ( "Local File" );
         fcol3.getColumn().setWidth ( 100 );
+        fcol3.getColumn().setAlignment ( SWT.RIGHT );
         fcol3.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.LOCALFILE ) );
         fcol3.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -5819,6 +5894,16 @@ public class SWTApp
     public Button getBtnDefaultDownloadLocation()
     {
         return btnDefaultDownloadLocation;
+    }
+
+    public Button getBtnEnableShareManager()
+    {
+        return btnEnableShareManager;
+    }
+
+    public Label getLblShareMgrRunning()
+    {
+        return lblNotRunning;
     }
 
 }

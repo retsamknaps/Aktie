@@ -772,4 +772,86 @@ public class Wrapper
         savePropsFile ( p );
     }
 
+    public static boolean getEnabledShareManager ( )
+    {
+        Properties p = loadExistingProps();
+
+        boolean e = true;
+        String ep = p.getProperty ( "aktie.sharemanager.enabled" );
+
+        if ( ep != null && !"true".equals ( ep ) )
+        {
+            e = false;
+        }
+
+        return e;
+    }
+
+    public static void saveEnabledShareManager ( boolean e )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.sharemanager.enabled", Boolean.toString ( e ) );
+
+        savePropsFile ( p );
+    }
+
+    public static int getClientPort()
+    {
+        Properties p = loadExistingProps();
+
+        int rt = 5789;
+        String ep = p.getProperty ( "aktie.client.port" );
+
+        if ( ep != null )
+        {
+            try
+            {
+                rt = Integer.valueOf ( ep );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        return rt;
+    }
+
+    public static void saveClientPort ( int rt )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.client.port", Integer.toString ( rt ) );
+
+        savePropsFile ( p );
+    }
+
+    public static String getClientInterface()
+    {
+        String msg = "0.0.0.0";
+
+        Properties p = loadExistingProps();
+
+        String m = p.getProperty ( "aktie.client.interface" );
+
+        if ( m != null )
+        {
+            msg = m;
+        }
+
+        return msg;
+    }
+
+    public static void saveClientInterface ( String msg )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.client.interface", msg );
+
+        savePropsFile ( p );
+    }
+
 }

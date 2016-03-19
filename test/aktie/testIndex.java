@@ -155,19 +155,21 @@ public class testIndex
 
             cl.close();
 
-            CObj qrycreator = new CObj();
-            qrycreator.pushString ( CObj.COMMUNITYID, "community0000" );
-            qrycreator.pushString ( CObj.CREATOR, "1" );
-            ql = new LinkedList<CObj>();
-            ql.add ( qrycreator );
+            //Creator test does not work because creator is set to
+            //local user that created the query now.
+            //CObj qrycreator = new CObj();
+            //qrycreator.pushString ( CObj.COMMUNITYID, "community0000" );
+            //qrycreator.pushString ( CObj.CREATOR, "1" );
+            //ql = new LinkedList<CObj>();
+            //ql.add ( qrycreator );
 
-            cl = i.searchPostsQuery ( ql, null );
+            //cl = i.searchPostsQuery ( ql, null );
 
-            assertEquals ( 1, cl.size() );
-            tc = cl.get ( 0 );
-            assertEquals ( postred.getDig(), tc.getDig() );
+            //assertEquals ( 1, cl.size() );
+            //tc = cl.get ( 0 );
+            //assertEquals ( postred.getDig(), tc.getDig() );
 
-            cl.close();
+            //cl.close();
 
             CObj qryearlier = new CObj();
             qryearlier.pushString ( CObj.COMMUNITYID, "community0000" );

@@ -73,6 +73,7 @@ public class CObj
     public static String USR_COMMUNITY = "usr_com";
     public static String USR_START_DEST = "start_dest";
     public static String USR_SET_RANK = "set_rank";
+    public static String USR_SHARE_MGR = "share_mgr";
 
     //Private fields
     public static String PRV_LOCALFILE   = "prv_localfile";
@@ -139,6 +140,7 @@ public class CObj
     public static String UPGRADEFLAG = "upgrade";
     public static String SHARE_NAME = "sharename";
     public static String STATUS = "fstatus";
+    public static String ENABLED = "enabled";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.

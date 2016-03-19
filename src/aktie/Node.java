@@ -31,6 +31,7 @@ import aktie.user.UsrReqIdentityProcessor;
 import aktie.user.UsrReqMemProcessor;
 import aktie.user.UsrReqPostProcessor;
 import aktie.user.UsrReqSetRankProcessor;
+import aktie.user.UsrReqShareProcessor;
 import aktie.user.UsrReqSubProcessor;
 import aktie.user.UsrSeed;
 import aktie.user.UsrSeedCommunity;
@@ -74,6 +75,13 @@ public class Node
         requestHandler = new RequestFileHandler ( session, nodedir + File.separator + "downloads", nfp, index );
         conMan = new ConnectionManager ( session, index, requestHandler, identManager, usrCallback );
         userQueue = new ProcessQueue();
+
+        hasFileCreator = new HasFileCreator ( session, index );
+        //HH2Session s, Index i, HasFileCreator h, ProcessQueue pq
+
+        shareManager = new ShareManager ( session, requestHandler, index,
+                                          hasFileCreator, nfp, userQueue );
+
         userQueue.addProcessor ( new NewCommunityProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( nfp );
         userQueue.addProcessor ( new NewIdentityProcessor ( network, conMan, session,
@@ -91,15 +99,10 @@ public class Node
         userQueue.addProcessor ( new UsrReqPostProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSetRankProcessor ( index ) );
+        userQueue.addProcessor ( new UsrReqShareProcessor ( shareManager ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );
         userQueue.addProcessor ( new NewPushProcessor ( index, conMan ) );
-
-        hasFileCreator = new HasFileCreator ( session, index );
-        //HH2Session s, Index i, HasFileCreator h, ProcessQueue pq
-        shareManager = new ShareManager ( session, requestHandler, index,
-                                          hasFileCreator, userQueue );
-
 
         doUpdate();
     }

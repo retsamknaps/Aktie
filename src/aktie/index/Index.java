@@ -230,7 +230,7 @@ public class Index
         catch ( Exception e )
         {
         }
-        
+
     }
 
     public CObjList search ( Query q, int max )

@@ -60,13 +60,12 @@ public class CleanParser
             bytesRead++;
             sb.append ( cr );
 
-            if ( '\'' == cr ) { isquote0 = !isquote0; }
+            if ( !lastesc && !isquote1 && '\'' == cr ) { isquote0 = !isquote0; }
 
-            if ( '"' == cr ) { isquote1 = !isquote1; }
+            if ( !lastesc && !isquote0 && '"' == cr ) { isquote1 = !isquote1; }
 
             if ( !lastesc && !isquote0 && !isquote1 )
             {
-                if ( '\\' == cr ) { lastesc = true; }
 
                 if ( '{' == cr ) { pcnt++; }
 
@@ -74,14 +73,17 @@ public class CleanParser
 
             }
 
-            else
-            {
-                lastesc = false;
-            }
+            if ( !lastesc && '\\' == cr ) { lastesc = true; }
+
+            else { lastesc = false; }
 
         }
 
-        JSONTokener t = new JSONTokener ( sb.toString() );
+        System.out.println ( "=====================================================" );
+        String js = sb.toString();
+        System.out.println ( js );
+        System.out.println ( "=====================================================" );
+        JSONTokener t = new JSONTokener ( js );
         return new JSONObject ( t );
     }
 
