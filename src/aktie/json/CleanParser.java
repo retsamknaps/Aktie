@@ -11,10 +11,16 @@ public class CleanParser
 
     private InputStream InStream;
     private long bytesRead;
+    private boolean permissive;
 
     public CleanParser ( InputStream is )
     {
         InStream = is;
+    }
+
+    public void setPermissive ( boolean p )
+    {
+        permissive = p;
     }
 
     public InputStream getInStream()
@@ -32,12 +38,20 @@ public class CleanParser
         bytesRead = 0;
         StringBuilder sb = new StringBuilder();
         int pcnt = 1;
-        int rs = InStream.read();
+        char cr = 0;
 
-        if ( rs < 0 ) { throw new IOException ( "EOF0" ); }
+        do
+        {
+            int rs = InStream.read();
 
-        char cr = ( char ) rs;
-        bytesRead++;
+            if ( rs < 0 ) { throw new IOException ( "EOF0" ); }
+
+            cr = ( char ) rs;
+            bytesRead++;
+
+        }
+
+        while ( cr != '{' && permissive );
 
         if ( '{' != cr )
         {
@@ -51,7 +65,7 @@ public class CleanParser
 
         while ( pcnt > 0 )
         {
-            rs = InStream.read();
+            int rs = InStream.read();
 
             if ( rs < 0 ) { throw new IOException ( "EOF1" ); }
 
@@ -79,10 +93,7 @@ public class CleanParser
 
         }
 
-        System.out.println ( "=====================================================" );
         String js = sb.toString();
-        System.out.println ( js );
-        System.out.println ( "=====================================================" );
         JSONTokener t = new JSONTokener ( js );
         return new JSONObject ( t );
     }

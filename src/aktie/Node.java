@@ -21,6 +21,7 @@ import aktie.user.NewIdentityProcessor;
 import aktie.user.NewMembershipProcessor;
 import aktie.user.NewPostProcessor;
 import aktie.user.NewPushProcessor;
+import aktie.user.NewQueryProcessor;
 import aktie.user.NewSubscriptionProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareManager;
@@ -82,6 +83,7 @@ public class Node
         shareManager = new ShareManager ( session, requestHandler, index,
                                           hasFileCreator, nfp, userQueue );
 
+        userQueue.addProcessor ( new NewQueryProcessor ( index ) );
         userQueue.addProcessor ( new NewCommunityProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( nfp );
         userQueue.addProcessor ( new NewIdentityProcessor ( network, conMan, session,

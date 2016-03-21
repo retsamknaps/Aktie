@@ -1,5 +1,6 @@
 package aktie.headless;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
@@ -8,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.json.JSONObject;
 
 import aktie.data.CObj;
+import aktie.json.CleanParser;
 
 public class ClientThread implements Runnable
 {
@@ -17,18 +19,45 @@ public class ClientThread implements Runnable
     private OutputStream outstream;
     private boolean stop;
     private ConcurrentLinkedQueue<CObj> outqueue;
+    private ClientReqIndexProcessor cliReqProc;
 
     public ClientThread ( Socket s, HeadlessMain m )
     {
         socket = s;
         hmain = m;
+        cliReqProc = new ClientReqIndexProcessor ( this, hmain.getNode().getIndex() );
         outqueue = new ConcurrentLinkedQueue<CObj>();
+        Thread t = new Thread ( this );
+        t.start();
+    }
+
+    public HeadlessMain getMain()
+    {
+        return hmain;
     }
 
     public synchronized void stop()
     {
         stop = true;
         notifyAll();
+
+        if ( socket != null )
+        {
+            try
+            {
+                if ( !socket.isClosed() )
+                {
+                    socket.close();
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+            }
+
+        }
+
     }
 
     public synchronized void enqueue ( CObj o )
@@ -56,12 +85,54 @@ public class ClientThread implements Runnable
         return outqueue.poll();
     }
 
+    class InputThread implements Runnable
+    {
+
+        public InputStream instream;
+
+        @Override
+        public void run()
+        {
+            CleanParser parser = new CleanParser ( instream );
+            parser.setPermissive ( true );
+
+            try
+            {
+                while ( !stop )
+                {
+                    JSONObject o = parser.next();
+                    CObj co = new CObj();
+                    co.loadJSON ( o );
+
+                    if ( !cliReqProc.process ( co ) )
+                    {
+                        hmain.getNode().enqueue ( co );
+                    }
+
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+            stop();
+        }
+
+    }
+
     @Override
     public void run()
     {
         try
         {
             outstream = socket.getOutputStream();
+            InputThread it = new InputThread();
+            it.instream = socket.getInputStream();
+            Thread t = new Thread ( it );
+            t.start();
 
             while ( !stop )
             {
@@ -95,7 +166,7 @@ public class ClientThread implements Runnable
             e.printStackTrace();
         }
 
-        stop = true;
+        stop();
     }
 
 

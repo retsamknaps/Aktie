@@ -46,6 +46,21 @@ public class CObj
     public static String FILEF = "filef";
     public static String QUERY = "query";
     public static String FIELD = "field";
+    //Types - no indexed.
+    public static String INDEX_QUERY = "index_query";
+    public static String NODE_CMD = "node_cmd";
+
+    //Node command types
+    public static String NODE_CMD_TYPE = "node_cmd_type";
+    public static String NODE_CMD_SHUTDOWN = "node_cmd_stop";
+
+    //Index query types
+    public static String INDEX_Q_TYPE = "index_q_type";
+    public static String INDEX_Q_PUBCOM = "index_q_pubcom";
+    public static String INDEX_Q_SUBS = "index_q_subs";
+    public static String INDEX_Q_MEMS = "index_q_mems";
+    public static String INDEX_Q_IDENT = "index_q_ident";
+
 
     //Temporary types - requests to other nodes.
     public static String CON_CHALLENGE = "con_challenge";
@@ -204,6 +219,7 @@ public class CObj
     public static String QRY_MIN_DATE = "q_min_dt";
     public static String QRY_MAX_DATE = "q_max_dt";
     public static String QRY_DAYS_BACK = "q_days_old";
+
 
     public static String getSubid ( String id )
     {

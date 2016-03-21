@@ -861,9 +861,8 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
 
         if ( m.find() )
         {
-            String nm = m.group ( 1 );
-            so.pushString ( CObj.NAME, nm );
-            so.setId ( "QUERY_ID_" + nm );
+            so.pushString ( CObj.NAME, qname );
+            so.setId ( "QUERY_ID_" + qname );
         }
 
         long minrank = 0;

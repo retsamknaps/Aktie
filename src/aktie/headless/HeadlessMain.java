@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.Node;
-import aktie.gui.I2PSettingsDialog;
 import aktie.i2p.I2PNet;
 
 public class HeadlessMain
@@ -16,10 +15,15 @@ public class HeadlessMain
     Logger log = Logger.getLogger ( "aktie" );
 
     private String nodeDir;
-    private String exportCommunitiesFile;
     private Node node;
+    private ClientServer server;
 
     private I2PNet i2pnet;
+
+    public Node getNode()
+    {
+        return node;
+    }
 
     public void setVerbose()
     {
@@ -130,6 +134,31 @@ public class HeadlessMain
 
     }
 
+    public void shutdown()
+    {
+        if ( server != null )
+        {
+            server.stop();
+        }
+
+        if ( node != null )
+        {
+            node.close();
+        }
+
+        if ( i2pnet != null )
+        {
+            i2pnet.exit();
+        }
+
+        System.exit ( 0 );
+    }
+
+    public void startClientServer()
+    {
+        server = new ClientServer ( this );
+    }
+
     /**
         Launch the application.
         @param args
@@ -141,22 +170,17 @@ public class HeadlessMain
         try
         {
 
-            HeadlessMain window = new HeadlessMain();
+            HeadlessMain hmain = new HeadlessMain();
 
             if ( args.length > 0 )
             {
-                window.nodeDir = args[0];
+                hmain.nodeDir = args[0];
 
                 if ( args.length > 1 )
                 {
                     if ( "-v".equals ( args[1] ) )
                     {
                         verbose = true;
-                    }
-
-                    else
-                    {
-                        window.exportCommunitiesFile = args[1];
                     }
 
                 }
@@ -174,28 +198,27 @@ public class HeadlessMain
 
             else
             {
-                window.nodeDir = "aktie_node";
+                hmain.nodeDir = "aktie_node";
             }
 
             if ( verbose )
             {
-                window.setVerbose();
+                hmain.setVerbose();
             }
 
             else
             {
-                window.setSevere();
+                hmain.setSevere();
             }
 
-            //OPEN
+            hmain.startNode();
+            hmain.startClientServer();
         }
 
         catch ( Exception e )
         {
             e.printStackTrace();
         }
-
-        System.exit ( 0 );
 
     }
 

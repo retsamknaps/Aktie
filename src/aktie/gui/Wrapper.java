@@ -24,8 +24,9 @@ public class Wrapper
     public static String VERSION_0115 = "version 0.1.15";
     public static String VERSION_0403 = "version 0.4.3";
     public static String VERSION_0405 = "version 0.4.5";
+    public static String VERSION_0406 = "version 0.4.6";
 
-    public static String VERSION = VERSION_0405;
+    public static String VERSION = VERSION_0406;
 
     public static String VERSION_FILE = "version.txt";
     //ADD ONE HOUR TO TIME.
@@ -33,7 +34,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1457765195L * 1000L ) + 3600000;
+    public static long RELEASETIME = ( 1458531663L * 1000L ) + 3600000;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
@@ -54,12 +55,18 @@ public class Wrapper
     public static int Main ( String args[] )
     {
         boolean verbose = false;
+        boolean headless = false;
 
         for ( int ct = 0; ct < args.length; ct++ )
         {
             if ( "-v".equals ( args[ct] ) )
             {
                 verbose = true;
+            }
+
+            if ( "-headless".equals ( args[ct] ) )
+            {
+                headless = true;
             }
 
         }
@@ -266,7 +273,17 @@ public class Wrapper
         }
 
         cmd.add ( sb.toString() );
-        cmd.add ( "aktie.gui.SWTApp" );
+
+        if ( !headless )
+        {
+            cmd.add ( "aktie.gui.SWTApp" );
+        }
+
+        else
+        {
+            cmd.add ( "aktie.headless.HeadlessMain" );
+        }
+
         cmd.add ( RUNDIR + File.separator + "aktie_node" );
 
         if ( verbose )
