@@ -401,8 +401,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         {
             if (
                 dest != null && endDestination != null &&
-                (   ( !loadFile ) ||
-                    ( loadFile && pendingFileRequests < MAX_PENDING_FILES )
+                (   pendingFileRequests < MAX_PENDING_FILES 
                 )
             )
             {
@@ -522,12 +521,13 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     if ( o == null )
                     {
+                        outstream.flush();
                         doWait();
                     }
 
                     else
                     {
-                        checkType ( o ); //TODO: Remove
+                        //checkType ( o ); //TODO: Remove
 
                         if ( o instanceof CObj )
                         {
@@ -545,7 +545,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                                 appendOutput ( "offset:  " + c.getNumber ( CObj.FRAGOFFSET ) );
                             }
 
-                            sendCObj ( c );
+                            sendCObjNoFlush ( c );
 
                             if ( CObj.FILEF.equals ( c.getType() ) )
                             {
@@ -580,7 +580,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                     }
 
-                                    outstream.flush();
                                     raf.close();
                                 }
 
@@ -601,8 +600,6 @@ public class ConnectionThread implements Runnable, GuiCallback
                             {
                                 sendCObjNoFlush ( cl.get ( c ) );
                             }
-
-                            outstream.flush();
 
                             cl.close();
                         }
@@ -628,7 +625,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     }
 
-    public static int MAX_PENDING_FILES = 2;
+    public static int MAX_PENDING_FILES = 10;
     private int pendingFileRequests = 0;
     private boolean loadFile;
     private int length;

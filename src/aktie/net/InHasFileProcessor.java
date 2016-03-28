@@ -50,7 +50,7 @@ public class InHasFileProcessor extends GenericProcessor
                 String comid = b.getString ( CObj.COMMUNITYID );
                 String wdig = b.getString ( CObj.FILEDIGEST );
                 String ddig = b.getString ( CObj.FRAGDIGEST );
-
+                
                 if ( comid != null && creatorid != null && wdig != null && ddig != null && seqnum != null )
                 {
                     String id = HasFileCreator.getCommunityMemberId ( creatorid, comid );
@@ -69,7 +69,7 @@ public class InHasFileProcessor extends GenericProcessor
 
                     CObj mysubid = subvalid.isMyUserSubscribed ( comid, destIdent.getId() );
                     CObj sid = subvalid.isUserSubscribed ( comid, creatorid );
-
+                    
                     if ( mysubid != null && sid != null )
                     {
                         Session s = null;
