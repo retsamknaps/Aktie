@@ -4062,7 +4062,7 @@ public class SWTApp
 
         TableViewerColumn col1 = new TableViewerColumn ( postTableViewer, SWT.NONE );
         col1.getColumn().setText ( "Subject" );
-        col1.getColumn().setWidth ( 200 );
+        col1.getColumn().setWidth ( 300 );
         col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.SUBJECT ) );
         col1.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -4816,7 +4816,7 @@ public class SWTApp
 
         TableViewerColumn fcol0 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
         fcol0.getColumn().setText ( "File" );
-        fcol0.getColumn().setWidth ( 100 );
+        fcol0.getColumn().setWidth ( 200 );
         fcol0.getColumn().setAlignment ( SWT.RIGHT );
         fcol0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.NAME ) );
         fcol0.getColumn().addSelectionListener ( new SelectionListener()
@@ -5397,7 +5397,7 @@ public class SWTApp
 
         TableViewerColumn dlcol2 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
         dlcol2.getColumn().setText ( "Downloaded Parts" );
-        dlcol2.getColumn().setWidth ( 100 );
+        dlcol2.getColumn().setWidth ( 150 );
         dlcol2.setLabelProvider ( new DownloadsColumnDownloaded() );
         dlcol2.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -5637,8 +5637,8 @@ public class SWTApp
         } );
 
         TableViewerColumn concol1 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol1.getColumn().setText ( "Upload" );
-        concol1.getColumn().setWidth ( 200 );
+        concol1.getColumn().setText ( "Upload (b)" );
+        concol1.getColumn().setWidth ( 100 );
         concol1.setLabelProvider ( new ConnectionColumnUpload() );
         concol1.getColumn().addSelectionListener ( new SelectionListener()
         {
@@ -5658,8 +5658,8 @@ public class SWTApp
         } );
 
         TableViewerColumn concol2 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol2.getColumn().setText ( "Download" );
-        concol2.getColumn().setWidth ( 200 );
+        concol2.getColumn().setText ( "Download (b)" );
+        concol2.getColumn().setWidth ( 100 );
         concol2.setLabelProvider ( new ConnectionColumnDownload() );
 
         concol2.getColumn().addSelectionListener ( new SelectionListener()
@@ -5680,8 +5680,8 @@ public class SWTApp
         } );
 
         TableViewerColumn concol3 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol3.getColumn().setText ( "Time" );
-        concol3.getColumn().setWidth ( 200 );
+        concol3.getColumn().setText ( "Time (s)" );
+        concol3.getColumn().setWidth ( 90 );
         concol3.setLabelProvider ( new ConnectionColumnTime() );
 
         concol3.getColumn().addSelectionListener ( new SelectionListener()
@@ -5703,7 +5703,7 @@ public class SWTApp
 
         TableViewerColumn concol4 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
         concol4.getColumn().setText ( "Last Sent" );
-        concol4.getColumn().setWidth ( 200 );
+        concol4.getColumn().setWidth ( 100 );
         concol4.setLabelProvider ( new ConnectionColumnLastSent() );
 
         concol4.getColumn().addSelectionListener ( new SelectionListener()
@@ -5725,7 +5725,7 @@ public class SWTApp
 
         TableViewerColumn concol5 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
         concol5.getColumn().setText ( "Last Read" );
-        concol5.getColumn().setWidth ( 200 );
+        concol5.getColumn().setWidth ( 100 );
         concol5.setLabelProvider ( new ConnectionColumnLastRead() );
 
         concol5.getColumn().addSelectionListener ( new SelectionListener()
@@ -5747,7 +5747,7 @@ public class SWTApp
 
         TableViewerColumn concol6 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
         concol6.getColumn().setText ( "Pending" );
-        concol6.getColumn().setWidth ( 200 );
+        concol6.getColumn().setWidth ( 100 );
         concol6.setLabelProvider ( new ConnectionColumnPending() );
 
         concol6.getColumn().addSelectionListener ( new SelectionListener()
@@ -5769,7 +5769,7 @@ public class SWTApp
 
         TableViewerColumn concol7 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
         concol7.getColumn().setText ( "Mode" );
-        concol7.getColumn().setWidth ( 200 );
+        concol7.getColumn().setWidth ( 100 );
         concol7.setLabelProvider ( new ConnectionColumnMode() );
 
         concol7.getColumn().addSelectionListener ( new SelectionListener()
