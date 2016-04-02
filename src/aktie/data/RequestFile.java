@@ -203,4 +203,23 @@ public class RequestFile
         this.shareName = shareName;
     }
 
+    @Override
+    public int hashCode()
+    {
+        return ( int ) id;
+    }
+
+    @Override
+    public boolean equals ( Object o )
+    {
+        if ( o == null ) { return false; }
+
+        if ( this == o ) { return true; }
+
+        if ( ! ( o instanceof RequestFile ) ) { return false; }
+
+        RequestFile rf = ( RequestFile ) o;
+        return id == rf.getId();
+    }
+
 }

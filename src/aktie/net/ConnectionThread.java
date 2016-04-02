@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +72,10 @@ public class ConnectionThread implements Runnable, GuiCallback
     private IdentityManager IdentManager;
     private long lastMyRequest;
     private long startTime;
+    private Set<String> memberships;
+    private Set<String> subs;
+    private Set<RequestFile> filesHasRequested;
+    private long lastFileUpdate;
 
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo )
     {
@@ -84,6 +89,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         index = i;
         session = s;
         fileHandler = rf;
+        subs = new CopyOnWriteArraySet<String>();
+        memberships = new CopyOnWriteArraySet<String>();
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
@@ -160,9 +167,176 @@ public class ConnectionThread implements Runnable, GuiCallback
         return dest;
     }
 
+    private void updateMemberships()
+    {
+        if ( endDestination != null )
+        {
+            Set<String> nl0 = new HashSet<String>();
+            Set<String> nl1 = new CopyOnWriteArraySet<String>();
+            CObjList sl = index.getIdentityMemberships ( endDestination.getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    String sbid = sb.getString ( CObj.COMMUNITYID );
+
+                    if ( sbid != null )
+                    {
+                        nl0.add ( sbid );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+
+            sl = index.getIdentityPrivateCommunities ( endDestination.getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    nl0.add ( sb.getDig() );
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+
+            sl = index.getIdentityMemberships ( getLocalDestination().getIdentity().getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    String sbid = sb.getString ( CObj.COMMUNITYID );
+
+                    if ( nl0.contains ( sbid ) )
+                    {
+                        nl1.add ( sbid );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+
+            sl = index.getIdentityPrivateCommunities ( getLocalDestination().getIdentity().getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+
+                    if ( nl0.contains ( sb.getDig() ) )
+                    {
+                        nl1.add ( sb.getDig() );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+
+            memberships = nl1;
+
+        }
+
+    }
+
+    private void updateSubs()
+    {
+        if ( endDestination != null )
+        {
+            Set<String> nl0 = new HashSet<String>();
+            Set<String> nl1 = new CopyOnWriteArraySet<String>();
+            CObjList sl = index.getMemberSubscriptions ( endDestination.getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    String sbid = sb.getString ( CObj.COMMUNITYID );
+
+                    if ( sbid != null )
+                    {
+                        nl0.add ( sbid );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+            sl = index.getMemberSubscriptions ( getLocalDestination().getIdentity().getId() );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    String sbid = sb.getString ( CObj.COMMUNITYID );
+
+                    if ( nl0.contains ( sbid ) )
+                    {
+                        nl1.add ( sbid );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+            subs = nl1;
+
+        }
+
+    }
+
     public void setEndDestination ( CObj o )
     {
         endDestination = o;
+        updateMemberships();
+        updateSubs();
     }
 
     public void stop()
@@ -401,7 +575,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         {
             if (
                 dest != null && endDestination != null &&
-                (   pendingFileRequests < MAX_PENDING_FILES 
+                (   pendingFileRequests < MAX_PENDING_FILES
                 )
             )
             {

@@ -9,7 +9,6 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
@@ -17,17 +16,17 @@ import aktie.utils.SubscriptionValidator;
 public class InSubProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
     private HH2Session session;
     private Index index;
     private DigestValidator validator;
     private SubscriptionValidator subvalidator;
+    private ConnectionThread conThread;
 
-    public InSubProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public InSubProcessor ( HH2Session s, Index i, ConnectionThread ct )
     {
         session = s;
+        conThread = ct;
         index = i;
-        guicallback = cb;
         validator = new DigestValidator ( index );
         subvalidator = new SubscriptionValidator ( index );
     }
@@ -109,7 +108,7 @@ public class InSubProcessor extends GenericProcessor
                                 s.getTransaction().commit();
                                 s.close();
                                 index.index ( b );
-                                guicallback.update ( b );
+                                conThread.update ( b );
                             }
 
                             catch ( IOException e )

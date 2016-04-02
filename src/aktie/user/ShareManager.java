@@ -467,7 +467,8 @@ public class ShareManager implements Runnable
                             cl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
                             log.warning ( "FOUND FILE TO CHECK FRAGMENTS: " + rf.getLocalFile() + " checking: " + cl.size() + " vs " + rf.getFragsTotal() );
 
-                            if ( rf.getFragsTotal() != cl.size() )
+                            if ( rf.getFragsTotal() != cl.size() &&
+                                    rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
                             {
                                 log.warning ( "REREQUESTING FRAGMENT LIST" );
                                 rfh.setReRequestList ( rf );

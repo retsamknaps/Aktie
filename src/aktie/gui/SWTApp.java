@@ -5532,11 +5532,16 @@ public class SWTApp
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
+                RequestFile rf = null;
 
                 while ( i.hasNext() )
                 {
-                    RequestFile rf = ( RequestFile ) i.next();
+                    rf = ( RequestFile ) i.next();
                     getNode().getFileHandler().cancelDownload ( rf );
+                }
+
+                if ( rf != null )
+                {
                     getUserCallback().update ( rf );
                 }
 

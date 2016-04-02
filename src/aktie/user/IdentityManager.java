@@ -518,6 +518,79 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimSubUpdate ( )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.subscriptionStatus = :st ORDER BY "
+                                      + "x.subscriptionUpdatePriority DESC, "
+                                      + "x.lastSubscriptionUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+            }
+
+            if ( cm != null )
+            {
+                cm.setSubscriptionStatus ( CommunityMember.DONE );
+                cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
+                cm.setSubscriptionUpdateCycle ( 0 );
+                cm.setLastSubscriptionUpdateFrom ( "" );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
     public IdentityData claimMemberUpdate ( String fromid, int upcycle )
     {
         Session s = null;
