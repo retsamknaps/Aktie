@@ -326,6 +326,80 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimHasFileUpdate ( )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.fileStatus = :st "
+                                      + " ORDER BY "
+                                      + "x.fileUpdatePriority DESC, "
+                                      + "x.lastFileUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+            }
+
+            if ( cm != null )
+            {
+                cm.setFileStatus ( CommunityMember.DONE );
+                cm.setLastFileUpdate ( System.currentTimeMillis() );
+                cm.setFileUpdateCycle ( 0 );
+                cm.setLastFileUpdateFrom ( "" );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
     public CommunityMember claimPostUpdate ( String thisid, Map<String, Integer> comids, int rereqperiod )
     {
         Session s = null;
@@ -378,6 +452,79 @@ public class IdentityManager
                 cm.setLastPostUpdate ( System.currentTimeMillis() );
                 cm.setPostUpdateCycle ( 0 );
                 cm.setLastPostUpdateFrom ( thisid );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimPostUpdate ( )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();//LOCKED HERE!
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.postStatus = :st ORDER BY "
+                                      + "x.postUpdatePriority DESC, "
+                                      + "x.lastPostUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+            }
+
+            if ( cm != null )
+            {
+                cm.setPostStatus ( CommunityMember.DONE );
+                cm.setLastPostUpdate ( System.currentTimeMillis() );
+                cm.setPostUpdateCycle ( 0 );
+                cm.setLastPostUpdateFrom ( "" );
                 s.merge ( cm );
             }
 
@@ -669,6 +816,79 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
+    public IdentityData claimMemberUpdate ( )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM IdentityData x WHERE x.mine = false AND "
+                                      + "x.memberStatus = :st ORDER BY "
+                                      + "x.memberUpdatePriority DESC, "
+                                      + "x.lastMemberUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( 1 );
+            List<IdentityData> r = q.list();
+            IdentityData id = null;
+
+            if ( r.size() > 0 )
+            {
+                id = r.get ( 0 );
+
+                if ( id != null )
+                {
+                    id.setLastMemberUpdate ( System.currentTimeMillis() );
+                    id.setMemberStatus ( IdentityData.DONE );
+                    id.setMemberUpdateCycle ( 0 );
+                    id.setLastMemberUpdateFrom ( "" );
+                    s.merge ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return id;
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
     public IdentityData claimCommunityUpdate ( String fromid, int upcycle )
     {
         Session s = null;
@@ -701,6 +921,80 @@ public class IdentityManager
                     id.setCommunityStatus ( IdentityData.DONE );
                     id.setCommunityUpdateCycle ( 0 );
                     id.setLastCommunityUpdateFrom ( fromid );
+                    s.merge ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return id;
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public IdentityData claimCommunityUpdate ( )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM IdentityData x WHERE x.mine = false AND "
+                                      + "x.communityStatus = :st "
+                                      + " ORDER BY "
+                                      + "x.communityUpdatePriority DESC, "
+                                      + "x.lastCommunityUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( 1 );
+            List<IdentityData> r = q.list();
+            IdentityData id = null;
+
+            if ( r.size() > 0 )
+            {
+                id = r.get ( 0 );
+
+                if ( id != null )
+                {
+                    id.setLastCommunityUpdate ( System.currentTimeMillis() );
+                    id.setCommunityStatus ( IdentityData.DONE );
+                    id.setCommunityUpdateCycle ( 0 );
+                    id.setLastCommunityUpdateFrom ( "" );
                     s.merge ( id );
                 }
 

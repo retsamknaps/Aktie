@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentMap;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
+import aktie.data.IdentityData;
 import aktie.data.RequestFile;
 import aktie.index.CObjList;
 import aktie.index.Index;
@@ -106,14 +107,127 @@ public class ConnectionManager2
         while ( qsize < QUEUE_DEPTH_COM && lastsize != qsize )
         {
             lastsize = qsize;
+
+            //Identity update is always sent first to any node upon
+            //initial connection.  No need to enqueue identity updates
+            //here.
+
+            //Community updates
+            IdentityData id = identityManager.claimCommunityUpdate();
+
+            if ( id != null )
+            {
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_COMMUNITIES );
+                cr.pushString ( CObj.CREATOR, id.getId() );
+                cr.pushNumber ( CObj.FIRSTNUM, id.getLastCommunityNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                nonCommunityRequests.add ( cr );
+                qsize++;
+            }
+
+            //Membership updates
+            id = identityManager.claimMemberUpdate();
+
+            if ( id != null )
+            {
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_MEMBERSHIPS );
+                cr.pushString ( CObj.CREATOR, id.getId() );
+                cr.pushNumber ( CObj.FIRSTNUM, id.getLastMembershipNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                nonCommunityRequests.add ( cr );
+                qsize++;
+            }
+
+            //Subscription updates
             CommunityMember cm = identityManager.claimSubUpdate();
 
             if ( cm != null )
             {
-                qsize++;
-                //If public it does on the nonCommunityRequests list
+                CObj comi = index.getCommunity ( cm.getCommunityId() );
 
-                //If private it goes on the subPrivRequests to go to members
+                if ( comi != null )
+                {
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_SUBS );
+                    cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
+                    cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                    String pub = comi.getString ( CObj.SCOPE );
+
+                    if ( CObj.SCOPE_PUBLIC.equals ( pub ) )
+                    {
+                        //If public it does on the nonCommunityRequests list
+                        nonCommunityRequests.add ( cr );
+                    }
+
+                    else
+                    {
+                        //If private it goes on the subPrivRequests to go to members
+                        ConcurrentLinkedQueue<CObj> clst = subPrivRequests.get ( cm.getCommunityId() );
+
+                        if ( clst == null )
+                        {
+                            clst = new ConcurrentLinkedQueue<CObj>();
+                            subPrivRequests.put ( cm.getCommunityId(), clst );
+                        }
+
+                        clst.add ( cr );
+                    }
+
+                    qsize++;
+
+                }
+
+            }
+
+            //Has file updates
+            cm = identityManager.claimHasFileUpdate();
+
+            if ( cm != null )
+            {
+                ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( cm.getCommunityId() );
+
+                if ( clst == null )
+                {
+                    clst = new ConcurrentLinkedQueue<CObj>();
+                    communityRequests.put ( cm.getCommunityId(), clst );
+                }
+
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_HASFILE );
+                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastFileNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                clst.add ( cr );
+                qsize++;
+
+            }
+
+            //Post updates
+            cm = identityManager.claimPostUpdate();
+
+            if ( cm != null )
+            {
+                ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( cm.getCommunityId() );
+
+                if ( clst == null )
+                {
+                    clst = new ConcurrentLinkedQueue<CObj>();
+                    communityRequests.put ( cm.getCommunityId(), clst );
+                }
+
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_POSTS );
+                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastPostNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                clst.add ( cr );
+                qsize++;
+
             }
 
         }

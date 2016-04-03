@@ -125,6 +125,14 @@ public class ConnectionValidatorProcessor extends GenericProcessor
                         con.enqueue ( filemode );
                     }
 
+                    else
+                    {
+                        //First thing to do is always request identities
+                        CObj cr = new CObj();
+                        cr.setType ( CObj.CON_REQ_IDENTITIES );
+                        con.enqueue ( cr );
+                    }
+
                     dest.addEstablishedConnection ( con );
                     IdentProcessor.process ( endDest );
                     con.poke();
