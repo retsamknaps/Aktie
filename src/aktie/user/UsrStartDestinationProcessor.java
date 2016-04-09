@@ -8,10 +8,10 @@ import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
+import aktie.net.ConnectionManager2;
 import aktie.net.Destination;
 import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
-import aktie.net.GetSendData;
 import aktie.net.Net;
 
 public class UsrStartDestinationProcessor extends GenericProcessor
@@ -22,18 +22,18 @@ public class UsrStartDestinationProcessor extends GenericProcessor
     private GuiCallback netcallback;
     private Index index;
     private HH2Session session;
-    private GetSendData sendData;
+    private ConnectionManager2 conMan;
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
 
-    public UsrStartDestinationProcessor ( Net n, GetSendData sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
+    public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
     {
         fileHandler = rf;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
-        sendData = sd;
+        conMan = sd;
         net = n;
         session = s;
         index = i;
@@ -83,7 +83,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
 
                     if ( d != null )
                     {
-                        DestinationThread dt = new DestinationThread ( d, sendData, session, index, netcallback, conListener, fileHandler );
+                        DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler );
                         dt.setIdentity ( o );
                         connectionMan.addDestination ( dt );
                     }

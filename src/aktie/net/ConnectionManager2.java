@@ -1,8 +1,9 @@
 package aktie.net;
 
 import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,28 +17,50 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 
+import org.bouncycastle.crypto.params.KeyParameter;
+
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
+import aktie.data.CommunityMyMember;
+import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.RequestFile;
+import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
+import aktie.user.PushInterface;
 import aktie.user.RequestFileHandler;
+import aktie.utils.MembershipValidator;
+import aktie.utils.SymDecoder;
 
-public class ConnectionManager2
+public class ConnectionManager2 implements GetSendData2, DestinationListener, PushInterface, Runnable
 {
 
+    public static int MAX_TOTAL_DEST_CONNECTIONS = 100;
+    public static long REQUEST_UPDATE_DELAY = 60L * 1000L;
+    public static long DECODE_AND_NEW_CONNECTION_DELAY = 2L * 60L * 1000L;
+    public static long UPDATE_CACHE_PERIOD = 60L * 1000L;
     public static long MAX_TIME_IN_QUEUE = 60L * 60L * 1000L;
+    public static long MIN_TIME_TO_NEW_CONNECTION = 10L * 60L * 1000L;
     public static int QUEUE_DEPTH_COM = 100;
     public static int QUEUE_DEPTH_FILE = 100;
+    public static int ATTEMPT_CONNECTIONS = 10;
+    public static long MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION = 2L * 60L * 1000L;
 
     private Index index;
     private RequestFileHandler fileHandler;
     private IdentityManager identityManager;
+    private SymDecoder symdec;
+    private MembershipValidator memvalid;
+    private boolean stop;
+    private GuiCallback callback;
 
-    private long lastFileUpdate = Long.MIN_VALUE;
+    //key: remotedest
+    private ConcurrentMap<String, Long> recentAttempts;
+
+    private long lastFileUpdate = Long.MIN_VALUE + 1;
     private LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> fileRequests;
 
     //Community data requests.  Key is community id
@@ -58,7 +81,21 @@ public class ConnectionManager2
     //The time the file requests were added to the queue
     private ConcurrentMap<RequestFile, Long> fileTime;
 
-    public ConnectionManager2()
+    private Map<String, DestinationThread> destinations;
+
+    private Map<String, SoftReference<CObj>> identityCache;
+    //Use weak reference because we want these to expire at
+    //a non-indenfinate interval so we get new subs for peers
+    private Map<String, WeakReference<Set<String>>> subCache;
+
+    //A cache of recent private membership subscription updates
+    //So we know which are updating ok and where we need new
+    //connections
+    private ConcurrentMap<String, Long> currentActiveSubPrivRequests;
+    private ConcurrentMap<String, Long> currentActiveComRequests;
+
+    public ConnectionManager2 ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
+                                GuiCallback cb )
     {
         fileRequests =
             new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
@@ -67,6 +104,40 @@ public class ConnectionManager2
         nonCommunityRequests = new ConcurrentLinkedQueue<CObj>();
         communityTime = new ConcurrentHashMap<String, Long>();
         fileTime = new ConcurrentHashMap<RequestFile, Long>();
+        destinations = new HashMap<String, DestinationThread>();
+        recentAttempts = new ConcurrentHashMap<String, Long>();
+        identityCache = new HashMap<String, SoftReference<CObj>>();
+        subCache = new HashMap<String, WeakReference<Set<String>>>();
+        currentActiveSubPrivRequests = new ConcurrentHashMap<String, Long>();
+        currentActiveComRequests = new ConcurrentHashMap<String, Long>();
+        index = i;
+        fileHandler = r;
+        identityManager = id;
+        callback = cb;
+        symdec = new SymDecoder();
+        memvalid = new MembershipValidator ( index );
+        Thread t = new Thread ( this );
+        t.setDaemon ( true );
+        t.start();
+
+    }
+
+    public void clearRecentConnections()
+    {
+        long bt = System.currentTimeMillis() - MIN_TIME_TO_NEW_CONNECTION;
+        Iterator<Entry<String, Long>> e = recentAttempts.entrySet().iterator();
+
+        while ( e.hasNext() )
+        {
+            Entry<String, Long> t = e.next();
+
+            if ( t.getValue() < bt )
+            {
+                e.remove();
+            }
+
+        }
+
     }
 
     public long getLastFileUpdate()
@@ -379,23 +450,88 @@ public class ConnectionManager2
 
     private void removeStale()
     {
-        long cutoff = System.currentTimeMillis() - MAX_TIME_IN_QUEUE;
+        long ct = System.currentTimeMillis();
 
-        for ( Entry<String, Long> e : communityTime.entrySet() )
+        long cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
+        Iterator<Entry<String, Long>> ai = currentActiveSubPrivRequests.entrySet().iterator();
+
+        while ( ai.hasNext() )
         {
+            Entry<String, Long> e = ai.next();
+
+            if ( e.getValue() <= cuttime )
+            {
+                ai.remove();
+            }
+
+        }
+
+        ai = currentActiveComRequests.entrySet().iterator();
+
+        while ( ai.hasNext() )
+        {
+            Entry<String, Long> e = ai.next();
+
+            if ( e.getValue() <= cuttime )
+            {
+                ai.remove();
+            }
+
+        }
+
+        long cutoff = ct - MAX_TIME_IN_QUEUE;
+
+        Iterator<Entry<String, Long>> ci = communityTime.entrySet().iterator();
+
+        while ( ci.hasNext() )
+        {
+            Entry<String, Long> e = ci.next();
+
             if ( e.getValue() <= cutoff )
             {
+                ci.remove();
                 communityRequests.remove ( e.getKey() );
                 subPrivRequests.remove ( e.getKey() );
             }
 
         }
 
-        for ( Entry<RequestFile, Long> e : fileTime.entrySet() )
+        Iterator<Entry<RequestFile, Long>> fi = fileTime.entrySet().iterator();
+
+        while ( fi.hasNext() )
         {
+            Entry<RequestFile, Long> e = fi.next();
+
             if ( e.getValue() <= cutoff )
             {
+                fi.remove();
                 fileRequests.remove ( e.getKey() );
+            }
+
+        }
+
+        Iterator<Entry<String, SoftReference<CObj>>> i = identityCache.entrySet().iterator();
+
+        while ( i.hasNext() )
+        {
+            Entry<String, SoftReference<CObj>> e = i.next();
+
+            if ( e.getValue().get() == null )
+            {
+                i.remove();
+            }
+
+        }
+
+        Iterator<Entry<String, WeakReference<Set<String>>>> i2 = subCache.entrySet().iterator();
+
+        while ( i2.hasNext() )
+        {
+            Entry<String, WeakReference<Set<String>>> e = i2.next();
+
+            if ( e.getValue().get() == null )
+            {
+                i2.remove();
             }
 
         }
@@ -419,7 +555,9 @@ public class ConnectionManager2
                 CObj co = index.getIdentHasFile ( rf.getCommunityId(),
                                                   remotedest, rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                if ( co != null )
+                CObj so = index.getSubscription ( rf.getCommunityId(), remotedest );
+
+                if ( co != null && so != null )
                 {
                     r.add ( rf );
                 }
@@ -434,6 +572,12 @@ public class ConnectionManager2
     //  Communityid ->  File digest -> Requests
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
     {
+
+        //Connection was successful remove
+        //from recent attempts so we know it's a good
+        //one to connect to
+        recentAttempts.remove ( remotedest + true );
+
         if ( hasfiles == null )
         {
             return null;
@@ -511,6 +655,7 @@ public class ConnectionManager2
     private Object nextPrivSubRequest ( Set<String> mems )
     {
         Object n = null;
+        long ct = System.currentTimeMillis();
         List<String> sl = new ArrayList<String>();
         sl.addAll ( mems );
         int r[] = randomList ( mems.size() );
@@ -534,7 +679,9 @@ public class ConnectionManager2
 
                     if ( n != null )
                     {
-                        communityTime.put ( sbs, System.currentTimeMillis() );
+                        communityTime.put ( sbs, ct );
+                        currentActiveSubPrivRequests.put ( sbs, ct );
+
                     }
 
                 }
@@ -546,10 +693,495 @@ public class ConnectionManager2
         return n;
     }
 
+    private Map<String, CObj> getMyIdMap()
+    {
+        List<CObj> myidlst = Index.list ( index.getMyIdentities() );
+        Map<String, CObj> myidmap = new HashMap<String, CObj>();
+
+        for ( CObj co : myidlst )
+        {
+            myidmap.put ( co.getId(), co );
+        }
+
+        return myidmap;
+    }
+
+    private CObj getIdentity ( String id )
+    {
+        CObj identObj = null;
+        SoftReference<CObj> identity = identityCache.get ( id );
+
+        if ( identity != null )
+        {
+            identObj = identity.get();
+        }
+
+        if ( identObj == null )
+        {
+            identObj = index.getIdentity ( id );
+
+            if ( identObj != null )
+            {
+                identityCache.put ( id, new SoftReference<CObj> ( identObj ) );
+            }
+
+        }
+
+        return identObj;
+    }
+
+    private Set<String> getSubs ( String id )
+    {
+        Set<String> r = null;
+        WeakReference<Set<String>> lst = subCache.get ( id );
+
+        if ( lst != null )
+        {
+            r = lst.get();
+        }
+
+        if ( r == null )
+        {
+            r = new HashSet<String>();
+            CObjList sl = index.getMemberSubscriptions ( id );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sub = sl.get ( c );
+                    r.add ( sub.getString ( CObj.COMMUNITYID ) );
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+            subCache.put ( id, new WeakReference<Set<String>> ( r ) );
+        }
+
+        return r;
+    }
+
+    private List<DestinationThread> findMyDestinationsForCommunity ( Map<String, CObj> myidmap, String comid )
+    {
+        List<CObj> mysubslist = Index.list ( index.getMySubscriptions ( comid ) );
+        //Find my destinations for my subscriptions to this community
+        List<DestinationThread> dlst = new LinkedList<DestinationThread>();
+
+        synchronized ( destinations )
+        {
+            for ( CObj c : mysubslist )
+            {
+                CObj mid = myidmap.get ( c.getString ( CObj.CREATOR ) );
+
+                if ( mid != null )
+                {
+                    String mydest = mid.getString ( CObj.DEST );
+
+                    if ( mydest != null )
+                    {
+                        DestinationThread dt = destinations.get ( mydest );
+
+                        if ( dt != null )
+                        {
+                            dlst.add ( dt );
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return dlst;
+    }
+
+    private List<DestinationThread> findAllMyDestinationsForCommunity ( Map<String, CObj> myidmap, String comid )
+    {
+        List<DestinationThread> dlst = new LinkedList<DestinationThread>();
+        CObj com = index.getCommunity ( comid );
+
+        if ( com != null )
+        {
+            if ( CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
+            {
+                synchronized ( destinations )
+                {
+                    dlst.addAll ( destinations.values() );
+                }
+
+            }
+
+            else
+            {
+                List<CObj> mymemlist = Index.list ( index.getMyMemberships ( comid ) );
+
+                //Find my destinations for my subscriptions to this community
+                synchronized ( destinations )
+                {
+                    for ( CObj c : mymemlist )
+                    {
+                        CObj mid = myidmap.get ( c.getPrivate ( CObj.MEMBERID ) );
+
+                        if ( mid != null )
+                        {
+                            String mydest = mid.getString ( CObj.DEST );
+
+                            if ( mydest != null )
+                            {
+                                DestinationThread dt = destinations.get ( mydest );
+
+                                if ( dt != null )
+                                {
+                                    dlst.add ( dt );
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    if ( "true".equals ( com.getPrivate ( CObj.MINE ) ) )
+                    {
+                        String creator = com.getString ( CObj.CREATOR );
+                        CObj mid = myidmap.get ( creator );
+
+                        if ( mid != null )
+                        {
+                            String mydest = mid.getString ( CObj.DEST );
+
+                            if ( mydest != null )
+                            {
+                                DestinationThread dt = destinations.get ( mydest );
+
+                                if ( dt != null && !dlst.contains ( dt ) )
+                                {
+                                    dlst.add ( dt );
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return dlst;
+    }
+
+    private boolean attemptConnection ( DestinationThread dt, CObj id, boolean fm, Map<String, CObj> myids )
+    {
+        if ( dt != null && dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS &&
+                myids.get ( id.getId() ) == null )
+        {
+            long ct = System.currentTimeMillis();
+            long bt = ct - MIN_TIME_TO_NEW_CONNECTION;
+            Long ra = recentAttempts.get ( id.getId() + fm );
+
+            if ( ra == null || ra <= bt )
+            {
+                String dest = id.getString ( CObj.DEST );
+
+                if ( !dt.isConnected ( id.getId(), fm ) && dest != null )
+                {
+                    dt.connect ( dest, fm );
+                    recentAttempts.put ( id.getId() + fm, ct );
+                    return true;
+                }
+
+            }
+
+        }
+
+        return false;
+    }
+
+    private void checkConnections()
+    {
+        int con = 0;
+
+        Map<String, CObj> myids = getMyIdMap();
+        //======================================================
+        //First connect to peers with files we requested
+        //fileRequests is already in priority order, so just
+        //try to connect to as many allowed that has the file!
+        //user can change priorities if they don't like it.
+        List<RequestFile> rls = new LinkedList<RequestFile>();
+
+        synchronized ( fileRequests )
+        {
+            rls.addAll ( fileRequests.keySet() );
+        }
+
+        Iterator<RequestFile> i = rls.iterator();
+
+        while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
+        {
+            RequestFile rf = i.next();
+
+            DestinationThread dt = null;
+
+            CObj mydest = myids.get ( rf.getRequestId() );
+
+            if ( mydest != null )
+            {
+                synchronized ( destinations )
+                {
+                    dt = destinations.get ( mydest.getString ( CObj.DEST ) );
+                }
+
+            }
+
+            if ( dt != null )
+            {
+                if ( dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS )
+                {
+
+                    CObjList clst = index.
+                                    getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
+
+                    int rl[] = randomList ( clst.size() );
+
+                    for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS; c++ )
+                    {
+                        try
+                        {
+                            CObj rd = clst.get ( rl[c] );
+                            String id = rd.getString ( CObj.CREATOR );
+
+                            Set<String> subs = getSubs ( id );
+
+                            if ( subs.contains ( rf.getCommunityId() ) )
+                            {
+                                CObj identity = getIdentity ( id );
+
+                                if ( attemptConnection ( dt, identity, true, myids ) )
+                                {
+                                    con++;
+                                }
+
+                            }
+
+                        }
+
+                        catch ( Exception e )
+                        {
+                            e.printStackTrace();
+                        }
+
+                    }
+
+                    clst.close();
+                }
+
+            }
+
+        }
+
+        //======================================================
+        // Attempt connections for subscribed communities
+        long ct = System.currentTimeMillis();
+        long cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
+        Set<String> comids = new HashSet<String>();
+
+        synchronized ( communityRequests )
+        {
+            comids.addAll ( communityRequests.keySet() );
+        }
+
+        Iterator<String> is = comids.iterator();
+
+        while ( is.hasNext() && con < ATTEMPT_CONNECTIONS )
+        {
+            String comid = is.next();
+            //First make sure we don't currently have a connection
+            //actively servicing subscription updates for this community
+            Long st = currentActiveComRequests.get ( comid );
+
+            if ( st == null || st <= cuttime )
+            {
+                List<DestinationThread> dtlst = findMyDestinationsForCommunity ( myids, comid );
+                CObjList subs = index.getSubscriptions ( comid, null );
+                int ridx[] = randomList ( subs.size() );
+
+                for ( int c0 = 0; c0 < subs.size() && con < ATTEMPT_CONNECTIONS; c0++ )
+                {
+                    try
+                    {
+                        CObj sub = subs.get ( ridx[c0] );
+                        String creatorid = sub.getString ( CObj.CREATOR );
+
+                        if ( creatorid != null )
+                        {
+                            CObj creator = index.getIdentity ( creatorid );
+
+                            if ( creator != null )
+                            {
+                                Iterator<DestinationThread> dti = dtlst.iterator();
+
+                                while ( dti.hasNext() && con < ATTEMPT_CONNECTIONS )
+                                {
+                                    DestinationThread dt = dti.next();
+
+                                    if ( attemptConnection ( dt, creator, false, myids ) )
+                                    {
+                                        con++;
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                subs.close();
+            }
+
+        }
+
+        //======================================================
+        // Attempt subscription update connections for private communities
+        ct = System.currentTimeMillis();
+        cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
+        comids = new HashSet<String>();
+
+        synchronized ( subPrivRequests )
+        {
+            comids.addAll ( subPrivRequests.keySet() );
+        }
+
+        is = comids.iterator();
+
+        while ( is.hasNext() && con < ATTEMPT_CONNECTIONS )
+        {
+            String comid = is.next();
+            //First make sure we don't currently have a connection
+            //actively servicing subscription updates for this community
+            Long st = currentActiveSubPrivRequests.get ( comid );
+
+            if ( st == null || st <= cuttime )
+            {
+                //Get the list of requests for this community
+                ConcurrentLinkedQueue<CObj> lq = subPrivRequests.get ( comid );
+
+                if ( lq != null )
+                {
+                    CObj c = lq.peek();
+
+                    if ( c != null )
+                    {
+                        //Get the community so we can try the creator
+                        CObj com = index.getCommunity ( comid );
+                        CObj comidentity = null;
+
+                        if ( com != null )
+                        {
+                            String creator = com.getString ( CObj.CREATOR );
+
+                            if ( creator != null )
+                            {
+                                comidentity = index.getIdentity ( creator );
+                            }
+
+                        }
+
+                        List<DestinationThread> dlst = findAllMyDestinationsForCommunity ( myids, comid );
+                        Iterator<DestinationThread> dti = dlst.iterator();
+
+                        while ( dti.hasNext() && con < ATTEMPT_CONNECTIONS )
+                        {
+                            DestinationThread dt = dti.next();
+
+                            if ( dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS )
+                            {
+                                //Attempt connection to creator
+                                if ( comidentity != null )
+                                {
+                                    if ( attemptConnection ( dt, comidentity, false, myids ) )
+                                    {
+                                        con++;
+                                    }
+
+                                }
+
+                                CObjList memlst = index.getMemberships ( comid, null );
+                                int ridx[] = randomList ( memlst.size() );
+
+                                for ( int c0 = 0; c0 < memlst.size() && con < ATTEMPT_CONNECTIONS; c0++ )
+                                {
+                                    try
+                                    {
+                                        CObj membership = memlst.get ( ridx[c0] );
+                                        String memid = membership.getString ( CObj.MEMBERID );
+
+                                        if ( memid != null )
+                                        {
+                                            CObj memidentity = index.getIdentity ( memid );
+
+                                            if ( memidentity != null )
+                                            {
+                                                if ( attemptConnection ( dt, memidentity, false, myids ) )
+                                                {
+                                                    con++;
+                                                }
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                    catch ( Exception e )
+                                    {
+                                        e.printStackTrace();
+                                    }
+
+                                }
+
+                                memlst.close();
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        //======================================================
+        // Attempt Any if needed
+
+    }
 
     private Object nextCommunityRequest ( Set<String> subs )
     {
         Object n = null;
+        long ct = System.currentTimeMillis();
         List<String> sl = new ArrayList<String>();
         sl.addAll ( subs );
         int r[] = randomList ( subs.size() );
@@ -573,7 +1205,9 @@ public class ConnectionManager2
 
                     if ( n != null )
                     {
-                        communityTime.put ( sbs, System.currentTimeMillis() );
+                        communityTime.put ( sbs, ct );
+                        currentActiveComRequests.put ( sbs, ct );
+
                     }
 
                 }
@@ -587,6 +1221,9 @@ public class ConnectionManager2
 
     public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
     {
+
+        recentAttempts.remove ( remotedest + false );
+
         Object n = null;
 
         int tnd = Utils.Random.nextInt ( 3 );
@@ -622,6 +1259,362 @@ public class ConnectionManager2
         }
 
         return n;
+    }
+
+
+    public void addDestination ( DestinationThread d )
+    {
+        synchronized ( destinations )
+        {
+            destinations.put ( d.getDest().getPublicDestinationInfo(), d );
+        }
+
+    }
+
+    @Override
+    public boolean isDestinationOpen ( String dest )
+    {
+        boolean opn = true;
+
+        synchronized ( destinations )
+        {
+            opn = destinations.containsKey ( dest );
+        }
+
+        return opn;
+    }
+
+    @Override
+    public void closeDestination ( CObj myid )
+    {
+        String dest = myid.getString ( CObj.DEST );
+
+        if ( dest != null )
+        {
+            synchronized ( destinations )
+            {
+                DestinationThread dt = destinations.remove ( dest );
+
+                if ( dt != null )
+                {
+                    dt.stop();
+                }
+
+            }
+
+        }
+
+    }
+
+    public void sendRequestsNow()
+    {
+
+        List<DestinationThread> dlst = new LinkedList<DestinationThread>();
+
+        synchronized ( destinations )
+        {
+            dlst.addAll ( destinations.values() );
+        }
+
+        for ( DestinationThread dt : dlst )
+        {
+            dt.poke();
+        }
+
+    }
+
+    @Override
+    public void push ( CObj fromid, CObj o )
+    {
+        String dest = fromid.getString ( CObj.DEST );
+        DestinationThread dt = null;
+
+        if ( dest != null )
+        {
+            synchronized ( destinations )
+            {
+                dt = destinations.get ( dest );
+            }
+
+        }
+
+        if ( dt != null )
+        {
+            dt.send ( o );
+        }
+
+    }
+
+    @Override
+    public List<String> getConnectedIds ( CObj fromid )
+    {
+        List<String> conids = null;
+
+        if ( fromid != null )
+        {
+            String dest = fromid.getString ( CObj.DEST );
+
+            synchronized ( destinations )
+            {
+                DestinationThread d = destinations.get ( dest );
+
+                if ( d != null )
+                {
+                    conids = d.getConnectedIds();
+                }
+
+            }
+
+        }
+
+        if ( conids == null )
+        {
+            conids = new LinkedList<String>();
+        }
+
+        return conids;
+    }
+
+    @Override
+    public void push ( CObj fromid, String to, CObj o )
+    {
+        String dest = fromid.getString ( CObj.DEST );
+        DestinationThread dt = null;
+
+        synchronized ( destinations )
+        {
+            dt = destinations.get ( dest );
+        }
+
+        if ( dt != null )
+        {
+            dt.send ( to, o );
+        }
+
+    }
+
+    public void closeDestinationConnections ( CObj id )
+    {
+        synchronized ( destinations )
+        {
+            DestinationThread dt = destinations.get ( id.getString ( CObj.DEST ) );
+            dt.closeConnections();
+        }
+
+    }
+
+    public void closeAllConnections()
+    {
+        synchronized ( destinations )
+        {
+            for ( DestinationThread dt : destinations.values() )
+            {
+                dt.closeConnections();
+            }
+
+        }
+
+    }
+
+    private void resetupLastUpdateToForceDecode()
+    {
+        try
+        {
+            long curtime = System.currentTimeMillis();
+            CObjList unlst = index.getUnDecodedMemberships ( 0 );
+
+            for ( int c = 0; c < unlst.size(); c++ )
+            {
+                CObj co = unlst.get ( c );
+                co.pushPrivateNumber ( CObj.LASTUPDATE, curtime );
+                index.index ( co );
+            }
+
+            unlst.close();
+
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void decodeMemberships()
+    {
+        //Find my memberships
+        try
+        {
+            List<CommunityMyMember> mycoms = identityManager.getMyMemberships();
+
+            for ( CommunityMyMember c : mycoms )
+            {
+                long lastdecode = c.getLastDecode();
+                long newtime = System.currentTimeMillis();
+                //Find all membership records we've received after this time.
+                KeyParameter kp = new KeyParameter ( c.getKey() );
+                CObjList unlst = index.getUnDecodedMemberships ( lastdecode );
+
+                for ( int cnt = 0; cnt < unlst.size(); cnt++ )
+                {
+                    CObj um = unlst.get ( cnt );
+
+                    if ( symdec.decode ( um, kp ) )
+                    {
+                        um.pushPrivate ( CObj.DECODED, "true" );
+                        index.index ( um );
+                    }
+
+                }
+
+                unlst.close();
+
+                //See if we've validated our own membership yet.
+                //it could be we got a new membership, but we didn't decode
+                //any.  we still want to attempt to validate it.
+
+                c.setLastDecode ( newtime );
+                identityManager.saveMyMembership ( c ); //if we get one after we start we'll try again
+            }
+
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
+        //Search for all decoded, invalid memberships, and check if valid
+        //keep checking until no more validated.
+        int lastdec = 0;
+        CObjList invliddeclist = index.getInvalidMemberships();
+
+        while ( invliddeclist.size() != lastdec )
+        {
+            lastdec = invliddeclist.size();
+
+            for ( int c = 0; c < invliddeclist.size(); c++ )
+            {
+                try
+                {
+                    CObj m = invliddeclist.get ( c );
+                    String creator = m.getString ( CObj.CREATOR );
+                    String comid = m.getPrivate ( CObj.COMMUNITYID );
+                    String memid = m.getPrivate ( CObj.MEMBERID );
+                    Long auth = m.getPrivateNumber ( CObj.AUTHORITY );
+
+                    if ( creator != null && comid != null && auth != null )
+                    {
+                        CObj com = memvalid.canGrantMemebership ( comid, creator, auth );
+                        CObj member = index.getIdentity ( memid );
+
+                        if ( com != null )
+                        {
+                            m.pushPrivate ( CObj.VALIDMEMBER, "true" );
+                            m.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );
+                            m.pushPrivate ( CObj.DESCRIPTION, com.getPrivate ( CObj.DESCRIPTION ) );
+
+                            if ( "true".equals ( member.getPrivate ( CObj.MINE ) ) )
+                            {
+                                m.pushPrivate ( CObj.MINE, "true" );
+                                com.pushPrivate ( memid, "true" );
+                                index.index ( com );
+                            }
+
+                            index.index ( m );
+
+                            if ( callback != null )
+                            {
+                                callback.update ( m );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            invliddeclist.close();
+            invliddeclist = index.getInvalidMemberships();
+        }
+
+        invliddeclist.close();
+
+    }
+
+    public synchronized void stop()
+    {
+        stop = true;
+
+        synchronized ( destinations )
+        {
+            for ( DestinationThread dt : destinations.values() )
+            {
+                dt.stop();
+            }
+
+        }
+
+        notifyAll();
+    }
+
+    public synchronized void kickConnections()
+    {
+        notifyAll();
+    }
+
+
+    private synchronized void delay()
+    {
+        try
+        {
+            wait ( REQUEST_UPDATE_DELAY ); //5 minutes
+        }
+
+        catch ( InterruptedException e )
+        {
+            e.printStackTrace();
+        }
+
+    }
+
+    private long nextdecode = 0;
+    @Override
+    public void run()
+    {
+        resetupLastUpdateToForceDecode();
+
+        while ( !stop )
+        {
+            if ( !stop )
+            {
+                procComQueue();
+                procFileQueue();
+                removeStale();
+
+                if ( System.currentTimeMillis() >= nextdecode )
+                {
+                    clearRecentConnections();
+                    checkConnections();
+                    decodeMemberships();
+                    nextdecode = System.currentTimeMillis() +
+                                 DECODE_AND_NEW_CONNECTION_DELAY;
+                }
+
+            }
+
+            delay();
+
+        }
+
     }
 
 }

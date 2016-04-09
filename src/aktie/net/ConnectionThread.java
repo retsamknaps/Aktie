@@ -51,7 +51,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private BatchProcessor inProcessor;
     private ConcurrentLinkedQueue<CObj> inQueue;
     private ConcurrentLinkedQueue<Object> outqueue;
-    private GetSendData sendData;
+    private GetSendData2 conMan;
     private OutputProcessor outproc;
     private CObj endDestination;
     private DestinationThread dest;
@@ -75,15 +75,15 @@ public class ConnectionThread implements Runnable, GuiCallback
     private Set<String> memberships;
     private Set<String> subs;
     private Set<RequestFile> filesHasRequested;
-    private long lastFileUpdate;
+    private long lastFileUpdate = Long.MIN_VALUE;
 
-    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo )
+    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo )
     {
         This = this;
         fileOnly = fo;
         conListener = cl;
         guicallback = cb;
-        sendData = sd;
+        conMan = sd;
         con = c;
         dest = d;
         index = i;
@@ -332,11 +332,30 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     }
 
+    private void updateSubsAndFiles()
+    {
+        long nu = conMan.getLastFileUpdate();
+
+        if ( nu > lastFileUpdate )
+        {
+            lastFileUpdate = nu;
+            updateMemberships();
+            updateSubs();
+            lastFileUpdate = conMan.getLastFileUpdate();
+
+            if ( fileOnly )
+            {
+                filesHasRequested = conMan.getHasFileForConnection ( endDestination.getId(), subs );
+            }
+
+        }
+
+    }
+
     public void setEndDestination ( CObj o )
     {
         endDestination = o;
-        updateMemberships();
-        updateSubs();
+        updateSubsAndFiles();
     }
 
     public void stop()
@@ -579,26 +598,37 @@ public class ConnectionThread implements Runnable, GuiCallback
                 )
             )
             {
-                Object r = sendData.next ( dest.getIdentity().getId(),
-                                           endDestination.getId(), fileOnly );
 
-                if ( r != null )
+                if ( fileOnly )
                 {
-                    if ( r instanceof CObj )
-                    {
-                        CObj co = ( CObj ) r;
+                    Object r = conMan.nextFile ( dest.getIdentity().getId(),
+                                                 endDestination.getId(), filesHasRequested );
 
-                        if ( CObj.CON_REQ_FRAG.equals ( co.getType() ) ||
-                                CObj.CON_REQ_FRAGLIST.equals ( co.getType() ) )
+                    if ( r != null )
+                    {
+                        if ( r instanceof CObj )
                         {
-                            incrFileRequests();
+                            CObj co = ( CObj ) r;
+
+                            if ( CObj.CON_REQ_FRAG.equals ( co.getType() ) ||
+                                    CObj.CON_REQ_FRAGLIST.equals ( co.getType() ) )
+                            {
+                                incrFileRequests();
+                            }
+
                         }
 
                     }
 
+                    return r;
                 }
 
-                return r;
+                else
+                {
+                    return conMan.nextNonFile ( dest.getIdentity().getId(),
+                                                endDestination.getId(), memberships, subs );
+                }
+
             }
 
             return null;
@@ -697,6 +727,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                     {
                         outstream.flush();
                         doWait();
+                        updateSubsAndFiles();
                     }
 
                     else

@@ -12,7 +12,7 @@ import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
-import aktie.net.ConnectionManager;
+import aktie.net.ConnectionManager2;
 import aktie.net.Net;
 import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
@@ -50,7 +50,7 @@ public class Node
     private GuiCallback usrCallback;
     private GuiCallback netCallback;
     private ConnectionListener conCallback;
-    private ConnectionManager conMan;
+    private ConnectionManager2 conMan;
     private RequestFileHandler requestHandler;
     private ShareManager shareManager;
     private Settings settings;
@@ -74,7 +74,7 @@ public class Node
         identManager = new IdentityManager ( session, index );
         NewFileProcessor nfp = new NewFileProcessor ( session, index, usrCallback ) ;
         requestHandler = new RequestFileHandler ( session, nodedir + File.separator + "downloads", nfp, index );
-        conMan = new ConnectionManager ( session, index, requestHandler, identManager, usrCallback );
+        conMan = new ConnectionManager2 ( session, index, requestHandler, identManager, usrCallback );
         userQueue = new ProcessQueue();
 
         hasFileCreator = new HasFileCreator ( session, index );

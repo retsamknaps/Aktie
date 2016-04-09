@@ -40,18 +40,18 @@ public class DestinationThread implements Runnable
     private Destination dest;
     private Map<String, List<ConnectionThread>> connections;
     private CObj identity;
-    private GetSendData sendData;
+    private GetSendData2 conMan;
     private ConnectionListener conListener;
     private RequestFileHandler fileHandler;
 
-    public DestinationThread ( Destination d, GetSendData sd, HH2Session s, Index i, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf )
+    public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf )
     {
         fileHandler = rf;
         conListener = cl;
         index = i;
         session = s;
         callback = cb;
-        sendData = sd;
+        conMan = sd;
         dest = d;
         connections = new HashMap<String, List<ConnectionThread>>();
         Thread t = new Thread ( this, "Destination Connection Accept Thread" );
@@ -297,7 +297,7 @@ public class DestinationThread implements Runnable
 
         else
         {
-            ConnectionThread ct = new ConnectionThread ( this, session, index, c, sendData, callback, conListener, fileHandler, filemode );
+            ConnectionThread ct = new ConnectionThread ( this, session, index, c, conMan, callback, conListener, fileHandler, filemode );
             ct.enqueue ( identity );
         }
 

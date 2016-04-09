@@ -3,6 +3,7 @@ package aktie;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.Set;
 
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import org.junit.Test;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
+import aktie.data.RequestFile;
 import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
@@ -17,7 +19,7 @@ import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
 import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
-import aktie.net.GetSendData;
+import aktie.net.GetSendData2;
 import aktie.net.RawNet;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
@@ -29,7 +31,7 @@ import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.utils.FUtils;
 
-public class UserTest implements GuiCallback, GetSendData, ConnectionListener, DestinationListener
+public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, DestinationListener
 {
 
     @Test
@@ -300,13 +302,6 @@ public class UserTest implements GuiCallback, GetSendData, ConnectionListener, D
     }
 
     @Override
-    public CObj next ( String localdest, String remotedest, boolean fmode )
-    {
-        //Called to get new data to send to remote destinations
-        return null;
-    }
-
-    @Override
     public void update ( ConnectionThread ct )
     {
         // TODO Auto-generated method stub
@@ -339,6 +334,34 @@ public class UserTest implements GuiCallback, GetSendData, ConnectionListener, D
     {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Set<RequestFile> getHasFileForConnection ( String remotedest, Set<String> subs )
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public long getLastFileUpdate()
+    {
+        // TODO Auto-generated method stub
+        return 0;
     }
 
 }

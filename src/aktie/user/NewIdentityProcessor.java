@@ -20,7 +20,7 @@ import aktie.net.ConnectionListener;
 import aktie.net.Destination;
 import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
-import aktie.net.GetSendData;
+import aktie.net.GetSendData2;
 import aktie.net.Net;
 
 public class NewIdentityProcessor extends GenericProcessor
@@ -33,18 +33,18 @@ public class NewIdentityProcessor extends GenericProcessor
     private GuiCallback netcallback;
     private Index index;
     private HH2Session session;
-    private GetSendData sendData;
+    private GetSendData2 conMan;
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
 
-    public NewIdentityProcessor ( Net n, GetSendData sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
+    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
     {
         fileHandler = rf;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
-        sendData = sd;
+        conMan = sd;
         net = n;
         session = s;
         index = i;
@@ -83,7 +83,7 @@ public class NewIdentityProcessor extends GenericProcessor
                 o.pushString ( CObj.KEY, Utils.stringFromPublicKey (
                                    ( RSAKeyParameters ) pair.getPublic() ) );
                 Destination d = net.getNewDestination();
-                DestinationThread dt = new DestinationThread ( d, sendData, session, index, netcallback, conListener, fileHandler );
+                DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler );
                 File df = d.savePrivateDestinationInfo();
                 o.pushPrivate ( CObj.DEST, df.getPath() );
                 o.pushString ( CObj.DEST, d.getPublicDestinationInfo() );
