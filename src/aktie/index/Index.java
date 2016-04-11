@@ -854,14 +854,12 @@ public class Index
                 String valuekey = CObj.FLD + CObj.getSubid ( qf.getDig() );
 
                 String typ = qf.getString ( CObj.FLD_TYPE );
-                System.out.println ( "SEARCH QUERY: " + typ );
 
                 if ( CObj.FLD_TYPE_BOOL.equals ( typ ) ||
                         CObj.FLD_TYPE_OPT.equals ( typ ) ||
                         CObj.FLD_TYPE_STRING.equals ( typ ) )
                 {
                     String val = query.getString ( valuekey );
-                    System.out.println ( "QUERY " + valuekey + " val: " + val );
 
                     if ( val != null )
                     {

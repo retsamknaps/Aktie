@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
-public class ConnectionManager implements GetSendData, DestinationListener, PushInterface, Runnable
+public class ConnectionManagerOLD implements GetSendData, DestinationListener, PushInterface, Runnable
 {
 
     Logger log = Logger.getLogger ( "aktie" );
@@ -62,8 +62,8 @@ public class ConnectionManager implements GetSendData, DestinationListener, Push
     public Map<String, Set<String>> pushMap;
     public Map<String, Integer> pushLoops;
 
-    public ConnectionManager ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
-                               GuiCallback cb )
+    public ConnectionManagerOLD ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
+                                  GuiCallback cb )
     {
         callback = cb;
         identManager = id;

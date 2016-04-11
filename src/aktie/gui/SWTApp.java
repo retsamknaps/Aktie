@@ -42,7 +42,7 @@ import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
 import aktie.index.Upgrade0405;
 import aktie.net.ConnectionListener;
-import aktie.net.ConnectionManager;
+import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
 //import aktie.net.RawNet;
 import aktie.user.RequestFileHandler;
@@ -2089,7 +2089,7 @@ public class SWTApp
             //Make the update period shorter than the max time with no requests, so that we
             //actually send requests before the time is up.  That way we don't loose the connection
             //when it is actually useful to us.
-        }, 0, Math.min ( 30L * 60L * 1000L, ConnectionManager.MAX_TIME_WITH_NO_REQUESTS - ( 10L * 60L * 1000L ) ) );
+        }, 0, Math.min ( 30L * 60L * 1000L, ConnectionManager2.MAX_TIME_WITH_NO_REQUESTS - ( 10L * 60L * 1000L ) ) );
 
     }
 

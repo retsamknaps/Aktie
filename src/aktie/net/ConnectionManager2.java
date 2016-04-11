@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -48,6 +49,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public static int QUEUE_DEPTH_FILE = 100;
     public static int ATTEMPT_CONNECTIONS = 10;
     public static long MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION = 2L * 60L * 1000L;
+    public static long MAX_TIME_WITH_NO_REQUESTS = 60L * 60L * 1000L;
+    public static long MAX_CONNECTION_TIME  = 2L * 60L * 60L * 1000L; //Only keep connections for 2 hours
 
     private Index index;
     private RequestFileHandler fileHandler;
@@ -173,7 +176,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private void procComQueue()
     {
         int qsize = calculateNonFileQueueSize();
-        int lastsize = 0;
+        int lastsize = -1;
 
         while ( qsize < QUEUE_DEPTH_COM && lastsize != qsize )
         {
@@ -884,6 +887,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     private boolean attemptConnection ( DestinationThread dt, CObj id, boolean fm, Map<String, CObj> myids )
     {
+        //log.info("ATTEMPING CONNECTION!!!  " + dt.getIdentity().getDisplayName() + " > " + id.getDisplayName());
         if ( dt != null && dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS &&
                 myids.get ( id.getId() ) == null )
         {
@@ -902,8 +906,23 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     return true;
                 }
 
+                else
+                {
+                    //log.info("FAILED: Already connected!");
+                }
+
             }
 
+            else
+            {
+                //log.info("FAILED: Already attempted connection.");
+            }
+
+        }
+
+        else
+        {
+            //log.info("FAILED:  Too many connections or self connection");
         }
 
         return false;
@@ -1175,6 +1194,49 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         //======================================================
         // Attempt Any if needed
+        //if ( con == 0 )
+        //{
+        List<DestinationThread> alldest = new LinkedList<DestinationThread>();
+
+        synchronized ( destinations )
+        {
+            alldest.addAll ( destinations.values() );
+        }
+
+        CObjList idlst = index.getIdentities();
+        int ridx[] = randomList ( idlst.size() );
+
+        //log.info("ALL DESTINATIONS: " + alldest.size() + " ids: " + idlst.size() + " cons: " + con);
+
+        for ( int c0 = 0; c0 < idlst.size() && con < ATTEMPT_CONNECTIONS; c0++ )
+        {
+            try
+            {
+                CObj identity = idlst.get ( ridx[c0] );
+                Iterator<DestinationThread> it = alldest.iterator();
+
+                while ( it.hasNext() && con < ATTEMPT_CONNECTIONS )
+                {
+                    DestinationThread dt = it.next();
+
+                    if ( attemptConnection ( dt, identity, false, myids ) )
+                    {
+                        con++;
+                    }
+
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        idlst.close();
+        //}
 
     }
 
@@ -1219,6 +1281,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
+
     public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
     {
 
@@ -1256,6 +1319,19 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         if ( n == null )
         {
             n = nonCommunityRequests.poll();
+        }
+
+        if ( n == null )
+        {
+            IdentityData id = identityManager.claimIdentityUpdate ( remotedest );
+
+            if ( id != null )
+            {
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_IDENTITIES );
+                n = cr;
+            }
+
         }
 
         return n;
@@ -1446,6 +1522,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         //Find my memberships
         try
         {
+            boolean newdecoded = false;
+
+            //New memberships have a LastDecode time of zero.
+            //So we should look at all undecoded memberships after
+            //becoming a new member
             List<CommunityMyMember> mycoms = identityManager.getMyMemberships();
 
             for ( CommunityMyMember c : mycoms )
@@ -1454,7 +1535,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 long newtime = System.currentTimeMillis();
                 //Find all membership records we've received after this time.
                 KeyParameter kp = new KeyParameter ( c.getKey() );
-                CObjList unlst = index.getUnDecodedMemberships ( lastdecode );
+                CObjList unlst = index.getUnDecodedMemberships ( lastdecode -
+                                 ( 2 * Index.MIN_TIME_BETWEEN_SEARCHERS ) );
 
                 for ( int cnt = 0; cnt < unlst.size(); cnt++ )
                 {
@@ -1464,6 +1546,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     {
                         um.pushPrivate ( CObj.DECODED, "true" );
                         index.index ( um );
+                        newdecoded = true;
                     }
 
                 }
@@ -1476,6 +1559,12 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 c.setLastDecode ( newtime );
                 identityManager.saveMyMembership ( c ); //if we get one after we start we'll try again
+
+            }
+
+            if ( newdecoded )
+            {
+                index.forceNewSearcher();
             }
 
         }
@@ -1543,6 +1632,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             }
 
             invliddeclist.close();
+            index.forceNewSearcher();
             invliddeclist = index.getInvalidMemberships();
         }
 
@@ -1576,7 +1666,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     {
         try
         {
-            wait ( REQUEST_UPDATE_DELAY ); //5 minutes
+            wait ( REQUEST_UPDATE_DELAY );
         }
 
         catch ( InterruptedException e )
@@ -1602,9 +1692,9 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 if ( System.currentTimeMillis() >= nextdecode )
                 {
+                    decodeMemberships();
                     clearRecentConnections();
                     checkConnections();
-                    decodeMemberships();
                     nextdecode = System.currentTimeMillis() +
                                  DECODE_AND_NEW_CONNECTION_DELAY;
                 }

@@ -47,7 +47,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -100,7 +100,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -154,7 +154,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -208,7 +208,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -292,7 +292,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -366,7 +366,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -462,7 +462,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -535,7 +535,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -631,7 +631,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -704,7 +704,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -782,7 +782,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -855,7 +855,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -933,7 +933,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -1007,7 +1007,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            ////e.printStackTrace();
 
             if ( s != null )
             {
@@ -1073,7 +1073,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1128,7 +1128,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1170,7 +1170,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1212,7 +1212,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1254,7 +1254,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1297,7 +1297,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1332,7 +1332,7 @@ public class IdentityManager
 
             catch ( Exception e )
             {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         }
@@ -1356,7 +1356,7 @@ public class IdentityManager
 
             catch ( IOException e )
             {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         }
@@ -1380,7 +1380,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1428,7 +1428,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1505,7 +1505,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1589,7 +1589,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1659,7 +1659,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1767,7 +1767,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1875,7 +1875,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -1921,7 +1921,7 @@ public class IdentityManager
 
             catch ( IOException e )
             {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         }
@@ -1950,7 +1950,7 @@ public class IdentityManager
 
                     catch ( IOException e )
                     {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
 
                 }
@@ -1984,7 +1984,7 @@ public class IdentityManager
 
                     catch ( Exception e )
                     {
-                        e.printStackTrace();
+                        //e.printStackTrace();
                     }
 
                 }
@@ -2053,7 +2053,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {

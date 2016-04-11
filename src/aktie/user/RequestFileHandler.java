@@ -64,7 +64,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -107,7 +107,7 @@ public class RequestFileHandler
 
             catch ( Exception e )
             {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
         }
@@ -133,7 +133,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -181,7 +181,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -247,7 +247,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -300,7 +300,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -345,7 +345,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -392,7 +392,7 @@ public class RequestFileHandler
         catch ( Exception e )
         {
             claimed = false;
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -453,7 +453,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -510,7 +510,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -562,7 +562,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -601,7 +601,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -647,7 +647,7 @@ public class RequestFileHandler
         catch ( Exception e )
         {
             climaed = false;
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -763,7 +763,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -820,7 +820,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
 
             if ( s != null )
             {
@@ -905,7 +905,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         return r;
@@ -973,7 +973,7 @@ public class RequestFileHandler
 
                     catch ( Exception e )
                     {
-                        //e.printStackTrace();
+                        ////e.printStackTrace();
                         log.info ( "Bad problem: " + e.getMessage() );
                         return null;
                     }
@@ -1141,7 +1141,7 @@ public class RequestFileHandler
 
                         catch ( IOException e )
                         {
-                            e.printStackTrace();
+                            //e.printStackTrace();
                         }
 
                     }

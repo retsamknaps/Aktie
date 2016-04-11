@@ -180,7 +180,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 try
                 {
                     CObj sb = sl.get ( c );
-                    String sbid = sb.getString ( CObj.COMMUNITYID );
+                    String sbid = sb.getPrivate ( CObj.COMMUNITYID );
 
                     if ( sbid != null )
                     {
@@ -224,7 +224,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 try
                 {
                     CObj sb = sl.get ( c );
-                    String sbid = sb.getString ( CObj.COMMUNITYID );
+                    String sbid = sb.getPrivate ( CObj.COMMUNITYID );
 
                     if ( nl0.contains ( sbid ) )
                     {
@@ -336,6 +336,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     {
         long nu = conMan.getLastFileUpdate();
 
+        //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
         if ( nu > lastFileUpdate )
         {
             lastFileUpdate = nu;
@@ -465,7 +466,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public boolean enqueue ( Object o )
     {
-        log.info ( "CONTHREAD: enqueue: size: " + outqueue.size() );
 
         if ( outqueue.size() < MAXQUEUESIZE )
         {
@@ -691,7 +691,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( !fileOnly )
             {
-                long cuttime = curtime - ConnectionManager.MAX_TIME_WITH_NO_REQUESTS;
+                long cuttime = curtime - ConnectionManager2.MAX_TIME_WITH_NO_REQUESTS;
 
                 if ( lastMyRequest < cuttime )
                 {
@@ -701,7 +701,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             }
 
-            long maxtime = curtime - ConnectionManager.MAX_CONNECTION_TIME;
+            long maxtime = curtime - ConnectionManager2.MAX_CONNECTION_TIME;
 
             if ( startTime < maxtime )
             {
@@ -1406,6 +1406,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                     String myid = dest.getIdentity().getId().substring ( 0, 6 );
                     String oid = endDestination.getId().substring ( 0, 6 );
                     String n = "out_" + myid + "_to_" + oid + ".trace";
+                    n = n.replaceAll ( File.separator, "_" );
+                    n = n.replaceAll ( File.pathSeparator, "_" );
                     File f = new File ( n );
                     int idx = 0;
 
@@ -1449,6 +1451,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                     String myid = dest.getIdentity().getId().substring ( 0, 6 );
                     String oid = endDestination.getId().substring ( 0, 6 );
                     String n = "in_" + myid + "_to_" + oid + ".trace";
+                    n = n.replaceAll ( File.separator, "_" );
+                    n = n.replaceAll ( File.pathSeparator, "_" );
                     File f = new File ( n );
                     int idx = 0;
 
