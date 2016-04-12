@@ -70,7 +70,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             lastupdate = null;
             q.enqueue ( i0 );
 
-            int loops = 120;
+            int loops = 10;
 
             while ( lastupdate == null && loops > 0 )
             {

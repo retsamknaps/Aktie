@@ -41,9 +41,6 @@ public class Index implements Runnable
 
     public Index()
     {
-        Thread t = new Thread ( this );
-        t.setDaemon ( true );
-        t.start();
     }
 
     public static List<CObj> list ( CObjList cl )
@@ -91,55 +88,22 @@ public class Index implements Runnable
         writer = new IndexWriter ( fsdir, idxconf );
         writer.commit();
         buildNewSearcher();
+        Thread t = new Thread ( this );
+        t.setDaemon ( true );
+        t.start();
 
     }
 
     public static long MIN_TIME_BETWEEN_SEARCHERS = 5L * 1000L; //10 seconds
     private boolean buildnewsearcher = false;
 
-    private class WaitForNewSearcher
-    {
-        private boolean started = false;
-        private boolean complete = false;
-
-        public synchronized void buildStarted()
-        {
-            started = true;
-            notifyAll();
-        }
-
-        public synchronized void buildComplete()
-        {
-            complete = started;
-            notifyAll();
-        }
-
-        public synchronized void waitForNewSearcher()
-        {
-            while ( !complete )
-            {
-                try
-                {
-                    wait ( 1000L );
-                }
-
-                catch ( InterruptedException e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-        }
-
-        public synchronized boolean isComplete()
-        {
-            return complete;
-        }
-
-    }
-
     private List<WaitForNewSearcher> newsearcherlist = new LinkedList<WaitForNewSearcher>();
+
+    public void forceNewSearcher()
+    {
+        WaitForNewSearcher w = getNewWaitForNewSearcher();
+        w.waitForNewSearcher();
+    }
 
     private synchronized WaitForNewSearcher getNewWaitForNewSearcher()
     {
@@ -147,13 +111,6 @@ public class Index implements Runnable
         newsearcherlist.add ( w );
         notifyAll();
         return w;
-    }
-
-    public void forceNewSearcher()
-    {
-        System.out.println ( "FORCE NEW SEARCHER" );
-        WaitForNewSearcher w = getNewWaitForNewSearcher();
-        w.waitForNewSearcher();
     }
 
     private synchronized void buildComplete()
@@ -210,12 +167,25 @@ public class Index implements Runnable
 
     }
 
+    private void initiateNewSearcher()
+    {
+        if ( MIN_TIME_BETWEEN_SEARCHERS <= 0 )
+        {
+            forceNewSearcher();
+        }
+
+        else
+        {
+            buildnewsearcher = true;
+        }
+
+    }
+
     private void buildNewSearcher() throws IOException
     {
         AktieSearcher old = searcher;
 
         searcher = AktieSearcher.newSearcher ( writer );
-        System.out.println ( "NEW SEARCHER BUILT!" );
 
         if ( old != null )
         {
@@ -224,11 +194,6 @@ public class Index implements Runnable
 
         buildComplete();
 
-    }
-
-    private synchronized void initiateNewSearcher()
-    {
-        buildnewsearcher = true;
     }
 
     private boolean stop = false;

@@ -328,6 +328,7 @@ public class testIndex
             b1.pushString ( "s1", "string1" );
             b1.pushText ( "title", "This not not what you think!" );
             i.index ( b1 );
+            i.forceNewSearcher();
 
             CObjList l0 = i.search ( "text_title:what", 10000 );
             //List<CObj> l0 = i.searchId("id0");

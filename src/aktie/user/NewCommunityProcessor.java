@@ -53,6 +53,7 @@ public class NewCommunityProcessor extends GenericProcessor
             }
 
             CObj myid = index.getMyIdentity ( creator );
+            System.out.println ( "MYID: " + myid );
 
             if ( myid == null )
             {
@@ -192,6 +193,7 @@ public class NewCommunityProcessor extends GenericProcessor
 
                     catch ( Exception e2 )
                     {
+                        e2.printStackTrace();
                     }
 
                     try
@@ -201,6 +203,7 @@ public class NewCommunityProcessor extends GenericProcessor
 
                     catch ( Exception e2 )
                     {
+                        e2.printStackTrace();
                     }
 
                 }
