@@ -263,11 +263,6 @@ public class DestinationThread implements Runnable
 
     public void connect ( String d, boolean filemode )
     {
-        if ( filemode )
-        {
-            System.out.println ( "CONNECT!  FILEMODE" );
-        }
-
         Connection con = dest.connect ( d );
 
         if ( con != null )
@@ -295,11 +290,6 @@ public class DestinationThread implements Runnable
 
     private void buildConnection ( Connection c, boolean filemode )
     {
-        if ( filemode )
-        {
-            System.out.println ( "FILEMODE buildConnection!" );
-        }
-
         if ( identity == null )
         {
             c.close();

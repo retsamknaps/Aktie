@@ -853,7 +853,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                         else
                         {
                             p.setFieldBool ( f.getDig(), Boolean.valueOf ( v ) );
-                            System.out.println ( "NOT NEW BOOL FIELD!" );
                         }
 
                     }
@@ -868,7 +867,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                         else
                         {
                             p.setFieldString ( f.getDig(), v );
-                            System.out.println ( "NOT NEW STRING FIELD!" );
                         }
 
                     }
@@ -883,7 +881,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                         else
                         {
                             p.setFieldNumber ( f.getDig(), Long.valueOf ( v ) );
-                            System.out.println ( "NOT NEW NUMBER FIELD!" );
                         }
 
                     }
@@ -898,7 +895,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                         else
                         {
                             p.setFieldDecimal ( f.getDig(), Double.valueOf ( v ) );
-                            System.out.println ( "NOT NEW DECIMAL FIELD!" );
                         }
 
                     }

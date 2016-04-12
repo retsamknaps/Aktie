@@ -379,8 +379,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
                                   rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                    System.out.println ( "REQUESTING FILE PARTS: " + cl.size() );
-
                     //There are none.. reset those requested some time ago.
                     if ( cl.size() == 0 )
                     {
@@ -458,8 +456,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     {
                         index.forceNewSearcher();
                     }
-
-                    System.out.println ( "FLSIZE: " + fl.size() );
 
                 }
 
@@ -573,8 +569,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         Set<RequestFile> r = new HashSet<RequestFile>();
         List<RequestFile> rl = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
-        System.out.println ( "HERE!!!!!!! " + rl.size() );
-
         for ( RequestFile rf : rl )
         {
             if ( subs.contains ( rf.getCommunityId() ) )
@@ -600,11 +594,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
     {
 
-        System.out.print ( "****************** nextFile! " + hasfiles );
-
-        if ( hasfiles != null ) { System.out.print ( " " + hasfiles.size() ); }
-
-        System.out.println();
         //Connection was successful remove
         //from recent attempts so we know it's a good
         //one to connect to
@@ -932,9 +921,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     private boolean attemptConnection ( DestinationThread dt, CObj id, boolean fm, Map<String, CObj> myids )
     {
-        if ( fm ) { System.out.println ( "HERE!!!!!!!!!!!!!!!!" ); }
 
-        //log.info("ATTEMPING CONNECTION!!!  " + dt.getIdentity().getDisplayName() + " > " + id.getDisplayName());
         if ( dt != null && dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS &&
                 myids.get ( id.getId() ) == null )
         {
@@ -942,18 +929,12 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             long bt = ct - MIN_TIME_TO_NEW_CONNECTION;
             Long ra = recentAttempts.get ( id.getId() + fm );
 
-            if ( fm ) { System.out.println ( "R-attempts: " + ra + " < " + bt ); }
-
             if ( ra == null || ra <= bt )
             {
                 String dest = id.getString ( CObj.DEST );
 
-                if ( fm ) { System.out.println ( "R-isConnected: " + !dt.isConnected ( id.getId(), fm ) + " dest: " + dest );}
-
                 if ( !dt.isConnected ( id.getId(), fm ) && dest != null )
                 {
-                    if ( fm ) { System.out.println ( "ATTEMPT! " + id.getId() + fm ); }
-
                     recentAttempts.put ( id.getId() + fm, ct );
                     dt.connect ( dest, fm );
                     return true;
@@ -998,11 +979,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             rls.addAll ( fileRequests.keySet() );
         }
 
-        if ( rls.size() > 0 )
-        {
-            System.out.println ( "FILES REQUESTED! " + rls.size() );
-        }
-
         Iterator<RequestFile> i = rls.iterator();
 
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
@@ -1030,8 +1006,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList clst = index.
                                     getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                    System.out.println ( "HASFILES: " + clst.size() );
-
                     int rl[] = randomList ( clst.size() );
 
                     for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS; c++ )
@@ -1042,8 +1016,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             String id = rd.getString ( CObj.CREATOR );
 
                             Set<String> subs = getSubs ( id );
-
-                            System.out.println ( "CREATOR: " + id + " subs: " + subs.size() + " contains: " + subs.contains ( rf.getCommunityId() ) );
 
                             if ( subs.contains ( rf.getCommunityId() ) )
                             {

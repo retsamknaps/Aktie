@@ -172,7 +172,6 @@ public class SubTreeEntityDB implements SubTreeEntityDBInterface
 
         }
 
-        System.out.println ( "Number Entities: " + r.size() );
         return r;
     }
 

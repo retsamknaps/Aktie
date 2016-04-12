@@ -99,7 +99,6 @@ public class AddFieldDialog extends Dialog
             {
                 if ( event.detail == SWT.TRAVERSE_RETURN )
                 {
-                    System.out.println ( "Enter pressed" );
                     doSearch();
                 }
 
