@@ -1,5 +1,6 @@
 package aktie.index;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,7 +17,7 @@ import org.apache.lucene.search.TopDocs;
 
 import aktie.data.CObj;
 
-public class CObjList
+public class CObjList implements Closeable, AutoCloseable
 {
 
     //private DirectoryReader reader;
@@ -187,6 +188,7 @@ public class CObjList
 
     }
 
+    @Override
     public void close()
     {
         if ( searcher != null )

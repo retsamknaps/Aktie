@@ -91,6 +91,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         fileHandler = rf;
         subs = new CopyOnWriteArraySet<String>();
         memberships = new CopyOnWriteArraySet<String>();
+        filesHasRequested = new CopyOnWriteArraySet<RequestFile>();
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
@@ -344,7 +345,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             updateSubs();
             lastFileUpdate = conMan.getLastFileUpdate();
 
-            if ( fileOnly )
+            if ( fileOnly && endDestination != null )
             {
                 filesHasRequested = conMan.getHasFileForConnection ( endDestination.getId(), subs );
             }
@@ -599,7 +600,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             )
             {
 
-                if ( fileOnly )
+                if ( fileOnly && filesHasRequested != null )
                 {
                     Object r = conMan.nextFile ( dest.getIdentity().getId(),
                                                  endDestination.getId(), filesHasRequested );
@@ -881,6 +882,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             outproc.decrFileRequests();
             loadFile = false;
             lastMyRequest = System.currentTimeMillis();
+            appendInput ( "OUTPUT THREAD GO! " + pendingFileRequests );
             outproc.go(); //it holds off on local requests until the file is read.
 
             appendInput ( "File read " + dstr );
@@ -903,7 +905,6 @@ public class ConnectionThread implements Runnable, GuiCallback
             FileInputStream fis = null;
             Session s = null;
             CObj fg = flist.get ( c );
-
 
             String wdig = fg.getString ( CObj.FILEDIGEST );
             String fdig = fg.getString ( CObj.FRAGDIGEST );
@@ -1180,6 +1181,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                 }
 
             }
+
+            appendInput ( "DONE PROCESSING FRAGMENT " );
 
         }
 

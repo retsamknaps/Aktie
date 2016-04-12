@@ -6,8 +6,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +28,7 @@ import org.apache.lucene.document.Document;
 
 import aktie.data.CObj;
 
-public class Index
+public class Index implements Runnable
 {
 
     // * NOTE *
@@ -43,6 +41,9 @@ public class Index
 
     public Index()
     {
+        Thread t = new Thread ( this );
+        t.setDaemon ( true );
+        t.start();
     }
 
     public static List<CObj> list ( CObjList cl )
@@ -93,42 +94,111 @@ public class Index
 
     }
 
-    public static long MIN_TIME_BETWEEN_SEARCHERS = 10L * 1000L; //10 seconds
-    private long lastNewSearcher;
+    public static long MIN_TIME_BETWEEN_SEARCHERS = 5L * 1000L; //10 seconds
+    private boolean buildnewsearcher = false;
 
-    private void buildNewSearcher() throws IOException
+    private class WaitForNewSearcher
     {
-        AktieSearcher old = searcher;
-        lastNewSearcher = System.currentTimeMillis();
-        searcher = AktieSearcher.newSearcher ( writer );
+        private boolean started = false;
+        private boolean complete = false;
 
-        if ( old != null )
+        public synchronized void buildStarted()
         {
-            old.shutdown();
+            started = true;
+            notifyAll();
+        }
+
+        public synchronized void buildComplete()
+        {
+            complete = started;
+            notifyAll();
+        }
+
+        public synchronized void waitForNewSearcher()
+        {
+            while ( !complete )
+            {
+                try
+                {
+                    wait ( 1000L );
+                }
+
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+        public synchronized boolean isComplete()
+        {
+            return complete;
         }
 
     }
 
-    boolean newpending = false;
+    private List<WaitForNewSearcher> newsearcherlist = new LinkedList<WaitForNewSearcher>();
 
-    private synchronized boolean grabNewPending()
+    private synchronized WaitForNewSearcher getNewWaitForNewSearcher()
     {
-        if ( !newpending )
-        {
-            newpending = true;
-            return true;
-        }
-
-        return false;
+        WaitForNewSearcher w = new WaitForNewSearcher();
+        newsearcherlist.add ( w );
+        notifyAll();
+        return w;
     }
 
-    private void waitToForce()
+    public void forceNewSearcher()
     {
-        while ( !grabNewPending() )
+        System.out.println ( "FORCE NEW SEARCHER" );
+        WaitForNewSearcher w = getNewWaitForNewSearcher();
+        w.waitForNewSearcher();
+    }
+
+    private synchronized void buildComplete()
+    {
+        Iterator<WaitForNewSearcher> i = newsearcherlist.iterator();
+
+        while ( i.hasNext() )
+        {
+            WaitForNewSearcher w = i.next();
+            w.buildComplete();
+
+            if ( w.isComplete() )
+            {
+                i.remove();
+            }
+
+        }
+
+    }
+
+    private synchronized boolean checkIfBuildNew()
+    {
+        boolean r = buildnewsearcher && ( !stop );
+        buildnewsearcher = false;
+
+        if ( !stop )
+        {
+            for ( WaitForNewSearcher w : newsearcherlist )
+            {
+                r = true;
+                w.buildStarted();
+            }
+
+        }
+
+        return r;
+    }
+
+    private synchronized void waitToBuildNewSearcher()
+    {
+        if ( !stop && newsearcherlist.size() == 0 )
         {
             try
             {
-                Thread.sleep ( 100 );
+                wait ( MIN_TIME_BETWEEN_SEARCHERS );
             }
 
             catch ( InterruptedException e )
@@ -140,70 +210,47 @@ public class Index
 
     }
 
-    /**
-        This is used to force a new searcher so that
-        newly saved documents are immediately available
-    */
-    public void forceNewSearcher()
+    private void buildNewSearcher() throws IOException
     {
-        waitToForce();
+        AktieSearcher old = searcher;
 
-        try
+        searcher = AktieSearcher.newSearcher ( writer );
+        System.out.println ( "NEW SEARCHER BUILT!" );
+
+        if ( old != null )
         {
-            buildNewSearcher();
+            old.shutdown();
         }
 
-        catch ( IOException e )
-        {
-            e.printStackTrace();
-        }
+        buildComplete();
 
-        newpending = false;
     }
 
     private synchronized void initiateNewSearcher()
     {
-        if ( MIN_TIME_BETWEEN_SEARCHERS == 0 )
+        buildnewsearcher = true;
+    }
+
+    private boolean stop = false;
+    public void run()
+    {
+        while ( !stop )
         {
-            //Only used for test!
-            try
-            {
-                buildNewSearcher();
-            }
+            waitToBuildNewSearcher();
 
-            catch ( Exception e )
+            if ( checkIfBuildNew() )
             {
-                e.printStackTrace();
-            }
-
-        }
-
-        else if ( !newpending )
-        {
-            newpending = true;
-            long ctime = System.currentTimeMillis();
-            long nt = lastNewSearcher + MIN_TIME_BETWEEN_SEARCHERS;
-            long dl = Math.max ( 0, nt - ctime );
-            Timer t = new Timer ( "New Index Searcher Builder Timer", true );
-            t.schedule ( new TimerTask()
-            {
-                @Override
-                public void run()
+                try
                 {
-                    try
-                    {
-                        buildNewSearcher();
-                        newpending = false;
-                    }
-
-                    catch ( IOException e )
-                    {
-                        e.printStackTrace();
-                    }
-
+                    buildNewSearcher();
                 }
 
-            }, dl );
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
 
         }
 
@@ -211,7 +258,7 @@ public class Index
 
     public void close()
     {
-        newpending = false;
+        stop = true;
 
         try
         {

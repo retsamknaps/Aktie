@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
-import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -173,10 +172,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return sz;
     }
 
-    private void procComQueue()
+    private boolean procComQueue()
     {
         int qsize = calculateNonFileQueueSize();
         int lastsize = -1;
+        boolean gonext = false;
 
         while ( qsize < QUEUE_DEPTH_COM && lastsize != qsize )
         {
@@ -197,6 +197,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 cr.pushNumber ( CObj.FIRSTNUM, id.getLastCommunityNumber() + 1 );
                 cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
                 nonCommunityRequests.add ( cr );
+                gonext = true;
                 qsize++;
             }
 
@@ -212,6 +213,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
                 nonCommunityRequests.add ( cr );
                 qsize++;
+                gonext = true;
             }
 
             //Subscription updates
@@ -250,6 +252,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         clst.add ( cr );
                     }
 
+                    gonext = true;
                     qsize++;
 
                 }
@@ -277,6 +280,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
                 clst.add ( cr );
                 qsize++;
+                gonext = true;
 
             }
 
@@ -301,15 +305,19 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
                 clst.add ( cr );
                 qsize++;
+                gonext = true;
 
             }
 
         }
 
+        return gonext;
+
     }
 
-    private void procFileQueue()
+    private boolean procFileQueue()
     {
+        boolean gonext = false;
         //Get the prioritized list of files
         LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> nlst =
             new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
@@ -353,6 +361,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         cr.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
                         cr.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
                         fl.add ( cr );
+                        gonext = true;
                     }
 
                 }
@@ -369,6 +378,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     //Find the fragments that haven't been requested yet.
                     CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
                                   rf.getWholeDigest(), rf.getFragmentDigest() );
+
+                    System.out.println ( "REQUESTING FILE PARTS: " + cl.size() );
 
                     //There are none.. reset those requested some time ago.
                     if ( cl.size() == 0 )
@@ -413,6 +424,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     }
 
+                    boolean newsearcher = false;
+
                     for ( int c = 0; c < cl.size() && fl.size() < QUEUE_DEPTH_FILE; c++ )
                     {
                         try
@@ -421,7 +434,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             co.pushPrivate ( CObj.COMPLETE, "req" );
                             co.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
                             index.index ( co );
-                            index.forceNewSearcher();
+                            newsearcher = true;
                             CObj sr = new CObj();
                             sr.setType ( CObj.CON_REQ_FRAG );
                             sr.pushString ( CObj.COMMUNITYID, co.getString ( CObj.COMMUNITYID ) );
@@ -429,6 +442,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             sr.pushString ( CObj.FRAGDIGEST, co.getString ( CObj.FRAGDIGEST ) );
                             sr.pushString ( CObj.FRAGDIG, co.getString ( CObj.FRAGDIG ) );
                             fl.add ( sr );
+                            gonext = true;
                         }
 
                         catch ( IOException e )
@@ -440,6 +454,13 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     cl.close();
 
+                    if ( newsearcher )
+                    {
+                        index.forceNewSearcher();
+                    }
+
+                    System.out.println ( "FLSIZE: " + fl.size() );
+
                 }
 
             }
@@ -449,6 +470,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         fileRequests = nlst;
         fileTime = nt;
         lastFileUpdate++;
+        return gonext;
     }
 
     private void removeStale()
@@ -551,6 +573,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         Set<RequestFile> r = new HashSet<RequestFile>();
         List<RequestFile> rl = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
+        System.out.println ( "HERE!!!!!!! " + rl.size() );
+
         for ( RequestFile rf : rl )
         {
             if ( subs.contains ( rf.getCommunityId() ) )
@@ -576,6 +600,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
     {
 
+        System.out.print ( "****************** nextFile! " + hasfiles );
+
+        if ( hasfiles != null ) { System.out.print ( " " + hasfiles.size() ); }
+
+        System.out.println();
         //Connection was successful remove
         //from recent attempts so we know it's a good
         //one to connect to
@@ -623,6 +652,22 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             }
 
+        }
+
+        boolean getmore = false;
+
+        synchronized ( fileRequests )
+        {
+            if ( fileRequests.size() == 0 )
+            {
+                getmore = true;
+            }
+
+        }
+
+        if ( getmore )
+        {
+            kickConnections();
         }
 
         return n;
@@ -887,6 +932,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     private boolean attemptConnection ( DestinationThread dt, CObj id, boolean fm, Map<String, CObj> myids )
     {
+        if ( fm ) { System.out.println ( "HERE!!!!!!!!!!!!!!!!" ); }
+
         //log.info("ATTEMPING CONNECTION!!!  " + dt.getIdentity().getDisplayName() + " > " + id.getDisplayName());
         if ( dt != null && dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS &&
                 myids.get ( id.getId() ) == null )
@@ -895,14 +942,20 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             long bt = ct - MIN_TIME_TO_NEW_CONNECTION;
             Long ra = recentAttempts.get ( id.getId() + fm );
 
+            if ( fm ) { System.out.println ( "R-attempts: " + ra + " < " + bt ); }
+
             if ( ra == null || ra <= bt )
             {
                 String dest = id.getString ( CObj.DEST );
 
+                if ( fm ) { System.out.println ( "R-isConnected: " + !dt.isConnected ( id.getId(), fm ) + " dest: " + dest );}
+
                 if ( !dt.isConnected ( id.getId(), fm ) && dest != null )
                 {
-                    dt.connect ( dest, fm );
+                    if ( fm ) { System.out.println ( "ATTEMPT! " + id.getId() + fm ); }
+
                     recentAttempts.put ( id.getId() + fm, ct );
+                    dt.connect ( dest, fm );
                     return true;
                 }
 
@@ -945,6 +998,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             rls.addAll ( fileRequests.keySet() );
         }
 
+        if ( rls.size() > 0 )
+        {
+            System.out.println ( "FILES REQUESTED! " + rls.size() );
+        }
+
         Iterator<RequestFile> i = rls.iterator();
 
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
@@ -972,6 +1030,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList clst = index.
                                     getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
 
+                    System.out.println ( "HASFILES: " + clst.size() );
+
                     int rl[] = randomList ( clst.size() );
 
                     for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS; c++ )
@@ -982,6 +1042,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             String id = rd.getString ( CObj.CREATOR );
 
                             Set<String> subs = getSubs ( id );
+
+                            System.out.println ( "CREATOR: " + id + " subs: " + subs.size() + " contains: " + subs.contains ( rf.getCommunityId() ) );
 
                             if ( subs.contains ( rf.getCommunityId() ) )
                             {
@@ -1686,9 +1748,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         {
             if ( !stop )
             {
-                procComQueue();
-                procFileQueue();
                 removeStale();
+
+                boolean g0 = procComQueue();
+                boolean g1 = procFileQueue();
+
+                if ( g0 || g1 )
+                {
+                    sendRequestsNow();
+                }
 
                 if ( System.currentTimeMillis() >= nextdecode )
                 {

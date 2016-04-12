@@ -566,6 +566,29 @@ public class TestNode
             n2.getIndex().forceNewSearcher();
             n3.getIndex().forceNewSearcher();
 
+            n1.enqueue ( memupdate );
+            n2.enqueue ( memupdate );
+            n3.enqueue ( memupdate );
+
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
             clist = n1.getIndex().getMemberships ( n0seed.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clist.size() );
             co = clist.get ( 0 );
@@ -673,6 +696,36 @@ public class TestNode
             {
                 e.printStackTrace();
             }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
 
             n0.getIndex().forceNewSearcher();
             n1.getIndex().forceNewSearcher();
@@ -996,6 +1049,60 @@ public class TestNode
             n2.getIndex().forceNewSearcher();
             n3.getIndex().forceNewSearcher();
 
+            updatesubs = new CObj();
+            updatesubs.setType ( CObj.USR_SUB_UPDATE );
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
+            updatesubs = new CObj();
+            updatesubs.setType ( CObj.USR_SUB_UPDATE );
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
             clist = n1.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
             clist.close();
@@ -1041,6 +1148,81 @@ public class TestNode
             System.out.println ( "UPDATE SUBSCRIPTION.............................." );
             updatesubs = new CObj();
             updatesubs.setType ( CObj.USR_SUB_UPDATE );
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
