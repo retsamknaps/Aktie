@@ -822,6 +822,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 catch ( Exception e )
                 {
+                    e.printStackTrace();
                     stop();
                 }
 
@@ -1186,11 +1187,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
-        if ( flist.size() == 0 )
-        {
-            stop();
-        }
-
         flist.close();
     }
 
@@ -1360,6 +1356,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         catch ( Exception e )
         {
+            e.printStackTrace();
         }
 
         stop();

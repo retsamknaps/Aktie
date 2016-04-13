@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -50,6 +51,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public static long MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION = 2L * 60L * 1000L;
     public static long MAX_TIME_WITH_NO_REQUESTS = 60L * 60L * 1000L;
     public static long MAX_CONNECTION_TIME  = 2L * 60L * 60L * 1000L; //Only keep connections for 2 hours
+    public static int MAX_PUSH_LOOPS = 20; //The number of times we attempt to connect to a node to push to
+    public static int PUSH_NODES = 5;  //The number of nodes we'd like to push to
 
     private Index index;
     private RequestFileHandler fileHandler;
@@ -58,6 +61,17 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private MembershipValidator memvalid;
     private boolean stop;
     private GuiCallback callback;
+
+    //Digest -> Identities pushed to already.
+    private ConcurrentMap<String, Set<String>> pushedToCache;
+    //Digest -> Number of connection attempts for the push
+    private ConcurrentMap<String, Integer> pushConAttempts;
+    //Community -> List of objects to push to members
+    private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> membershipPushes;
+    //Community -> List of objects to push to subscribers
+    private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> subPushes;
+    //List of objects to push to anyone
+    private ConcurrentLinkedQueue<CObj> pubPushes;
 
     //key: remotedest
     private ConcurrentMap<String, Long> recentAttempts;
@@ -112,6 +126,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         subCache = new HashMap<String, WeakReference<Set<String>>>();
         currentActiveSubPrivRequests = new ConcurrentHashMap<String, Long>();
         currentActiveComRequests = new ConcurrentHashMap<String, Long>();
+        pushedToCache = new ConcurrentHashMap<String, Set<String>>() ;
+        pushConAttempts = new ConcurrentHashMap<String, Integer>() ;
+        membershipPushes = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>() ;
+        subPushes = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>() ;
+        pubPushes = new ConcurrentLinkedQueue<CObj>();
         index = i;
         fileHandler = r;
         identityManager = id;
@@ -150,13 +169,50 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private int calculateNonFileQueueSize()
     {
         int sz = 0;
+
         List<String> kl = new LinkedList<String>();
+        kl.addAll ( membershipPushes.keySet() );
+
+        for ( String k : kl )
+        {
+            ConcurrentLinkedQueue<CObj> l = membershipPushes.get ( k );
+
+            if ( l != null )
+            {
+                sz += l.size();
+            }
+
+        }
+
+        kl.clear();
+        kl.addAll ( subPushes.keySet() );
+
+        for ( String k : kl )
+        {
+            ConcurrentLinkedQueue<CObj> l = subPushes.get ( k );
+
+            if ( l != null )
+            {
+                sz += l.size();
+            }
+
+        }
+
+        sz += pubPushes.size();
+
+        kl.clear();
         kl.addAll ( communityRequests.keySet() );
 
         for ( String k : kl )
         {
             ConcurrentLinkedQueue<CObj> l = communityRequests.get ( k );
-            sz += l.size();
+
+            if ( l != null )
+            {
+                sz += l.size();
+
+            }
+
         }
 
         kl.clear();
@@ -165,7 +221,12 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         for ( String k : kl )
         {
             ConcurrentLinkedQueue<CObj> l = subPrivRequests.get ( k );
-            sz += l.size();
+
+            if ( l != null )
+            {
+                sz += l.size();
+            }
+
         }
 
         sz += nonCommunityRequests.size();
@@ -181,6 +242,99 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         while ( qsize < QUEUE_DEPTH_COM && lastsize != qsize )
         {
             lastsize = qsize;
+
+            //Find pushes we haven't claimed
+            CObjList plst = index.getPushesToSend();
+
+            for ( int cnt = 0; cnt < plst.size() && qsize < QUEUE_DEPTH_COM; cnt++ )
+            {
+                try
+                {
+                    CObj co = plst.get ( cnt );
+                    co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
+                    index.index ( co );
+                    qsize++;
+
+                    //public static String IDENTITY = "identity";
+                    //public static String COMMUNITY = "community";
+                    //public static String MEMBERSHIP = "membership";
+                    String tp = co.getType();
+
+                    if ( CObj.IDENTITY.equals ( tp ) ||
+                            CObj.COMMUNITY.equals ( tp ) ||
+                            CObj.MEMBERSHIP.equals ( tp ) )
+                    {
+                        pubPushes.add ( co );
+                    }
+
+                    //public static String SUBSCRIPTION = "subscription";
+                    if ( CObj.SUBSCRIPTION.equals ( tp ) )
+                    {
+                        String comid = co.getString ( CObj.COMMUNITYID );
+
+                        if ( comid != null )
+                        {
+                            CObj com = index.getByDig ( comid );
+
+                            if ( com != null )
+                            {
+                                String scope = com.getString ( CObj.SCOPE );
+
+                                if ( CObj.SCOPE_PRIVATE.equals ( scope ) )
+                                {
+                                    ConcurrentLinkedQueue<CObj> mq = membershipPushes.get ( comid );
+
+                                    if ( mq == null )
+                                    {
+                                        mq = new ConcurrentLinkedQueue<CObj>();
+                                        membershipPushes.put ( comid, mq );
+                                    }
+
+                                    mq.add ( co );
+                                }
+
+                                else
+                                {
+                                    pubPushes.add ( co );
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    //public static String POST = "post";
+                    //public static String HASFILE = "hasfile";
+                    if ( CObj.POST.equals ( tp ) ||
+                            CObj.HASFILE.equals ( tp ) )
+                    {
+                        String comid = co.getString ( CObj.COMMUNITYID );
+
+                        if ( comid != null )
+                        {
+                            ConcurrentLinkedQueue<CObj> mq = subPushes.get ( comid );
+
+                            if ( mq == null )
+                            {
+                                mq = new ConcurrentLinkedQueue<CObj>();
+                                subPushes.put ( comid, mq );
+                            }
+
+                            mq.add ( co );
+                        }
+
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                }
+
+            }
+
+            plst.close();
 
             //Identity update is always sent first to any node upon
             //initial connection.  No need to enqueue identity updates
@@ -469,11 +623,99 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return gonext;
     }
 
+    private boolean checkRemovePush ( String d )
+    {
+        boolean rm = false;
+        Set<String> pc = pushedToCache.get ( d );
+
+        if ( pc != null )
+        {
+            if ( pc.size() >= PUSH_NODES )
+            {
+                rm = true;
+                pushedToCache.remove ( d );
+                pushConAttempts.remove ( d );
+            }
+
+        }
+
+        Integer pa = pushConAttempts.get ( d );
+
+        if ( pa != null )
+        {
+            if ( pa > MAX_PUSH_LOOPS )
+            {
+                rm = true;
+                pushedToCache.remove ( d );
+                pushConAttempts.remove ( d );
+            }
+
+        }
+
+        return rm;
+    }
+
     private void removeStale()
     {
         long ct = System.currentTimeMillis();
-
         long cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
+
+        Iterator<Entry<String, ConcurrentLinkedQueue<CObj>>> ei = membershipPushes.entrySet().iterator();
+
+        while ( ei.hasNext() )
+        {
+            Entry<String, ConcurrentLinkedQueue<CObj>> e = ei.next();
+            Iterator<CObj> mi = e.getValue().iterator();
+
+            while  ( mi.hasNext() )
+            {
+                CObj c = mi.next();
+                String d = c.getDig();
+
+                if ( checkRemovePush ( d ) )
+                {
+                    mi.remove();
+                }
+
+            }
+
+        }
+
+        ei = subPushes.entrySet().iterator();
+
+        while ( ei.hasNext() )
+        {
+            Entry<String, ConcurrentLinkedQueue<CObj>> e = ei.next();
+            Iterator<CObj> mi = e.getValue().iterator();
+
+            while  ( mi.hasNext() )
+            {
+                CObj c = mi.next();
+                String d = c.getDig();
+
+                if ( checkRemovePush ( d ) )
+                {
+                    mi.remove();
+                }
+
+            }
+
+        }
+
+        Iterator<CObj> ii = pubPushes.iterator();
+
+        while ( ii.hasNext() )
+        {
+            CObj c = ii.next();
+            String d = c.getDig();
+
+            if ( checkRemovePush ( d ) )
+            {
+                ii.remove();
+            }
+
+        }
+
         Iterator<Entry<String, Long>> ai = currentActiveSubPrivRequests.entrySet().iterator();
 
         while ( ai.hasNext() )
@@ -695,7 +937,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         long ct = System.currentTimeMillis();
         List<String> sl = new ArrayList<String>();
         sl.addAll ( mems );
-        int r[] = randomList ( mems.size() );
+        int r[] = randomList ( sl.size() );
 
         for ( int i = 0; i < r.length && n == null; i++ )
         {
@@ -966,7 +1208,71 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     {
         int con = 0;
 
+        //Increment push loops
+        Iterator<Entry<String, ConcurrentLinkedQueue<CObj>>> ei = membershipPushes.entrySet().iterator();
+
+        while ( ei.hasNext() )
+        {
+            Entry<String, ConcurrentLinkedQueue<CObj>> et = ei.next();
+            Iterator<CObj> si = et.getValue().iterator();
+
+            while ( si.hasNext() )
+            {
+                CObj co = si.next();
+                Integer cnt = pushConAttempts.get ( co.getDig() );
+
+                if ( cnt == null )
+                {
+                    cnt = 0;
+                }
+
+                cnt++;
+                pushConAttempts.put ( co.getDig(), cnt );
+            }
+
+        }
+
+        ei = subPushes.entrySet().iterator();
+
+        while ( ei.hasNext() )
+        {
+            Entry<String, ConcurrentLinkedQueue<CObj>> et = ei.next();
+            Iterator<CObj> si = et.getValue().iterator();
+
+            while ( si.hasNext() )
+            {
+                CObj co = si.next();
+                Integer cnt = pushConAttempts.get ( co.getDig() );
+
+                if ( cnt == null )
+                {
+                    cnt = 0;
+                }
+
+                cnt++;
+                pushConAttempts.put ( co.getDig(), cnt );
+            }
+
+        }
+
+        Iterator<CObj> si = pubPushes.iterator();
+
+        while ( si.hasNext() )
+        {
+            CObj co = si.next();
+            Integer cnt = pushConAttempts.get ( co.getDig() );
+
+            if ( cnt == null )
+            {
+                cnt = 0;
+            }
+
+            cnt++;
+            pushConAttempts.put ( co.getDig(), cnt );
+        }
+
         Map<String, CObj> myids = getMyIdMap();
+
         //======================================================
         //First connect to peers with files we requested
         //fileRequests is already in priority order, so just
@@ -1050,10 +1356,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         long cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
         Set<String> comids = new HashSet<String>();
 
-        synchronized ( communityRequests )
-        {
-            comids.addAll ( communityRequests.keySet() );
-        }
+        comids.addAll ( communityRequests.keySet() );
+        comids.addAll ( subPushes.keySet() );
 
         Iterator<String> is = comids.iterator();
 
@@ -1120,10 +1424,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
         comids = new HashSet<String>();
 
-        synchronized ( subPrivRequests )
-        {
-            comids.addAll ( subPrivRequests.keySet() );
-        }
+        comids.addAll ( subPrivRequests.keySet() );
+        comids.addAll ( membershipPushes.keySet() );
 
         is = comids.iterator();
 
@@ -1280,7 +1582,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         long ct = System.currentTimeMillis();
         List<String> sl = new ArrayList<String>();
         sl.addAll ( subs );
-        int r[] = randomList ( subs.size() );
+        int r[] = randomList ( sl.size() );
 
         for ( int i = 0; i < r.length && n == null; i++ )
         {
@@ -1315,6 +1617,116 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
+    private Object nextMembershipPush ( String ident, Set<String> mems )
+    {
+        Object n = null;
+        List<String> sl = new ArrayList<String>();
+        sl.addAll ( mems );
+        int r[] = randomList ( sl.size() );
+
+        for ( int i = 0; i < r.length && n == null; i++ )
+        {
+            int ix = r[i];
+            ConcurrentLinkedQueue<CObj> cl = membershipPushes.get ( sl.get ( ix ) );
+
+            if ( cl != null )
+            {
+                Iterator<CObj> ci = cl.iterator();
+
+                while ( n == null && ci.hasNext() )
+                {
+                    CObj co = ci.next();
+                    Set<String> sc = pushedToCache.get ( co.getDig() );
+
+                    if ( sc == null )
+                    {
+                        sc = new CopyOnWriteArraySet<String>();
+                        pushedToCache.put ( co.getDig(), sc );
+                    }
+
+                    if ( !sc.contains ( ident ) )
+                    {
+                        n = co;
+                        sc.add ( ident );
+                    }
+
+                }
+
+            }
+
+        }
+
+        return n;
+    }
+
+    private Object nextSubPush ( String ident, Set<String> subs )
+    {
+        Object n = null;
+        List<String> sl = new ArrayList<String>();
+        sl.addAll ( subs );
+        int r[] = randomList ( sl.size() );
+
+        for ( int i = 0; i < r.length && n == null; i++ )
+        {
+            int ix = r[i];
+            ConcurrentLinkedQueue<CObj> cl = subPushes.get ( sl.get ( ix ) );
+
+            if ( cl != null )
+            {
+                Iterator<CObj> ci = cl.iterator();
+
+                while ( n == null && ci.hasNext() )
+                {
+                    CObj co = ci.next();
+                    Set<String> sc = pushedToCache.get ( co.getDig() );
+
+                    if ( sc == null )
+                    {
+                        sc = new CopyOnWriteArraySet<String>();
+                        pushedToCache.put ( co.getDig(), sc );
+                    }
+
+                    if ( !sc.contains ( ident ) )
+                    {
+                        n = co;
+                        sc.add ( ident );
+                    }
+
+                }
+
+            }
+
+        }
+
+        return n;
+    }
+
+    private Object nextPubPush ( String ident )
+    {
+        Object n = null;
+        Iterator<CObj> ci = pubPushes.iterator();
+
+        while ( n == null && ci.hasNext() )
+        {
+            CObj co = ci.next();
+            Set<String> sc = pushedToCache.get ( co.getDig() );
+
+            if ( sc == null )
+            {
+                sc = new CopyOnWriteArraySet<String>();
+                pushedToCache.put ( co.getDig(), sc );
+            }
+
+            if ( !sc.contains ( ident ) )
+            {
+                n = co;
+                sc.add ( ident );
+            }
+
+        }
+
+        return n;
+    }
 
     public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
     {
@@ -1322,22 +1734,37 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         recentAttempts.remove ( remotedest + false );
 
         Object n = null;
+        n = nextMembershipPush ( remotedest, members );
 
-        int tnd = Utils.Random.nextInt ( 3 );
-
-        if ( tnd == 0 )
+        if ( n == null )
         {
-            n = nextCommunityRequest ( subs );
+            n = nextSubPush ( remotedest, subs );
         }
 
-        if ( n == null || tnd == 1 )
+        if ( n == null )
         {
-            n = nextPrivSubRequest ( members );
+            n = nextPubPush ( remotedest );
         }
 
-        if ( n == null || tnd == 2 )
+        if ( n == null )
         {
-            n = nonCommunityRequests.poll();
+            int tnd = Utils.Random.nextInt ( 3 );
+
+            if ( tnd == 0 )
+            {
+                n = nextCommunityRequest ( subs );
+            }
+
+            if ( n == null || tnd == 1 )
+            {
+                n = nextPrivSubRequest ( members );
+            }
+
+            if ( n == null || tnd == 2 )
+            {
+                n = nonCommunityRequests.poll();
+            }
+
         }
 
         if ( n == null )

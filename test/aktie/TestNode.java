@@ -860,7 +860,7 @@ public class TestNode
 
                 try
                 {
-                    Thread.sleep ( 2L * 1000L );
+                    Thread.sleep ( 4L * 1000L );
                 }
 
                 catch ( InterruptedException e )
