@@ -626,8 +626,26 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 else
                 {
-                    return conMan.nextNonFile ( dest.getIdentity().getId(),
-                                                endDestination.getId(), memberships, subs );
+                    int memcnt = 0;
+
+                    if ( memberships != null )
+                    {
+                        memcnt = memberships.size();
+                    }
+
+                    int subcnt = 0;
+
+                    if ( subs != null )
+                    {
+                        subcnt = subs.size();
+                    }
+
+                    appendOutput ( "nextNonFile mem: " + memberships + " " +
+                                   memcnt + " subs: " + subs + " " + subcnt );
+                    Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
+                                                    endDestination.getId(), memberships, subs );
+                    appendOutput ( "nextNonFile " + r );
+                    return r;
                 }
 
             }
@@ -721,8 +739,8 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     seeIfUseless();
 
-                    appendOutput ( "WAIT FOR DATA.." );
                     Object o = getData();
+                    appendOutput ( "WAIT FOR DATA.. " + o );
 
                     if ( o == null )
                     {

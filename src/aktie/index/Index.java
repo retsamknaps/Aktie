@@ -566,6 +566,19 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
+    public CObjList getPublicCommunities ( Sort s )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term privterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PUBLIC );
+        builder.add ( new TermQuery ( privterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE, s );
+    }
+
     public CObjList getMyMemberships ( String comid )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

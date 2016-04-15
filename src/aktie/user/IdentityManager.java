@@ -400,6 +400,82 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimHasFileUpdate ( String comid )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.fileStatus = :st AND "
+                                      + "x.communityId = :comid "
+                                      + " ORDER BY "
+                                      + "x.fileUpdatePriority DESC, "
+                                      + "x.lastFileUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            q.setParameter ( "comid", comid );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+            }
+
+            if ( cm != null )
+            {
+                cm.setFileStatus ( CommunityMember.DONE );
+                cm.setLastFileUpdate ( System.currentTimeMillis() );
+                cm.setFileUpdateCycle ( 0 );
+                cm.setLastFileUpdateFrom ( "" );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
     public CommunityMember claimPostUpdate ( String thisid, Map<String, Integer> comids, int rereqperiod )
     {
         Session s = null;
@@ -569,6 +645,81 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimPostUpdate ( String comid )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();//LOCKED HERE!
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.postStatus = :st AND "
+                                      + "x.communityId = :comid ORDER BY "
+                                      + "x.postUpdatePriority DESC, "
+                                      + "x.lastPostUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            q.setParameter ( "comid", comid );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+            }
+
+            if ( cm != null )
+            {
+                cm.setPostStatus ( CommunityMember.DONE );
+                cm.setLastPostUpdate ( System.currentTimeMillis() );
+                cm.setPostUpdateCycle ( 0 );
+                cm.setLastPostUpdateFrom ( "" );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
     public CommunityMember claimSubUpdate ( String thisid, Map<String, Integer> comids, int rereqperiod )
     {
         Session s = null;
@@ -621,6 +772,82 @@ public class IdentityManager
                 cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
                 cm.setSubscriptionUpdateCycle ( 0 );
                 cm.setLastSubscriptionUpdateFrom ( thisid );
+                s.merge ( cm );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+            return cm;
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public CommunityMember claimSubUpdate ( String comid )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
+                                      + "x.subscriptionStatus = :st AND "
+                                      + "x.communityId = :comid ORDER BY "
+                                      + "x.subscriptionUpdatePriority DESC, "
+                                      + "x.lastSubscriptionUpdate ASC" );
+            q.setParameter ( "st", CommunityMember.UPDATE );
+            q.setParameter ( "comid", comid );
+            //q.setMaxResults ( 100 );
+            CommunityMember cm = null;
+            List<CommunityMember> r = q.list();
+            Iterator<CommunityMember> i = r.iterator();
+
+            if ( i.hasNext() )
+            {
+                cm = i.next();
+
+            }
+
+            if ( cm != null )
+            {
+                cm.setSubscriptionStatus ( CommunityMember.DONE );
+                cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
+                cm.setSubscriptionUpdateCycle ( 0 );
+                cm.setLastSubscriptionUpdateFrom ( "" );
                 s.merge ( cm );
             }
 

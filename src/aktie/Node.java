@@ -182,6 +182,11 @@ public class Node
         return index;
     }
 
+    public ConnectionManager2 getConnectionManager()
+    {
+        return conMan;
+    }
+
     public HH2Session getSession()
     {
         return session;

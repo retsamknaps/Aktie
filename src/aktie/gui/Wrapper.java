@@ -24,9 +24,9 @@ public class Wrapper
     public static String VERSION_0115 = "version 0.1.15";
     public static String VERSION_0403 = "version 0.4.3";
     public static String VERSION_0405 = "version 0.4.5";
-    public static String VERSION_0408 = "version 0.4.8";
+    public static String VERSION_0409 = "version 0.4.9";
 
-    public static String VERSION = VERSION_0408;
+    public static String VERSION = VERSION_0409;
 
     public static String VERSION_FILE = "version.txt";
     //ADD ONE HOUR TO TIME.
@@ -34,7 +34,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1460506982L * 1000L ) + 3600000;
+    public static long RELEASETIME = ( 1460741351L * 1000L ) + 3600000;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";

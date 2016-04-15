@@ -796,15 +796,31 @@ public class SWTApp
                             CObjList mysubs = getNode().getIndex().getMySubscriptions ( comid );
                             String selid = null;
 
+                            //At least one connected id should be subscribed to
+                            //the correct community or we would not have gotten
+                            //the update just now
+                            List<CObj> conids = getNode().getConnectionManager().getConnectedIdentities();
+                            Set<String> conset = new HashSet<String>();
+
+                            for ( CObj cc : conids )
+                            {
+                                conset.add ( cc.getId() );
+                            }
+
                             for ( int c = 0; c < mysubs.size() && selid == null; c++ )
                             {
                                 try
                                 {
                                     CObj ss = mysubs.get ( c );
                                     selid = ss.getString ( CObj.CREATOR );
-                                    CObj dl = co.clone();
-                                    dl.pushString ( CObj.CREATOR, selid );
-                                    node.enqueue ( dl );
+
+                                    if ( conset.contains ( selid ) )
+                                    {
+                                        CObj dl = co.clone();
+                                        dl.pushString ( CObj.CREATOR, selid );
+                                        node.enqueue ( dl );
+                                    }
+
                                 }
 
                                 catch ( Exception e )

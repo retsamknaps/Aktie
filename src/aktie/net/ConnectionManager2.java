@@ -45,7 +45,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public static long UPDATE_CACHE_PERIOD = 60L * 1000L;
     public static long MAX_TIME_IN_QUEUE = 60L * 60L * 1000L;
     public static long MIN_TIME_TO_NEW_CONNECTION = 10L * 60L * 1000L;
-    public static int QUEUE_DEPTH_COM = 100;
     public static int QUEUE_DEPTH_FILE = 100;
     public static int ATTEMPT_CONNECTIONS = 10;
     public static long MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION = 2L * 60L * 1000L;
@@ -67,10 +66,13 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //Digest -> Number of connection attempts for the push
     private ConcurrentMap<String, Integer> pushConAttempts;
     //Community -> List of objects to push to members
+    public static int MAX_MEM_PUSHES = 10;
     private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> membershipPushes;
     //Community -> List of objects to push to subscribers
+    public static int MAX_SUB_PUSHES = 10;
     private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> subPushes;
     //List of objects to push to anyone
+    public static int MAX_PUB_PUSHES = 10;
     private ConcurrentLinkedQueue<CObj> pubPushes;
 
     //key: remotedest
@@ -81,14 +83,17 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     //Community data requests.  Key is community id
     //Requests only sent to subscribers of communities
+    public int MAX_COM_REQUESTS = 100;
     private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> communityRequests;
 
     //Membership update requests for private communites
     //Only members can be sent request.  For public communities membership
     //requests can be sent to anyone
+    public int MAX_PRIV_REQUESTS = 100;
     private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> subPrivRequests;
 
     //Requests that can be sent to any node
+    public int MAX_PUB_REQUESTS = 1000;
     private ConcurrentLinkedQueue<CObj> nonCommunityRequests;
 
     //The time the community requests were added to the queue
@@ -166,94 +171,24 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return lastFileUpdate;
     }
 
-    private int calculateNonFileQueueSize()
-    {
-        int sz = 0;
-
-        List<String> kl = new LinkedList<String>();
-        kl.addAll ( membershipPushes.keySet() );
-
-        for ( String k : kl )
-        {
-            ConcurrentLinkedQueue<CObj> l = membershipPushes.get ( k );
-
-            if ( l != null )
-            {
-                sz += l.size();
-            }
-
-        }
-
-        kl.clear();
-        kl.addAll ( subPushes.keySet() );
-
-        for ( String k : kl )
-        {
-            ConcurrentLinkedQueue<CObj> l = subPushes.get ( k );
-
-            if ( l != null )
-            {
-                sz += l.size();
-            }
-
-        }
-
-        sz += pubPushes.size();
-
-        kl.clear();
-        kl.addAll ( communityRequests.keySet() );
-
-        for ( String k : kl )
-        {
-            ConcurrentLinkedQueue<CObj> l = communityRequests.get ( k );
-
-            if ( l != null )
-            {
-                sz += l.size();
-
-            }
-
-        }
-
-        kl.clear();
-        kl.addAll ( subPrivRequests.keySet() );
-
-        for ( String k : kl )
-        {
-            ConcurrentLinkedQueue<CObj> l = subPrivRequests.get ( k );
-
-            if ( l != null )
-            {
-                sz += l.size();
-            }
-
-        }
-
-        sz += nonCommunityRequests.size();
-        return sz;
-    }
-
     private boolean procComQueue()
     {
-        int qsize = calculateNonFileQueueSize();
+        int qsize = 0;
         int lastsize = -1;
         boolean gonext = false;
 
-        while ( qsize < QUEUE_DEPTH_COM && lastsize != qsize )
+        while ( lastsize != qsize )
         {
             lastsize = qsize;
 
             //Find pushes we haven't claimed
             CObjList plst = index.getPushesToSend();
 
-            for ( int cnt = 0; cnt < plst.size() && qsize < QUEUE_DEPTH_COM; cnt++ )
+            for ( int cnt = 0; cnt < 2; cnt++ )
             {
                 try
                 {
                     CObj co = plst.get ( cnt );
-                    co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
-                    index.index ( co );
-                    qsize++;
 
                     //public static String IDENTITY = "identity";
                     //public static String COMMUNITY = "community";
@@ -264,7 +199,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             CObj.COMMUNITY.equals ( tp ) ||
                             CObj.MEMBERSHIP.equals ( tp ) )
                     {
-                        pubPushes.add ( co );
+                        if ( pubPushes.size() < MAX_PUB_PUSHES )
+                        {
+                            co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
+                            index.index ( co );
+                            qsize++;
+                            gonext = true;
+                            pubPushes.add ( co );
+                        }
+
                     }
 
                     //public static String SUBSCRIPTION = "subscription";
@@ -290,12 +233,29 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                         membershipPushes.put ( comid, mq );
                                     }
 
-                                    mq.add ( co );
+                                    if ( mq.size() < MAX_MEM_PUSHES )
+                                    {
+                                        co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
+                                        index.index ( co );
+                                        qsize++;
+                                        gonext = true;
+                                        mq.add ( co );
+                                    }
+
                                 }
 
                                 else
                                 {
-                                    pubPushes.add ( co );
+                                    if ( pubPushes.size() < MAX_PUB_PUSHES )
+                                    {
+                                        co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
+                                        index.index ( co );
+                                        qsize++;
+                                        gonext = true;
+                                        pubPushes.add ( co );
+
+                                    }
+
                                 }
 
                             }
@@ -321,7 +281,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                 subPushes.put ( comid, mq );
                             }
 
-                            mq.add ( co );
+                            if ( mq.size() < MAX_SUB_PUSHES )
+                            {
+                                co.pushPrivate ( CObj.PRV_PUSH_REQ, "false" );
+                                index.index ( co );
+                                qsize++;
+                                gonext = true;
+                                mq.add ( co );
+                            }
+
                         }
 
                     }
@@ -340,127 +308,221 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //initial connection.  No need to enqueue identity updates
             //here.
 
-            //Community updates
-            IdentityData id = identityManager.claimCommunityUpdate();
+            //Private sub updates, get all my private communities
+            CObjList comlist = index.getMyValidMemberships ( null );
 
-            if ( id != null )
+            for ( int c = 0; c < comlist.size(); c++ )
             {
-                CObj cr = new CObj();
-                cr.setType ( CObj.CON_REQ_COMMUNITIES );
-                cr.pushString ( CObj.CREATOR, id.getId() );
-                cr.pushNumber ( CObj.FIRSTNUM, id.getLastCommunityNumber() + 1 );
-                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                nonCommunityRequests.add ( cr );
-                gonext = true;
-                qsize++;
-            }
-
-            //Membership updates
-            id = identityManager.claimMemberUpdate();
-
-            if ( id != null )
-            {
-                CObj cr = new CObj();
-                cr.setType ( CObj.CON_REQ_MEMBERSHIPS );
-                cr.pushString ( CObj.CREATOR, id.getId() );
-                cr.pushNumber ( CObj.FIRSTNUM, id.getLastMembershipNumber() + 1 );
-                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                nonCommunityRequests.add ( cr );
-                qsize++;
-                gonext = true;
-            }
-
-            //Subscription updates
-            CommunityMember cm = identityManager.claimSubUpdate();
-
-            if ( cm != null )
-            {
-                CObj comi = index.getCommunity ( cm.getCommunityId() );
-
-                if ( comi != null )
+                try
                 {
-                    CObj cr = new CObj();
-                    cr.setType ( CObj.CON_REQ_SUBS );
-                    cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                    cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
-                    cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                    String pub = comi.getString ( CObj.SCOPE );
+                    CObj com = comlist.get ( c );
+                    ConcurrentLinkedQueue<CObj> r = subPrivRequests.get ( com.getDig() );
 
-                    if ( CObj.SCOPE_PUBLIC.equals ( pub ) )
+                    if ( r == null )
                     {
-                        //If public it does on the nonCommunityRequests list
-                        nonCommunityRequests.add ( cr );
+                        r = new ConcurrentLinkedQueue<CObj>();
+                        subPrivRequests.put ( com.getDig(), r );
                     }
 
-                    else
+                    if ( r.size() < MAX_PRIV_REQUESTS )
                     {
-                        //If private it goes on the subPrivRequests to go to members
-                        ConcurrentLinkedQueue<CObj> clst = subPrivRequests.get ( cm.getCommunityId() );
+                        CommunityMember cm = identityManager.claimSubUpdate ( com.getDig() );
+
+                        if ( cm != null )
+                        {
+                            CObj cr = new CObj();
+                            cr.setType ( CObj.CON_REQ_SUBS );
+                            cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
+                            cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                            r.add ( cr );
+                            gonext = true;
+                            qsize++;
+                            Long tm = communityTime.get ( com.getDig() );
+
+                            if ( tm == null )
+                            {
+                                tm = System.currentTimeMillis();
+                                communityTime.put ( com.getDig(), tm );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            comlist.close();
+
+            CObjList slist = index.getMySubscriptions();
+
+            for ( int c = 0; c < slist.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = slist.get ( c );
+                    String comid = sb.getString ( CObj.COMMUNITYID );
+
+                    if ( comid != null )
+                    {
+                        ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( comid );
 
                         if ( clst == null )
                         {
                             clst = new ConcurrentLinkedQueue<CObj>();
-                            subPrivRequests.put ( cm.getCommunityId(), clst );
+                            communityRequests.put ( comid, clst );
                         }
 
-                        clst.add ( cr );
+                        if ( clst.size() < MAX_COM_REQUESTS )
+                        {
+                            CommunityMember cm = identityManager.claimHasFileUpdate ( comid );
+
+                            if ( cm != null )
+                            {
+                                CObj cr = new CObj();
+                                cr.setType ( CObj.CON_REQ_HASFILE );
+                                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastFileNumber() + 1 );
+                                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                                clst.add ( cr );
+                                gonext = true;
+                                qsize++;
+                                Long tm = communityTime.get ( comid );
+
+                                if ( tm == null )
+                                {
+                                    tm = System.currentTimeMillis();
+                                    communityTime.put ( comid, tm );
+                                }
+
+                            }
+
+                            cm = identityManager.claimPostUpdate ( comid );
+
+                            if ( cm != null )
+                            {
+                                CObj cr = new CObj();
+                                cr.setType ( CObj.CON_REQ_POSTS );
+                                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastPostNumber() + 1 );
+                                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                                clst.add ( cr );
+                                gonext = true;
+                                qsize++;
+                                Long tm = communityTime.get ( comid );
+
+                                if ( tm == null )
+                                {
+                                    tm = System.currentTimeMillis();
+                                    communityTime.put ( comid, tm );
+                                }
+
+                            }
+
+                        }
+
                     }
 
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            slist.close();
+
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
+            {
+                IdentityData id = identityManager.claimCommunityUpdate();
+
+                if ( id != null )
+                {
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_COMMUNITIES );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastCommunityNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
                     gonext = true;
                     qsize++;
-
                 }
 
             }
 
-            //Has file updates
-            cm = identityManager.claimHasFileUpdate();
-
-            if ( cm != null )
+            //Membership updates
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
-                ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( cm.getCommunityId() );
+                IdentityData id = identityManager.claimMemberUpdate();
 
-                if ( clst == null )
+                if ( id != null )
                 {
-                    clst = new ConcurrentLinkedQueue<CObj>();
-                    communityRequests.put ( cm.getCommunityId(), clst );
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_MEMBERSHIPS );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastMembershipNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
+                    qsize++;
+                    gonext = true;
                 }
-
-                CObj cr = new CObj();
-                cr.setType ( CObj.CON_REQ_HASFILE );
-                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastFileNumber() + 1 );
-                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                clst.add ( cr );
-                qsize++;
-                gonext = true;
 
             }
 
-            //Post updates
-            cm = identityManager.claimPostUpdate();
-
-            if ( cm != null )
+            //Subscription updates for public coms
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
-                ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( cm.getCommunityId() );
+                CObjList lst = index.getPublicCommunities ( null );
 
-                if ( clst == null )
+                for ( int c = 0; c < lst.size() &&
+                        nonCommunityRequests.size() < MAX_PUB_REQUESTS; c++ )
                 {
-                    clst = new ConcurrentLinkedQueue<CObj>();
-                    communityRequests.put ( cm.getCommunityId(), clst );
+                    try
+                    {
+                        CObj com = lst.get ( c );
+                        CommunityMember cm = identityManager.claimSubUpdate ( com.getDig() );
+
+                        if ( cm != null )
+                        {
+                            CObj cr = new CObj();
+                            cr.setType ( CObj.CON_REQ_SUBS );
+                            cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
+                            cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                            nonCommunityRequests.add ( cr );
+                            qsize++;
+                            gonext = true;
+                            Long tm = communityTime.get ( com.getDig() );
+
+                            if ( tm == null )
+                            {
+                                tm = System.currentTimeMillis();
+                                communityTime.put ( com.getDig(), tm );
+                            }
+
+                        }
+
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
                 }
 
-                CObj cr = new CObj();
-                cr.setType ( CObj.CON_REQ_POSTS );
-                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastPostNumber() + 1 );
-                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                clst.add ( cr );
-                qsize++;
-                gonext = true;
-
+                lst.close();
             }
 
         }
@@ -1796,6 +1858,22 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         return n;
+    }
+
+    public List<CObj> getConnectedIdentities()
+    {
+        List<CObj> r = new LinkedList<CObj>();
+
+        synchronized ( destinations )
+        {
+            for ( Entry<String, DestinationThread> e : destinations.entrySet() )
+            {
+                r.add ( e.getValue().getIdentity() );
+            }
+
+        }
+
+        return r;
     }
 
 
