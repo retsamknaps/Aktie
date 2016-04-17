@@ -514,6 +514,15 @@ public class ConnectionThread implements Runnable, GuiCallback
         this.loadFile = loadFile;
     }
 
+    public void decrFileRequest()
+    {
+        if ( outproc != null )
+        {
+            outproc.decrFileRequests();
+        }
+
+    }
+
     private void process()
     {
         CObj o = inQueue.poll();
@@ -840,7 +849,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 catch ( Exception e )
                 {
-                    e.printStackTrace();
+                    if ( log.getLevel() == Level.INFO )
+                    {
+                        e.printStackTrace();
+                    }
+
                     stop();
                 }
 
@@ -1374,7 +1387,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         catch ( Exception e )
         {
-            e.printStackTrace();
+            if ( log.getLevel() == Level.INFO )
+            {
+                e.printStackTrace();
+            }
+
         }
 
         stop();

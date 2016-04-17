@@ -44,6 +44,7 @@ public class CObj
     public static String HASFILE = "hasfile";
     public static String FRAGMENT = "fragment";
     public static String FILEF = "filef";
+    public static String FRAGFAILED = "oops";
     public static String QUERY = "query";
     public static String FIELD = "field";
     //Types - no indexed.

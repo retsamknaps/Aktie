@@ -1,10 +1,13 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 
 public class InFileProcessor extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionThread connection;
 
@@ -17,6 +20,19 @@ public class InFileProcessor extends GenericProcessor
     public boolean process ( CObj b )
     {
         String type = b.getType();
+
+        if ( CObj.FRAGFAILED.equals ( type ) )
+        {
+            connection.decrFileRequest();
+
+            log.info ( "FILE REQUEST FAILED ===============================" );
+            log.info ( "COMMUNITY: " + b.getString ( CObj.COMMUNITYID ) );
+            log.info ( "WHOLE DIG: " + b.getString ( CObj.FILEDIGEST ) );
+            log.info ( "DIGOFDIGS: " + b.getString ( CObj.FRAGDIGEST ) ); //Digest of digests
+            log.info ( "FRAGMENT:  " + b.getString ( CObj.FRAGDIG ) );
+
+            return true;
+        }
 
         if ( CObj.FILEF.equals ( type ) )
         {
@@ -32,6 +48,7 @@ public class InFileProcessor extends GenericProcessor
                 connection.setLoadFile ( true );
             }
 
+            return true;
         }
 
         return false;

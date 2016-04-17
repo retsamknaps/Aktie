@@ -585,7 +585,36 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
                         rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
                 {
-                    fileHandler.setReRequestList ( rf );
+                    //Check if the fragment request is still in the queue
+                    Iterator<CObj> fi = fl.iterator();
+                    boolean fnd = false;
+
+                    while ( fi.hasNext() && !fnd )
+                    {
+                        CObj c = fi.next();
+
+                        if ( CObj.CON_REQ_FRAGLIST.equals ( c.getType() ) )
+                        {
+                            String comid = c.getString ( CObj.COMMUNITYID );
+                            String wdig = c.getString ( CObj.FILEDIGEST );
+                            String pdig = c.getString ( CObj.FRAGDIGEST );
+
+                            if ( comid.equals ( rf.getCommunityId() ) &&
+                                    wdig.equals ( rf.getWholeDigest() ) &&
+                                    pdig.equals ( rf.getFragmentDigest() ) )
+                            {
+                                fnd = true;
+                            }
+
+                        }
+
+                    }
+
+                    if ( !fnd )
+                    {
+                        fileHandler.setReRequestList ( rf );
+                    }
+
                 }
 
                 if ( rf.getState() == RequestFile.REQUEST_FRAG )

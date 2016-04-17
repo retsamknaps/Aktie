@@ -1,5 +1,6 @@
 package aktie.net;
 
+import java.io.File;
 import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
@@ -26,6 +27,8 @@ public class ReqFragProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_FRAG.equals ( type ) )
         {
+            boolean fragfnd = false;
+
             String comid = b.getString ( CObj.COMMUNITYID );
             String wdig = b.getString ( CObj.FILEDIGEST );
             String pdig = b.getString ( CObj.FRAGDIGEST ); //Digest of digests
@@ -54,13 +57,36 @@ public class ReqFragProcessor extends GenericProcessor
 
                     if ( hf != null && fg != null )
                     {
-                        fg.setType ( CObj.FILEF ); //Change the type to indicate we're
-                        //actually sending over the fragment.
-                        connection.enqueue ( fg );
+                        String lfs = fg.getPrivate ( CObj.LOCALFILE );
+                        Long offset = fg.getNumber ( CObj.FRAGOFFSET );
+                        Long len = fg.getNumber ( CObj.FRAGSIZE );
+
+                        if ( lfs != null && offset != null && len != null )
+                        {
+                            File tf = new File ( lfs );
+
+                            if ( tf.exists() && tf.canRead() &&
+                                    tf.length() >= ( offset + len ) )
+                            {
+                                fg.setType ( CObj.FILEF ); //Change the type to indicate we're
+                                //actually sending over the fragment.
+                                connection.enqueue ( fg );
+                                fragfnd = true;
+                            }
+
+                        }
+
                     }
 
                 }
 
+            }
+
+            if ( !fragfnd )
+            {
+                CObj nf = b.clone();
+                nf.setType ( CObj.FRAGFAILED );
+                connection.enqueue ( nf );
             }
 
             return true;
