@@ -214,6 +214,7 @@ public class NewCommunityProcessor extends GenericProcessor
             try
             {
                 index.index ( o );
+                index.forceNewSearcher();
             }
 
             catch ( Exception e )

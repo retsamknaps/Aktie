@@ -233,6 +233,7 @@ public class NewMembershipProcessor extends GenericProcessor
                 try
                 {
                     index.index ( com );
+                    index.forceNewSearcher();
                 }
 
                 catch ( Exception e )

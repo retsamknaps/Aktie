@@ -287,27 +287,31 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                     String qname = text.getText();
                     Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( qname );
 
-                    if ( !m.find() )
+                    if ( m.find() )
                     {
                         id = "QUERY_ID_" + m.group ( 1 );
                     }
 
                 }
 
-                CObj c = app.getNode().getIndex().getById ( id );
-
-                if ( c != null )
+                if ( id != null )
                 {
-                    try
-                    {
-                        app.getNode().getIndex().delete ( c );
-                        app.getNode().getIndex().forceNewSearcher();
-                        updateQueries();
-                    }
+                    CObj c = app.getNode().getIndex().getById ( id );
 
-                    catch ( IOException e1 )
+                    if ( c != null )
                     {
-                        e1.printStackTrace();
+                        try
+                        {
+                            app.getNode().getIndex().delete ( c );
+                            app.getNode().getIndex().forceNewSearcher();
+                            updateQueries();
+                        }
+
+                        catch ( IOException e1 )
+                        {
+                            e1.printStackTrace();
+                        }
+
                     }
 
                 }

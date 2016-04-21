@@ -17,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -38,6 +39,8 @@ import aktie.utils.SymDecoder;
 
 public class ConnectionManager2 implements GetSendData2, DestinationListener, PushInterface, Runnable
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     public static int MAX_TOTAL_DEST_CONNECTIONS = 100;
     public static long REQUEST_UPDATE_DELAY = 60L * 1000L;
@@ -631,7 +634,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         cl = index.getFragmentsToReset ( rf.getCommunityId(),
                                                          rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                        long backtime = System.currentTimeMillis() - 20L * 60L * 1000L;
+                        long backtime = System.currentTimeMillis() -
+                                        ( 2L * 60L * 60L * 1000L );
 
                         for ( int c = 0; c < cl.size(); c++ )
                         {
@@ -2168,16 +2172,44 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                         if ( com != null )
                         {
-                            m.pushPrivate ( CObj.VALIDMEMBER, "true" );
-                            m.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );
-                            m.pushPrivate ( CObj.DESCRIPTION, com.getPrivate ( CObj.DESCRIPTION ) );
-
                             if ( "true".equals ( member.getPrivate ( CObj.MINE ) ) )
                             {
                                 m.pushPrivate ( CObj.MINE, "true" );
                                 com.pushPrivate ( memid, "true" );
+
+                                //Test to make sure we've decoded the community.
+                                //It's possible we haven't due to lucene commit delay
+                                if ( !"true".equals ( com.getPrivate ( CObj.MINE ) ) )
+                                {
+                                    String key = m.getPrivate ( CObj.KEY );
+
+                                    byte bk[] = Utils.toByteArray ( key );
+
+                                    if ( bk != null )
+                                    {
+                                        KeyParameter sk = new KeyParameter ( bk );
+
+                                        if ( !symdec.decode ( com, sk ) )
+                                        {
+                                            log.severe ( "Community failed to decode! " + comid );
+                                        }
+
+                                    }
+
+                                    else
+                                    {
+                                        log.severe ( "Membership key not found! " + memid );
+                                    }
+
+                                    com.pushPrivate ( CObj.MINE, "true" );
+                                }
+
                                 index.index ( com );
                             }
+
+                            m.pushPrivate ( CObj.VALIDMEMBER, "true" );
+                            m.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );
+                            m.pushPrivate ( CObj.DESCRIPTION, com.getPrivate ( CObj.DESCRIPTION ) );
 
                             index.index ( m );
 

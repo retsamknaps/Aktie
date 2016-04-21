@@ -790,7 +790,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                                 {
                                     byte buf[] = new byte[4096];
                                     File lf = new File ( lfs );
-                                    RandomAccessFile raf = new RandomAccessFile ( lf, "rw" );
+                                    RandomAccessFile raf = new RandomAccessFile ( lf, "r" );
                                     raf.seek ( offset );
                                     long ridx = 0;
 

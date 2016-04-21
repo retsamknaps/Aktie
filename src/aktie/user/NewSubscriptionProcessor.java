@@ -146,6 +146,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
             {
                 //Set the ID, so we always overwrite the last subscription
                 index.index ( o );
+                index.forceNewSearcher();
             }
 
             catch ( Exception e )

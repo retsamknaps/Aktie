@@ -214,6 +214,8 @@ public class NewPostProcessor extends GenericProcessor
                     index.index ( fld );
                 }
 
+                index.forceNewSearcher();
+
             }
 
             catch ( Exception e )

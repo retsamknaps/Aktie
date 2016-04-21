@@ -35,6 +35,7 @@ public class NewQueryProcessor extends GenericProcessor
                 try
                 {
                     index.index ( o );
+                    index.forceNewSearcher();
                 }
 
                 catch ( IOException e )

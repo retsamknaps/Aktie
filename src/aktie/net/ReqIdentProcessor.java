@@ -24,8 +24,12 @@ public class ReqIdentProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_IDENTITIES.equals ( type ) )
         {
-            CObjList il = index.getIdentities();
-            connection.enqueue ( il );
+            if ( !connection.isFileMode() )
+            {
+                CObjList il = index.getIdentities();
+                connection.enqueue ( il );
+            }
+
             return true;
         }
 

@@ -80,10 +80,12 @@ import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.widgets.Table;
 
@@ -429,13 +431,38 @@ public class SWTApp
 
     }
 
-    class DownloadsColumnFileName extends ColumnLabelProvider
-    {
+    /*
+        class DownloadsColumnFileName extends ColumnLabelProvider
+        {
         @Override
         public String getText ( Object element )
         {
             RequestFile rf = ( RequestFile ) element;
             return rf.getLocalFile();
+        }
+
+        }
+
+    */
+
+    class DownloadsColumnFileName extends StyledCellLabelProvider
+    {
+        @Override
+        public void update ( ViewerCell cell )
+        {
+            RequestFile rf = ( RequestFile ) cell.getElement();
+            cell.setText ( rf.getLocalFile() );
+        }
+
+    }
+
+
+    class DownloadsColumnDummy extends ColumnLabelProvider
+    {
+        @Override
+        public String getText ( Object element )
+        {
+            return "";
         }
 
     }
@@ -581,47 +608,57 @@ public class SWTApp
                 RequestFile ct2 = ( RequestFile ) e2;
                 ColumnLabelProvider labprov = null;
 
+                String s0 = null;
+                String s1 = null;
+
                 if ( column == 0 )
                 {
-                    labprov = new DownloadsColumnFileName();
+                    s0 = ct1.getLocalFile();
+                    s1 = ct2.getLocalFile();
                 }
 
-                if ( column == 1 )
+                else
                 {
-                    labprov = new DownloadsColumnPriority();
+                    if ( column == 1 )
+                    {
+                        labprov = new DownloadsColumnPriority();
+                    }
+
+                    if ( column == 2 )
+                    {
+                        labprov = new DownloadsColumnDownloaded();
+                    }
+
+                    if ( column == 3 )
+                    {
+                        labprov = new DownloadsColumnTotalFragments();
+                    }
+
+                    if ( column == 4 )
+                    {
+                        labprov = new DownloadsColumnFileSize();
+                    }
+
+                    if ( column == 5 )
+                    {
+                        labprov = new DownloadsColumnState();
+                    }
+
+                    if ( column == 6 )
+                    {
+                        labprov = new DownloadsColumnId();
+                    }
+
+                    if ( labprov != null )
+                    {
+                        s0 = labprov.getText ( ct1 );
+                        s1 = labprov.getText ( ct2 );
+                    }
+
                 }
 
-                if ( column == 2 )
+                if ( s0 != null && s1 != null )
                 {
-                    labprov = new DownloadsColumnDownloaded();
-                }
-
-                if ( column == 3 )
-                {
-                    labprov = new DownloadsColumnTotalFragments();
-                }
-
-                if ( column == 4 )
-                {
-                    labprov = new DownloadsColumnFileSize();
-                }
-
-                if ( column == 5 )
-                {
-                    labprov = new DownloadsColumnState();
-                }
-
-                if ( column == 6 )
-                {
-                    labprov = new DownloadsColumnId();
-                }
-
-                if ( labprov != null )
-                {
-
-                    String s0 = labprov.getText ( ct1 );
-                    String s1 = labprov.getText ( ct2 );
-
                     Comparable dn0 = s0;
                     Comparable dn1 = s1;
 
@@ -819,6 +856,11 @@ public class SWTApp
                                         CObj dl = co.clone();
                                         dl.pushString ( CObj.CREATOR, selid );
                                         node.enqueue ( dl );
+                                    }
+
+                                    else
+                                    {
+                                        selid = null;
                                     }
 
                                 }
@@ -4776,6 +4818,29 @@ public class SWTApp
 
         fileSearch = new Text ( composite_9, SWT.BORDER );
         fileSearch.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        fileSearch.addListener ( SWT.Traverse, new Listener()
+        {
+            @Override
+            public void handleEvent ( Event event )
+            {
+                if ( event.detail == SWT.TRAVERSE_RETURN )
+                {
+                    if ( selectedIdentity == null && selectedCommunity == null )
+                    {
+                        MessageDialog.openWarning ( shell, "Select a community.", "Sorry, you have to select a community first." );
+                    }
+
+                    else
+                    {
+                        filesSearch();
+                    }
+
+                }
+
+            }
+
+        } );
+
 
         Button btnSearch_1 = new Button ( composite_9, SWT.NONE );
         btnSearch_1.setText ( "Search" );
@@ -5358,15 +5423,22 @@ public class SWTApp
 
         Composite composite_10 = new Composite ( tabFolder, SWT.NONE );
         tbtmDownloadds.setControl ( composite_10 );
-        composite_10.setLayout ( new GridLayout ( 1, false ) );
+        //composite_10.setLayout ( new GridLayout ( 1, false ) );
+        composite_10.setLayout ( new BorderLayout ( 0, 0 ) );
 
-        downloadTableViewer = new TableViewer ( composite_10, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI );
-        downloadTableViewer.setContentProvider ( new DownloadContentProvider() );
+        downloadTableViewer = new TableViewer ( composite_10, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
         downloadTable = downloadTableViewer.getTable();
+        //downloadTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
+        downloadTable.setLayoutData ( BorderLayout.CENTER );
         downloadTable.setHeaderVisible ( true );
         downloadTable.setLinesVisible ( true );
-        downloadTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
         downloadTableViewer.setSorter ( new DownloadsSorter() );
+        downloadTableViewer.setContentProvider ( new DownloadContentProvider() );
+
+        TableViewerColumn dlcoll = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
+        dlcoll.getColumn().setText ( "" );
+        dlcoll.getColumn().setWidth ( 2 );
+        dlcoll.setLabelProvider ( new DownloadsColumnDummy() );
 
         TableViewerColumn dlcol0 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
         dlcol0.getColumn().setText ( "File" );
@@ -5455,7 +5527,7 @@ public class SWTApp
 
         TableViewerColumn dlcol4 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
         dlcol4.getColumn().setText ( "File Size" );
-        dlcol4.getColumn().setWidth ( 200 );
+        dlcol4.getColumn().setWidth ( 100 );
         dlcol4.setLabelProvider ( new DownloadsColumnFileSize() );
         dlcol4.getColumn().addSelectionListener ( new SelectionListener()
         {

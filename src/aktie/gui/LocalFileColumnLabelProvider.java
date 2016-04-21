@@ -27,6 +27,7 @@ public class LocalFileColumnLabelProvider extends  StyledCellLabelProvider
     @Override
     public void update ( ViewerCell cell )
     {
+
         CObjListGetter o = ( CObjListGetter ) cell.getElement();
 
         CObj pst = o.getCObj();

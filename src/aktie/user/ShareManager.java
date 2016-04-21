@@ -99,6 +99,28 @@ public class ShareManager implements Runnable
                                 userQueue.enqueue ( p );
                             }
 
+                            String lrgfile = pst.getString ( CObj.PRV_NAME );
+
+                            if ( lrgfile != null )
+                            {
+
+                                log.info ( "autoDownload: Downloading: " + lrgfile );
+
+                                CObj p = new CObj();
+                                p.setType ( CObj.USR_DOWNLOAD_FILE );
+                                p.pushString ( CObj.CREATOR, co.getString ( CObj.CREATOR ) );
+                                p.pushString ( CObj.COMMUNITYID, pst.getString ( CObj.COMMUNITYID ) );
+                                p.pushString ( CObj.NAME, pst.getString ( CObj.PRV_NAME ) );
+                                p.pushNumber ( CObj.FILESIZE, pst.getNumber ( CObj.PRV_FILESIZE ) );
+                                p.pushString ( CObj.FRAGDIGEST, pst.getString ( CObj.PRV_FRAGDIGEST ) );
+                                p.pushNumber ( CObj.FRAGSIZE, pst.getNumber ( CObj.PRV_FRAGSIZE ) );
+                                p.pushNumber ( CObj.FRAGNUMBER, pst.getNumber ( CObj.PRV_FRAGNUMBER ) );
+                                p.pushString ( CObj.FILEDIGEST, pst.getString ( CObj.PRV_FILEDIGEST ) );
+                                p.pushString ( CObj.SHARE_NAME, pst.getString ( CObj.SHARE_NAME ) );
+
+                                userQueue.enqueue ( p );
+                            }
+
                         }
 
                         catch ( Exception e )

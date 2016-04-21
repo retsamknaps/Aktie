@@ -39,6 +39,7 @@ public class ShowPrivComDialog extends Dialog
     public ShowPrivComDialog ( Shell parentShell, SWTApp a )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
     }
 

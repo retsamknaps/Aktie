@@ -100,6 +100,7 @@ public class NewIdentityProcessor extends GenericProcessor
                     dt.setIdentity ( o );
                     o.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
                     index.index ( o );
+                    index.forceNewSearcher();
                     connectionMan.addDestination ( dt );
                 }
 
