@@ -1459,6 +1459,16 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getAllMyDuplicates ( )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getAllHasFiles ( )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -1511,6 +1521,59 @@ public class Index implements Runnable
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getDuplicate ( String comid, String memid, String localfile )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        Term lfterm = new Term ( CObj.docString ( CObj.LOCALFILE ), localfile );
+        builder.add ( new TermQuery ( lfterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObj getDuplicate ( String refid, String localfile )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.HASFILE ), refid );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        Term lfterm = new Term ( CObj.docString ( CObj.LOCALFILE ), localfile );
+        builder.add ( new TermQuery ( lfterm ), BooleanClause.Occur.MUST );
+
+        CObj r = null;
+        CObjList cl = search ( builder.build(), Integer.MAX_VALUE );
+
+        if ( cl.size() > 0 )
+        {
+            try
+            {
+                r = cl.get ( 0 );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        cl.close();
+        return r;
     }
 
     public CObj getIdentHasFile ( String comid, String uid, String wdig, String pdig )

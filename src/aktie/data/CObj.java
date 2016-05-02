@@ -47,6 +47,8 @@ public class CObj
     public static String FRAGFAILED = "oops";
     public static String QUERY = "query";
     public static String FIELD = "field";
+    public static String DUPFILE = "dupfile";
+
     //Types - no indexed.
     public static String INDEX_QUERY = "index_query";
     public static String NODE_CMD = "node_cmd";
@@ -61,7 +63,6 @@ public class CObj
     public static String INDEX_Q_SUBS = "index_q_subs";
     public static String INDEX_Q_MEMS = "index_q_mems";
     public static String INDEX_Q_IDENT = "index_q_ident";
-
 
     //Temporary types - requests to other nodes.
     public static String CON_CHALLENGE = "con_challenge";

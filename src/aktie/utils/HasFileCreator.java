@@ -83,14 +83,6 @@ public class HasFileCreator
                 fi = new CObj();
                 fi.setId ( id );
                 fi.setType ( CObj.FILE );
-                fi.pushString ( CObj.COMMUNITYID, comid );
-                fi.pushString ( CObj.FILEDIGEST, wholedig );
-                fi.pushString ( CObj.FRAGDIGEST, digofdigs );
-                fi.pushString ( CObj.NAME, name );
-                fi.pushNumber ( CObj.FILESIZE, filesize );
-                fi.pushNumber ( CObj.FRAGSIZE, fragsize );
-                fi.pushNumber ( CObj.FRAGNUMBER, fragnumber );
-                fi.pushText ( CObj.TXTNAME, txtname );
             }
 
             fi.pushNumber ( CObj.NUMBER_HAS, numberhasfile );
@@ -137,6 +129,15 @@ public class HasFileCreator
                     fi.pushString ( CObj.LOCALFILE, localfile );
                     fi.pushString ( CObj.SHARE_NAME, share );
                 }
+
+                fi.pushString ( CObj.COMMUNITYID, comid );
+                fi.pushString ( CObj.FILEDIGEST, wholedig );
+                fi.pushString ( CObj.FRAGDIGEST, digofdigs );
+                fi.pushNumber ( CObj.FILESIZE, filesize );
+                fi.pushNumber ( CObj.FRAGSIZE, fragsize );
+                fi.pushNumber ( CObj.FRAGNUMBER, fragnumber );
+                fi.pushString ( CObj.NAME, name );
+                fi.pushText ( CObj.TXTNAME, txtname );
 
                 index.index ( fi );
 
@@ -312,12 +313,69 @@ public class HasFileCreator
             {
                 try
                 {
-                    o.pushPrivate ( CObj.LOCALFILE, f.getCanonicalPath() );
+                    lf = f.getCanonicalPath();
+                    o.pushPrivate ( CObj.LOCALFILE, lf );
                 }
 
                 catch ( IOException e )
                 {
                     e.printStackTrace();
+                }
+
+            }
+
+        }
+
+        //If the file is a duplicate remove it
+        CObj ed = index.getDuplicate ( hasfileid, lf );
+
+        if ( ed != null )
+        {
+            try
+            {
+                index.delete ( ed );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        //See if there is an existing file already for it
+        //Make the old one a duplicate
+        CObj oldfile = index.getById ( hasfileid );
+
+        if ( oldfile != null )
+        {
+            String oldlocal = oldfile.getPrivate ( CObj.LOCALFILE );
+
+            if ( oldlocal != null && !oldlocal.equals ( lf ) )
+            {
+                File f = new File ( oldlocal );
+
+                if ( f.exists() )
+                {
+                    CObj dp = new CObj();
+                    dp.setType ( CObj.DUPFILE );
+                    dp.pushString ( CObj.HASFILE, hasfileid );
+                    dp.pushString ( CObj.LOCALFILE, oldlocal );
+                    dp.pushString ( CObj.COMMUNITYID, comid );
+                    dp.pushString ( CObj.CREATOR, creator );
+                    dp.simpleDigest();
+
+                    try
+                    {
+                        index.index ( dp );
+                        index.forceNewSearcher();
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
                 }
 
             }

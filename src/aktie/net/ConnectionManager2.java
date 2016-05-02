@@ -947,7 +947,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         synchronized ( fileRequests )
         {
-            rls.addAll ( fileRequests.keySet() );
+            for ( RequestFile rf : fileRequests.keySet() )
+            {
+                if ( rf.getRequestId().equals ( localdest ) )
+                {
+                    rls.add ( rf );
+                }
+
+            }
+
         }
 
         Iterator<RequestFile> i = rls.iterator();

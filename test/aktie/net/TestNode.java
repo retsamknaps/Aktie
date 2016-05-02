@@ -182,4 +182,18 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
 
     }
 
+    @Override
+    public void bytesReceived ( long bytes )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void bytesSent ( long bytes )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

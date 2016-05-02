@@ -364,4 +364,18 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
         return 0;
     }
 
+    @Override
+    public void bytesReceived ( long bytes )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void bytesSent ( long bytes )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
 }

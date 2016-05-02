@@ -93,6 +93,20 @@ public class TestNode
             oqueue.add ( ct );
         }
 
+        @Override
+        public void bytesReceived ( long bytes )
+        {
+            // TODO Auto-generated method stub
+
+        }
+
+        @Override
+        public void bytesSent ( long bytes )
+        {
+            // TODO Auto-generated method stub
+
+        }
+
     }
 
     private CObj createIdentity ( Node n, String name )

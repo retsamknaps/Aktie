@@ -187,14 +187,96 @@ public class ShareManager implements Runnable
 
                     if ( mlst.size() == 0 )
                     {
-                        addFile ( s, f );
+                        mlst.close();
+
+                        //Check if it's a duplicate
+                        CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
+
+                        if ( dlst.size() == 0 )
+                        {
+                            dlst.close();
+                            addFile ( s, f );
+                        }
+
+                        else
+                        {
+                            CObj dlp = null;
+
+                            try
+                            {
+                                //Check if file referenced by the duplicate exists
+                                dlp = dlst.get ( 0 );
+                            }
+
+                            catch ( Exception e )
+                            {
+                                e.printStackTrace();
+                            }
+
+                            dlst.close();
+
+                            boolean add = true;
+
+                            if ( dlp != null )
+                            {
+                                String rfid = dlp.getString ( CObj.HASFILE );
+
+                                if ( rfid != null )
+                                {
+                                    CObj hf = index.getById ( rfid );
+
+                                    if ( hf != null )
+                                    {
+                                        //There is a hasfile, check if the file
+                                        //still exists
+                                        String phf = hf.getPrivate ( CObj.LOCALFILE );
+                                        String shf = hf.getString ( CObj.STILLHASFILE );
+
+                                        if ( phf != null && "true".equals ( shf ) )
+                                        {
+                                            File pf = new File ( phf );
+
+                                            if ( pf.exists() )
+                                            {
+                                                add = false;
+                                            }
+
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                            if ( add )
+                            {
+                                //There is no hasfile for it.  So add it.
+                                addFile ( s, f );
+                            }
+
+                        }
+
                     }
 
                     else
                     {
+                        CObj mhf = null;
+
                         try
                         {
-                            CObj mhf = mlst.get ( 0 );
+                            mhf = mlst.get ( 0 );
+                        }
+
+                        catch ( IOException e )
+                        {
+                            e.printStackTrace();
+                        }
+
+                        mlst.close();
+
+                        if ( mhf != null )
+                        {
                             String shr = mhf.getString ( CObj.SHARE_NAME );
 
                             if ( !s.getShareName().equals ( shr ) )
@@ -204,14 +286,8 @@ public class ShareManager implements Runnable
 
                         }
 
-                        catch ( IOException e )
-                        {
-                            e.printStackTrace();
-                        }
-
                     }
 
-                    mlst.close();
                 }
 
             }
@@ -391,6 +467,76 @@ public class ShareManager implements Runnable
 
     }
 
+    //We are lazy and just remove all duplicates that don't exist
+    //or don't have a hasfile that exists and has a file that exists.
+    //they will be recrawled and new hasfiles will be created as needed.
+    private void checkDuplicate ( CObj d )
+    {
+        if ( d != null )
+        {
+            String comid = d.getString ( CObj.COMMUNITYID );
+            String memid = d.getString ( CObj.CREATOR );
+            String lf = d.getString ( CObj.LOCALFILE );
+            String hf = d.getString ( CObj.HASFILE );
+            boolean remove = true;
+
+            if ( comid != null && memid != null && lf != null && hf != null )
+            {
+                File f = new File ( lf );
+
+                if ( f.exists() )
+                {
+                    try
+                    {
+                        CObj thf = index.getById ( hf );
+
+                        if ( thf != null )
+                        {
+                            String olf = thf.getPrivate ( CObj.LOCALFILE );
+                            String shf = thf.getString ( CObj.STILLHASFILE );
+
+                            if ( olf != null && "true".equals ( shf ) )
+                            {
+                                File of = new File ( olf );
+
+                                if ( of.exists() )
+                                {
+                                    remove = false;
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
+            if ( remove )
+            {
+                try
+                {
+                    index.delete ( d );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+    }
+
     private void checkAllHasFile()
     {
         if ( enabled )
@@ -404,6 +550,33 @@ public class ShareManager implements Runnable
                 {
                     CObj hf = myhf.get ( c );
                     checkHasFile ( hf );
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+            myhf.close();
+        }
+
+    }
+
+    private void checkAllDuplicates()
+    {
+        if ( enabled )
+        {
+
+            CObjList myhf = index.getAllMyDuplicates();
+
+            try
+            {
+                for ( int c = 0; c < myhf.size() && enabled; c++ )
+                {
+                    CObj hf = myhf.get ( c );
+                    checkDuplicate ( hf );
                 }
 
             }
@@ -1021,6 +1194,7 @@ public class ShareManager implements Runnable
                 {
                     setRunning ( true );
                     checkAllHasFile();
+                    checkAllDuplicates();
                     checkFragments();
                     nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
                     setRunning ( false );

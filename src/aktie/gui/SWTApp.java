@@ -689,12 +689,33 @@ public class SWTApp
     {
         public Set<ConnectionThread> connections = new HashSet<ConnectionThread>();
         private long lastDisplay = 0;
+
+        private long lastTotalInBytes = 0L;
+        private long lastTotalOutBytes = 0L;
+        private long totalInBytes = 0L;
+        private long totalOutBytes = 0L;
+
+        @Override
+
+        public synchronized void bytesReceived ( long bytes )
+        {
+            totalInBytes += bytes;
+        }
+
+        @Override
+
+        public synchronized void bytesSent ( long bytes )
+        {
+            totalOutBytes += bytes;
+        }
+
         private void updateDisplay ( boolean force )
         {
             long curtime = System.currentTimeMillis();
 
             if ( curtime > ( lastDisplay + UPDATE_INTERVAL ) || force )
             {
+                final long dt = curtime - lastDisplay;
                 lastDisplay = curtime;
                 final ConnectionCallback This = this;
                 Display.getDefault().asyncExec ( new Runnable()
@@ -702,7 +723,19 @@ public class SWTApp
                     @Override
                     public void run()
                     {
-                        connectionTableViewer.setInput ( This );
+                        if ( dt > 0L )
+                        {
+                            long curTotalInBytes = totalInBytes;
+                            long curTotalOutBytes = totalOutBytes;
+                            long deltaInBytes = curTotalInBytes - lastTotalInBytes;
+                            long deltaOutBytes = curTotalOutBytes - lastTotalOutBytes;
+                            lastTotalInBytes = curTotalInBytes;
+                            lastTotalOutBytes = curTotalOutBytes;
+                            updateConnectionSpeed ( deltaInBytes, deltaOutBytes, dt );
+
+                            connectionTableViewer.setInput ( This );
+                        }
+
                     }
 
                 } );
@@ -1512,6 +1545,7 @@ public class SWTApp
 
     private SWTSplash splash;
     private Label lblVersion;
+    private Label lblSpeed;
     private boolean doUpgrade = true;
     protected Shell shell;
     private Text searchText;
@@ -3284,6 +3318,10 @@ public class SWTApp
         lblVersion = new Label ( composite_header, SWT.NONE );
         lblVersion.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         setVersionNetStatus();
+
+        lblSpeed = new Label ( composite_header, SWT.NONE );
+        lblSpeed.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        updateConnectionSpeed ( 0, 0, 1 ); // use update method to initialize text of speed label
 
         lblError = new Label ( composite_header, SWT.NONE );
         lblError.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
@@ -5997,6 +6035,14 @@ public class SWTApp
     public Label getLblShareMgrRunning()
     {
         return lblNotRunning;
+    }
+
+    public void updateConnectionSpeed ( long deltaInBytes, long deltaOutBytes, long deltaTime )
+    {
+        String inkBps = String.format ( "%.2f", deltaInBytes / 1.024 / deltaTime );
+        String outkBps = String.format ( "%.2f", deltaOutBytes / 1.024 / deltaTime );
+        lblSpeed.setText ( new StringBuffer().append ( "down: " ).append ( inkBps ).append ( " kB/s | up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
+
     }
 
 }

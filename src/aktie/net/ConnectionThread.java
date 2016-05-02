@@ -710,6 +710,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             String os = ot.toString();
             byte ob[] = os.getBytes ( "UTF-8" );
             outBytes += ob.length;
+            conListener.bytesSent ( ob.length );
             outstream.write ( ob );
         }
 
@@ -809,6 +810,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                                             outstream.write ( buf, 0, l );
                                             outBytes += l;
                                             ridx += l;
+                                            conListener.bytesSent ( l );
                                         }
 
                                     }
@@ -902,6 +904,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                     fdig.update ( buf, 0, len );
                     fos.write ( buf, 0, len );
                     rl += len;
+                    conListener.bytesReceived ( len );
                 }
 
             }
@@ -1271,6 +1274,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 JSONObject jo = clnpar.next();
                 inBytes += clnpar.getBytesRead();
                 inNonFileBytes += clnpar.getBytesRead();
+                conListener.bytesReceived ( clnpar.getBytesRead() );
                 CObj r = new CObj();
                 r.loadJSON ( jo );
                 lastRead = r.getType();
