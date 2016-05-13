@@ -44,13 +44,15 @@ public class ReqFragListProcessor extends GenericProcessor
                 if ( sub != null && "true".equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
                 {
                     //Make sure someone has has the file in the context of the community
-                    CObjList hfl = index.getHasFiles ( comid, wdig, pdig );
-                    boolean getti = hfl.size() > 0;
-                    hfl.close();
-                    log.info ( "Yes, subscribed: has file: " + hfl.size() );
+                    //We get the HasFile object to make sure we actually have the file.
+                    CObj hf = index.getIdentHasFile ( comid, //Community
+                                                      connection.getLocalDestination().getIdentity().getId(), //My id
+                                                      wdig, pdig );
 
-                    if ( getti )
+                    if ( hf != null )
                     {
+                        log.info ( "Yes, you have the file" );
+
                         CObjList frags = index.getFragments ( wdig, pdig );
 
                         log.info ( "Enqueue fragment list: " + frags.size() );
@@ -58,6 +60,13 @@ public class ReqFragListProcessor extends GenericProcessor
                         if ( frags.size() > 0 )
                         {
                             connection.enqueue ( frags );
+                            String lf = hf.getPrivate ( CObj.LOCALFILE );
+
+                            if ( lf != null )
+                            {
+                                connection.setFileUp ( lf );
+                            }
+
                         }
 
                         else

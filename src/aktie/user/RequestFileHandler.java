@@ -621,6 +621,45 @@ public class RequestFileHandler
         return new LinkedList<RequestFile>();
     }
 
+    @SuppressWarnings ( "unchecked" )
+    public List<RequestFile> listRequestFilesAll ( int state, int max )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            Query q = s.createQuery ( "SELECT x FROM RequestFile x WHERE "
+                                      + "x.state != :st ORDER BY x.priority DESC, x.state DESC" );
+            q.setParameter ( "st", state );
+            q.setMaxResults ( max );
+            List<RequestFile> r = q.list();
+            s.close();
+            return r;
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return new LinkedList<RequestFile>();
+    }
+
     public boolean claimFileComplete ( RequestFile rf )
     {
         boolean climaed = false;

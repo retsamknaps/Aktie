@@ -50,6 +50,7 @@ public class ReqFragProcessor extends GenericProcessor
                     CObj hf = index.getIdentHasFile ( comid, //Community
                                                       connection.getLocalDestination().getIdentity().getId(), //My id
                                                       wdig, pdig );
+
                     //String wdig, String ddig, String dig
                     CObj fg = index.getFragment ( comid, wdig, pdig, fdig );
 
@@ -71,6 +72,7 @@ public class ReqFragProcessor extends GenericProcessor
                                 fg.setType ( CObj.FILEF ); //Change the type to indicate we're
                                 //actually sending over the fragment.
                                 connection.enqueue ( fg );
+                                connection.setFileUp ( lfs );
                                 fragfnd = true;
                             }
 

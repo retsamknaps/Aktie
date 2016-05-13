@@ -121,125 +121,214 @@ public class SWTApp
 
     private ConnectionCallback concallback = new ConnectionCallback();
 
-    class ConnectionColumnId extends ColumnLabelProvider
+    class ConnectionElement
     {
-
-        @Override
-        public String getText ( Object element )
+        public String localId;
+        public String remoteDest;
+        public String lastSent;
+        public String lastRead;
+        public String mode;
+        public long pending;
+        public long download;
+        public long upload;
+        public long time;
+        public String upFile;
+        public String downFile;
+        public String fulllocalid;
+        public String fullremoteid;
+        public ConnectionElement ( ConnectionThread ct )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            CObj id = ct.getEndDestination();
-
-            if ( id != null )
+            if ( ct != null )
             {
-                return id.getDisplayName();
+                remoteDest = "Connecting/Authenticating";
+                CObj id = ct.getEndDestination();
+
+                if ( id != null )
+                {
+                    remoteDest = id.getDisplayName();
+                    fullremoteid = id.getId();
+                }
+
+                localId = "?";
+
+                if ( ct.getLocalDestination() != null &&
+                        ct.getLocalDestination().getIdentity() != null )
+                {
+                    fullremoteid = ct.getLocalDestination().getIdentity().getId();
+                    localId = ct.getLocalDestination().getIdentity().getDisplayName();
+                }
+
+                lastSent = ct.getLastSent();
+
+                if ( lastSent == null )
+                {
+                    lastSent = "";
+                }
+
+                StringBuilder sb = new StringBuilder();
+                lastRead = ct.getLastRead();
+
+                if ( lastRead != null )
+                {
+                    sb.append ( lastRead );
+                }
+
+                sb.append ( " " ).append ( ct.getListCount() );
+                lastRead = sb.toString();
+                mode = ct.isFileMode() ? "FILE" : "norm";
+                pending = ct.getPendingFileRequests();
+                download = ct.getInBytes();
+                upload = ct.getOutBytes();
+                long curtime = System.currentTimeMillis();
+                time = curtime - ct.getStartTime();
+                time = time / ( 1000L );
+                upFile = ct.getFileUp();
+                downFile = ct.getFileDown();
             }
 
-            return "Connecting/Authenticating";
         }
 
     }
 
-    class ConnectionColumnDest extends ColumnLabelProvider
+    interface ConnectionColumnGetText
     {
+        public String getText ( Object element );
+    }
+
+    class ConnectionColumnFileUp extends ColumnLabelProvider implements ConnectionColumnGetText
+    {
+
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
+            ConnectionElement ct = ( ConnectionElement ) element;
 
-            if ( ct != null && ct.getLocalDestination() != null &&
-                    ct.getLocalDestination().getIdentity() != null )
+            if ( ct.upFile != null )
             {
-                return ct.getLocalDestination().getIdentity().getDisplayName();
+                return ct.upFile;
             }
 
-            return "?";
+            return "";
         }
 
     }
 
-    class ConnectionColumnLastSent extends ColumnLabelProvider
+    class ConnectionColumnFileDown extends StyledCellLabelProvider implements ConnectionColumnGetText
     {
+
+        @Override
+        public void update ( ViewerCell cell )
+        {
+            ConnectionElement o = ( ConnectionElement ) cell.getElement();
+            cell.setText ( getText ( o ) );
+        }
+
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            return ct.getLastSent();
+            ConnectionElement o = ( ConnectionElement ) element;
+            return o.downFile != null ? o.downFile : "";
         }
 
     }
 
-    class ConnectionColumnLastRead extends ColumnLabelProvider
+    class ConnectionColumnId extends ColumnLabelProvider implements ConnectionColumnGetText
     {
+
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            return ct.getLastRead() + " " + ct.getListCount();
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return ct.remoteDest;
         }
 
     }
 
-    class ConnectionColumnMode extends ColumnLabelProvider
+    class ConnectionColumnDest extends ColumnLabelProvider implements ConnectionColumnGetText
     {
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-
-            if ( ct.isFileMode() )
-            {
-                return "FILE";
-            }
-
-            return "norm";
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return ct.localId;
         }
 
     }
 
-    class ConnectionColumnPending extends ColumnLabelProvider
+    class ConnectionColumnLastSent extends ColumnLabelProvider implements ConnectionColumnGetText
     {
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            return Long.toString ( ct.getPendingFileRequests() );
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return ct.lastSent;
         }
 
     }
 
-    class ConnectionColumnDownload extends ColumnLabelProvider
+    class ConnectionColumnLastRead extends ColumnLabelProvider implements ConnectionColumnGetText
     {
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            return Long.toString ( ct.getInBytes() );
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return ct.lastRead;
         }
 
     }
 
-    class ConnectionColumnTime extends ColumnLabelProvider
+    class ConnectionColumnMode extends ColumnLabelProvider implements ConnectionColumnGetText
     {
         @Override
         public String getText ( Object element )
         {
-            long curtime = System.currentTimeMillis();
-            ConnectionThread ct = ( ConnectionThread ) element;
-            long tm = curtime - ct.getStartTime();
-            tm = tm / ( 1000L );
-            return Long.toString ( tm );
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return ct.mode;
         }
 
     }
 
-    class ConnectionColumnUpload extends ColumnLabelProvider
+    class ConnectionColumnPending extends ColumnLabelProvider implements ConnectionColumnGetText
     {
         @Override
         public String getText ( Object element )
         {
-            ConnectionThread ct = ( ConnectionThread ) element;
-            return Long.toString ( ct.getOutBytes() );
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return Long.toString ( ct.pending );
+        }
+
+    }
+
+    class ConnectionColumnDownload extends ColumnLabelProvider implements ConnectionColumnGetText
+    {
+
+        @Override
+        public String getText ( Object element )
+        {
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return Long.toString ( ct.download );
+        }
+
+    }
+
+    class ConnectionColumnTime extends ColumnLabelProvider implements ConnectionColumnGetText
+    {
+        @Override
+        public String getText ( Object element )
+        {
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return Long.toString ( ct.time );
+        }
+
+    }
+
+    class ConnectionColumnUpload extends ColumnLabelProvider implements ConnectionColumnGetText
+    {
+        @Override
+        public String getText ( Object element )
+        {
+            ConnectionElement ct = ( ConnectionElement ) element;
+            return Long.toString ( ct.upload );
         }
 
     }
@@ -276,6 +365,12 @@ public class SWTApp
 
         private boolean reverse;
 
+        public ConnectionSorter()
+        {
+            column = 0;
+            reverse = false;
+        }
+
         public void doSort ( int column )
         {
             if ( column == this.column )
@@ -295,12 +390,12 @@ public class SWTApp
 
         public int compare ( Viewer viewer, Object e1, Object e2 )
         {
-            if ( e1 instanceof ConnectionThread &&
-                    e2 instanceof ConnectionThread )
+            if ( e1 instanceof ConnectionElement &&
+                    e2 instanceof ConnectionElement )
             {
-                ConnectionThread ct1 = ( ConnectionThread ) e1;
-                ConnectionThread ct2 = ( ConnectionThread ) e2;
-                ColumnLabelProvider labprov = null;
+                ConnectionElement ct1 = ( ConnectionElement ) e1;
+                ConnectionElement ct2 = ( ConnectionElement ) e2;
+                ConnectionColumnGetText labprov = null;
 
                 int cc = 0;
 
@@ -365,6 +460,20 @@ public class SWTApp
                     labprov = new ConnectionColumnMode();
                 }
 
+                cc++;
+
+                if ( column == cc )
+                {
+                    labprov = new ConnectionColumnFileDown();
+                }
+
+                cc++;
+
+                if ( column == cc )
+                {
+                    labprov = new ConnectionColumnFileUp();
+                }
+
                 if ( labprov != null )
                 {
                     String s0 = labprov.getText ( ct1 );
@@ -412,7 +521,7 @@ public class SWTApp
             if ( a instanceof RequestFileHandler )
             {
                 RequestFileHandler cc = ( RequestFileHandler ) a;
-                List<RequestFile> rfl = cc.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+                List<RequestFile> rfl = cc.listRequestFilesAll ( RequestFile.COMPLETE, Integer.MAX_VALUE );
                 Object r[] = new Object[rfl.size()];
                 Iterator<RequestFile> i = rfl.iterator();
                 int idx = 0;
@@ -787,7 +896,7 @@ public class SWTApp
 
                 while ( i.hasNext() )
                 {
-                    r[idx] = i.next();
+                    r[idx] = new ConnectionElement ( i.next() );
                     idx++;
                 }
 
@@ -4353,62 +4462,67 @@ public class SWTApp
                         {
                             CObjListArrayElement selm = ( CObjListArrayElement ) selo;
                             displayedPost = selm.getCObj();
-                            displayedPost.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 0L );
 
-                            try
+                            if ( displayedPost != null )
                             {
-                                node.getIndex().index ( displayedPost );
-                            }
-
-                            catch ( IOException e1 )
-                            {
-                                e1.printStackTrace();
-                            }
-
-                            postSearch();
-
-                            String msgdisp = getPostString ( displayedPost );
-                            msgdisp = NewPostDialog.formatDisplay ( msgdisp, false );
-                            String lines = "\n==========================\n=";
-                            String msg = msgdisp + lines;
-                            postText.setText ( msg );
-
-                            //String comid, String wdig, String pdig
-                            String comid = displayedPost.getString ( CObj.COMMUNITYID );
-
-                            String pwdig = displayedPost.getString ( CObj.PRV_FILEDIGEST );
-                            String ppdig = displayedPost.getString ( CObj.PRV_FRAGDIGEST );
-                            Long pfsize = displayedPost.getNumber ( CObj.PRV_FILESIZE );
-
-                            File prvfile = getPreviewHasFile ( comid, pwdig, ppdig, pfsize );
-
-                            String wdig = displayedPost.getString ( CObj.FILEDIGEST );
-                            String pdig = displayedPost.getString ( CObj.FRAGDIGEST );
-                            Long fsize = displayedPost.getNumber ( CObj.FILESIZE );
-
-                            File file = getPreviewHasFile ( comid, wdig, pdig, fsize );
-
-                            if ( prvfile != null )
-                            {
-                                Display defdesp = Display.getDefault();
-                                Image image = new Image ( defdesp, prvfile.getPath() );
-                                addImage ( image, msg.length() - 1 );
-                            }
-
-                            else if ( file != null )
-                            {
-                                Display defdesp = Display.getDefault();
+                                displayedPost.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 0L );
 
                                 try
                                 {
-                                    Image image = new Image ( defdesp, file.getPath() );
+                                    node.getIndex().index ( displayedPost );
+                                }
+
+                                catch ( IOException e1 )
+                                {
+                                    e1.printStackTrace();
+                                }
+
+                                postSearch();
+
+                                String msgdisp = getPostString ( displayedPost );
+                                msgdisp = NewPostDialog.formatDisplay ( msgdisp, false );
+                                String lines = "\n==========================\n=";
+                                String msg = msgdisp + lines;
+                                postText.setText ( msg );
+
+                                //String comid, String wdig, String pdig
+                                String comid = displayedPost.getString ( CObj.COMMUNITYID );
+
+                                String pwdig = displayedPost.getString ( CObj.PRV_FILEDIGEST );
+                                String ppdig = displayedPost.getString ( CObj.PRV_FRAGDIGEST );
+                                Long pfsize = displayedPost.getNumber ( CObj.PRV_FILESIZE );
+
+                                File prvfile = getPreviewHasFile ( comid, pwdig, ppdig, pfsize );
+
+                                String wdig = displayedPost.getString ( CObj.FILEDIGEST );
+                                String pdig = displayedPost.getString ( CObj.FRAGDIGEST );
+                                Long fsize = displayedPost.getNumber ( CObj.FILESIZE );
+
+                                File file = getPreviewHasFile ( comid, wdig, pdig, fsize );
+
+                                if ( prvfile != null )
+                                {
+                                    Display defdesp = Display.getDefault();
+                                    Image image = new Image ( defdesp, prvfile.getPath() );
                                     addImage ( image, msg.length() - 1 );
                                 }
 
-                                catch ( Exception ei )
+                                else if ( file != null )
                                 {
-                                    //do not spam the user.  this could happen a lot if someone
-                                    //is a jerk
+                                    Display defdesp = Display.getDefault();
+
+                                    try
+                                    {
+                                        Image image = new Image ( defdesp, file.getPath() );
+                                        addImage ( image, msg.length() - 1 );
+                                    }
+
+                                    catch ( Exception ei )
+                                    {
+                                        //do not spam the user.  this could happen a lot if someone
+                                        //is a jerk
+                                    }
+
                                 }
 
                             }
@@ -5711,8 +5825,13 @@ public class SWTApp
 
                 while ( i.hasNext() )
                 {
-                    ConnectionThread ct = ( ConnectionThread ) i.next();
-                    ct.stop();
+                    ConnectionElement ct = ( ConnectionElement ) i.next();
+
+                    if ( ct.fulllocalid != null && ct.fullremoteid != null )
+                    {
+                        node.getConnectionManager().closeConnection ( ct.fulllocalid, ct.fullremoteid );
+                    }
+
                 }
 
             }
@@ -5910,6 +6029,52 @@ public class SWTApp
             {
                 ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
                 srt.doSort ( 8 );
+                connectionTableViewer.refresh();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        TableViewerColumn concol8 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
+        concol8.getColumn().setText ( "Down File" );
+        concol8.getColumn().setWidth ( 200 );
+        concol8.getColumn().setAlignment ( SWT.RIGHT );
+        concol8.setLabelProvider ( new ConnectionColumnFileDown() );
+
+        concol8.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
+                srt.doSort ( 9 );
+                connectionTableViewer.refresh();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        TableViewerColumn concol9 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
+        concol9.getColumn().setText ( "Up File" );
+        concol9.getColumn().setWidth ( 200 );
+        concol9.getColumn().setAlignment ( SWT.RIGHT );
+        concol9.setLabelProvider ( new ConnectionColumnFileUp() );
+
+        concol9.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
+                srt.doSort ( 10 );
                 connectionTableViewer.refresh();
             }
 

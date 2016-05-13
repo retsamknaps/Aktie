@@ -2072,6 +2072,34 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
+    public void closeConnection ( String localdest, String remotedest )
+    {
+        CObj myid = this.getIdentity ( localdest );
+
+        if ( myid != null )
+        {
+            String dest = myid.getString ( CObj.DEST );
+
+            if ( dest != null )
+            {
+                DestinationThread dt = null;
+
+                synchronized ( destinations )
+                {
+                    dt = destinations.get ( dest );
+                }
+
+                if ( dt != null )
+                {
+                    dt.closeConnection ( remotedest );
+                }
+
+            }
+
+        }
+
+    }
+
     private void resetupLastUpdateToForceDecode()
     {
         try

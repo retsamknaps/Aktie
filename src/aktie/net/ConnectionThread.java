@@ -76,6 +76,8 @@ public class ConnectionThread implements Runnable, GuiCallback
     private Set<String> subs;
     private Set<RequestFile> filesHasRequested;
     private long lastFileUpdate = Long.MIN_VALUE;
+    private String fileUp;
+    private String fileDown;
 
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo )
     {
@@ -338,16 +340,20 @@ public class ConnectionThread implements Runnable, GuiCallback
         long nu = conMan.getLastFileUpdate();
 
         //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
+        appendOutput ( "updateSubsAndFiles: nu: " + nu + " > " + lastFileUpdate );
+
         if ( nu > lastFileUpdate )
         {
             lastFileUpdate = nu;
             updateMemberships();
             updateSubs();
             lastFileUpdate = conMan.getLastFileUpdate();
+            appendOutput ( "updateSubsAndFiles: subs: " + subs );
 
             if ( fileOnly && endDestination != null )
             {
                 filesHasRequested = conMan.getHasFileForConnection ( endDestination.getId(), subs );
+                appendOutput ( "updateSubsAndFiles: filesHasRequested: " + filesHasRequested );
             }
 
         }
@@ -602,17 +608,22 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         private Object getLocalRequests()
         {
+            appendOutput ( "getLocalRequests: START" );
+
             if (
                 dest != null && endDestination != null &&
                 (   pendingFileRequests < MAX_PENDING_FILES
                 )
             )
             {
+                appendOutput ( "getLocalRequests: fileOnly? " + fileOnly + " filesHasRequested? " + filesHasRequested );
 
                 if ( fileOnly && filesHasRequested != null )
                 {
                     Object r = conMan.nextFile ( dest.getIdentity().getId(),
                                                  endDestination.getId(), filesHasRequested );
+
+                    appendOutput ( "getLocalRequests: nextFile? " + fileOnly + " filesHasRequested? " + filesHasRequested + " R: " + r );
 
                     if ( r != null )
                     {
@@ -751,12 +762,12 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     Object o = getData();
                     appendOutput ( "WAIT FOR DATA.. " + o );
+                    updateSubsAndFiles();
 
                     if ( o == null )
                     {
                         outstream.flush();
                         doWait();
-                        updateSubsAndFiles();
                     }
 
                     else
@@ -968,6 +979,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     for ( RequestFile rf : lrf )
                     {
+                        //This could change for every fragment, but someone
+                        //might find it interesting information.
+                        fileDown = rf.getLocalFile();
+
                         boolean exists = false;
                         lf = rf.getLocalFile();
 
@@ -1542,6 +1557,26 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
+    }
+
+    public String getFileUp()
+    {
+        return fileUp;
+    }
+
+    public void setFileUp ( String fileUp )
+    {
+        this.fileUp = fileUp;
+    }
+
+    public String getFileDown()
+    {
+        return fileDown;
+    }
+
+    public void setFileDown ( String fileDown )
+    {
+        this.fileDown = fileDown;
     }
 
 }

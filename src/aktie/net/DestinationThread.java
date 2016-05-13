@@ -136,6 +136,28 @@ public class DestinationThread implements Runnable
 
     }
 
+    public void closeConnection ( String id )
+    {
+        List<ConnectionThread> cl = new LinkedList<ConnectionThread>();
+
+        synchronized ( connections )
+        {
+            List<ConnectionThread> l = connections.get ( id );
+
+            if ( l != null )
+            {
+                cl.addAll ( l );
+            }
+
+        }
+
+        for ( ConnectionThread ct : cl )
+        {
+            ct.stop();
+        }
+
+    }
+
     public List<String> getConnectedIds()
     {
         List<String> r = new LinkedList<String>();
