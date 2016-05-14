@@ -39,7 +39,7 @@ public class Wrapper
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
-    public static String JARFILE = "aktie.jar";
+    //public static String JARFILE = "aktie.jar";
 
     public static void main ( String args[] )
     {
@@ -458,8 +458,12 @@ public class Wrapper
             }
 
             //get the zip file content
+            File jarfile = new File ( Wrapper.class.getProtectionDomain()
+                                      .getCodeSource()
+                                      .getLocation()
+                                      .getPath() );
             ZipInputStream zis =
-                new ZipInputStream ( new FileInputStream ( JARFILE ) );
+                new ZipInputStream ( new FileInputStream ( jarfile ) );
             //get the zipped file list entry
             ZipEntry ze = zis.getNextEntry();
 
