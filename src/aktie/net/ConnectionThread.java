@@ -1460,8 +1460,10 @@ public class ConnectionThread implements Runnable, GuiCallback
                     String myid = dest.getIdentity().getId().substring ( 0, 6 );
                     String oid = endDestination.getId().substring ( 0, 6 );
                     String n = "out_" + myid + "_to_" + oid + ".trace";
-                    n = n.replaceAll ( File.separator, "_" );
-                    n = n.replaceAll ( File.pathSeparator, "_" );
+                    n = n.replaceAll ( "\\\\", "_" );
+                    n = n.replaceAll ( "/", "_" );
+                    n = n.replaceAll ( ":", "_" );
+                    n = n.replaceAll ( ";", "_" );
                     File f = new File ( n );
                     int idx = 0;
 

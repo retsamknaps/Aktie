@@ -46,7 +46,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public static long REQUEST_UPDATE_DELAY = 60L * 1000L;
     public static long DECODE_AND_NEW_CONNECTION_DELAY = 2L * 60L * 1000L;
     public static long UPDATE_CACHE_PERIOD = 60L * 1000L;
-    public static long MAX_TIME_IN_QUEUE = 60L * 60L * 1000L;
+    public static long MAX_TIME_IN_QUEUE = 24L * 60L * 60L * 1000L;
     public static long MIN_TIME_TO_NEW_CONNECTION = 10L * 60L * 1000L;
     public static int QUEUE_DEPTH_FILE = 100;
     public static int ATTEMPT_CONNECTIONS = 10;
@@ -543,6 +543,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         ConcurrentMap<RequestFile, Long> nt = new ConcurrentHashMap<RequestFile, Long>();
 
         List<RequestFile> flst = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+        log.info ( "procFileQueue: " + flst.size() );
 
         for ( RequestFile rf : flst )
         {
@@ -558,6 +559,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 fl = new ConcurrentLinkedQueue<CObj>();
             }
 
+            log.info ( "procFileQueue: " + rf.getLocalFile() + " num in queue: " + fl.size() );
+
             Long tm = fileTime.get ( rf );
 
             if ( tm == null )
@@ -570,10 +573,14 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             if ( fl.size() < QUEUE_DEPTH_FILE )
             {
+
+                log.info ( "procFileQueue: state: " + rf.getState() );
+
                 if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST )
                 {
                     if ( fileHandler.claimFileListClaim ( rf ) )
                     {
+                        log.info ( "procFileQueue: state: request file list: " + rf.getLocalFile() );
                         CObj cr = new CObj();
                         cr.setType ( CObj.CON_REQ_FRAGLIST );
                         cr.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
@@ -588,6 +595,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
                         rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
                 {
+                    log.info ( "procFileQueue: re-request file list " + rf.getLocalFile() );
                     //Check if the fragment request is still in the queue
                     Iterator<CObj> fi = fl.iterator();
                     boolean fnd = false;
@@ -615,6 +623,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     if ( !fnd )
                     {
+                        log.info ( "procFileQueue: really re-request file list " + rf.getLocalFile() );
                         fileHandler.setReRequestList ( rf );
                     }
 
@@ -627,6 +636,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
                                   rf.getWholeDigest(), rf.getFragmentDigest() );
 
+                    log.info ( "procFileQueue: request fragments " + cl.size() );
+
                     //There are none.. reset those requested some time ago.
                     if ( cl.size() == 0 )
                     {
@@ -637,21 +648,64 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         long backtime = System.currentTimeMillis() -
                                         ( 2L * 60L * 60L * 1000L );
 
-                        for ( int c = 0; c < cl.size(); c++ )
+                        log.info ( "procFileQueue: re-request fragments " + cl.size() );
+
+                        for ( int ct = 0; ct < cl.size(); ct++ )
                         {
                             try
                             {
                                 //Set to false, so that we'll request again.
                                 //Ones already complete won't be reset.
-                                CObj co = cl.get ( c );
+                                CObj co = cl.get ( ct );
                                 Long lt = co.getPrivateNumber ( CObj.LASTUPDATE );
 
                                 //Check lastupdate so we don't request it back to
                                 //back when there's only one fragment for a file.
                                 if ( lt == null || lt < backtime )
                                 {
-                                    co.pushPrivate ( CObj.COMPLETE, "false" );
-                                    index.index ( co );
+                                    Iterator<CObj> fi = fl.iterator();
+                                    boolean fnd = false;
+
+                                    String comid = co.getString ( CObj.COMMUNITYID );
+                                    String filed = co.getString ( CObj.FILEDIGEST );
+                                    String fragt = co.getString ( CObj.FRAGDIGEST );
+                                    String fragd = co.getString ( CObj.FRAGDIG );
+
+                                    if ( comid != null && filed != null && fragt != null &&
+                                            fragd != null )
+                                    {
+
+                                        while ( fi.hasNext() && !fnd )
+                                        {
+                                            CObj c = fi.next();
+
+                                            if ( CObj.CON_REQ_FRAG.equals ( c.getType() ) )
+                                            {
+                                                String ccomid = c.getString ( CObj.COMMUNITYID );
+                                                String cfiled = c.getString ( CObj.FILEDIGEST );
+                                                String cfragt = c.getString ( CObj.FRAGDIGEST );
+                                                String cfragd = c.getString ( CObj.FRAGDIG );
+
+                                                if ( comid.equals ( ccomid ) &&
+                                                        filed.equals ( cfiled ) &&
+                                                        fragt.equals ( cfragt ) &&
+                                                        fragd.equals ( cfragd ) )
+                                                {
+                                                    fnd = true;
+                                                }
+
+                                            }
+
+                                        }
+
+                                        if ( !fnd )
+                                        {
+                                            co.pushPrivate ( CObj.COMPLETE, "false" );
+                                            index.index ( co );
+                                        }
+
+                                    }
+
                                 }
 
                             }
@@ -673,11 +727,16 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     boolean newsearcher = false;
 
+                    log.info ( "procFileQueue: request fragments: " + cl.size() + " queue size: " + fl.size() );
+
                     for ( int c = 0; c < cl.size() && fl.size() < QUEUE_DEPTH_FILE; c++ )
                     {
                         try
                         {
+
                             CObj co = cl.get ( c );
+                            log.info ( "procFileQueue: request fragment: " + c );
+
                             co.pushPrivate ( CObj.COMPLETE, "req" );
                             co.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
                             index.index ( co );
@@ -1287,21 +1346,21 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 else
                 {
-                    //log.info("FAILED: Already connected!");
+                    log.info ( "FAILED: Already connected! " + id.getId() );
                 }
 
             }
 
             else
             {
-                //log.info("FAILED: Already attempted connection.");
+                log.info ( "FAILED: Already attempted connection. " + id.getId() );
             }
 
         }
 
         else
         {
-            //log.info("FAILED:  Too many connections or self connection");
+            log.info ( "FAILED:  Too many connections or self connection " + id.getId() );
         }
 
         return false;
@@ -1393,6 +1452,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
         {
             RequestFile rf = i.next();
+            log.info ( "ConnectionManager2: attempt connection for file: " + rf.getLocalFile() );
 
             DestinationThread dt = null;
 
@@ -1415,6 +1475,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList clst = index.
                                     getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
 
+                    log.info ( "ConnectionManager2: other nodes with file: " + clst.size() + " cons " + con );
+
                     int rl[] = randomList ( clst.size() );
 
                     for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS; c++ )
@@ -1426,7 +1488,10 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                             Set<String> subs = getSubs ( id );
 
-                            if ( subs.contains ( rf.getCommunityId() ) )
+                            boolean contains = subs.contains ( rf.getCommunityId() );
+                            log.info ( "ConnectionManager2: attempt connetion to: " + id + " subs: " + subs.size() + " contains: " + contains );
+
+                            if ( contains )
                             {
                                 CObj identity = getIdentity ( id );
 
@@ -2317,23 +2382,30 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public void run()
     {
         resetupLastUpdateToForceDecode();
+        log.info ( "STARTING CONNECTION MANAGER2" );
 
         while ( !stop )
         {
+            log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 0" );
+
             if ( !stop )
             {
                 removeStale();
+                log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 1" );
 
                 boolean g0 = procComQueue();
                 boolean g1 = procFileQueue();
+                log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 2" );
 
                 if ( g0 || g1 )
                 {
+                    log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 3" );
                     sendRequestsNow();
                 }
 
                 if ( System.currentTimeMillis() >= nextdecode )
                 {
+                    log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 4" );
                     decodeMemberships();
                     clearRecentConnections();
                     checkConnections();
@@ -2343,9 +2415,13 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             }
 
+            log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 5" );
             delay();
+            log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 6" );
 
         }
+
+        log.info ( "MANAGER2 EXIT" );
 
     }
 

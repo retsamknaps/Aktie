@@ -195,8 +195,15 @@ public class SWTApp
         public String getText ( Object element );
     }
 
-    class ConnectionColumnFileUp extends ColumnLabelProvider implements ConnectionColumnGetText
+    class ConnectionColumnFileUp extends StyledCellLabelProvider implements ConnectionColumnGetText
     {
+
+        @Override
+        public void update ( ViewerCell cell )
+        {
+            ConnectionElement o = ( ConnectionElement ) cell.getElement();
+            cell.setText ( getText ( o ) );
+        }
 
         @Override
         public String getText ( Object element )
