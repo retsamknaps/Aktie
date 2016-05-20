@@ -5784,7 +5784,11 @@ public class SWTApp
                 while ( i.hasNext() )
                 {
                     rf = ( RequestFile ) i.next();
-                    getNode().getFileHandler().cancelDownload ( rf );
+
+                    CObj cf = new CObj();
+                    cf.setType ( CObj.USR_CANCEL_DL );
+                    cf.pushString ( CObj.LOCALFILE, rf.getLocalFile() );
+                    getNode().enqueue ( cf );
                 }
 
                 if ( rf != null )

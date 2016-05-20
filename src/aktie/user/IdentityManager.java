@@ -326,8 +326,9 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimHasFileUpdate ( )
+    public List<CommunityMember> claimHasFileUpdate ( int max )
     {
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
         Session s = null;
 
         try
@@ -340,28 +341,29 @@ public class IdentityManager
                                       + "x.fileUpdatePriority DESC, "
                                       + "x.lastFileUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
-            }
 
-            if ( cm != null )
-            {
-                cm.setFileStatus ( CommunityMember.DONE );
-                cm.setLastFileUpdate ( System.currentTimeMillis() );
-                cm.setFileUpdateCycle ( 0 );
-                cm.setLastFileUpdateFrom ( "" );
-                s.merge ( cm );
+                if ( cm != null )
+                {
+                    cm.setFileStatus ( CommunityMember.DONE );
+                    cm.setLastFileUpdate ( System.currentTimeMillis() );
+                    cm.setFileUpdateCycle ( 0 );
+                    cm.setLastFileUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
+
             }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -396,12 +398,13 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimHasFileUpdate ( String comid )
+    public List<CommunityMember> claimHasFileUpdate ( String comid, int max )
     {
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
         Session s = null;
 
         try
@@ -416,28 +419,29 @@ public class IdentityManager
                                       + "x.lastFileUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
             q.setParameter ( "comid", comid );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
-            }
 
-            if ( cm != null )
-            {
-                cm.setFileStatus ( CommunityMember.DONE );
-                cm.setLastFileUpdate ( System.currentTimeMillis() );
-                cm.setFileUpdateCycle ( 0 );
-                cm.setLastFileUpdateFrom ( "" );
-                s.merge ( cm );
+                if ( cm != null )
+                {
+                    cm.setFileStatus ( CommunityMember.DONE );
+                    cm.setLastFileUpdate ( System.currentTimeMillis() );
+                    cm.setFileUpdateCycle ( 0 );
+                    cm.setLastFileUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
+
             }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -472,7 +476,7 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
@@ -572,8 +576,9 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimPostUpdate ( )
+    public List<CommunityMember> claimPostUpdate ( int max )
     {
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
         Session s = null;
 
         try
@@ -585,28 +590,30 @@ public class IdentityManager
                                       + "x.postUpdatePriority DESC, "
                                       + "x.lastPostUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
+
+                if ( cm != null )
+                {
+                    cm.setPostStatus ( CommunityMember.DONE );
+                    cm.setLastPostUpdate ( System.currentTimeMillis() );
+                    cm.setPostUpdateCycle ( 0 );
+                    cm.setLastPostUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
+
             }
 
-            if ( cm != null )
-            {
-                cm.setPostStatus ( CommunityMember.DONE );
-                cm.setLastPostUpdate ( System.currentTimeMillis() );
-                cm.setPostUpdateCycle ( 0 );
-                cm.setLastPostUpdateFrom ( "" );
-                s.merge ( cm );
-            }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -641,12 +648,13 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimPostUpdate ( String comid )
+    public List<CommunityMember> claimPostUpdate ( String comid, int max )
     {
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
         Session s = null;
 
         try
@@ -660,28 +668,29 @@ public class IdentityManager
                                       + "x.lastPostUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
             q.setParameter ( "comid", comid );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
-            }
 
-            if ( cm != null )
-            {
-                cm.setPostStatus ( CommunityMember.DONE );
-                cm.setLastPostUpdate ( System.currentTimeMillis() );
-                cm.setPostUpdateCycle ( 0 );
-                cm.setLastPostUpdateFrom ( "" );
-                s.merge ( cm );
+                if ( cm != null )
+                {
+                    cm.setPostStatus ( CommunityMember.DONE );
+                    cm.setLastPostUpdate ( System.currentTimeMillis() );
+                    cm.setPostUpdateCycle ( 0 );
+                    cm.setLastPostUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
+
             }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -716,7 +725,7 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
@@ -816,8 +825,9 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimSubUpdate ( String comid )
+    public List<CommunityMember> claimSubUpdate ( String comid, int max )
     {
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
         Session s = null;
 
         try
@@ -831,29 +841,29 @@ public class IdentityManager
                                       + "x.lastSubscriptionUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
             q.setParameter ( "comid", comid );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
 
-            }
+                if ( cm != null )
+                {
+                    cm.setSubscriptionStatus ( CommunityMember.DONE );
+                    cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
+                    cm.setSubscriptionUpdateCycle ( 0 );
+                    cm.setLastSubscriptionUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
 
-            if ( cm != null )
-            {
-                cm.setSubscriptionStatus ( CommunityMember.DONE );
-                cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
-                cm.setSubscriptionUpdateCycle ( 0 );
-                cm.setLastSubscriptionUpdateFrom ( "" );
-                s.merge ( cm );
             }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -888,13 +898,14 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimSubUpdate ( )
+    public List<CommunityMember> claimSubUpdate ( int max )
     {
         Session s = null;
+        List<CommunityMember> rl = new LinkedList<CommunityMember>();
 
         try
         {
@@ -905,28 +916,30 @@ public class IdentityManager
                                       + "x.subscriptionUpdatePriority DESC, "
                                       + "x.lastSubscriptionUpdate ASC" );
             q.setParameter ( "st", CommunityMember.UPDATE );
-            //q.setMaxResults ( 100 );
+            q.setMaxResults ( max );
             CommunityMember cm = null;
             List<CommunityMember> r = q.list();
             Iterator<CommunityMember> i = r.iterator();
 
-            if ( i.hasNext() )
+            while ( i.hasNext() )
             {
                 cm = i.next();
+
+                if ( cm != null )
+                {
+                    cm.setSubscriptionStatus ( CommunityMember.DONE );
+                    cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
+                    cm.setSubscriptionUpdateCycle ( 0 );
+                    cm.setLastSubscriptionUpdateFrom ( "" );
+                    s.merge ( cm );
+                    rl.add ( cm );
+                }
+
             }
 
-            if ( cm != null )
-            {
-                cm.setSubscriptionStatus ( CommunityMember.DONE );
-                cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
-                cm.setSubscriptionUpdateCycle ( 0 );
-                cm.setLastSubscriptionUpdateFrom ( "" );
-                s.merge ( cm );
-            }
 
             s.getTransaction().commit();
             s.close();
-            return cm;
         }
 
         catch ( Exception e )
@@ -961,7 +974,7 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
@@ -1043,8 +1056,9 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public IdentityData claimMemberUpdate ( )
+    public List<IdentityData> claimMemberUpdate ( int max )
     {
+        List<IdentityData> rl = new LinkedList<IdentityData>();
         Session s = null;
 
         try
@@ -1059,10 +1073,11 @@ public class IdentityManager
             q.setMaxResults ( 1 );
             List<IdentityData> r = q.list();
             IdentityData id = null;
+            Iterator<IdentityData> i = r.iterator();
 
-            if ( r.size() > 0 )
+            while ( i.hasNext() )
             {
-                id = r.get ( 0 );
+                id = i.next();
 
                 if ( id != null )
                 {
@@ -1071,13 +1086,13 @@ public class IdentityManager
                     id.setMemberUpdateCycle ( 0 );
                     id.setLastMemberUpdateFrom ( "" );
                     s.merge ( id );
+                    rl.add ( id );
                 }
 
             }
 
             s.getTransaction().commit();
             s.close();
-            return id;
         }
 
         catch ( Exception e )
@@ -1112,7 +1127,7 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     @SuppressWarnings ( "unchecked" )
@@ -1194,8 +1209,9 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public IdentityData claimCommunityUpdate ( )
+    public List<IdentityData> claimCommunityUpdate ( int max )
     {
+        List<IdentityData> rl = new LinkedList<IdentityData>();
         Session s = null;
 
         try
@@ -1208,13 +1224,14 @@ public class IdentityManager
                                       + "x.communityUpdatePriority DESC, "
                                       + "x.lastCommunityUpdate ASC" );
             q.setParameter ( "st", IdentityData.UPDATE );
-            q.setMaxResults ( 1 );
+            q.setMaxResults ( max );
             List<IdentityData> r = q.list();
             IdentityData id = null;
+            Iterator<IdentityData> i = r.iterator();
 
-            if ( r.size() > 0 )
+            while ( i.hasNext() )
             {
-                id = r.get ( 0 );
+                id = i.next();
 
                 if ( id != null )
                 {
@@ -1223,13 +1240,13 @@ public class IdentityManager
                     id.setCommunityUpdateCycle ( 0 );
                     id.setLastCommunityUpdateFrom ( "" );
                     s.merge ( id );
+                    rl.add ( id );
                 }
 
             }
 
             s.getTransaction().commit();
             s.close();
-            return id;
         }
 
         catch ( Exception e )
@@ -1264,7 +1281,7 @@ public class IdentityManager
 
         }
 
-        return null;
+        return rl;
     }
 
     public IdentityData claimIdentityUpdate ( String id )

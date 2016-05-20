@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +62,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private MembershipValidator memvalid;
     private boolean stop;
     private GuiCallback callback;
+    private ConnectionFileManager fileManager;
 
     //Digest -> Identities pushed to already.
     private ConcurrentMap<String, Set<String>> pushedToCache;
@@ -80,9 +80,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     //key: remotedest
     private ConcurrentMap<String, Long> recentAttempts;
-
-    private long lastFileUpdate = Long.MIN_VALUE + 1;
-    private LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> fileRequests;
 
     //Community data requests.  Key is community id
     //Requests only sent to subscribers of communities
@@ -102,9 +99,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //The time the community requests were added to the queue
     private ConcurrentMap<String, Long> communityTime;
 
-    //The time the file requests were added to the queue
-    private ConcurrentMap<RequestFile, Long> fileTime;
-
     private Map<String, DestinationThread> destinations;
 
     private Map<String, SoftReference<CObj>> identityCache;
@@ -121,13 +115,10 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public ConnectionManager2 ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
                                 GuiCallback cb )
     {
-        fileRequests =
-            new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
         communityRequests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
         subPrivRequests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
         nonCommunityRequests = new ConcurrentLinkedQueue<CObj>();
         communityTime = new ConcurrentHashMap<String, Long>();
-        fileTime = new ConcurrentHashMap<RequestFile, Long>();
         destinations = new HashMap<String, DestinationThread>();
         recentAttempts = new ConcurrentHashMap<String, Long>();
         identityCache = new HashMap<String, SoftReference<CObj>>();
@@ -143,6 +134,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         fileHandler = r;
         identityManager = id;
         callback = cb;
+        fileManager = new ConnectionFileManager ( s, i, r );
         symdec = new SymDecoder();
         memvalid = new MembershipValidator ( index );
         Thread t = new Thread ( this );
@@ -171,7 +163,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     public long getLastFileUpdate()
     {
-        return lastFileUpdate;
+        return fileManager.getLastFileUpdate();
     }
 
     private boolean procComQueue()
@@ -180,8 +172,68 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         int lastsize = -1;
         boolean gonext = false;
 
+        CObjList chlst = index.getPublicCommunities ( null );
+        List<CObj> pubcoms = new LinkedList<CObj>();
+
+        for ( int c = 0; c < chlst.size(); c++ )
+        {
+            try
+            {
+                pubcoms.add ( chlst.get ( c ) );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        chlst.close();
+
+        //Private sub updates, get all my private communities
+        List<CObj> myprivcoms = new LinkedList<CObj>();
+        CObjList mymlst = index.getMyValidMemberships ( null );
+
+        for ( int c = 0; c < mymlst.size(); c++ )
+        {
+            try
+            {
+                myprivcoms.add ( mymlst.get ( c ) );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        mymlst.close();
+
+        //My subs
+        CObjList mslist = index.getMySubscriptions();
+        List<CObj> mysubs = new LinkedList<CObj>();
+
+        for ( int c = 0; c < mslist.size(); c++ )
+        {
+            try
+            {
+                mysubs.add ( mslist.get ( c ) );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        mslist.close();
+
         while ( lastsize != qsize )
         {
+            log.info ( "procComQueue loop..." );
             lastsize = qsize;
 
             //Find pushes we haven't claimed
@@ -312,41 +364,117 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //here.
 
             //Private sub updates, get all my private communities
-            CObjList comlist = index.getMyValidMemberships ( null );
+            //CObjList comlist = index.getMyValidMemberships ( null );
 
-            for ( int c = 0; c < comlist.size(); c++ )
+            for ( int c = 0; c < myprivcoms.size(); c++ )
             {
-                try
-                {
-                    CObj com = comlist.get ( c );
-                    ConcurrentLinkedQueue<CObj> r = subPrivRequests.get ( com.getDig() );
+                log.info ( "procComQueue loop " + c );
+                CObj com = myprivcoms.get ( c );
+                ConcurrentLinkedQueue<CObj> r = subPrivRequests.get ( com.getDig() );
 
-                    if ( r == null )
+                if ( r == null )
+                {
+                    r = new ConcurrentLinkedQueue<CObj>();
+                    subPrivRequests.put ( com.getDig(), r );
+                }
+
+                if ( r.size() < MAX_PRIV_REQUESTS )
+                {
+                    List<CommunityMember> cl = identityManager.claimSubUpdate ( com.getDig(), 10 );
+                    Iterator<CommunityMember> il = cl.iterator();
+
+                    //Must add all of them because we've already claimed them
+                    while ( il.hasNext() )
                     {
-                        r = new ConcurrentLinkedQueue<CObj>();
-                        subPrivRequests.put ( com.getDig(), r );
+                        CommunityMember cm = il.next();
+                        CObj cr = new CObj();
+                        cr.setType ( CObj.CON_REQ_SUBS );
+                        cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                        cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
+                        cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                        r.add ( cr );
+                        gonext = true;
+                        qsize++;
+                        Long tm = communityTime.get ( com.getDig() );
+
+                        if ( tm == null )
+                        {
+                            tm = System.currentTimeMillis();
+                            communityTime.put ( com.getDig(), tm );
+                        }
+
                     }
 
-                    if ( r.size() < MAX_PRIV_REQUESTS )
-                    {
-                        CommunityMember cm = identityManager.claimSubUpdate ( com.getDig() );
+                }
 
-                        if ( cm != null )
+            }
+
+            //CObjList slist = index.getMySubscriptions();
+
+            for ( int c = 0; c < mysubs.size(); c++ )
+            {
+                log.info ( "procComQueue loop AA " + c );
+                CObj sb = mysubs.get ( c );
+                String comid = sb.getString ( CObj.COMMUNITYID );
+
+                if ( comid != null )
+                {
+                    ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( comid );
+
+                    if ( clst == null )
+                    {
+                        clst = new ConcurrentLinkedQueue<CObj>();
+                        communityRequests.put ( comid, clst );
+                    }
+
+                    if ( clst.size() < MAX_COM_REQUESTS )
+                    {
+                        List<CommunityMember> cl = identityManager.claimHasFileUpdate ( comid, 5 );
+                        Iterator<CommunityMember> il = cl.iterator();
+
+                        while ( il.hasNext() )
                         {
+                            CommunityMember cm = il.next();
                             CObj cr = new CObj();
-                            cr.setType ( CObj.CON_REQ_SUBS );
+                            cr.setType ( CObj.CON_REQ_HASFILE );
                             cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
                             cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                            r.add ( cr );
+                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastFileNumber() + 1 );
+                            cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                            clst.add ( cr );
                             gonext = true;
                             qsize++;
-                            Long tm = communityTime.get ( com.getDig() );
+                            Long tm = communityTime.get ( comid );
 
                             if ( tm == null )
                             {
                                 tm = System.currentTimeMillis();
-                                communityTime.put ( com.getDig(), tm );
+                                communityTime.put ( comid, tm );
+                            }
+
+                        }
+
+                        cl = identityManager.claimPostUpdate ( comid, 5 );
+                        il = cl.iterator();
+
+                        while ( il.hasNext() )
+                        {
+                            CommunityMember cm = il.next();
+                            CObj cr = new CObj();
+                            cr.setType ( CObj.CON_REQ_POSTS );
+                            cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                            cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastPostNumber() + 1 );
+                            cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                            clst.add ( cr );
+                            gonext = true;
+                            qsize++;
+                            Long tm = communityTime.get ( comid );
+
+                            if ( tm == null )
+                            {
+                                tm = System.currentTimeMillis();
+                                communityTime.put ( comid, tm );
                             }
 
                         }
@@ -355,103 +483,17 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 }
 
-                catch ( Exception e )
-                {
-                    e.printStackTrace();
-                }
 
             }
-
-            comlist.close();
-
-            CObjList slist = index.getMySubscriptions();
-
-            for ( int c = 0; c < slist.size(); c++ )
-            {
-                try
-                {
-                    CObj sb = slist.get ( c );
-                    String comid = sb.getString ( CObj.COMMUNITYID );
-
-                    if ( comid != null )
-                    {
-                        ConcurrentLinkedQueue<CObj> clst = communityRequests.get ( comid );
-
-                        if ( clst == null )
-                        {
-                            clst = new ConcurrentLinkedQueue<CObj>();
-                            communityRequests.put ( comid, clst );
-                        }
-
-                        if ( clst.size() < MAX_COM_REQUESTS )
-                        {
-                            CommunityMember cm = identityManager.claimHasFileUpdate ( comid );
-
-                            if ( cm != null )
-                            {
-                                CObj cr = new CObj();
-                                cr.setType ( CObj.CON_REQ_HASFILE );
-                                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastFileNumber() + 1 );
-                                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                                clst.add ( cr );
-                                gonext = true;
-                                qsize++;
-                                Long tm = communityTime.get ( comid );
-
-                                if ( tm == null )
-                                {
-                                    tm = System.currentTimeMillis();
-                                    communityTime.put ( comid, tm );
-                                }
-
-                            }
-
-                            cm = identityManager.claimPostUpdate ( comid );
-
-                            if ( cm != null )
-                            {
-                                CObj cr = new CObj();
-                                cr.setType ( CObj.CON_REQ_POSTS );
-                                cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                                cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                                cr.pushNumber ( CObj.FIRSTNUM, cm.getLastPostNumber() + 1 );
-                                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                                clst.add ( cr );
-                                gonext = true;
-                                qsize++;
-                                Long tm = communityTime.get ( comid );
-
-                                if ( tm == null )
-                                {
-                                    tm = System.currentTimeMillis();
-                                    communityTime.put ( comid, tm );
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                catch ( Exception e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-            slist.close();
 
             if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
-                IdentityData id = identityManager.claimCommunityUpdate();
+                List<IdentityData> cl = identityManager.claimCommunityUpdate ( 10 );
+                Iterator<IdentityData> il = cl.iterator();
 
-                if ( id != null )
+                while ( il.hasNext() )
                 {
+                    IdentityData id = il.next();
                     CObj cr = new CObj();
                     cr.setType ( CObj.CON_REQ_COMMUNITIES );
                     cr.pushString ( CObj.CREATOR, id.getId() );
@@ -467,10 +509,12 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //Membership updates
             if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
-                IdentityData id = identityManager.claimMemberUpdate();
+                List<IdentityData> ci = identityManager.claimMemberUpdate ( 10 );
+                Iterator<IdentityData> il = ci.iterator();
 
-                if ( id != null )
+                while ( il.hasNext() )
                 {
+                    IdentityData id = il.next();
                     CObj cr = new CObj();
                     cr.setType ( CObj.CON_REQ_MEMBERSHIPS );
                     cr.pushString ( CObj.CREATOR, id.getId() );
@@ -486,283 +530,33 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //Subscription updates for public coms
             if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
-                CObjList lst = index.getPublicCommunities ( null );
-
-                for ( int c = 0; c < lst.size() &&
+                for ( int c = 0; c < pubcoms.size() &&
                         nonCommunityRequests.size() < MAX_PUB_REQUESTS; c++ )
                 {
-                    try
+                    log.info ( "procComQueue loop BB " + c );
+                    CObj com = pubcoms.get ( c );
+                    List<CommunityMember> cl = identityManager.claimSubUpdate ( com.getDig(), 10 );
+                    Iterator<CommunityMember> il = cl.iterator();
+
+                    while ( il.hasNext() )
                     {
-                        CObj com = lst.get ( c );
-                        CommunityMember cm = identityManager.claimSubUpdate ( com.getDig() );
-
-                        if ( cm != null )
-                        {
-                            CObj cr = new CObj();
-                            cr.setType ( CObj.CON_REQ_SUBS );
-                            cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                            cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
-                            cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                            nonCommunityRequests.add ( cr );
-                            qsize++;
-                            gonext = true;
-                            Long tm = communityTime.get ( com.getDig() );
-
-                            if ( tm == null )
-                            {
-                                tm = System.currentTimeMillis();
-                                communityTime.put ( com.getDig(), tm );
-                            }
-
-                        }
-
-                    }
-
-                    catch ( Exception e )
-                    {
-                        e.printStackTrace();
-                    }
-
-                }
-
-                lst.close();
-            }
-
-        }
-
-        return gonext;
-
-    }
-
-    private boolean procFileQueue()
-    {
-        boolean gonext = false;
-        //Get the prioritized list of files
-        LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> nlst =
-            new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
-        ConcurrentMap<RequestFile, Long> nt = new ConcurrentHashMap<RequestFile, Long>();
-
-        List<RequestFile> flst = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
-        log.info ( "procFileQueue: " + flst.size() );
-
-        for ( RequestFile rf : flst )
-        {
-            ConcurrentLinkedQueue<CObj> fl = null;
-
-            synchronized ( fileRequests )
-            {
-                fl = fileRequests.get ( rf );
-            }
-
-            if ( fl == null )
-            {
-                fl = new ConcurrentLinkedQueue<CObj>();
-            }
-
-            log.info ( "procFileQueue: " + rf.getLocalFile() + " num in queue: " + fl.size() );
-
-            Long tm = fileTime.get ( rf );
-
-            if ( tm == null )
-            {
-                tm = System.currentTimeMillis();
-            }
-
-            nlst.put ( rf, fl );
-            nt.put ( rf, tm );
-
-            if ( fl.size() < QUEUE_DEPTH_FILE )
-            {
-
-                log.info ( "procFileQueue: state: " + rf.getState() );
-
-                if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST )
-                {
-                    if ( fileHandler.claimFileListClaim ( rf ) )
-                    {
-                        log.info ( "procFileQueue: state: request file list: " + rf.getLocalFile() );
+                        CommunityMember cm = il.next();
                         CObj cr = new CObj();
-                        cr.setType ( CObj.CON_REQ_FRAGLIST );
-                        cr.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
-                        cr.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
-                        cr.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
-                        fl.add ( cr );
+                        cr.setType ( CObj.CON_REQ_SUBS );
+                        cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
+                        cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
+                        cr.pushString ( CObj.CREATOR, cm.getMemberId() );
+                        nonCommunityRequests.add ( cr );
+                        qsize++;
                         gonext = true;
-                    }
+                        Long tm = communityTime.get ( com.getDig() );
 
-                }
-
-                if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
-                        rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
-                {
-                    log.info ( "procFileQueue: re-request file list " + rf.getLocalFile() );
-                    //Check if the fragment request is still in the queue
-                    Iterator<CObj> fi = fl.iterator();
-                    boolean fnd = false;
-
-                    while ( fi.hasNext() && !fnd )
-                    {
-                        CObj c = fi.next();
-
-                        if ( CObj.CON_REQ_FRAGLIST.equals ( c.getType() ) )
+                        if ( tm == null )
                         {
-                            String comid = c.getString ( CObj.COMMUNITYID );
-                            String wdig = c.getString ( CObj.FILEDIGEST );
-                            String pdig = c.getString ( CObj.FRAGDIGEST );
-
-                            if ( comid.equals ( rf.getCommunityId() ) &&
-                                    wdig.equals ( rf.getWholeDigest() ) &&
-                                    pdig.equals ( rf.getFragmentDigest() ) )
-                            {
-                                fnd = true;
-                            }
-
+                            tm = System.currentTimeMillis();
+                            communityTime.put ( com.getDig(), tm );
                         }
 
-                    }
-
-                    if ( !fnd )
-                    {
-                        log.info ( "procFileQueue: really re-request file list " + rf.getLocalFile() );
-                        fileHandler.setReRequestList ( rf );
-                    }
-
-                }
-
-                if ( rf.getState() == RequestFile.REQUEST_FRAG )
-                {
-
-                    //Find the fragments that haven't been requested yet.
-                    CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                                  rf.getWholeDigest(), rf.getFragmentDigest() );
-
-                    log.info ( "procFileQueue: request fragments " + cl.size() );
-
-                    //There are none.. reset those requested some time ago.
-                    if ( cl.size() == 0 )
-                    {
-                        cl.close();
-                        cl = index.getFragmentsToReset ( rf.getCommunityId(),
-                                                         rf.getWholeDigest(), rf.getFragmentDigest() );
-
-                        long backtime = System.currentTimeMillis() -
-                                        ( 2L * 60L * 60L * 1000L );
-
-                        log.info ( "procFileQueue: re-request fragments " + cl.size() );
-
-                        for ( int ct = 0; ct < cl.size(); ct++ )
-                        {
-                            try
-                            {
-                                //Set to false, so that we'll request again.
-                                //Ones already complete won't be reset.
-                                CObj co = cl.get ( ct );
-                                Long lt = co.getPrivateNumber ( CObj.LASTUPDATE );
-
-                                //Check lastupdate so we don't request it back to
-                                //back when there's only one fragment for a file.
-                                if ( lt == null || lt < backtime )
-                                {
-                                    Iterator<CObj> fi = fl.iterator();
-                                    boolean fnd = false;
-
-                                    String comid = co.getString ( CObj.COMMUNITYID );
-                                    String filed = co.getString ( CObj.FILEDIGEST );
-                                    String fragt = co.getString ( CObj.FRAGDIGEST );
-                                    String fragd = co.getString ( CObj.FRAGDIG );
-
-                                    if ( comid != null && filed != null && fragt != null &&
-                                            fragd != null )
-                                    {
-
-                                        while ( fi.hasNext() && !fnd )
-                                        {
-                                            CObj c = fi.next();
-
-                                            if ( CObj.CON_REQ_FRAG.equals ( c.getType() ) )
-                                            {
-                                                String ccomid = c.getString ( CObj.COMMUNITYID );
-                                                String cfiled = c.getString ( CObj.FILEDIGEST );
-                                                String cfragt = c.getString ( CObj.FRAGDIGEST );
-                                                String cfragd = c.getString ( CObj.FRAGDIG );
-
-                                                if ( comid.equals ( ccomid ) &&
-                                                        filed.equals ( cfiled ) &&
-                                                        fragt.equals ( cfragt ) &&
-                                                        fragd.equals ( cfragd ) )
-                                                {
-                                                    fnd = true;
-                                                }
-
-                                            }
-
-                                        }
-
-                                        if ( !fnd )
-                                        {
-                                            co.pushPrivate ( CObj.COMPLETE, "false" );
-                                            index.index ( co );
-                                        }
-
-                                    }
-
-                                }
-
-                            }
-
-                            catch ( IOException e )
-                            {
-                                e.printStackTrace();
-                            }
-
-                        }
-
-                        cl.close();
-                        index.forceNewSearcher();
-                        //Get the new list of fragments to request after resetting
-                        cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                                                           rf.getWholeDigest(), rf.getFragmentDigest() );
-
-                    }
-
-                    boolean newsearcher = false;
-
-                    log.info ( "procFileQueue: request fragments: " + cl.size() + " queue size: " + fl.size() );
-
-                    for ( int c = 0; c < cl.size() && fl.size() < QUEUE_DEPTH_FILE; c++ )
-                    {
-                        try
-                        {
-
-                            CObj co = cl.get ( c );
-                            log.info ( "procFileQueue: request fragment: " + c );
-
-                            co.pushPrivate ( CObj.COMPLETE, "req" );
-                            co.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
-                            index.index ( co );
-                            newsearcher = true;
-                            CObj sr = new CObj();
-                            sr.setType ( CObj.CON_REQ_FRAG );
-                            sr.pushString ( CObj.COMMUNITYID, co.getString ( CObj.COMMUNITYID ) );
-                            sr.pushString ( CObj.FILEDIGEST, co.getString ( CObj.FILEDIGEST ) );
-                            sr.pushString ( CObj.FRAGDIGEST, co.getString ( CObj.FRAGDIGEST ) );
-                            sr.pushString ( CObj.FRAGDIG, co.getString ( CObj.FRAGDIG ) );
-                            fl.add ( sr );
-                            gonext = true;
-                        }
-
-                        catch ( IOException e )
-                        {
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                    cl.close();
-
-                    if ( newsearcher )
-                    {
-                        index.forceNewSearcher();
                     }
 
                 }
@@ -771,10 +565,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         }
 
-        fileRequests = nlst;
-        fileTime = nt;
-        lastFileUpdate++;
         return gonext;
+
     }
 
     private boolean checkRemovePush ( String d )
@@ -913,20 +705,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         }
 
-        Iterator<Entry<RequestFile, Long>> fi = fileTime.entrySet().iterator();
-
-        while ( fi.hasNext() )
-        {
-            Entry<RequestFile, Long> e = fi.next();
-
-            if ( e.getValue() <= cutoff )
-            {
-                fi.remove();
-                fileRequests.remove ( e.getKey() );
-            }
-
-        }
-
         Iterator<Entry<String, SoftReference<CObj>>> i = identityCache.entrySet().iterator();
 
         while ( i.hasNext() )
@@ -989,81 +767,19 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //  Communityid ->  File digest -> Requests
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
     {
-
         //Connection was successful remove
         //from recent attempts so we know it's a good
         //one to connect to
         recentAttempts.remove ( remotedest + true );
 
-        if ( hasfiles == null )
-        {
-            return null;
-        }
+        Object r = fileManager.nextFile ( localdest, remotedest, hasfiles );
 
-        Object n = null;
-
-        List<RequestFile> rls = new LinkedList<RequestFile>();
-
-        synchronized ( fileRequests )
-        {
-            for ( RequestFile rf : fileRequests.keySet() )
-            {
-                if ( rf.getRequestId().equals ( localdest ) )
-                {
-                    rls.add ( rf );
-                }
-
-            }
-
-        }
-
-        Iterator<RequestFile> i = rls.iterator();
-
-        while ( i.hasNext() && n == null )
-        {
-            RequestFile r = i.next();
-
-            if ( hasfiles.contains ( r ) )
-            {
-                ConcurrentLinkedQueue<CObj> rl = null;
-
-                synchronized ( fileRequests )
-                {
-                    rl = fileRequests.get ( r );
-                }
-
-                if ( rl != null )
-                {
-                    n = rl.poll();
-
-                    if ( n != null )
-                    {
-                        fileTime.put ( r, System.currentTimeMillis() );
-                    }
-
-                }
-
-            }
-
-        }
-
-        boolean getmore = false;
-
-        synchronized ( fileRequests )
-        {
-            if ( fileRequests.size() == 0 )
-            {
-                getmore = true;
-            }
-
-        }
-
-        if ( getmore )
+        if ( r == null )
         {
             kickConnections();
         }
 
-        return n;
+        return r;
     }
 
     private int[] randomList ( int i )
@@ -1440,13 +1156,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         //fileRequests is already in priority order, so just
         //try to connect to as many allowed that has the file!
         //user can change priorities if they don't like it.
-        List<RequestFile> rls = new LinkedList<RequestFile>();
-
-        synchronized ( fileRequests )
-        {
-            rls.addAll ( fileRequests.keySet() );
-        }
-
+        List<RequestFile> rls = fileManager.getRequestFile();
         Iterator<RequestFile> i = rls.iterator();
 
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
@@ -2354,6 +2064,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         }
 
+        fileManager.stop();
+
         notifyAll();
     }
 
@@ -2394,10 +2106,9 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 1" );
 
                 boolean g0 = procComQueue();
-                boolean g1 = procFileQueue();
-                log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 2" );
+                log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 1.5" );
 
-                if ( g0 || g1 )
+                if ( g0 )
                 {
                     log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 3" );
                     sendRequestsNow();

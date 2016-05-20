@@ -25,6 +25,7 @@ import aktie.user.NewQueryProcessor;
 import aktie.user.NewSubscriptionProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareManager;
+import aktie.user.UsrCancelFileProcessor;
 import aktie.user.UsrReqComProcessor;
 import aktie.user.UsrReqFileProcessor;
 import aktie.user.UsrReqHasFileProcessor;
@@ -104,6 +105,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqShareProcessor ( shareManager ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );
+        userQueue.addProcessor ( new UsrCancelFileProcessor ( requestHandler, usrCallback ) );
         userQueue.addProcessor ( new NewPushProcessor ( index, conMan ) );
 
         doUpdate();

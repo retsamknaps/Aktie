@@ -91,6 +91,7 @@ public class CObj
     public static String USR_START_DEST = "start_dest";
     public static String USR_SET_RANK = "set_rank";
     public static String USR_SHARE_MGR = "share_mgr";
+    public static String USR_CANCEL_DL = "cancel_dl";
 
     //Private fields
     public static String PRV_LOCALFILE   = "prv_localfile";
