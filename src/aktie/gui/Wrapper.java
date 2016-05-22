@@ -8,6 +8,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
@@ -458,10 +459,11 @@ public class Wrapper
             }
 
             //get the zip file content
-            File jarfile = new File ( Wrapper.class.getProtectionDomain()
-                                      .getCodeSource()
-                                      .getLocation()
-                                      .getPath() );
+            String fn = URLDecoder.decode ( Wrapper.class.getProtectionDomain()
+                                            .getCodeSource()
+                                            .getLocation()
+                                            .getPath(), "UTF-8" );
+            File jarfile = new File ( fn );
             ZipInputStream zis =
                 new ZipInputStream ( new FileInputStream ( jarfile ) );
             //get the zipped file list entry
