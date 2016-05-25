@@ -45,6 +45,8 @@ public class CObj
     public static String FRAGMENT = "fragment";
     public static String FILEF = "filef";
     public static String FRAGFAILED = "oops";
+    public static String PRIVIDENTIFIER = "privident";
+    public static String PRIVMESSAGE = "privmsg";
     public static String QUERY = "query";
     public static String FIELD = "field";
     public static String DUPFILE = "dupfile";
@@ -110,6 +112,8 @@ public class CObj
     public static String PRV_DEF_FIELD   = "prv_def_field";
     public static String PRV_FLD_NEW     = "prv_fld_new";
     public static String PRV_QRY_AUTODOWNLOAD = "prv_auto_dl";
+    public static String PRV_RECIPIENT   = "prv_to";
+    public static String PRV_MSG_ID      = "prv_msg_id";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 

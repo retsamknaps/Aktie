@@ -231,9 +231,13 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         mslist.close();
 
-        while ( lastsize != qsize )
+        int maxloops = 3;
+
+        while ( lastsize != qsize && maxloops > 0 )
         {
-            log.info ( "procComQueue loop..." );
+            maxloops--;
+
+            log.info ( "procComQueue loop... " + lastsize + " = " + qsize );
             lastsize = qsize;
 
             //Find pushes we haven't claimed

@@ -364,6 +364,19 @@ public class Index implements Runnable
 
     }
 
+    public CObjList getPrivateMsgIdentity ( String msgid, Sort s )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docPrivate ( CObj.PRV_MSG_ID ), msgid );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE, s );
+    }
+
     public CObjList getIdentities()
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
