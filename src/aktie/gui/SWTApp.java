@@ -41,6 +41,7 @@ import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
 import aktie.index.Upgrade0405;
+import aktie.net.ConnectionElement;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
@@ -121,386 +122,9 @@ public class SWTApp
 
     private ConnectionCallback concallback = new ConnectionCallback();
 
-    class ConnectionElement
-    {
-        public String localId;
-        public String remoteDest;
-        public String lastSent;
-        public String lastRead;
-        public String mode;
-        public long pending;
-        public long download;
-        public long upload;
-        public long time;
-        public String upFile;
-        public String downFile;
-        public String fulllocalid;
-        public String fullremoteid;
-        public ConnectionElement ( ConnectionThread ct )
-        {
-            if ( ct != null )
-            {
-                remoteDest = "Connecting/Authenticating";
-                CObj id = ct.getEndDestination();
-
-                if ( id != null )
-                {
-                    remoteDest = id.getDisplayName();
-                    fullremoteid = id.getId();
-                }
-
-                localId = "?";
-
-                if ( ct.getLocalDestination() != null &&
-                        ct.getLocalDestination().getIdentity() != null )
-                {
-                    fullremoteid = ct.getLocalDestination().getIdentity().getId();
-                    localId = ct.getLocalDestination().getIdentity().getDisplayName();
-                }
-
-                lastSent = ct.getLastSent();
-
-                if ( lastSent == null )
-                {
-                    lastSent = "";
-                }
-
-                StringBuilder sb = new StringBuilder();
-                lastRead = ct.getLastRead();
-
-                if ( lastRead != null )
-                {
-                    sb.append ( lastRead );
-                }
-
-                sb.append ( " " ).append ( ct.getListCount() );
-                lastRead = sb.toString();
-                mode = ct.isFileMode() ? "FILE" : "norm";
-                pending = ct.getPendingFileRequests();
-                download = ct.getInBytes();
-                upload = ct.getOutBytes();
-                long curtime = System.currentTimeMillis();
-                time = curtime - ct.getStartTime();
-                time = time / ( 1000L );
-                upFile = ct.getFileUp();
-                downFile = ct.getFileDown();
-            }
-
-        }
-
-    }
-
     interface ConnectionColumnGetText
     {
         public String getText ( Object element );
-    }
-
-    class ConnectionColumnFileUp extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-
-            if ( ct.upFile != null )
-            {
-                return ct.upFile;
-            }
-
-            return "";
-        }
-
-    }
-
-    class ConnectionColumnFileDown extends StyledCellLabelProvider implements ConnectionColumnGetText
-    {
-
-        @Override
-        public void update ( ViewerCell cell )
-        {
-            ConnectionElement o = ( ConnectionElement ) cell.getElement();
-            cell.setText ( getText ( o ) );
-        }
-
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement o = ( ConnectionElement ) element;
-            return o.downFile != null ? o.downFile : "";
-        }
-
-    }
-
-    class ConnectionColumnId extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return ct.remoteDest;
-        }
-
-    }
-
-    class ConnectionColumnDest extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return ct.localId;
-        }
-
-    }
-
-    class ConnectionColumnLastSent extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return ct.lastSent;
-        }
-
-    }
-
-    class ConnectionColumnLastRead extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return ct.lastRead;
-        }
-
-    }
-
-    class ConnectionColumnMode extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return ct.mode;
-        }
-
-    }
-
-    class ConnectionColumnPending extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return Long.toString ( ct.pending );
-        }
-
-    }
-
-    class ConnectionColumnDownload extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return Long.toString ( ct.download );
-        }
-
-    }
-
-    class ConnectionColumnTime extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return Long.toString ( ct.time );
-        }
-
-    }
-
-    class ConnectionColumnUpload extends ColumnLabelProvider implements ConnectionColumnGetText
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            ConnectionElement ct = ( ConnectionElement ) element;
-            return Long.toString ( ct.upload );
-        }
-
-    }
-
-    class ConnectionContentProvider implements IStructuredContentProvider
-    {
-        @Override
-        public void dispose()
-        {
-        }
-
-        @Override
-        public void inputChanged ( Viewer arg0, Object arg1, Object arg2 )
-        {
-        }
-
-        @Override
-        public Object[] getElements ( Object a )
-        {
-            if ( a instanceof ConnectionCallback )
-            {
-                ConnectionCallback cc = ( ConnectionCallback ) a;
-                return cc.getElements();
-            }
-
-            return null;
-        }
-
-    }
-
-    class ConnectionSorter extends ViewerSorter
-    {
-        private int column;
-
-        private boolean reverse;
-
-        public ConnectionSorter()
-        {
-            column = 0;
-            reverse = false;
-        }
-
-        public void doSort ( int column )
-        {
-            if ( column == this.column )
-            {
-                reverse = !reverse;
-            }
-
-            else
-            {
-                this.column = column;
-                reverse = false;
-            }
-
-        }
-
-        @SuppressWarnings ( { "rawtypes", "unchecked" } )
-
-        public int compare ( Viewer viewer, Object e1, Object e2 )
-        {
-            if ( e1 instanceof ConnectionElement &&
-                    e2 instanceof ConnectionElement )
-            {
-                ConnectionElement ct1 = ( ConnectionElement ) e1;
-                ConnectionElement ct2 = ( ConnectionElement ) e2;
-                ConnectionColumnGetText labprov = null;
-
-                int cc = 0;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnDest();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnId();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnUpload();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnDownload();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnTime();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnLastSent();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnLastRead();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnPending();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnMode();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnFileDown();
-                }
-
-                cc++;
-
-                if ( column == cc )
-                {
-                    labprov = new ConnectionColumnFileUp();
-                }
-
-                if ( labprov != null )
-                {
-                    String s0 = labprov.getText ( ct1 );
-                    String s1 = labprov.getText ( ct2 );
-
-                    Comparable dn0 = s0;
-                    Comparable dn1 = s1;
-
-                    if ( ( column > 1 && column < 5 ) || column == 7 )
-                    {
-                        dn0 = Long.valueOf ( s0 );
-                        dn1 = Long.valueOf ( s1 );
-                    }
-
-                    if ( !reverse )
-                    {
-                        return dn0.compareTo ( dn1 );
-                    }
-
-                    return dn1.compareTo ( dn0 );
-                }
-
-            }
-
-            return 0;
-        }
-
     }
 
     class DownloadContentProvider implements IStructuredContentProvider
@@ -826,7 +450,6 @@ public class SWTApp
             {
                 final long dt = curtime - lastDisplay;
                 lastDisplay = curtime;
-                final ConnectionCallback This = this;
                 Display.getDefault().asyncExec ( new Runnable()
                 {
                     @Override
@@ -842,7 +465,7 @@ public class SWTApp
                             lastTotalOutBytes = curTotalOutBytes;
                             updateConnectionSpeed ( deltaInBytes, deltaOutBytes, dt );
 
-                            connectionTableViewer.setInput ( This );
+                            connectionTable.getTableViewer().setInput ( ConnectionCallback.this );
                         }
 
                     }
@@ -884,13 +507,13 @@ public class SWTApp
             updateDisplay ( true );
         }
 
-        public Object[] getElements()
+        public ConnectionElement[] getElements()
         {
-            Object r[] = null;
+            ConnectionElement r[] = null;
 
             synchronized ( connections )
             {
-                r = new Object[connections.size()];
+                r = new ConnectionElement[connections.size()];
                 Iterator<ConnectionThread> i = connections.iterator();
                 int idx = 0;
 
@@ -1690,8 +1313,8 @@ public class SWTApp
     private CObjListContentProvider fileContentProvider;
     private CObj displayedPost;
     private StyledText postText;
-    private Table connectionTable;
-    private TableViewer connectionTableViewer;
+    private ConnectionTable connectionTable;
+    //private AktieTableViewer<ConnectionElement> connectionTableViewer;
     private Text fileSearch;
     private Table fileTable;
     private TableViewer fileTableViewer;
@@ -5801,289 +5424,7 @@ public class SWTApp
         tbtmConnections.setControl ( composite_8 );
         composite_8.setLayout ( new FillLayout ( SWT.HORIZONTAL ) );
 
-        connectionTableViewer = new TableViewer ( composite_8, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        connectionTable = connectionTableViewer.getTable();
-        connectionTable.setHeaderVisible ( true );
-        connectionTable.setLinesVisible ( true );
-        connectionTableViewer.setContentProvider ( new ConnectionContentProvider() );
-        connectionTableViewer.setSorter ( new ConnectionSorter() );
-
-
-        Menu menu_7 = new Menu ( connectionTable );
-        connectionTable.setMenu ( menu_7 );
-
-        MenuItem closecon = new MenuItem ( menu_7, SWT.NONE );
-        closecon.setText ( "Close Connection" );
-        closecon.addSelectionListener ( new SelectionListener()
-        {
-            @SuppressWarnings ( "rawtypes" )
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                IStructuredSelection sel = ( IStructuredSelection ) connectionTableViewer.getSelection();
-                Iterator i = sel.iterator();
-
-                while ( i.hasNext() )
-                {
-                    ConnectionElement ct = ( ConnectionElement ) i.next();
-
-                    if ( ct.fulllocalid != null && ct.fullremoteid != null )
-                    {
-                        node.getConnectionManager().closeConnection ( ct.fulllocalid, ct.fullremoteid );
-                    }
-
-                }
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-
-        TableViewerColumn concol00 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol00.getColumn().setText ( "Local" );
-        concol00.getColumn().setWidth ( 200 );
-        concol00.setLabelProvider ( new ConnectionColumnDest() );
-        concol00.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 0 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol0 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol0.getColumn().setText ( "Remote" );
-        concol0.getColumn().setWidth ( 200 );
-        concol0.setLabelProvider ( new ConnectionColumnId() );
-        concol0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 1 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol1 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol1.getColumn().setText ( "Upload (b)" );
-        concol1.getColumn().setWidth ( 100 );
-        concol1.setLabelProvider ( new ConnectionColumnUpload() );
-        concol1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 2 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol2 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol2.getColumn().setText ( "Download (b)" );
-        concol2.getColumn().setWidth ( 100 );
-        concol2.setLabelProvider ( new ConnectionColumnDownload() );
-
-        concol2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 3 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol3 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol3.getColumn().setText ( "Time (s)" );
-        concol3.getColumn().setWidth ( 90 );
-        concol3.setLabelProvider ( new ConnectionColumnTime() );
-
-        concol3.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 4 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol4 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol4.getColumn().setText ( "Last Sent" );
-        concol4.getColumn().setWidth ( 100 );
-        concol4.setLabelProvider ( new ConnectionColumnLastSent() );
-
-        concol4.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 5 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol5 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol5.getColumn().setText ( "Last Read" );
-        concol5.getColumn().setWidth ( 100 );
-        concol5.setLabelProvider ( new ConnectionColumnLastRead() );
-
-        concol5.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 6 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol6 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol6.getColumn().setText ( "Pending" );
-        concol6.getColumn().setWidth ( 100 );
-        concol6.setLabelProvider ( new ConnectionColumnPending() );
-
-        concol6.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 7 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol7 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol7.getColumn().setText ( "Mode" );
-        concol7.getColumn().setWidth ( 100 );
-        concol7.setLabelProvider ( new ConnectionColumnMode() );
-
-        concol7.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 8 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol8 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol8.getColumn().setText ( "Down File" );
-        concol8.getColumn().setWidth ( 200 );
-        concol8.getColumn().setAlignment ( SWT.RIGHT );
-        concol8.setLabelProvider ( new ConnectionColumnFileDown() );
-
-        concol8.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 9 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn concol9 = new TableViewerColumn ( connectionTableViewer, SWT.NONE );
-        concol9.getColumn().setText ( "Up File" );
-        concol9.getColumn().setWidth ( 200 );
-        concol9.getColumn().setAlignment ( SWT.RIGHT );
-        concol9.setLabelProvider ( new ConnectionColumnFileUp() );
-
-        concol9.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                ConnectionSorter srt = ( ConnectionSorter ) connectionTableViewer.getSorter();
-                srt.doSort ( 10 );
-                connectionTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
+        connectionTable = new ConnectionTable ( composite_8, node );
 
         bannerText = new Text ( shell, SWT.BORDER );
         bannerText.setEditable ( false );
@@ -6112,10 +5453,10 @@ public class SWTApp
         return postText;
     }
 
-    public Table getConnectionTable()
-    {
+    /*  public Table getConnectionTable()
+        {
         return connectionTable;
-    }
+        }*/
 
     public Table getFileTable()
     {
