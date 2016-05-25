@@ -52,11 +52,11 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             //Get the creator's random identity for the recipient.
             String pid = Utils.mergeIds ( creator, recipient );
 
-            Sort s = new Sort();
+            Sort srt = new Sort();
 
-            s.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, memberReverseSort ) );
+            srt.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, true ) );
             //Add private message index
-            index.getPrivateMsgIdentity ( pid, s )
+            index.getPrivateMsgIdentity ( pid, srt );
             Session s = null;
 
             try
