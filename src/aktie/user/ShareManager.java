@@ -356,7 +356,7 @@ public class ShareManager implements Runnable
             {
                 File f = lsd[c];
 
-                if ( f.exists() )
+                if ( f.exists() && ( !f.getName().startsWith ( "." ) ) )
                 {
                     if ( f.isDirectory() )
                     {
