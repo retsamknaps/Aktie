@@ -51,15 +51,18 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 guicallback.update ( b );
                 return true;
             }
-            
-            CObj recid = index.getIdentity(recipient);
-            if (recid == null) {
+
+            CObj recid = index.getIdentity ( recipient );
+
+            if ( recid == null )
+            {
                 b.pushString ( CObj.ERROR, "Recipient identity not found" );
                 guicallback.update ( b );
                 return true;
             }
-            
+
             CObj myid = index.getMyIdentity ( creator );
+
             if ( myid == null )
             {
                 b.pushString ( CObj.ERROR, "You may only use your own identity" );
@@ -72,23 +75,31 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             String pid = Utils.mergeIds ( creator, recipient );
 
             Sort srt = new Sort();
-            srt.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.SEQNUM ), 
-            		SortedNumericSortField.Type.LONG, false ) );
+            srt.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.SEQNUM ),
+                          SortedNumericSortField.Type.LONG, false ) );
             //Add private message index
             CObjList idlst = index.getPrivateMsgIdentity ( pid, srt );
             CObj pident = null;
-            if (idlst.size() > 0) {
-            	try {
-					pident = idlst.get(0);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+
+            if ( idlst.size() > 0 )
+            {
+                try
+                {
+                    pident = idlst.get ( 0 );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
             }
+
             idlst.close();
-            
+
             long idseqnum = 0;
             long msgnum = 0;
-            
+
             Session s = null;
 
             try
@@ -103,16 +114,19 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     pm.setId ( creator );
                     pm.setMine ( true );
                 }
-                if (pident == null) {
-                	idseqnum = pm.getLastIdentNumber();
-                	idseqnum++;
-                	pm.setLastIdentNumber(idseqnum);
+
+                if ( pident == null )
+                {
+                    idseqnum = pm.getLastIdentNumber();
+                    idseqnum++;
+                    pm.setLastIdentNumber ( idseqnum );
                 }
+
                 msgnum = pm.getLastMsgNumber();
                 msgnum++;
-                pm.setLastMsgNumber(msgnum);
-                
-                s.merge(pm);
+                pm.setLastMsgNumber ( msgnum );
+
+                s.merge ( pm );
 
                 s.getTransaction().commit();
                 s.close();
@@ -149,51 +163,57 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     }
 
                 }
+
                 return true;
 
             }
 
             //k create ident if needed
-            if (pident == null) {
-            	pident = new CObj();
-            	pident.setType(CObj.PRIVIDENTIFIER);
-            	pident.pushString(CObj.CREATOR, creator);
-            	pident.pushNumber(CObj.SEQNUM, idseqnum);
-            	pident.pushNumber(CObj.MSGIDENT, Utils.Random.nextLong());
-            	
+            if ( pident == null )
+            {
+                pident = new CObj();
+                pident.setType ( CObj.PRIVIDENTIFIER );
+                pident.pushString ( CObj.CREATOR, creator );
+                pident.pushNumber ( CObj.SEQNUM, idseqnum );
+                pident.pushNumber ( CObj.MSGIDENT, Utils.Random.nextLong() );
+
                 KeyParameter kp = Utils.generateKey();
                 RSAKeyParameters mpk = Utils.publicKeyFromString ( recid.getString ( CObj.KEY ) );
                 byte enckey[] = Utils.anonymousAsymEncode ( mpk, Utils.CID0, Utils.CID1, kp.getKey() );
                 pident.pushString ( CObj.ENCKEY, Utils.toString ( enckey ) );
-                
-                pident.pushPrivate ( CObj.KEY, Utils.toString ( kp.getKey() ) );
-            	pident.pushPrivate(CObj.PRV_MSG_ID, pid);
-            	pident.pushPrivate(CObj.PRV_RECIPIENT, recipient);
-            	
-            	pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
-                try {
-					index.index(pident);
-				} catch (IOException e) {
-					e.printStackTrace();
-	                b.pushString ( CObj.ERROR, "failed to save identity data" );
-	                guicallback.update ( b );
-	                return true;
-				}
-            	
+                pident.pushPrivate ( CObj.KEY, Utils.toString ( kp.getKey() ) );
+                pident.pushPrivate ( CObj.PRV_MSG_ID, pid );
+                pident.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
+
+                pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+
+                try
+                {
+                    index.index ( pident );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                    b.pushString ( CObj.ERROR, "failed to save identity data" );
+                    guicallback.update ( b );
+                    return true;
+                }
+
             }
-            
-            b.pushNumber(CObj.SEQNUM, msgnum);
-            b.pushNumber(CObj.MSGIDENT, pident.getNumber(CObj.MSGIDENT));
-            
+
+            b.pushNumber ( CObj.SEQNUM, msgnum );
+            b.pushNumber ( CObj.MSGIDENT, pident.getNumber ( CObj.MSGIDENT ) );
+
             StringBuilder sb = new StringBuilder();
             sb.append ( CObj.SUBJECT );
             sb.append ( "=" );
-            sb.append ( b.getPrivate(CObj.SUBJECT) );
+            sb.append ( b.getPrivate ( CObj.SUBJECT ) );
             sb.append ( "," );
             sb.append ( CObj.BODY );
             sb.append ( "=" );
-            sb.append ( b.getPrivate(CObj.BODY) );
+            sb.append ( b.getPrivate ( CObj.BODY ) );
             String rawstr = sb.toString();
             byte raw[] = Utils.stringToByteArray ( rawstr );
             //encrypt the community key with the identity public key
@@ -202,11 +222,11 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             byte enc[] = Utils.anonymousSymEncode ( kp, Utils.CID0,
                                                     Utils.CID1, raw );
             b.pushString ( CObj.PAYLOAD, Utils.toString ( enc ) );
-            
+
             sb = new StringBuilder();
-            sb.append(CObj.CREATEDON);
-            sb.append("=");
-            sb.append((new Date()).getTime());
+            sb.append ( CObj.CREATEDON );
+            sb.append ( "=" );
+            sb.append ( ( new Date() ).getTime() );
             rawstr = sb.toString();
             raw = Utils.stringToByteArray ( rawstr );
             //encrypt the community key with the identity public key
@@ -214,14 +234,18 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                                              Utils.CID1, raw );
             b.pushString ( CObj.PAYLOAD2, Utils.toString ( enc ) );
 
-        	b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+            b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
-        	try {
-				index.index(b);
-				index.forceNewSearcher();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+            try
+            {
+                index.index ( b );
+                index.forceNewSearcher();
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
 
             return true;
         }
