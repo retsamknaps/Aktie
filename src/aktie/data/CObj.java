@@ -163,6 +163,7 @@ public class CObj
     public static String SHARE_NAME = "sharename";
     public static String STATUS = "fstatus";
     public static String ENABLED = "enabled";
+    public static String MSGIDENT = "msgid";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.
