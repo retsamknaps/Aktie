@@ -26,6 +26,7 @@ import aktie.data.CommunityMember;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
+import aktie.data.PrivateMsgIdentity;
 import aktie.data.RequestFile;
 import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
@@ -527,6 +528,46 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     nonCommunityRequests.add ( cr );
                     qsize++;
                     gonext = true;
+                }
+
+            }
+
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
+            {
+                List<PrivateMsgIdentity> cl = identityManager.claimPrvtIdentUpdate ( 10 );
+                Iterator<PrivateMsgIdentity> il = cl.iterator();
+
+                while ( il.hasNext() )
+                {
+                    PrivateMsgIdentity id = il.next();
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_PRVIDENT );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastIdentNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
+                    gonext = true;
+                    qsize++;
+                }
+
+            }
+
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
+            {
+                List<PrivateMsgIdentity> cl = identityManager.claimPrvtMsgUpdate ( 10 );
+                Iterator<PrivateMsgIdentity> il = cl.iterator();
+
+                while ( il.hasNext() )
+                {
+                    PrivateMsgIdentity id = il.next();
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_PRVMSG );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastMsgNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
+                    gonext = true;
+                    qsize++;
                 }
 
             }

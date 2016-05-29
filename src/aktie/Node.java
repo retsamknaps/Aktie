@@ -20,6 +20,7 @@ import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
 import aktie.user.NewMembershipProcessor;
 import aktie.user.NewPostProcessor;
+import aktie.user.NewPrivateMessageProcessor;
 import aktie.user.NewPushProcessor;
 import aktie.user.NewQueryProcessor;
 import aktie.user.NewSubscriptionProcessor;
@@ -32,6 +33,7 @@ import aktie.user.UsrReqHasFileProcessor;
 import aktie.user.UsrReqIdentityProcessor;
 import aktie.user.UsrReqMemProcessor;
 import aktie.user.UsrReqPostProcessor;
+import aktie.user.UsrReqPrvMsgProcessor;
 import aktie.user.UsrReqSetRankProcessor;
 import aktie.user.UsrReqShareProcessor;
 import aktie.user.UsrReqSubProcessor;
@@ -91,6 +93,7 @@ public class Node
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
         userQueue.addProcessor ( new NewMembershipProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( new NewPostProcessor ( session, index, usrCallback ) );
+        userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
@@ -99,6 +102,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqIdentityProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqMemProcessor ( identManager ) );
+        userQueue.addProcessor ( new UsrReqPrvMsgProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqPostProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSetRankProcessor ( index ) );

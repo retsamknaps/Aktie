@@ -230,6 +230,155 @@ public class TestBasic
         assertEquals ( com1.getString ( CObj.PAYLOAD ), oc0.getString ( CObj.PAYLOAD ) );
 
         //Create membership
+        System.out.println ( " ========================== PRIVATE TEST ==============================" );
+        CObj prv0 = new CObj();
+        prv0.setType ( CObj.PRIVMESSAGE );
+        prv0.pushString ( CObj.CREATOR, n1.getId() );
+        prv0.pushPrivate ( CObj.SUBJECT, "This is a test private message - subj" );
+        prv0.pushPrivate ( CObj.BODY, "This is a test private message - body." );
+        prv0.pushPrivate ( CObj.PRV_RECIPIENT, n0.getId() );
+        Tn1.newUserData ( prv0 );
+
+        o1 = pollForData ( Tn1 );
+        assertNotNull ( o1 );
+        assertTrue ( o1 instanceof CObj );
+        oc1 = ( CObj ) o1;
+        assertNotNull ( oc1.getDig() );
+        assertEquals ( CObj.PRIVMESSAGE, oc1.getType() );
+        assertNotNull ( oc1.getString ( CObj.PAYLOAD ) );
+        assertNotNull ( oc1.getString ( CObj.PAYLOAD2 ) );
+        System.out.println ( "PRIVATE IDENT:    " + oc1.getString ( CObj.MSGIDENT ) );
+        System.out.println ( "PRIVATE SEQ:      " + oc1.getNumber ( CObj.SEQNUM ) );
+        System.out.println ( "PRIVATE PAYLOAD:  " + oc1.getString ( CObj.PAYLOAD ) );
+        System.out.println ( "PRIVATE PAYLOAD2: " + oc1.getString ( CObj.PAYLOAD2 ) );
+
+        //Ok, now update private identifiers
+        CObj reqprvident = new CObj();
+        reqprvident.setType ( CObj.CON_REQ_PRVIDENT );
+        reqprvident.pushString ( CObj.CREATOR, n1.getId() );
+        reqprvident.pushNumber ( CObj.FIRSTNUM, 0 );
+        reqprvident.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+        Tn0.getTestReq().enqueue ( reqprvident );
+
+        o0 = pollForData ( Tn0 );
+        assertNotNull ( o0 );
+        assertTrue ( o0 instanceof CObj );
+        oc0 = ( CObj ) o0;
+        assertNotNull ( oc0.getDig() );
+        assertEquals ( CObj.PRIVIDENTIFIER, oc0.getType() );
+        assertNotNull ( oc0.getString ( CObj.MSGIDENT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.KEY ) );
+        assertNotNull ( oc0.getPrivate ( CObj.PRV_MSG_ID ) );
+        assertNotNull ( oc0.getPrivate ( CObj.PRV_RECIPIENT ) );
+        System.out.println ( "PRV IDENT: " + oc0.getString ( CObj.MSGIDENT ) );
+        System.out.println ( "PRV KEY:   " + oc0.getPrivate ( CObj.PRV_MSG_ID ) );
+        System.out.println ( "PRV RCP:   " + oc0.getPrivate ( CObj.PRV_RECIPIENT ) );
+
+        //Ok, now update private messages
+        CObj reqprvmsg = new CObj();
+        reqprvmsg.setType ( CObj.CON_REQ_PRVMSG );
+        reqprvmsg.pushString ( CObj.CREATOR, n1.getId() );
+        reqprvmsg.pushNumber ( CObj.FIRSTNUM, 0 );
+        reqprvmsg.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+        Tn0.getTestReq().enqueue ( reqprvmsg );
+
+        o0 = pollForData ( Tn0 );
+        assertNotNull ( o0 );
+        assertTrue ( o0 instanceof CObj );
+        oc0 = ( CObj ) o0;
+        assertNotNull ( oc0.getDig() );
+        assertEquals ( CObj.PRIVMESSAGE, oc0.getType() );
+        assertNotNull ( oc0.getString ( CObj.MSGIDENT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.SUBJECT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.BODY ) );
+        assertEquals ( "true", oc0.getPrivate ( CObj.DECODED ) );
+        System.out.println ( "PRV RCP:   " + oc0.getPrivate ( CObj.DECODED ) );
+        System.out.println ( "PRV SUBJ:  " + oc0.getPrivate ( CObj.SUBJECT ) );
+        System.out.println ( "PRV KEY:   " + oc0.getPrivate ( CObj.BODY ) );
+
+        //Create membership
+        System.out.println ( " ========================== PRIVATE TEST 1 ==============================" );
+        CObj prv1 = new CObj();
+        prv1.setType ( CObj.PRIVMESSAGE );
+        prv1.pushString ( CObj.CREATOR, n0.getId() );
+        prv1.pushPrivate ( CObj.SUBJECT, "This is a test private message - subj 22" );
+        prv1.pushPrivate ( CObj.BODY, "This is a test private message - body 22" );
+        prv1.pushPrivate ( CObj.PRV_RECIPIENT, n1.getId() );
+        Tn0.newUserData ( prv1 );
+
+        o1 = pollForData ( Tn0 );
+        assertNotNull ( o1 );
+        assertTrue ( o1 instanceof CObj );
+        oc1 = ( CObj ) o1;
+        assertNotNull ( oc1.getDig() );
+        assertNull ( oc1.getString ( CObj.ERROR ) );
+        assertEquals ( CObj.PRIVMESSAGE, oc1.getType() );
+        assertNotNull ( oc1.getString ( CObj.PAYLOAD ) );
+        assertNotNull ( oc1.getString ( CObj.PAYLOAD2 ) );
+        System.out.println ( "2PRIVATE IDENT:    " + oc1.getString ( CObj.MSGIDENT ) );
+        System.out.println ( "2PRIVATE SEQ:      " + oc1.getNumber ( CObj.SEQNUM ) );
+        System.out.println ( "2PRIVATE PAYLOAD:  " + oc1.getString ( CObj.PAYLOAD ) );
+        System.out.println ( "2PRIVATE PAYLOAD2: " + oc1.getString ( CObj.PAYLOAD2 ) );
+
+        //Ok, now update private messages
+        CObj reqprvmsg0 = new CObj();
+        reqprvmsg0.setType ( CObj.CON_REQ_PRVMSG );
+        reqprvmsg0.pushString ( CObj.CREATOR, n0.getId() );
+        reqprvmsg0.pushNumber ( CObj.FIRSTNUM, 0 );
+        reqprvmsg0.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+        Tn1.getTestReq().enqueue ( reqprvmsg0 );
+
+        try
+        {
+            Thread.sleep ( 60000 );
+        }
+
+        catch ( InterruptedException e2 )
+        {
+            e2.printStackTrace();
+        }
+
+        assertNull ( Tn1.pollGuiQueue() );
+        System.out.println ( "2MSG REQ DONE--------------------" );
+
+
+        //Ok, now update private identifiers
+        CObj reqprvident0 = new CObj();
+        reqprvident0.setType ( CObj.CON_REQ_PRVIDENT );
+        reqprvident0.pushString ( CObj.CREATOR, n0.getId() );
+        reqprvident0.pushNumber ( CObj.FIRSTNUM, 0 );
+        reqprvident0.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+        Tn1.getTestReq().enqueue ( reqprvident0 );
+
+        o0 = pollForData ( Tn1 );
+        assertNotNull ( o0 );
+        assertTrue ( o0 instanceof CObj );
+        oc0 = ( CObj ) o0;
+        assertNotNull ( oc0.getDig() );
+        assertEquals ( CObj.PRIVIDENTIFIER, oc0.getType() );
+        assertNotNull ( oc0.getString ( CObj.MSGIDENT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.KEY ) );
+        assertNotNull ( oc0.getPrivate ( CObj.PRV_MSG_ID ) );
+        assertNotNull ( oc0.getPrivate ( CObj.PRV_RECIPIENT ) );
+        System.out.println ( "PRV IDENT: " + oc0.getString ( CObj.MSGIDENT ) );
+        System.out.println ( "PRV KEY:   " + oc0.getPrivate ( CObj.PRV_MSG_ID ) );
+        System.out.println ( "PRV RCP:   " + oc0.getPrivate ( CObj.PRV_RECIPIENT ) );
+
+        o0 = pollForData ( Tn1 );
+        assertNotNull ( o0 );
+        assertTrue ( o0 instanceof CObj );
+        oc0 = ( CObj ) o0;
+        assertNotNull ( oc0.getDig() );
+        assertEquals ( CObj.PRIVMESSAGE, oc0.getType() );
+        assertNotNull ( oc0.getString ( CObj.MSGIDENT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.SUBJECT ) );
+        assertNotNull ( oc0.getPrivate ( CObj.BODY ) );
+        assertEquals ( "true", oc0.getPrivate ( CObj.DECODED ) );
+        System.out.println ( "PRV RCP:   " + oc0.getPrivate ( CObj.DECODED ) );
+        System.out.println ( "PRV SUBJ:  " + oc0.getPrivate ( CObj.SUBJECT ) );
+        System.out.println ( "PRV KEY:   " + oc0.getPrivate ( CObj.BODY ) );
+
+        //Create membership
         System.out.println ( " ========================== MEMBERSHIP TEST ==============================" );
         CObj mem1 = new CObj();
         mem1.setType ( CObj.MEMBERSHIP );

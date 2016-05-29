@@ -114,6 +114,9 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
         preprocProcessor.addProcessor ( new InComProcessor ( session, index, this ) );
         preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, this, hfc ) );
+        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, this ) );
+        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, this ) );
+        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, this ) );
         preprocProcessor.addProcessor ( new InMemProcessor ( session, index, this ) );
         preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, this ) );
         preprocProcessor.addProcessor ( new InSubProcessor ( session, index, this ) );
@@ -126,6 +129,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         inProcessor.addProcessor ( new ReqFragListProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqFragProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqComProcessor ( i, this ) );
+        inProcessor.addProcessor ( new ReqPrvIdentProcessor ( i, this ) );
+        inProcessor.addProcessor ( new ReqPrvMsgProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqHasFileProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqMemProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqPostsProcessor ( i, this ) );

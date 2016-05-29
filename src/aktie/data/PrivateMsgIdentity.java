@@ -16,6 +16,7 @@ public class PrivateMsgIdentity
     private long lastMsgUpdate;
     private int msgStatus;
     private int msgUpdatePriority;
+    private int msgUpdateCycle;
 
     private long lastIdentNumber;
     private long nextClosestIdentNumber;
@@ -23,6 +24,7 @@ public class PrivateMsgIdentity
     private long lastIdentUpdate;
     private int identStatus;
     private int identUpdatePriority;
+    private int identUpdateCycle;
 
     private boolean mine;
 
@@ -164,6 +166,26 @@ public class PrivateMsgIdentity
     public void setIdentUpdatePriority ( int identUpdatePriority )
     {
         this.identUpdatePriority = identUpdatePriority;
+    }
+
+    public int getMsgUpdateCycle()
+    {
+        return msgUpdateCycle;
+    }
+
+    public void setMsgUpdateCycle ( int msgUpdateCycle )
+    {
+        this.msgUpdateCycle = msgUpdateCycle;
+    }
+
+    public int getIdentUpdateCycle()
+    {
+        return identUpdateCycle;
+    }
+
+    public void setIdentUpdateCycle ( int identUpdateCycle )
+    {
+        this.identUpdateCycle = identUpdateCycle;
     }
 
 }

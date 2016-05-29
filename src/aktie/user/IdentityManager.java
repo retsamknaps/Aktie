@@ -16,6 +16,7 @@ import aktie.data.CommunityMember;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
+import aktie.data.PrivateMsgIdentity;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -1284,6 +1285,156 @@ public class IdentityManager
         return rl;
     }
 
+    @SuppressWarnings ( "unchecked" )
+    public List<PrivateMsgIdentity> claimPrvtIdentUpdate ( int max )
+    {
+        List<PrivateMsgIdentity> rl = new LinkedList<PrivateMsgIdentity>();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM PrivateMsgIdentity x WHERE x.mine = false AND "
+                                      + "x.identStatus = :st "
+                                      + " ORDER BY "
+                                      + "x.identUpdatePriority DESC, "
+                                      + "x.lastIdentUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( max );
+            List<PrivateMsgIdentity> r = q.list();
+            PrivateMsgIdentity id = null;
+            Iterator<PrivateMsgIdentity> i = r.iterator();
+
+            while ( i.hasNext() )
+            {
+                id = i.next();
+
+                if ( id != null )
+                {
+                    id.setLastIdentUpdate ( System.currentTimeMillis() );
+                    id.setIdentStatus ( IdentityData.DONE );
+                    id.setIdentUpdateCycle ( 0 );
+                    s.merge ( id );
+                    rl.add ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return rl;
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public List<PrivateMsgIdentity> claimPrvtMsgUpdate ( int max )
+    {
+        List<PrivateMsgIdentity> rl = new LinkedList<PrivateMsgIdentity>();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM PrivateMsgIdentity x WHERE x.mine = false AND "
+                                      + "x.msgStatus = :st "
+                                      + " ORDER BY "
+                                      + "x.msgUpdatePriority DESC, "
+                                      + "x.lastMsgUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( max );
+            List<PrivateMsgIdentity> r = q.list();
+            PrivateMsgIdentity id = null;
+            Iterator<PrivateMsgIdentity> i = r.iterator();
+
+            while ( i.hasNext() )
+            {
+                id = i.next();
+
+                if ( id != null )
+                {
+                    id.setLastMsgUpdate ( System.currentTimeMillis() );
+                    id.setMsgStatus ( IdentityData.DONE );
+                    id.setMsgUpdateCycle ( 0 );
+                    s.merge ( id );
+                    rl.add ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return rl;
+    }
+
     public IdentityData claimIdentityUpdate ( String id )
     {
         Session s = null;
@@ -1823,6 +1974,102 @@ public class IdentityManager
                     idat.setMemberStatus ( IdentityData.UPDATE );
                     idat.setMemberUpdateCycle ( idat.getMemberUpdateCycle() + 1 );
                     s.merge ( idat );
+                }
+
+                s.getTransaction().commit();
+            }
+
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public void requestPrvIdentMsg()
+    {
+        List<String> myids = getMyIds();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            Query q = s.createQuery ( "SELECT x FROM PrivateMsgIdentity x WHERE x.mine = false" );
+            List<String> ids = new LinkedList<String>();
+            List<PrivateMsgIdentity> idl = q.list();
+
+            for ( PrivateMsgIdentity i : idl )
+            {
+                String id = i.getId();
+
+                if ( id != null && !myids.contains ( id ) )
+                {
+                    ids.add ( i.getId() );
+                }
+
+            }
+
+            for ( String i : ids )
+            {
+                s.getTransaction().begin();
+                PrivateMsgIdentity idat = ( PrivateMsgIdentity ) s.get ( PrivateMsgIdentity.class, i );
+
+                if ( idat != null )
+                {
+                    if ( idat.getNextClosestMsgNumber() >
+                            idat.getLastMsgNumber() &&
+                            idat.getNumClosestMsgNumber() > MAX_LAST_NUMBER )
+                    {
+                        idat.setLastMsgNumber ( idat.getNextClosestMsgNumber() );
+                        idat.setNumClosestMsgNumber ( 0 );
+                    }
+
+                    idat.setMsgStatus ( IdentityData.UPDATE );
+                    idat.setMsgUpdateCycle ( idat.getMsgUpdateCycle() + 1 );
+
+                    if ( idat.getNextClosestIdentNumber() >
+                            idat.getLastIdentNumber() &&
+                            idat.getNumClosestIdentNumber() > MAX_LAST_NUMBER )
+                    {
+                        idat.setLastIdentNumber ( idat.getNextClosestIdentNumber() );
+                        idat.setNumClosestIdentNumber ( 0 );
+                    }
+
+                    idat.setIdentStatus ( IdentityData.UPDATE );
+                    idat.setIdentUpdateCycle ( idat.getIdentUpdateCycle() + 1 );
+                    s.merge ( idat );
+
                 }
 
                 s.getTransaction().commit();

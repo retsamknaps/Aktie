@@ -70,6 +70,8 @@ public class CObj
     public static String CON_CHALLENGE = "con_challenge";
     public static String CON_REPLY = "con_reply";
     public static String CON_REQ_IDENTITIES = "con_ident";
+    public static String CON_REQ_PRVIDENT = "con_prv_ident";
+    public static String CON_REQ_PRVMSG = "con_prv_msg";
     public static String CON_REQ_COMMUNITIES = "con_com";
     public static String CON_REQ_MEMBERSHIPS = "con_mem";
     public static String CON_REQ_SUBS = "con_subs";
@@ -88,6 +90,7 @@ public class CObj
     public static String USR_IDENTITY_UPDATE = "usr_identupdate";
     public static String USR_COMMUNITY_UPDATE = "usr_comupdate";
     public static String USR_MEMBER_UPDATE = "usr_memupdate";
+    public static String USR_PRVMSG_UPDATE = "usr_prvmsgupdate";
     public static String USR_SEED = "usr_seed";
     public static String USR_COMMUNITY = "usr_com";
     public static String USR_START_DEST = "start_dest";

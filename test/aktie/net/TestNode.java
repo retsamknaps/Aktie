@@ -16,6 +16,7 @@ import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
 import aktie.user.NewMembershipProcessor;
 import aktie.user.NewPostProcessor;
+import aktie.user.NewPrivateMessageProcessor;
 import aktie.user.NewSubscriptionProcessor;
 import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
@@ -62,6 +63,7 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
             userQueue.addProcessor ( new NewPostProcessor ( session, index, this ) );
             userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, this ) );
             userQueue.addProcessor ( new NewTemplateProcessor ( session, index, this ) );
+            userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, this ) );
         }
 
         catch ( Exception e )
@@ -92,14 +94,14 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
         {
             CObj co = ( CObj ) o;
 
-            if ( co.getType() != null && co.getString ( CObj.ERROR ) == null )
-            {
-                updateQueue.add ( o );
-            }
-
-            else
+            if ( co.getString ( CObj.ERROR ) != null )
             {
                 System.out.println ( "ERROR: " + co.getString ( CObj.ERROR ) );
+            }
+
+            if ( co.getType() != null )
+            {
+                updateQueue.add ( o );
             }
 
         }

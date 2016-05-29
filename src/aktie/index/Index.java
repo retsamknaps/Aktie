@@ -364,7 +364,7 @@ public class Index implements Runnable
 
     }
 
-    public CObjList getPrivateMsgIdentity ( String msgid, Sort s )
+    public CObjList getPrivateMyMsgIdentity ( String msgid, Sort s )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
@@ -374,7 +374,60 @@ public class Index implements Runnable
         Term memterm = new Term ( CObj.docPrivate ( CObj.PRV_MSG_ID ), msgid );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
 
+        Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE, s );
+    }
+
+    public CObj getPrivateMsgIdentity ( String creator, String msgid )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.MSGIDENT ), msgid );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        Term cterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+        builder.add ( new TermQuery ( cterm ), BooleanClause.Occur.MUST );
+
+        CObj r = null;
+        CObjList l = search ( builder.build(), 1 );
+
+        if ( l.size() > 0 )
+        {
+            try
+            {
+                r = l.get ( 0 );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        l.close();
+        return r;
+    }
+
+    public CObjList getPrivateMsgNotDecoded ( String id )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.MSGIDENT ), id );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        Term mineterm = new Term ( CObj.docPrivate ( CObj.DECODED ), "false" );
+        builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
     }
 
     public CObjList getIdentities()
@@ -400,13 +453,31 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    //Could be based on creator and sequence number, but
-    //not enough to worry about.  Just send all.
     public CObjList getCommunities ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.COMMUNITY, creator, first, last );
+    }
+
+    public CObjList getPrvIdent ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.PRIVIDENTIFIER, creator, first, last );
+    }
+
+    public CObjList getPrvMsg ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.PRIVMESSAGE, creator, first, last );
+    }
+
+    public CObjList getMemberships ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.MEMBERSHIP, creator, first, last );
+    }
+
+    private CObjList getCreatorObjs ( String ctyp, String creator, long first, long last )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
-        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
+        Term typterm = new Term ( CObj.PARAM_TYPE, ctyp );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
         Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
@@ -465,28 +536,6 @@ public class Index implements Runnable
         builder.add ( new TermQuery ( valterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
-    }
-
-    //Could be based on creator and sequence number, but
-    //not enough to worry about.  Just send all.
-    //send ALL, even ones not maked decoded or valid
-    public CObjList getMemberships ( String creator, long first, long last )
-    {
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        //BooleanQuery bq = new BooleanQuery();
-        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.MEMBERSHIP );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
-
-        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
-        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
-
-        NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
-                                         CObj.docNumber ( CObj.SEQNUM ),
-                                         first, last, true, true );
-        builder.add ( nq, BooleanClause.Occur.MUST );
-
-        CObjList r = search ( builder.build(), Integer.MAX_VALUE );
-        return r;
     }
 
     //Could be based on creator and sequence number, but

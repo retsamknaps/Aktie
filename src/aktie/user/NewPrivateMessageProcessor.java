@@ -76,9 +76,9 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
             Sort srt = new Sort();
             srt.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.SEQNUM ),
-                          SortedNumericSortField.Type.LONG, false ) );
+                          SortedNumericSortField.Type.LONG, true ) );
             //Add private message index
-            CObjList idlst = index.getPrivateMsgIdentity ( pid, srt );
+            CObjList idlst = index.getPrivateMyMsgIdentity ( pid, srt );
             CObj pident = null;
 
             if ( idlst.size() > 0 )
@@ -175,7 +175,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.setType ( CObj.PRIVIDENTIFIER );
                 pident.pushString ( CObj.CREATOR, creator );
                 pident.pushNumber ( CObj.SEQNUM, idseqnum );
-                pident.pushNumber ( CObj.MSGIDENT, Utils.Random.nextLong() );
+                pident.pushString ( CObj.MSGIDENT, Long.toString ( Utils.Random.nextLong() ) );
 
                 KeyParameter kp = Utils.generateKey();
                 RSAKeyParameters mpk = Utils.publicKeyFromString ( recid.getString ( CObj.KEY ) );
@@ -185,12 +185,14 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.KEY, Utils.toString ( kp.getKey() ) );
                 pident.pushPrivate ( CObj.PRV_MSG_ID, pid );
                 pident.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
+                pident.pushPrivate ( CObj.MINE, "true" );
 
                 pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
                 try
                 {
                     index.index ( pident );
+                    index.forceNewSearcher();
                 }
 
                 catch ( IOException e )
@@ -204,7 +206,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             }
 
             b.pushNumber ( CObj.SEQNUM, msgnum );
-            b.pushNumber ( CObj.MSGIDENT, pident.getNumber ( CObj.MSGIDENT ) );
+            b.pushString ( CObj.MSGIDENT, pident.getString ( CObj.MSGIDENT ) );
 
             StringBuilder sb = new StringBuilder();
             sb.append ( CObj.SUBJECT );
@@ -234,6 +236,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                                              Utils.CID1, raw );
             b.pushString ( CObj.PAYLOAD2, Utils.toString ( enc ) );
 
+            b.pushString ( CObj.DECODED, "true" );
+
             b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
             try
@@ -246,6 +250,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             {
                 e.printStackTrace();
             }
+
+            guicallback.update ( b );
 
             return true;
         }
