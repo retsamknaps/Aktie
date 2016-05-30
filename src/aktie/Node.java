@@ -86,6 +86,7 @@ public class Node
         shareManager = new ShareManager ( session, requestHandler, index,
                                           hasFileCreator, nfp, userQueue );
 
+        NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
         userQueue.addProcessor ( new NewCommunityProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( nfp );
@@ -93,7 +94,8 @@ public class Node
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
         userQueue.addProcessor ( new NewMembershipProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( new NewPostProcessor ( session, index, usrCallback ) );
-        userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, usrCallback ) );
+
+        userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, usrCallback ) );
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
@@ -110,7 +112,7 @@ public class Node
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrCancelFileProcessor ( requestHandler, usrCallback ) );
-        userQueue.addProcessor ( new NewPushProcessor ( index, conMan ) );
+        userQueue.addProcessor ( pusher );
 
         doUpdate();
     }

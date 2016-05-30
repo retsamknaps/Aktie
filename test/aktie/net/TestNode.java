@@ -63,7 +63,7 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
             userQueue.addProcessor ( new NewPostProcessor ( session, index, this ) );
             userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, this ) );
             userQueue.addProcessor ( new NewTemplateProcessor ( session, index, this ) );
-            userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, this ) );
+            userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, null, this ) );
         }
 
         catch ( Exception e )

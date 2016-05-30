@@ -27,12 +27,14 @@ public class NewPrivateMessageProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private GuiCallback guicallback;
+    private NewPushProcessor push;
 
-    public NewPrivateMessageProcessor ( HH2Session s, Index i, GuiCallback gc )
+    public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, GuiCallback gc )
     {
         session = s;
         index = i;
         guicallback = gc;
+        push = p;
     }
 
     @Override
@@ -186,6 +188,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.PRV_MSG_ID, pid );
                 pident.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
                 pident.pushPrivate ( CObj.MINE, "true" );
+                pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
 
                 pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
@@ -201,6 +204,11 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     b.pushString ( CObj.ERROR, "failed to save identity data" );
                     guicallback.update ( b );
                     return true;
+                }
+
+                if ( push != null )
+                {
+                    push.process ( pident );
                 }
 
             }
@@ -237,6 +245,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushString ( CObj.PAYLOAD2, Utils.toString ( enc ) );
 
             b.pushString ( CObj.DECODED, "true" );
+            b.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
 
             b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
@@ -249,11 +258,13 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             catch ( IOException e )
             {
                 e.printStackTrace();
+                b.pushString ( CObj.ERROR, "Bad error: " + e.getMessage() );
+                guicallback.update ( b );
+                return true;
             }
 
             guicallback.update ( b );
 
-            return true;
         }
 
         return false;

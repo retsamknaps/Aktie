@@ -35,7 +35,9 @@ public class NewPushProcessor extends GenericProcessor
             {
                 if ( CObj.IDENTITY.equals ( type ) ||
                         CObj.MEMBERSHIP.equals ( type ) ||
-                        CObj.COMMUNITY.equals ( type )
+                        CObj.COMMUNITY.equals ( type ) ||
+                        CObj.PRIVIDENTIFIER.equals ( type ) ||
+                        CObj.PRIVMESSAGE.equals ( type )
                    )
                 {
                     push.push ( myid, b );
