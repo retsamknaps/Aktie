@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.gui.GuiCallback;
@@ -19,6 +20,8 @@ import aktie.net.ConnectionThread;
 import aktie.net.RawNet;
 import aktie.utils.FUtils;
 
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.junit.Test;
 
 public class TestNode
@@ -1339,6 +1342,23 @@ public class TestNode
             prv0.pushPrivate ( CObj.BODY, "pm test body." );
             n0.enqueue ( prv0 );
 
+            try
+            {
+                Thread.sleep ( 100 );
+            }
+
+            catch ( InterruptedException e1 )
+            {
+                e1.printStackTrace();
+            }
+
+            CObj prv1 = new CObj();
+            prv1.setType ( CObj.PRIVMESSAGE );
+            prv1.pushString ( CObj.CREATOR, node2a.getId() );
+            prv1.pushPrivate ( CObj.PRV_RECIPIENT, n0seed.getId() );
+            prv1.pushPrivate ( CObj.SUBJECT, "pm test subject." );
+            prv1.pushPrivate ( CObj.BODY, "pm test body." );
+            n2.enqueue ( prv1 );
 
             CObj upp = new CObj();
             upp.setType ( CObj.USR_PRVMSG_UPDATE );
@@ -1362,10 +1382,13 @@ public class TestNode
                 e.printStackTrace();
             }
 
+            String tid = Utils.mergeIds ( n0seed.getId(), node2a.getId() );
+
             CObjList l = n0.getIndex().getPrvIdent ( n0seed.getId(), 0, 99 );
             assertEquals ( 1, l.size() );
             CObj t = l.get ( 0 );
             assertEquals ( "true", t.getPrivate ( CObj.MINE ) );
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 
             l = n1.getIndex().getPrvIdent ( n0seed.getId(), 0, 99 );
@@ -1378,6 +1401,7 @@ public class TestNode
             assertEquals ( 1, l.size() );
             t = l.get ( 0 );
             assertEquals ( node2a.getId(), t.getPrivate ( CObj.PRV_RECIPIENT ) );
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 
             l = n3.getIndex().getPrvIdent ( n0seed.getId(), 0, 99 );
@@ -1394,6 +1418,7 @@ public class TestNode
             String bdy = t.getPrivate ( CObj.BODY );
             assertNotNull ( sbj );
             assertNotNull ( bdy );
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 
             l = n1.getIndex().getPrvMsg ( n0seed.getId(), 0, 99 );
@@ -1408,6 +1433,7 @@ public class TestNode
             t = l.get ( 0 );
             assertEquals ( sbj, t.getPrivate ( CObj.SUBJECT ) );
             assertEquals ( bdy, t.getPrivate ( CObj.BODY ) );
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 
             l = n3.getIndex().getPrvMsg ( n0seed.getId(), 0, 99 );
@@ -1416,6 +1442,90 @@ public class TestNode
             assertNull ( t.getPrivate ( CObj.SUBJECT ) );
             assertNull ( t.getPrivate ( CObj.BODY ) );
             l.close();
+
+
+
+            l = n0.getIndex().getPrvMsg ( node2a.getId(), 0, 99 );
+            assertEquals ( 1, l.size() );
+            t = l.get ( 0 );
+            sbj = t.getPrivate ( CObj.SUBJECT );
+            bdy = t.getPrivate ( CObj.BODY );
+            assertNotNull ( sbj );
+            assertNotNull ( bdy );
+            System.out.println("SUB: " + sbj);
+            System.out.println("BDY: " + bdy);
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
+            l.close();
+
+            l = n1.getIndex().getPrvMsg ( node2a.getId(), 0, 99 );
+            assertEquals ( 1, l.size() );
+            t = l.get ( 0 );
+            assertNull ( t.getPrivate ( CObj.SUBJECT ) );
+            assertNull ( t.getPrivate ( CObj.BODY ) );
+            l.close();
+
+            l = n2.getIndex().getPrvMsg ( node2a.getId(), 0, 99 );
+            assertEquals ( 1, l.size() );
+            t = l.get ( 0 );
+            assertEquals ( sbj, t.getPrivate ( CObj.SUBJECT ) );
+            assertEquals ( bdy, t.getPrivate ( CObj.BODY ) );
+            assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
+            l.close();
+
+            l = n3.getIndex().getPrvMsg ( node2a.getId(), 0, 99 );
+            assertEquals ( 1, l.size() );
+            t = l.get ( 0 );
+            assertNull ( t.getPrivate ( CObj.SUBJECT ) );
+            assertNull ( t.getPrivate ( CObj.BODY ) );
+            l.close();
+
+
+            l = n0.getIndex().getDecodedPrvIdentifiers();
+            assertEquals ( 2, l.size() );
+            l.close();
+
+            l = n1.getIndex().getDecodedPrvIdentifiers();
+            assertEquals ( 0, l.size() );
+            l.close();
+
+            l = n2.getIndex().getDecodedPrvIdentifiers();
+            assertEquals ( 2, l.size() );
+            l.close();
+
+            l = n3.getIndex().getDecodedPrvIdentifiers();
+            assertEquals ( 0, l.size() );
+            l.close();
+
+            Sort s = new Sort();
+            s.setSort ( new SortedNumericSortField ( CObj.docPrivateNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
+            l = n0.getIndex().getDecodedPrvMessages ( tid, s );
+            assertEquals ( 2, l.size() );
+            CObj tu = l.get ( 0 );
+            assertEquals ( node2a.getId(), tu.getString ( CObj.CREATOR ) );
+            assertEquals ( n0seed.getId(), tu.getPrivate ( CObj.PRV_RECIPIENT ) );
+            tu = l.get ( 1 );
+            assertEquals ( n0seed.getId(), tu.getString ( CObj.CREATOR ) );
+            assertEquals ( node2a.getId(), tu.getPrivate ( CObj.PRV_RECIPIENT ) );
+            l.close();
+
+            l = n1.getIndex().getDecodedPrvMessages ( tid, s );
+            assertEquals ( 0, l.size() );
+            l.close();
+
+            l = n2.getIndex().getDecodedPrvMessages ( tid, s );
+            assertEquals ( 2, l.size() );
+            tu = l.get ( 0 );
+            assertEquals ( node2a.getId(), tu.getString ( CObj.CREATOR ) );
+            assertEquals ( n0seed.getId(), tu.getPrivate ( CObj.PRV_RECIPIENT ) );
+            tu = l.get ( 1 );
+            assertEquals ( n0seed.getId(), tu.getString ( CObj.CREATOR ) );
+            assertEquals ( node2a.getId(), tu.getPrivate ( CObj.PRV_RECIPIENT ) );
+            l.close();
+
+            l = n3.getIndex().getDecodedPrvMessages ( tid, s );
+            assertEquals ( 0, l.size() );
+            l.close();
+
 
             System.out.println ( "CREATE FILE...................................." );
             cb3.oqueue.clear();

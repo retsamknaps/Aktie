@@ -118,6 +118,10 @@ public class InPrvMsgProcessor extends GenericProcessor
                                 if ( decoder.decode ( b, sk ) )
                                 {
                                     b.pushPrivate ( CObj.DECODED, "true" );
+                                    b.pushPrivate ( CObj.PRV_MSG_ID,
+                                                    mident.getPrivate ( CObj.PRV_MSG_ID ) );
+                                    b.pushPrivate ( CObj.PRV_RECIPIENT,
+                                                    mident.getPrivate ( CObj.PRV_RECIPIENT ) );
                                     decoded = true;
                                 }
 

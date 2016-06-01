@@ -188,6 +188,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.PRV_MSG_ID, pid );
                 pident.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
                 pident.pushPrivate ( CObj.MINE, "true" );
+                pident.pushPrivate ( CObj.DECODED, "true" );
                 pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
 
                 pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
@@ -232,11 +233,12 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             byte enc[] = Utils.anonymousSymEncode ( kp, Utils.CID0,
                                                     Utils.CID1, raw );
             b.pushString ( CObj.PAYLOAD, Utils.toString ( enc ) );
+            b.pushPrivateNumber ( CObj.CREATEDON, ( new Date() ).getTime() );
 
             sb = new StringBuilder();
             sb.append ( CObj.CREATEDON );
             sb.append ( "=" );
-            sb.append ( ( new Date() ).getTime() );
+            sb.append ( b.getPrivateNumber ( CObj.CREATEDON ) );
             rawstr = sb.toString();
             raw = Utils.stringToByteArray ( rawstr );
             //encrypt the community key with the identity public key
@@ -246,6 +248,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
             b.pushString ( CObj.DECODED, "true" );
             b.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
+            b.pushPrivate ( CObj.PRV_MSG_ID, pid );
+            b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
 
             b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 

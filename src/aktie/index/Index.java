@@ -453,6 +453,32 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getDecodedPrvIdentifiers()
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docPrivate ( CObj.DECODED ), "true" );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getDecodedPrvMessages ( String mid, Sort s )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docPrivate ( CObj.PRV_MSG_ID ), mid );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE, s );
+    }
+
     public CObjList getCommunities ( String creator, long first, long last )
     {
         return getCreatorObjs ( CObj.COMMUNITY, creator, first, last );

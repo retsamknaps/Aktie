@@ -125,6 +125,7 @@ public class InPrvIdentProcessor extends GenericProcessor
                                 b.pushPrivate ( CObj.KEY, kstr );
                                 b.pushPrivate ( CObj.PRV_MSG_ID, pid );
                                 b.pushPrivate ( CObj.PRV_RECIPIENT, myid.getId() );
+                                b.pushPrivate ( CObj.DECODED, "true" );
                             }
 
                         }
