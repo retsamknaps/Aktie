@@ -225,6 +225,15 @@ public class NewMembershipProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
+            //Set the rank of the post based on the rank of the
+            //user
+            Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+            if ( rnk != null )
+            {
+                o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+            }
+
             if ( "true".equals ( member.getPrivate ( CObj.MINE ) ) )
             {
                 o.pushPrivate ( CObj.MINE, "true" );

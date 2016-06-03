@@ -2635,8 +2635,6 @@ public class SWTApp
     {
         newCommunityDialog = new NewCommunityDialog ( shell, this );
         newCommunityDialog.create();
-        hasFileDialog = new ShowHasFileDialog ( shell, this );
-        hasFileDialog.create();
         newIdentityDialog = new NewIdentityDialog ( shell, this );
         newIdentityDialog.create();
         subscriptionDialog = new SubscriptionDialog ( shell, this );
@@ -2662,6 +2660,8 @@ public class SWTApp
         advancedDialog.create();
         userRankDialog = new SetUserRankDialog ( shell, this );
         userRankDialog.create();
+        hasFileDialog = new ShowHasFileDialog ( shell, userRankDialog, this );
+        hasFileDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }

@@ -1452,8 +1452,8 @@ public class TestNode
             bdy = t.getPrivate ( CObj.BODY );
             assertNotNull ( sbj );
             assertNotNull ( bdy );
-            System.out.println("SUB: " + sbj);
-            System.out.println("BDY: " + bdy);
+            System.out.println ( "SUB: " + sbj );
+            System.out.println ( "BDY: " + bdy );
             assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 

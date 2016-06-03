@@ -53,8 +53,6 @@ public class NewCommunityProcessor extends GenericProcessor
             }
 
             CObj myid = index.getMyIdentity ( creator );
-            System.out.println ( "MYID: " + myid );
-
             if ( myid == null )
             {
                 o.pushString ( CObj.ERROR, "You may only use your own identity" );
@@ -209,6 +207,15 @@ public class NewCommunityProcessor extends GenericProcessor
                 }
 
                 return true;
+            }
+
+            //Set the rank of the post based on the rank of the
+            //user
+            Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+            if ( rnk != null )
+            {
+                o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
             }
 
             try

@@ -193,6 +193,15 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
                 pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
+                //Set the rank of the post based on the rank of the
+                //user
+                Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                if ( rnk != null )
+                {
+                    pident.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                }
+
                 try
                 {
                     index.index ( pident );
@@ -252,6 +261,15 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
 
             b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+
+            //Set the rank of the post based on the rank of the
+            //user
+            Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+            if ( rnk != null )
+            {
+                b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+            }
 
             try
             {

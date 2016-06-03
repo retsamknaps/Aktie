@@ -142,6 +142,15 @@ public class NewSubscriptionProcessor extends GenericProcessor
 
             o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
 
+            //Set the rank of the post based on the rank of the
+            //user
+            Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+            if ( rnk != null )
+            {
+                o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+            }
+
             try
             {
                 //Set the ID, so we always overwrite the last subscription

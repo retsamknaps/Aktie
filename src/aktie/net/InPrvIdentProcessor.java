@@ -132,6 +132,21 @@ public class InPrvIdentProcessor extends GenericProcessor
 
                         myids.close();
 
+                        //Set the rank of the post based on the rank of the
+                        //user
+                        CObj idty = index.getIdentity ( creator );
+
+                        if ( idty != null )
+                        {
+                            Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                            if ( rnk != null )
+                            {
+                                b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                            }
+
+                        }
+
                         index.index ( b );
                         //Force new searcher so new private messages received after this
                         //are decoded

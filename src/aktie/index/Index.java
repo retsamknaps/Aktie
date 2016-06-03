@@ -377,6 +377,11 @@ public class Index implements Runnable
         Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
         builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
@@ -389,6 +394,11 @@ public class Index implements Runnable
 
         Term memterm = new Term ( CObj.docString ( CObj.MSGIDENT ), msgid );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         Term cterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
         builder.add ( new TermQuery ( cterm ), BooleanClause.Occur.MUST );
@@ -437,6 +447,11 @@ public class Index implements Runnable
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
@@ -463,6 +478,11 @@ public class Index implements Runnable
         Term memterm = new Term ( CObj.docPrivate ( CObj.DECODED ), "true" );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
@@ -475,6 +495,11 @@ public class Index implements Runnable
 
         Term memterm = new Term ( CObj.docPrivate ( CObj.PRV_MSG_ID ), mid );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
@@ -509,6 +534,11 @@ public class Index implements Runnable
         Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
                                          first, last, true, true );
@@ -532,6 +562,11 @@ public class Index implements Runnable
         Term scopeterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PRIVATE );
         builder.add ( new TermQuery ( scopeterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
         builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
 
@@ -544,6 +579,11 @@ public class Index implements Runnable
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         Term pubterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PUBLIC );
         builder.add ( new TermQuery ( pubterm ), BooleanClause.Occur.MUST );
@@ -560,6 +600,11 @@ public class Index implements Runnable
 
         Term valterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
         builder.add ( new TermQuery ( valterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
@@ -613,6 +658,11 @@ public class Index implements Runnable
         Term privterm = new Term ( CObj.docString ( CObj.SCOPE ), CObj.SCOPE_PRIVATE );
         builder.add ( new TermQuery ( privterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
@@ -625,6 +675,11 @@ public class Index implements Runnable
 
         Term mineterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
         builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         BooleanQuery.Builder builder2 = new BooleanQuery.Builder();
         //BooleanQuery bq2 = new BooleanQuery();
@@ -693,6 +748,11 @@ public class Index implements Runnable
         Term idterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
         builder.add ( new TermQuery ( idterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         Matcher m = Pattern.compile ( "\\S+" ).matcher ( squery );
 
         if ( m.find() )
@@ -731,6 +791,11 @@ public class Index implements Runnable
 
         Term pnterm = new Term ( CObj.docString ( CObj.NAME_IS_PUBLIC ), "true" );
         builder.add ( new TermQuery ( pnterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         if ( squery != null )
         {
@@ -773,6 +838,11 @@ public class Index implements Runnable
 
         Term comterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         if ( pub )
         {
@@ -1065,6 +1135,11 @@ public class Index implements Runnable
         Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         Matcher m = Pattern.compile ( "\\S+" ).matcher ( qstr );
 
         if ( m.find() )
@@ -1179,6 +1254,10 @@ public class Index implements Runnable
                                          0L, Long.MAX_VALUE, false, true );
         builder.add ( nq, BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         if ( share != null )
         {
@@ -1218,6 +1297,11 @@ public class Index implements Runnable
         Term subterm = new Term ( CObj.docString ( CObj.SUBSCRIBED ), "true" );
         builder.add ( new TermQuery ( subterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
@@ -1230,6 +1314,11 @@ public class Index implements Runnable
 
         Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
@@ -1281,6 +1370,11 @@ public class Index implements Runnable
 
         Term subterm = new Term ( CObj.docString ( CObj.SUBSCRIBED ), "true" );
         builder.add ( new TermQuery ( subterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
@@ -1455,6 +1549,11 @@ public class Index implements Runnable
         Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
                                          first, last, true, true );
@@ -1475,6 +1574,11 @@ public class Index implements Runnable
 
         Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
@@ -1502,6 +1606,11 @@ public class Index implements Runnable
 
         Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
@@ -1940,6 +2049,11 @@ public class Index implements Runnable
         Term subterm = new Term ( CObj.docString ( CObj.SUBSCRIBED ), "true" );
         builder.add ( new TermQuery ( subterm ), BooleanClause.Occur.MUST );
 
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
         CObj r = null;
         CObjList l = search ( builder.build(), 1 );
 
@@ -2053,6 +2167,7 @@ public class Index implements Runnable
 
     public void indexNoCommit ( IndexWriter idx, CObj o, boolean onlynew ) throws IOException
     {
+
         if ( o.getDig() == null && o.getId() == null )
         {
             throw new IOException ( "Digest or id required!" );

@@ -1,5 +1,9 @@
 package aktie.gui;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.graphics.Point;
@@ -8,6 +12,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -17,6 +23,7 @@ import org.eclipse.swt.widgets.Table;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 
@@ -28,14 +35,16 @@ public class ShowHasFileDialog extends Dialog
     private Table table;
     private CObj fileo;
     private Label lblNodesHaveFile;
+    private SetUserRankDialog usrRankDialog;
 
     /**
         Create the dialog.
         @param parentShell
     */
-    public ShowHasFileDialog ( Shell parentShell, SWTApp g )
+    public ShowHasFileDialog ( Shell parentShell, SetUserRankDialog d, SWTApp g )
     {
         super ( parentShell );
+        usrRankDialog = d;
         app = g;
     }
 
@@ -60,6 +69,64 @@ public class ShowHasFileDialog extends Dialog
         table.setHeaderVisible ( true );
         table.setLinesVisible ( true );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
+
+        Menu menu = new Menu ( table );
+        table.setMenu ( menu );
+
+        MenuItem mntmSetRank = new MenuItem ( menu, SWT.NONE );
+        mntmSetRank.setText ( "Set Selected User(s) Rank" );
+        mntmSetRank.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                Set<String> userids = new HashSet<String>();
+
+                while ( i.hasNext() )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof CObjListIdentPubElement )
+                    {
+                        CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
+                        CObj fr = ae.getCObj();
+                        String id = fr.getString ( CObj.CREATOR );
+
+                        if ( id != null )
+                        {
+                            userids.add ( id );
+                        }
+
+                    }
+
+                }
+
+                Set<CObj> users = new HashSet<CObj>();
+
+                for ( String id : userids )
+                {
+                    CObj u = app.getNode().getIndex().getIdentity ( id );
+                    users.add ( u );
+                }
+
+                if ( users.size() > 0 )
+                {
+                    usrRankDialog.open ( users );
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
         col0.getColumn().setText ( "Identity" );

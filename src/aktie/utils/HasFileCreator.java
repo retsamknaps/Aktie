@@ -415,6 +415,15 @@ public class HasFileCreator
 
         ol.close();
 
+        //Set the rank of the post based on the rank of the
+        //user
+        Long rnk = myid.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+        if ( rnk != null )
+        {
+            o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+        }
+
         //Set the created on time
         o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
         //Sign it.

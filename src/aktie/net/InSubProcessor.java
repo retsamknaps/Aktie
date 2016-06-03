@@ -107,6 +107,22 @@ public class InSubProcessor extends GenericProcessor
                                 s.merge ( m );
                                 s.getTransaction().commit();
                                 s.close();
+
+                                //Set the rank of the post based on the rank of the
+                                //user
+                                CObj idty = index.getIdentity ( creatorid );
+
+                                if ( idty != null )
+                                {
+                                    Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                                    if ( rnk != null )
+                                    {
+                                        b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                                    }
+
+                                }
+
                                 index.index ( b );
                                 conThread.update ( b );
                             }
