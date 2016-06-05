@@ -85,7 +85,7 @@ public class ShowHasFileDialog extends Dialog
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
 
-                Set<String> userids = new HashSet<String>();
+                Set<CObj> users = new HashSet<CObj>();
 
                 while ( i.hasNext() )
                 {
@@ -95,23 +95,9 @@ public class ShowHasFileDialog extends Dialog
                     {
                         CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
                         CObj fr = ae.getCObj();
-                        String id = fr.getString ( CObj.CREATOR );
-
-                        if ( id != null )
-                        {
-                            userids.add ( id );
-                        }
-
+                        users.add(fr);
                     }
 
-                }
-
-                Set<CObj> users = new HashSet<CObj>();
-
-                for ( String id : userids )
-                {
-                    CObj u = app.getNode().getIndex().getIdentity ( id );
-                    users.add ( u );
                 }
 
                 if ( users.size() > 0 )

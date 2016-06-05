@@ -1298,6 +1298,7 @@ public class SWTApp
     private AddFolderDialog addFolderDialog;
     private AdvancedSearchDialog advancedDialog;
     private SetUserRankDialog userRankDialog;
+    private ZeroIdentityDialog zeroDialog;
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
@@ -1831,6 +1832,7 @@ public class SWTApp
         {
             upgrade0301 ( lastversion );
             upgrade0405 ( lastversion );
+            upgrade0418 ( lastversion );
         }
 
         // new RawNet ( new File ( nodeDir ) )
@@ -2018,6 +2020,15 @@ public class SWTApp
     public void upgrade0405 ( String lastversion )
     {
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0405 ) < 0 )
+        {
+            Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
+        }
+
+    }
+
+    public void upgrade0418 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0418 ) < 0 )
         {
             Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
         }
@@ -2662,6 +2673,8 @@ public class SWTApp
         userRankDialog.create();
         hasFileDialog = new ShowHasFileDialog ( shell, userRankDialog, this );
         hasFileDialog.create();
+        zeroDialog = new ZeroIdentityDialog(shell, userRankDialog, this);
+        zeroDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -3020,6 +3033,25 @@ public class SWTApp
             }
 
         } );
+        
+        //zeroDialog
+        MenuItem mntmZero = new MenuItem ( menu_1, SWT.NONE );
+        mntmZero.setText ( "Show Zero Rank Identities" );
+        mntmZero.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+            	zeroDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+        
 
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
         mntmStartManualUpdate.setText ( "Refresh All Now" );

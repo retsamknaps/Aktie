@@ -4,15 +4,18 @@ import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.utils.HasFileCreator;
 
 public class UsrReqSetRankProcessor extends GenericProcessor
 {
 
     private Index index;
+    private HasFileCreator hfc;
 
-    public UsrReqSetRankProcessor ( Index i )
+    public UsrReqSetRankProcessor ( Index i, HasFileCreator c )
     {
         index = i;
+        hfc = c;
     }
 
     @Override
@@ -27,6 +30,7 @@ public class UsrReqSetRankProcessor extends GenericProcessor
 
             if ( id != null && rnk != null )
             {
+            	rnk = Math.max(0L, rnk);
                 CObj user = index.getIdentity ( id );
 
                 if ( user != null )
@@ -41,7 +45,6 @@ public class UsrReqSetRankProcessor extends GenericProcessor
                     catch ( Exception e )
                     {
                         e.printStackTrace();
-                        //TODO: Don't be lazy and push error
                     }
 
                 }
@@ -54,11 +57,22 @@ public class UsrReqSetRankProcessor extends GenericProcessor
                     {
                         CObj co = cl.get ( c );
                         Long or = co.getPrivateNumber ( CObj.PRV_USER_RANK );
-
+                        
                         if ( !rnk.equals ( or ) )
                         {
                             co.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                             index.index ( co );
+                            
+                            /*
+                             * If rank is zero reduce the hasfile count for the
+                             * file.
+                             */
+                            if ((or == 0 || rnk == 0) && 
+                            		CObj.HASFILE.equals(co.getType())) 
+                            {
+                            	hfc.updateFileInfo(co);
+                            }
+                            
                         }
 
                     }

@@ -25,9 +25,9 @@ public class Wrapper
     public static String VERSION_0115 = "version 0.1.15";
     public static String VERSION_0403 = "version 0.4.3";
     public static String VERSION_0405 = "version 0.4.5";
-    public static String VERSION_0417 = "version 0.4.17";
+    public static String VERSION_0418 = "version 0.4.18";
 
-    public static String VERSION = VERSION_0417;
+    public static String VERSION = VERSION_0418;
 
     public static String VERSION_FILE = "version.txt";
 

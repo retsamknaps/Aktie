@@ -107,7 +107,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqPrvMsgProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqPostProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
-        userQueue.addProcessor ( new UsrReqSetRankProcessor ( index ) );
+        userQueue.addProcessor ( new UsrReqSetRankProcessor ( index, hasFileCreator ) );
         userQueue.addProcessor ( new UsrReqShareProcessor ( shareManager ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );

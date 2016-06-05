@@ -455,6 +455,21 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getZeroIdentities()
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, 0L, true, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getCreatedBy ( String id )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
