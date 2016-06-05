@@ -13,6 +13,7 @@ import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 
 public class NewCommunityProcessor extends GenericProcessor
@@ -53,6 +54,7 @@ public class NewCommunityProcessor extends GenericProcessor
             }
 
             CObj myid = index.getMyIdentity ( creator );
+
             if ( myid == null )
             {
                 o.pushString ( CObj.ERROR, "You may only use your own identity" );
@@ -156,7 +158,8 @@ public class NewCommunityProcessor extends GenericProcessor
                 o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
                 o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-                o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+                o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                         Wrapper.getGenPayment() );
 
                 if ( CObj.SCOPE_PRIVATE.equals ( o.getString ( CObj.SCOPE ) ) )
                 {

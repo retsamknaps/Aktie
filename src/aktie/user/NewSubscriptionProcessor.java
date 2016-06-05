@@ -8,6 +8,7 @@ import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 import aktie.utils.SubscriptionValidator;
 
@@ -140,7 +141,8 @@ public class NewSubscriptionProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                     Wrapper.getGenPayment() );
 
             //Set the rank of the post based on the rank of the
             //user

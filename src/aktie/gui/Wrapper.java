@@ -38,6 +38,12 @@ public class Wrapper
     //an upgrade
     public static long RELEASETIME = ( 1464264565L * 1000L ) + 3600000L;
 
+    //Hash cash payment values
+    public static int OLDPAYMENT = 0;
+    public static long CHECKNEWPAYMENTAFTER = ( 1465144386L * 1000L ) +
+            ( 5L * 24L * 60L * 60L * 1000L );
+    public static int NEWPAYMENT = 4;
+
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
     //public static String JARFILE = "aktie.jar";
@@ -876,6 +882,26 @@ public class Wrapper
         p.setProperty ( "aktie.client.interface", msg );
 
         savePropsFile ( p );
+    }
+
+    public static int getCheckPayment()
+    {
+        /*
+            int pm = OLDPAYMENT;
+            long today = System.currentTimeMillis();
+            if (today >= CHECKNEWPAYMENTAFTER) {
+            pm = NEWPAYMENT;
+            }
+
+            return pm;
+        */
+        return 0;
+    }
+
+    public static int getGenPayment()
+    {
+        //return NEWPAYMENT;
+        return 0;
     }
 
 }

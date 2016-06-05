@@ -2,6 +2,7 @@ package aktie.user;
 
 import aktie.GenericProcessor;
 import aktie.data.CObj;
+import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.HasFileCreator;
@@ -11,11 +12,13 @@ public class UsrReqSetRankProcessor extends GenericProcessor
 
     private Index index;
     private HasFileCreator hfc;
+    private GuiCallback guicallback;
 
-    public UsrReqSetRankProcessor ( Index i, HasFileCreator c )
+    public UsrReqSetRankProcessor ( Index i, HasFileCreator c, GuiCallback cb )
     {
         index = i;
         hfc = c;
+        guicallback = cb;
     }
 
     @Override
@@ -30,11 +33,17 @@ public class UsrReqSetRankProcessor extends GenericProcessor
 
             if ( id != null && rnk != null )
             {
-            	rnk = Math.max(0L, rnk);
+
+                rnk = Math.max ( 0L, rnk );
                 CObj user = index.getIdentity ( id );
 
                 if ( user != null )
                 {
+                    CObj updatemsg = new CObj();
+                    updatemsg.pushString ( CObj.ERROR, "Setting user rank for: " + user.getDisplayName() );
+                    updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+                    guicallback.update ( updatemsg );
+
                     user.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
 
                     try
@@ -57,22 +66,22 @@ public class UsrReqSetRankProcessor extends GenericProcessor
                     {
                         CObj co = cl.get ( c );
                         Long or = co.getPrivateNumber ( CObj.PRV_USER_RANK );
-                        
+
                         if ( !rnk.equals ( or ) )
                         {
                             co.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                             index.index ( co );
-                            
+
                             /*
-                             * If rank is zero reduce the hasfile count for the
-                             * file.
-                             */
-                            if ((or == 0 || rnk == 0) && 
-                            		CObj.HASFILE.equals(co.getType())) 
+                                If rank is zero reduce the hasfile count for the
+                                file.
+                            */
+                            if ( ( or == 0 || rnk == 0 ) &&
+                                    CObj.HASFILE.equals ( co.getType() ) )
                             {
-                            	hfc.updateFileInfo(co);
+                                hfc.updateFileInfo ( co );
                             }
-                            
+
                         }
 
                     }
@@ -86,6 +95,10 @@ public class UsrReqSetRankProcessor extends GenericProcessor
                 }
 
                 cl.close();
+
+                CObj updatemsg = new CObj();
+                updatemsg.pushString ( CObj.ERROR, "" );
+                guicallback.update ( updatemsg );
             }
 
             return true;

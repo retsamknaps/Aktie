@@ -25,7 +25,8 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 
-public class ZeroIdentityDialog extends Dialog {
+public class ZeroIdentityDialog extends Dialog
+{
 
     private SWTApp app;
     private Table table;
@@ -33,50 +34,57 @@ public class ZeroIdentityDialog extends Dialog {
     private SetUserRankDialog usrRankDialog;
 
     /**
-	 * Create the dialog.
-	 * @param parentShell
-	 */
-	public ZeroIdentityDialog(Shell parentShell, SetUserRankDialog ur, SWTApp a) {
-		super(parentShell);
+        Create the dialog.
+        @param parentShell
+    */
+    public ZeroIdentityDialog ( Shell parentShell, SetUserRankDialog ur, SWTApp a )
+    {
+        super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         usrRankDialog = ur;
         app = a;
-	}
-	
-	private void updateTable() 
-	{
-		if (table != null && tableViewer != null && !table.isDisposed()) 
-		{
-			CObjList oldcl = (CObjList) tableViewer.getInput();
-			CObjList nlst = app.getNode().getIndex().getZeroIdentities();
-			tableViewer.setInput(nlst);
-			if (oldcl != null) {
-				oldcl.close();
-			}
-		}
-	}
+    }
 
-	public int open() {
-		updateTable();
-		return super.open();
-	}
-	
-	/**
-	 * Create contents of the dialog.
-	 * @param parent
-	 */
-	@Override
-	protected Control createDialogArea(Composite parent) {
-		Composite container = (Composite) super.createDialogArea(parent);
-		container.setLayout(new BorderLayout(0, 0));
-		
-		tableViewer = new TableViewer(container, SWT.MULTI | SWT.BORDER | 
-				SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
-		tableViewer.setContentProvider(new CObjListContentProvider());
-		table = tableViewer.getTable();
+    private void updateTable()
+    {
+        if ( table != null && tableViewer != null && !table.isDisposed() )
+        {
+            CObjList oldcl = ( CObjList ) tableViewer.getInput();
+            CObjList nlst = app.getNode().getIndex().getZeroIdentities();
+            tableViewer.setInput ( nlst );
+
+            if ( oldcl != null )
+            {
+                oldcl.close();
+            }
+
+        }
+
+    }
+
+    public int open()
+    {
+        updateTable();
+        return super.open();
+    }
+
+    /**
+        Create contents of the dialog.
+        @param parent
+    */
+    @Override
+    protected Control createDialogArea ( Composite parent )
+    {
+        Composite container = ( Composite ) super.createDialogArea ( parent );
+        container.setLayout ( new BorderLayout ( 0, 0 ) );
+
+        tableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER |
+                                        SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
+        tableViewer.setContentProvider ( new CObjListContentProvider() );
+        table = tableViewer.getTable();
         table.setHeaderVisible ( true );
         table.setLinesVisible ( true );
-		table.setLayoutData(BorderLayout.CENTER);
+        table.setLayoutData ( BorderLayout.CENTER );
 
         Menu menu = new Menu ( table );
         table.setMenu ( menu );
@@ -101,10 +109,10 @@ public class ZeroIdentityDialog extends Dialog {
 
                     if ( selo instanceof CObjListArrayElement )
                     {
-                    	CObjListArrayElement ae = ( CObjListArrayElement ) selo;
+                        CObjListArrayElement ae = ( CObjListArrayElement ) selo;
                         CObj fr = ae.getCObj();
-                        users.add(fr);
-                        
+                        users.add ( fr );
+
                     }
 
                 }
@@ -129,32 +137,38 @@ public class ZeroIdentityDialog extends Dialog {
         col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
 
         updateTable();
-        
+
         return container;
-	}
+    }
 
-	/**
-	 * Create contents of the button bar.
-	 * @param parent
-	 */
-	@Override
-	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true);
-		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
-	}
+    /**
+        Create contents of the button bar.
+        @param parent
+    */
+    @Override
+    protected void createButtonsForButtonBar ( Composite parent )
+    {
+        createButton ( parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true );
+        createButton ( parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false );
+    }
 
-	/**
-	 * Return the initial size of the dialog.
-	 */
-	@Override
-	protected Point getInitialSize() {
-		return new Point(450, 300);
-	}
+    /**
+        Return the initial size of the dialog.
+    */
+    @Override
+    protected Point getInitialSize()
+    {
+        return new Point ( 450, 300 );
+    }
 
-	public Table getTable() {
-		return table;
-	}
-	public TableViewer getTableViewer() {
-		return tableViewer;
-	}
+    public Table getTable()
+    {
+        return table;
+    }
+
+    public TableViewer getTableViewer()
+    {
+        return tableViewer;
+    }
+
 }

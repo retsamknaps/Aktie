@@ -83,7 +83,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             String privkey = lastupdate.getPrivate ( CObj.PRIVATEKEY );
             assertNotNull ( privkey );
             RSAPrivateCrtKeyParameters mykey = Utils.privateKeyFromString ( privkey );
-            lastupdate.checkSignature ( mykey );
+            lastupdate.checkSignature ( mykey, 0 );
             assertNotNull ( lastupdate.getString ( CObj.DEST ) );
             System.out.println ( lastupdate.getString ( CObj.DEST ) );
             String id0 = lastupdate.getId();
@@ -110,7 +110,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             privkey = lastupdate.getPrivate ( CObj.PRIVATEKEY );
             assertNotNull ( privkey );
             mykey = Utils.privateKeyFromString ( privkey );
-            lastupdate.checkSignature ( mykey );
+            lastupdate.checkSignature ( mykey, 0 );
             assertNotNull ( lastupdate.getString ( CObj.DEST ) );
             System.out.println ( lastupdate.getString ( CObj.DEST ) );
             String id1 = lastupdate.getId();

@@ -95,7 +95,7 @@ public class ShowHasFileDialog extends Dialog
                     {
                         CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
                         CObj fr = ae.getCObj();
-                        users.add(fr);
+                        users.add ( fr );
                     }
 
                 }

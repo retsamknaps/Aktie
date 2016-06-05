@@ -11,6 +11,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 
 public class InIdentityProcessor extends GenericProcessor
@@ -60,7 +61,7 @@ public class InIdentityProcessor extends GenericProcessor
 
                         if ( cids.equals ( id ) )
                         {
-                            if ( b.checkSignature ( pk ) )
+                            if ( b.checkSignature ( pk, Wrapper.getGenPayment() ) )
                             {
                                 idat = new IdentityData();
                                 idat.setFirstSeen ( ( new Date() ).getTime() );

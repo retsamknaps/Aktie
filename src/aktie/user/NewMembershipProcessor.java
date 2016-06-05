@@ -13,6 +13,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 import aktie.utils.MembershipValidator;
 
@@ -216,7 +217,8 @@ public class NewMembershipProcessor extends GenericProcessor
                 return true;
             }
 
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                     Wrapper.getGenPayment() );
             o.pushPrivate ( CObj.DECODED, "true" );
             o.pushPrivate ( CObj.VALIDMEMBER, "true" );
             o.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );

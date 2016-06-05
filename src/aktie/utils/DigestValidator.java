@@ -4,6 +4,7 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 
 import aktie.crypto.Utils;
 import aktie.data.CObj;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 
 public class DigestValidator
@@ -36,10 +37,39 @@ public class DigestValidator
 
             if ( pubkey != null )
             {
+
+                int payment = Wrapper.getCheckPayment();
+
+                //No payment required for posts and files in private
+                //communities
+                if ( CObj.POST.equals ( b.getType() ) ||
+                        CObj.HASFILE.equals ( b.getType() ) )
+                {
+                    String comid = b.getString ( CObj.COMMUNITYID );
+
+                    if ( comid == null )
+                    {
+                        return false;
+                    }
+
+                    CObj com = index.getCommunity ( comid );
+
+                    if ( com == null )
+                    {
+                        return false;
+                    }
+
+                    if ( CObj.SCOPE_PRIVATE.equals ( com.getString ( CObj.SCOPE ) ) )
+                    {
+                        payment = 0;
+                    }
+
+                }
+
                 //Update the community sequence number if greater
                 RSAKeyParameters pubk = Utils.publicKeyFromString ( pubkey );
 
-                if ( b.checkSignature ( pubk ) )
+                if ( b.checkSignature ( pubk, payment ) )
                 {
                     return true;
                 }
@@ -54,7 +84,7 @@ public class DigestValidator
                         CObj chk = b.clone();
                         chk.setId ( null );
 
-                        if ( chk.checkSignature ( pubk ) )
+                        if ( chk.checkSignature ( pubk, payment ) )
                         {
                             return true;
                         }

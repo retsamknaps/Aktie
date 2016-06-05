@@ -10,6 +10,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -426,8 +427,19 @@ public class HasFileCreator
 
         //Set the created on time
         o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
+
+        //Determine if this is a private or public community
+        CObj com = index.getCommunity ( comid );
+        int payment = 0;
+
+        if ( com != null && CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
+        {
+            payment = Wrapper.getGenPayment();
+        }
+
         //Sign it.
-        o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+        o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                 payment );
 
         try
         {

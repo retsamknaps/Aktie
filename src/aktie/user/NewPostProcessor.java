@@ -12,6 +12,7 @@ import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.SubscriptionValidator;
@@ -165,10 +166,17 @@ public class NewPostProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
+            //Determine if this is a private or public community
+            CObj com = index.getCommunity ( comid );
+            int payment = 0;
 
+            if ( com != null && CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
+            {
+                payment = Wrapper.getGenPayment();
+            }
 
             //Sign it.
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), payment );
             log.info ( "NEW POST: " + o.getDig() );
 
             //Set the rank of the post based on the rank of the

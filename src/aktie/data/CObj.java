@@ -167,6 +167,7 @@ public class CObj
     public static String STATUS = "fstatus";
     public static String ENABLED = "enabled";
     public static String MSGIDENT = "msgid";
+    public static String PAYMENT = "hashpayment";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.
@@ -1347,9 +1348,9 @@ public class CObj
 
     }
 
-    public void sign ( RSAPrivateCrtKeyParameters key )
+    public void sign ( RSAPrivateCrtKeyParameters key, int bm )
     {
-        byte dg[] = digest();
+        byte dg[] = genPayment ( bm );
         dig = Utils.toString ( dg );
         RSAEngine eng = new RSAEngine();
         PKCS1Encoding enc = new PKCS1Encoding ( eng );
@@ -1374,9 +1375,16 @@ public class CObj
         dig = Utils.toString ( dg );
     }
 
-    public boolean checkSignature ( RSAKeyParameters key )
+    public boolean checkSignature ( RSAKeyParameters key, int bm )
     {
         byte td[] = digest();
+
+        byte msk[] = Utils.generateMask ( bm, td.length );
+
+        if ( !Utils.checkDig ( td, msk ) )
+        {
+            return false;
+        }
 
         if ( !Arrays.equals ( td, Utils.toByteArray ( dig ) ) ) { return false; }
 
@@ -1396,6 +1404,34 @@ public class CObj
         }
 
         return false;
+    }
+
+    private byte[] genPayment ( int bm )
+    {
+        byte d[] = digest();
+        byte rb[] = new byte[d.length];
+        System.arraycopy ( d, 0, rb, 0, d.length );
+
+        if ( bm > 0 )
+        {
+            Map<String, Long> cm = new HashMap<String, Long>();
+            byte msk[] = Utils.generateMask ( bm, d.length );
+            byte tb[] = new byte[d.length];
+            long payment = 0L;
+            cm.put ( CObj.PAYMENT, payment );
+            Utils.digLongMap ( rb, tb, d, cm );
+
+            while ( !Utils.checkDig ( rb, msk ) )
+            {
+                payment++;
+                cm.put ( CObj.PAYMENT, payment );
+                Utils.digLongMap ( rb, tb, d, cm );
+            }
+
+            pushNumber ( CObj.PAYMENT, payment );
+        }
+
+        return rb;
     }
 
     private byte[] digest()

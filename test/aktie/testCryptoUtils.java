@@ -84,8 +84,11 @@ public class testCryptoUtils
         o.pushString ( "s1", "string1" );
         o.pushText ( "t0", "text0" );
         o.pushText ( "t1", "test1" );
-        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate() );
-        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic() ) );
+        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 8 );
+        byte d[] = Utils.toByteArray ( o.getDig() );
+        System.out.println ( "DIG: " + Integer.toHexString ( d[0] ) +
+                             Integer.toHexString ( d[1] ) + Integer.toHexString ( d[2] ) );
+        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic(), 8 ) );
     }
 
     @Test
@@ -106,8 +109,10 @@ public class testCryptoUtils
         //o.pushString("s1", "string1");
         o.pushText ( "t0", "text0" );
         o.pushText ( "t1", "test1" );
-        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate() );
-        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic() ) );
+        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 22 );
+        byte d[] = Utils.toByteArray ( o.getDig() );
+        System.out.println ( "DIG: " + Utils.bytesToHex ( d ) );
+        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic(), 22 ) );
     }
 
     @Test

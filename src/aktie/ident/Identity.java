@@ -22,7 +22,7 @@ public class Identity
 
                 if ( cid.equals ( b.getId() ) )
                 {
-                    return b.checkSignature ( pk );
+                    return b.checkSignature ( pk, 0 );
                 }
 
             }

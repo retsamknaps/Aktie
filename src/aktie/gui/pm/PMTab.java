@@ -1,4 +1,4 @@
-package aktie.gui;
+package aktie.gui.pm;
 
 import org.eclipse.swt.widgets.Composite;
 import swing2swt.layout.BorderLayout;
@@ -9,6 +9,9 @@ import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Tree;
+
+import aktie.gui.SWTApp;
+
 import org.eclipse.jface.viewers.TreeViewer;
 
 public class PMTab extends Composite
@@ -19,10 +22,12 @@ public class PMTab extends Composite
     private TreeViewer treeViewer;
     private TableViewer tableViewer;
     private StyledText styledText;
+    private SWTApp app;
 
-    public PMTab ( Composite parent, int style )
+    public PMTab ( Composite parent, int style, SWTApp a )
     {
         super ( parent, style );
+        app = a;
         setLayout ( new BorderLayout ( 0, 0 ) );
 
         SashForm sashForm = new SashForm ( this, SWT.NONE );

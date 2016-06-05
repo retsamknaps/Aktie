@@ -15,6 +15,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.Destination;
@@ -89,7 +90,7 @@ public class NewIdentityProcessor extends GenericProcessor
                 o.pushString ( CObj.DEST, d.getPublicDestinationInfo() );
                 byte [] id = Utils.digString ( ( byte[] ) null, o.getString ( CObj.KEY ) );
                 o.setId ( Utils.toString ( id ) );
-                o.sign ( ( RSAPrivateCrtKeyParameters ) pair.getPrivate() );
+                o.sign ( ( RSAPrivateCrtKeyParameters ) pair.getPrivate(), Wrapper.getGenPayment() );
                 o.pushPrivate ( CObj.MINE, "true" );
 
                 o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );

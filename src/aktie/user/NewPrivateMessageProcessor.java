@@ -16,6 +16,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.PrivateMsgIdentity;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -191,7 +192,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.DECODED, "true" );
                 pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
 
-                pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+                pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                              Wrapper.getGenPayment() );
 
                 //Set the rank of the post based on the rank of the
                 //user
@@ -260,7 +262,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
 
-            b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ) );
+            b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                     Wrapper.getGenPayment() );
 
             //Set the rank of the post based on the rank of the
             //user

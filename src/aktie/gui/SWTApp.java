@@ -2673,7 +2673,7 @@ public class SWTApp
         userRankDialog.create();
         hasFileDialog = new ShowHasFileDialog ( shell, userRankDialog, this );
         hasFileDialog.create();
-        zeroDialog = new ZeroIdentityDialog(shell, userRankDialog, this);
+        zeroDialog = new ZeroIdentityDialog ( shell, userRankDialog, this );
         zeroDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
@@ -3033,7 +3033,7 @@ public class SWTApp
             }
 
         } );
-        
+
         //zeroDialog
         MenuItem mntmZero = new MenuItem ( menu_1, SWT.NONE );
         mntmZero.setText ( "Show Zero Rank Identities" );
@@ -3042,7 +3042,7 @@ public class SWTApp
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-            	zeroDialog.open();
+                zeroDialog.open();
             }
 
             @Override
@@ -3051,7 +3051,7 @@ public class SWTApp
             }
 
         } );
-        
+
 
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
         mntmStartManualUpdate.setText ( "Refresh All Now" );

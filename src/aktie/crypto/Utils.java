@@ -35,6 +35,9 @@ public class Utils
 
     public static SecureRandom Random = new SecureRandom();
 
+    //It may be faster for generating collisions
+    public static java.util.Random NOTSECURERandom = new java.util.Random();
+
     // 4 hour
     public static int TIMEFUZZ = 4 * 60 * 60 * 1000;
 
@@ -268,6 +271,28 @@ public class Utils
         return d;
     }
 
+    /**
+        Digest d, then b, then put result in t
+        @param t
+        @param d
+        @param b
+        @return
+    */
+    public static byte[] digBytes ( byte t[], byte d[], byte b[] )
+    {
+        RIPEMD256Digest dig = new RIPEMD256Digest();
+
+        if ( t == null )
+        {
+            t = new byte[dig.getDigestSize()];
+        }
+
+        dig.update ( d, 0, d.length );
+        dig.update ( b, 0, b.length );
+        dig.doFinal ( t, 0 );
+        return d;
+    }
+
     public static byte[] digString ( byte d[], String s )
     {
         try
@@ -328,6 +353,26 @@ public class Utils
         return x0;
     }
 
+    public static byte[] xorBytes ( byte rb[], byte x0[], byte x1[] )
+    {
+        if ( rb == null )
+        {
+            rb = new byte[x0.length];
+        }
+
+        if ( x0.length != x1.length || x0.length != rb.length )
+        {
+            throw new RuntimeException ( "Must XOR byte arrays the same length." );
+        }
+
+        for ( int c = 0; c < x0.length; c++ )
+        {
+            rb[c] = ( byte ) ( x0[c] ^ x1[c] );
+        }
+
+        return rb;
+    }
+
     public static byte[] digByteMap ( byte db[], Map<String, byte[]> m )
     {
         Digest d = new RIPEMD256Digest();
@@ -350,6 +395,58 @@ public class Utils
         }
 
         return db;
+    }
+
+    public static final byte LASTB[] =
+    {
+        ( byte ) 0x00,
+        ( byte ) 0x80,
+        ( byte ) 0xC0,
+        ( byte ) 0xE0,
+        ( byte ) 0xF0,
+        ( byte ) 0xF8,
+        ( byte ) 0xFC,
+        ( byte ) 0xFE,
+        ( byte ) 0xFF
+    };
+
+    public static byte[] generateMask ( int bm, int bl )
+    {
+        byte m[] = new byte[bl];
+        Arrays.fill ( m, ( byte ) 0 );
+
+        if ( bm > ( bl * 8 ) )
+        {
+            throw new RuntimeException ( "MASK TOO LONG!" );
+        }
+
+        int idx = 0;
+
+        for ( ; bm > 8; bm -= 8 )
+        {
+            m[idx] = ( byte ) 0xFF;
+            idx++;
+        }
+
+        m[idx] = LASTB[bm];
+        return m;
+    }
+
+    public static boolean checkDig ( byte d[], byte m[] )
+    {
+        boolean c = true;
+
+        if ( d.length != m.length )
+        {
+            throw new RuntimeException ( "MASK AND DIG NOT THE SAME LENGTH!" );
+        }
+
+        for ( int t = 0; t < d.length && c; t++ )
+        {
+            c = ( ( d[t] & m[t] ) == 0 );
+        }
+
+        return c;
     }
 
     public static byte[] digStringMap ( byte db[], Map<String, String> m )
@@ -398,6 +495,38 @@ public class Utils
         }
 
         return db;
+    }
+
+    public static byte[] digLongMap ( byte rb[], byte tb[], byte db[], Map<String, Long> m )
+    {
+        Digest d = new RIPEMD256Digest();
+
+        if ( db == null )
+        {
+            db = new byte[d.getDigestSize()];
+            Arrays.fill ( db, ( byte ) 0 );
+        }
+
+        if ( rb == null )
+        {
+            rb = new byte[d.getDigestSize()];
+        }
+
+        if ( tb == null )
+        {
+            tb = new byte[d.getDigestSize()];
+        }
+
+        for ( Entry<String, Long> e : m.entrySet() )
+        {
+            d.reset();
+            digString ( d, e.getKey() );
+            digLong ( d, e.getValue() );
+            d.doFinal ( tb, 0 );
+            xorBytes ( rb, db, tb );
+        }
+
+        return rb;
     }
 
     public static byte[] digDoubleMap ( byte db[], Map<String, Double> m )
@@ -598,6 +727,21 @@ public class Utils
         }
 
         return toString ( i0 );
+    }
+
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex ( byte[] bytes )
+    {
+        char[] hexChars = new char[bytes.length * 2];
+
+        for ( int j = 0; j < bytes.length; j++ )
+        {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+
+        return new String ( hexChars );
     }
 
 }
