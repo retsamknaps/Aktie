@@ -13,8 +13,8 @@ import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 
 public class NewCommunityProcessor extends GenericProcessor
 {
@@ -22,12 +22,14 @@ public class NewCommunityProcessor extends GenericProcessor
     private GuiCallback guicallback;
     private Index index;
     private HH2Session session;
+    private SpamTool spamtool;
 
-    public NewCommunityProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewCommunityProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
         index = i;
         guicallback = cb;
+        spamtool = st;
     }
 
     /**
@@ -158,8 +160,7 @@ public class NewCommunityProcessor extends GenericProcessor
                 o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
                 o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-                o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
-                         Wrapper.getGenPayment() );
+                spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
 
                 if ( CObj.SCOPE_PRIVATE.equals ( o.getString ( CObj.SCOPE ) ) )
                 {

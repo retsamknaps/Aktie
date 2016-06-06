@@ -42,7 +42,7 @@ public class Wrapper
     public static int OLDPAYMENT = 0;
     public static long CHECKNEWPAYMENTAFTER = ( 1465144386L * 1000L ) +
             ( 5L * 24L * 60L * 60L * 1000L );
-    public static int NEWPAYMENT = 4;
+    public static int NEWPAYMENT = 26;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
@@ -802,6 +802,21 @@ public class Wrapper
         savePropsFile ( p );
     }
 
+    public static boolean getIsDeveloper ( )
+    {
+        Properties p = loadExistingProps();
+
+        boolean e = false;
+        String ep = p.getProperty ( "aktie.developer" );
+
+        if ( "true".equals ( ep ) )
+        {
+            e = true;
+        }
+
+        return e;
+    }
+
     public static boolean getEnabledShareManager ( )
     {
         Properties p = loadExistingProps();
@@ -884,24 +899,55 @@ public class Wrapper
         savePropsFile ( p );
     }
 
-    public static int getCheckPayment()
+    public static int getPaymentRank()
     {
-        /*
-            int pm = OLDPAYMENT;
-            long today = System.currentTimeMillis();
-            if (today >= CHECKNEWPAYMENTAFTER) {
-            pm = NEWPAYMENT;
+        Properties p = loadExistingProps();
+
+        int rt = 5;
+        String ep = p.getProperty ( "aktie.spam.rank" );
+
+        if ( ep != null )
+        {
+            try
+            {
+                rt = Integer.valueOf ( ep );
             }
 
-            return pm;
-        */
-        return 0;
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        return rt;
+    }
+
+    public static void savePaymentRank ( int rt )
+    {
+        Properties p = loadExistingProps();
+
+        p.setProperty ( "aktie.spam.rank", Integer.toString ( rt ) );
+
+        savePropsFile ( p );
+    }
+
+    public static int getCheckPayment()
+    {
+        int pm = OLDPAYMENT;
+        long today = System.currentTimeMillis();
+
+        if ( today >= CHECKNEWPAYMENTAFTER )
+        {
+            pm = NEWPAYMENT;
+        }
+
+        return pm;
     }
 
     public static int getGenPayment()
     {
-        //return NEWPAYMENT;
-        return 0;
+        return NEWPAYMENT;
     }
 
 }

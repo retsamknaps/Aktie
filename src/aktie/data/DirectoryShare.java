@@ -23,6 +23,7 @@ public class DirectoryShare
     private String message;
 
     private boolean defaultDownload;
+    private boolean skipSpam;
 
     @Override
     public int hashCode()
@@ -145,6 +146,16 @@ public class DirectoryShare
     public void setDefaultDownload ( boolean defaultDownload )
     {
         this.defaultDownload = defaultDownload;
+    }
+
+    public boolean isSkipSpam()
+    {
+        return skipSpam;
+    }
+
+    public void setSkipSpam ( boolean skipSpam )
+    {
+        this.skipSpam = skipSpam;
     }
 
 }

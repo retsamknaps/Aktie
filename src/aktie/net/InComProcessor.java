@@ -15,6 +15,7 @@ import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
 
@@ -26,14 +27,16 @@ public class InComProcessor extends GenericProcessor
     private HH2Session session;
     private DigestValidator validator;
     private SymDecoder decoder;
+    private SpamTool spamtool;
 
-    public InComProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public InComProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
+        spamtool = st;
         decoder = new SymDecoder();
-        validator = new DigestValidator ( index );
+        validator = new DigestValidator ( index, spamtool );
     }
 
     @SuppressWarnings ( "unchecked" )

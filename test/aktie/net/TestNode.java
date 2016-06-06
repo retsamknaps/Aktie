@@ -11,6 +11,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
@@ -51,19 +52,21 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
             index.setIndexdir ( id );
             index.init();
 
-            NewFileProcessor nfp = new NewFileProcessor ( session, index, this );
+            SpamTool st = new SpamTool ( index );
+
+            NewFileProcessor nfp = new NewFileProcessor ( session, index, st, this );
             requestFile = new RequestFileHandler ( session, wkdir + File.separator + "dl", nfp, index );
 
             RequestFileHandler fileHandler = new RequestFileHandler ( session, "tndl", null, null );
 
-            userQueue.addProcessor ( new NewCommunityProcessor ( session, index, this ) );
+            userQueue.addProcessor ( new NewCommunityProcessor ( session, index, st, this ) );
             userQueue.addProcessor ( nfp );
-            userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index, this, this, this, this, fileHandler ) );
-            userQueue.addProcessor ( new NewMembershipProcessor ( session, index, this ) );
-            userQueue.addProcessor ( new NewPostProcessor ( session, index, this ) );
-            userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, this ) );
+            userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index, this, this, this, this, fileHandler, st ) );
+            userQueue.addProcessor ( new NewMembershipProcessor ( session, index, st, this ) );
+            userQueue.addProcessor ( new NewPostProcessor ( session, index, st, this ) );
+            userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, st, this ) );
             userQueue.addProcessor ( new NewTemplateProcessor ( session, index, this ) );
-            userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, null, this ) );
+            userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, null, st, this ) );
         }
 
         catch ( Exception e )

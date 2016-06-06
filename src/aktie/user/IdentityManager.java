@@ -14,6 +14,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.CommunityMyMember;
+import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.PrivateMsgIdentity;
@@ -1435,6 +1436,80 @@ public class IdentityManager
         return rl;
     }
 
+    @SuppressWarnings ( "unchecked" )
+    public List<DeveloperIdentity> claimSpamExUpdate ( int max )
+    {
+        List<DeveloperIdentity> rl = new LinkedList<DeveloperIdentity>();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM DeveloperIdentity x WHERE "
+                                      + "x.spamExStatus = :st "
+                                      + " ORDER BY "
+                                      + "x.spamExUpdatePriority DESC, "
+                                      + "x.lastSpamExUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( max );
+            List<DeveloperIdentity> r = q.list();
+            DeveloperIdentity id = null;
+            Iterator<DeveloperIdentity> i = r.iterator();
+
+            while ( i.hasNext() )
+            {
+                id = i.next();
+
+                if ( id != null )
+                {
+                    id.setLastSpamExUpdate ( System.currentTimeMillis() );
+                    id.setSpamExStatus ( IdentityData.DONE );
+                    s.merge ( id );
+                    rl.add ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return rl;
+    }
+
     public IdentityData claimIdentityUpdate ( String id )
     {
         Session s = null;
@@ -1807,6 +1882,61 @@ public class IdentityManager
 
     }
 
+    public void newDeveloperIdentity ( String id )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            DeveloperIdentity d = ( DeveloperIdentity ) s.get ( DeveloperIdentity.class, id );
+
+            if ( d == null )
+            {
+                d = new DeveloperIdentity();
+                d.setId ( id );
+                s.persist ( d );
+            }
+
+            s.getTransaction().commit();
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
     @SuppressWarnings ( "unchecked" )
     public List<CommunityMyMember> getMyMemberships()
     {
@@ -2068,6 +2198,91 @@ public class IdentityManager
 
                     idat.setIdentStatus ( IdentityData.UPDATE );
                     idat.setIdentUpdateCycle ( idat.getIdentUpdateCycle() + 1 );
+                    s.merge ( idat );
+
+                }
+
+                s.getTransaction().commit();
+            }
+
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public void requestSpamEx()
+    {
+        List<String> myids = getMyIds();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            Query q = s.createQuery ( "SELECT x FROM DeveloperIdentity x" );
+            List<String> ids = new LinkedList<String>();
+            List<DeveloperIdentity> idl = q.list();
+
+            for ( DeveloperIdentity i : idl )
+            {
+                String id = i.getId();
+
+                if ( id != null && !myids.contains ( id ) )
+                {
+                    ids.add ( i.getId() );
+                }
+
+            }
+
+            for ( String i : ids )
+            {
+                s.getTransaction().begin();
+                DeveloperIdentity idat = ( DeveloperIdentity ) s.get ( DeveloperIdentity.class, i );
+
+                if ( idat != null )
+                {
+                    if ( idat.getNextClosestSpamExNumber() >
+                            idat.getLastSpamExNumber() &&
+                            idat.getNumClosestSpamExNumber() > MAX_LAST_NUMBER )
+                    {
+                        idat.setLastSpamExNumber ( idat.getNextClosestSpamExNumber() );
+                        idat.setNumClosestSpamExNumber ( 0 );
+                    }
+
+                    idat.setSpamExStatus ( IdentityData.UPDATE );
+
                     s.merge ( idat );
 
                 }

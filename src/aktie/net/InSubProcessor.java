@@ -10,6 +10,7 @@ import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
 
@@ -22,12 +23,12 @@ public class InSubProcessor extends GenericProcessor
     private SubscriptionValidator subvalidator;
     private ConnectionThread conThread;
 
-    public InSubProcessor ( HH2Session s, Index i, ConnectionThread ct )
+    public InSubProcessor ( HH2Session s, Index i, SpamTool st, ConnectionThread ct )
     {
         session = s;
         conThread = ct;
         index = i;
-        validator = new DigestValidator ( index );
+        validator = new DigestValidator ( index, st );
         subvalidator = new SubscriptionValidator ( index );
     }
 

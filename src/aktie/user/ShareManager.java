@@ -158,6 +158,7 @@ public class ShareManager implements Runnable
         hf.pushString ( CObj.COMMUNITYID, s.getCommunityId() );
         hf.pushString ( CObj.SHARE_NAME, s.getShareName() );
         hf.pushPrivate ( CObj.LOCALFILE, f.getPath() ); //Canonical name gotten during processing
+        hf.pushPrivate ( CObj.PRV_SKIP_PAYMENT, s.isSkipSpam() ? "true" : "false" );
         fileProc.process ( hf );
     }
 
@@ -989,7 +990,7 @@ public class ShareManager implements Runnable
     }
 
     @SuppressWarnings ( "unchecked" )
-    public void addShare ( String comid, String memid, String name, String dir, boolean def )
+    public void addShare ( String comid, String memid, String name, String dir, boolean def, boolean skipspam )
     {
         boolean hassometing = false;
 
@@ -1073,6 +1074,7 @@ public class ShareManager implements Runnable
                 d.setMemberId ( memid );
                 d.setShareName ( name );
                 d.setDefaultDownload ( def );
+                d.setSkipSpam ( skipspam );
 
                 s.merge ( d );
 

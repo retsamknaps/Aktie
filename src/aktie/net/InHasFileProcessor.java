@@ -10,6 +10,7 @@ import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.HasFileCreator;
 import aktie.utils.SubscriptionValidator;
@@ -25,14 +26,14 @@ public class InHasFileProcessor extends GenericProcessor
     private CObj destIdent;
     private HasFileCreator hfc;
 
-    public InHasFileProcessor ( CObj id, HH2Session s, Index i, GuiCallback cb, HasFileCreator h )
+    public InHasFileProcessor ( CObj id, HH2Session s, Index i, GuiCallback cb, HasFileCreator h, SpamTool st )
     {
         hfc = h;
         destIdent = id;
         index = i;
         session = s;
         guicallback = cb;
-        validator = new DigestValidator ( index );
+        validator = new DigestValidator ( index, st );
         subvalid = new SubscriptionValidator ( index );
     }
 

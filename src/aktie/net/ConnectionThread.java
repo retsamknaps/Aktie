@@ -33,6 +33,7 @@ import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.json.CleanParser;
+import aktie.spam.SpamTool;
 import aktie.user.IdentityManager;
 import aktie.user.RequestFileHandler;
 import aktie.utils.HasFileCreator;
@@ -79,7 +80,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private String fileUp;
     private String fileDown;
 
-    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo )
+    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
     {
         This = this;
         fileOnly = fo;
@@ -97,7 +98,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
-        hfc = new HasFileCreator ( session, index );
+        hfc = new HasFileCreator ( session, index, st );
         outqueue = new ConcurrentLinkedQueue<Object>();
         inQueue = new ConcurrentLinkedQueue<CObj>();
         accumulateTypes = new HashSet<String>();
@@ -112,14 +113,14 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InFileModeProcessor ( this ) );
         preprocProcessor.addProcessor ( ip );
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
-        preprocProcessor.addProcessor ( new InComProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, this, hfc ) );
-        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, this ) );
-        preprocProcessor.addProcessor ( new InSubProcessor ( session, index, this ) );
+        preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, this, hfc, st ) );
+        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InSubProcessor ( session, index, st, this ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
         preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );

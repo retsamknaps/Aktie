@@ -24,6 +24,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.CommunityMyMember;
+import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.PrivateMsgIdentity;
@@ -488,6 +489,26 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 }
 
+
+            }
+
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
+            {
+                List<DeveloperIdentity> cl = identityManager.claimSpamExUpdate ( 10 );
+                Iterator<DeveloperIdentity> il = cl.iterator();
+
+                while ( il.hasNext() )
+                {
+                    DeveloperIdentity id = il.next();
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_SPAMEX );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastSpamExNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
+                    gonext = true;
+                    qsize++;
+                }
 
             }
 

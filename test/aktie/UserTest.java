@@ -21,6 +21,7 @@ import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
 import aktie.net.GetSendData2;
 import aktie.net.RawNet;
+import aktie.spam.SpamTool;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
@@ -53,14 +54,15 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
         try
         {
             i.init();
+            SpamTool st = new SpamTool ( i );
             RawNet net = new RawNet ( id );
             ProcessQueue q = new ProcessQueue();
-            q.addProcessor ( new NewCommunityProcessor ( sf, i, this ) );
-            q.addProcessor ( new NewFileProcessor ( sf, i, this ) );
-            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler ) );
-            q.addProcessor ( new NewMembershipProcessor ( sf, i, this ) );
-            q.addProcessor ( new NewPostProcessor ( sf, i, this ) );
-            q.addProcessor ( new NewSubscriptionProcessor ( sf, i, this ) );
+            q.addProcessor ( new NewCommunityProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewFileProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st ) );
+            q.addProcessor ( new NewMembershipProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewPostProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewSubscriptionProcessor ( sf, i, st, this ) );
             q.addProcessor ( new NewTemplateProcessor ( sf, i, this ) );
 
             //New identity
@@ -83,7 +85,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             String privkey = lastupdate.getPrivate ( CObj.PRIVATEKEY );
             assertNotNull ( privkey );
             RSAPrivateCrtKeyParameters mykey = Utils.privateKeyFromString ( privkey );
-            lastupdate.checkSignature ( mykey, 0 );
+            lastupdate.checkSignatureX ( mykey, 0 );
             assertNotNull ( lastupdate.getString ( CObj.DEST ) );
             System.out.println ( lastupdate.getString ( CObj.DEST ) );
             String id0 = lastupdate.getId();
@@ -110,7 +112,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             privkey = lastupdate.getPrivate ( CObj.PRIVATEKEY );
             assertNotNull ( privkey );
             mykey = Utils.privateKeyFromString ( privkey );
-            lastupdate.checkSignature ( mykey, 0 );
+            lastupdate.checkSignatureX ( mykey, 0 );
             assertNotNull ( lastupdate.getString ( CObj.DEST ) );
             System.out.println ( lastupdate.getString ( CObj.DEST ) );
             String id1 = lastupdate.getId();

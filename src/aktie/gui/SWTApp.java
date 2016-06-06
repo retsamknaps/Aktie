@@ -1242,21 +1242,35 @@ public class SWTApp
         CObj u = new CObj();
         u.setType ( CObj.USR_IDENTITY_UPDATE );
         getNode().enqueue ( u );
+
         u = new CObj();
         u.setType ( CObj.USR_COMMUNITY_UPDATE );
         getNode().enqueue ( u );
+
         u = new CObj();
         u.setType ( CObj.USR_MEMBER_UPDATE );
         getNode().enqueue ( u );
+
         u = new CObj();
         u.setType ( CObj.USR_SUB_UPDATE );
         getNode().enqueue ( u );
+
         u = new CObj();
         u.setType ( CObj.USR_HASFILE_UPDATE );
         getNode().enqueue ( u );
+
         u = new CObj();
         u.setType ( CObj.USR_POST_UPDATE );
         getNode().enqueue ( u );
+
+        u = new CObj();
+        u.setType ( CObj.USR_PRVMSG_UPDATE );
+        getNode().enqueue ( u );
+
+        u = new CObj();
+        u.setType ( CObj.USR_SPAMEX_UPDATE );
+        getNode().enqueue ( u );
+
         getNode().sendRequestsNow();
     }
 
@@ -1739,6 +1753,13 @@ public class SWTApp
 
         try
         {
+            File devid = new File ( nodeDir + File.separator + "developerid.dat" );
+
+            if ( devid.exists() )
+            {
+                loadDeveloperIdentity ( devid );
+            }
+
             CObjList mlst = node.getIndex().getMyIdentities();
 
             if ( mlst.size() == 0 )
@@ -1770,19 +1791,13 @@ public class SWTApp
             {
                 for ( int c = 0; c < mlst.size(); c++ )
                 {
-                    usrcallback.update ( mlst.get ( c ) );
+                    CObj mc = mlst.get ( c );
+                    usrcallback.update ( mc );
                 }
 
             }
 
             mlst.close();
-
-            File devid = new File ( nodeDir + File.separator + "developerid.dat" );
-
-            if ( devid.exists() )
-            {
-                loadDeveloperIdentity ( devid );
-            }
 
 
             mlst = node.getIndex().getMySubscriptions();
@@ -2235,6 +2250,7 @@ public class SWTApp
         textNumberSubDirs.setText ( "" );
         textNumberFiles.setText ( "" );
         btnDefaultDownloadLocation.setSelection ( false );
+        btnDoNotGenerate.setSelection ( false );
         selectedShare = null;
         selectedShareFiles = null;
         ISelection isel = shareComboViewer.getSelection();
@@ -2275,6 +2291,7 @@ public class SWTApp
             textShareName.setText ( ds.getShareName() );
             textSharePath.setText ( ds.getDirectory() );
             btnDefaultDownloadLocation.setSelection ( ds.isDefaultDownload() );
+            btnDoNotGenerate.setSelection ( ds.isSkipSpam() );
         }
 
     }
@@ -2565,7 +2582,7 @@ public class SWTApp
                 CObj co = new CObj();
                 co.loadJSON ( o );
                 developerIdentity = co;
-
+                node.newDeveloperIdentity ( co.getId() );
             }
 
             br.close();
@@ -2749,6 +2766,7 @@ public class SWTApp
     private Combo comboShareName;
     private ComboViewer comboShareNameViewer;
     private Button btnDefaultDownloadLocation;
+    private Button btnDoNotGenerate;
     private Text txtAShareIs;
 
     private boolean doDownloadLrg ( CObj c )
@@ -3052,7 +3070,6 @@ public class SWTApp
 
         } );
 
-
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
         mntmStartManualUpdate.setText ( "Refresh All Now" );
         mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
@@ -3074,6 +3091,45 @@ public class SWTApp
             }
 
         } );
+
+        //zeroDialog
+        MenuItem mntmDumpOpen = new MenuItem ( menu_1, SWT.NONE );
+        mntmDumpOpen.setText ( "Dump Open Searchers(debug)" );
+        mntmDumpOpen.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                CObjList.displayAllStillOpen();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        if ( Wrapper.getIsDeveloper() )
+        {
+            MenuItem mntmSpamEx = new MenuItem ( menu_1, SWT.NONE );
+            mntmSpamEx.setText ( "GEN SPAM EX" );
+            mntmSpamEx.addSelectionListener ( new SelectionListener()
+            {
+                @Override
+                public void widgetSelected ( SelectionEvent e )
+                {
+                    //TODO HERE!
+                }
+
+                @Override
+                public void widgetDefaultSelected ( SelectionEvent e )
+                {
+                }
+
+            } );
+
+        }
 
         composite_header = new Composite ( shell, SWT.NONE );
         composite_header.setLayout ( new GridLayout ( 5, false ) );
@@ -5171,7 +5227,8 @@ public class SWTApp
                         selectedShare.getMemberId(),
                         selectedShare.getShareName(),
                         selectedShare.getDirectory(),
-                        btnDefaultDownloadLocation.getSelection() );
+                        btnDefaultDownloadLocation.getSelection(),
+                        btnDoNotGenerate.getSelection() );
 
                 }
 
@@ -5183,6 +5240,35 @@ public class SWTApp
             }
 
         } );
+
+        btnDoNotGenerate = new Button ( composite_14, SWT.CHECK );
+        btnDoNotGenerate.setText ( "Do not generate anti-spam payment ( Expert )" );
+        btnDoNotGenerate.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedShare != null )
+                {
+                    getNode().getShareManager().addShare (
+                        selectedShare.getCommunityId(),
+                        selectedShare.getMemberId(),
+                        selectedShare.getShareName(),
+                        selectedShare.getDirectory(),
+                        btnDefaultDownloadLocation.getSelection(),
+                        btnDoNotGenerate.getSelection() );
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
 
         Button btnDelete = new Button ( composite_14, SWT.NONE );
         btnDelete.setText ( "Delete" );

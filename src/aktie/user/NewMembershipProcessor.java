@@ -13,8 +13,8 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.MembershipValidator;
 
 public class NewMembershipProcessor extends GenericProcessor
@@ -24,12 +24,14 @@ public class NewMembershipProcessor extends GenericProcessor
     private Index index;
     private MembershipValidator validator;
     private HH2Session session;
+    private SpamTool spamtool;
 
-    public NewMembershipProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewMembershipProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
         index = i;
         guicallback = cb;
+        spamtool = st;
         validator = new MembershipValidator ( index );
     }
 
@@ -217,8 +219,8 @@ public class NewMembershipProcessor extends GenericProcessor
                 return true;
             }
 
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
-                     Wrapper.getGenPayment() );
+            spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+
             o.pushPrivate ( CObj.DECODED, "true" );
             o.pushPrivate ( CObj.VALIDMEMBER, "true" );
             o.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );

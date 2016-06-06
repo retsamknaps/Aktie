@@ -89,10 +89,10 @@ public class CObjList implements Closeable, AutoCloseable
         createdOn = System.currentTimeMillis();
         creationStack = Thread.currentThread().getStackTrace();
 
-        //        synchronized ( alllists )
-        //        {
-        //            alllists.add ( this );
-        //        }
+        synchronized ( alllists )
+        {
+            alllists.add ( this );
+        }
 
     }
 
@@ -196,10 +196,10 @@ public class CObjList implements Closeable, AutoCloseable
             searcher.closeSearch();
         }
 
-        //        synchronized ( alllists )
-        //        {
-        //            alllists.remove ( this );
-        //        }
+        synchronized ( alllists )
+        {
+            alllists.remove ( this );
+        }
 
     }
 

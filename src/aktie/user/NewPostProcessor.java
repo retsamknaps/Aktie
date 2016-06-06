@@ -12,9 +12,9 @@ import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.SubscriptionValidator;
 
 public class NewPostProcessor extends GenericProcessor
@@ -26,12 +26,14 @@ public class NewPostProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private SubscriptionValidator validator;
+    private SpamTool spamtool;
 
-    public NewPostProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewPostProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
         index = i;
         guicallback = cb;
+        spamtool = st;
         validator = new SubscriptionValidator ( index );
     }
 
@@ -166,17 +168,9 @@ public class NewPostProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-            //Determine if this is a private or public community
-            CObj com = index.getCommunity ( comid );
-            int payment = 0;
-
-            if ( com != null && CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
-            {
-                payment = Wrapper.getGenPayment();
-            }
-
             //Sign it.
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), payment );
+            spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+
             log.info ( "NEW POST: " + o.getDig() );
 
             //Set the rank of the post based on the rank of the

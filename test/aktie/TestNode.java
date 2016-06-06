@@ -1537,7 +1537,7 @@ public class TestNode
             File nf = FUtils.createTestFile ( tmp, 10L * 1024L * 1024L + 263L );
 
             n3.getShareManager().addShare ( com0n0.getDig(), node3b.getId(),
-                                            "testshare", tmp.getPath(), false );
+                                            "testshare", tmp.getPath(), false, false );
 
             List<DirectoryShare> slst = n3.getShareManager().listShares ( com0n0.getDig(), node3b.getId() );
 
@@ -1826,7 +1826,7 @@ public class TestNode
             tmp2.mkdirs();
 
             n0.getShareManager().addShare ( com0n0.getDig(), n0seedb.getId(),
-                                            "testshare2", tmp2.getPath(), false );
+                                            "testshare2", tmp2.getPath(), false, false );
 
             slst = n0.getShareManager().listShares ( com0n0.getDig(), n0seedb.getId() );
 

@@ -10,6 +10,7 @@ import aktie.data.HH2Session;
 import aktie.data.PrivateMsgIdentity;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
 
@@ -22,13 +23,13 @@ public class InPrvMsgProcessor extends GenericProcessor
     private SymDecoder decoder;
     private GuiCallback guicallback;
 
-    public InPrvMsgProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
         decoder = new SymDecoder();
-        validator = new DigestValidator ( index );
+        validator = new DigestValidator ( index, st );
     }
 
     @Override

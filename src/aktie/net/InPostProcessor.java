@@ -12,6 +12,7 @@ import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
 
@@ -25,13 +26,13 @@ public class InPostProcessor extends GenericProcessor
     private SubscriptionValidator subvalidator;
     private CObj destIdent;
 
-    public InPostProcessor ( CObj id, HH2Session s, Index i, GuiCallback cb )
+    public InPostProcessor ( CObj id, HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         destIdent = id;
         index = i;
         session = s;
         guicallback = cb;
-        validator = new DigestValidator ( index );
+        validator = new DigestValidator ( index, st );
         subvalidator = new SubscriptionValidator ( index );
     }
 

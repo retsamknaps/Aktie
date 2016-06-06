@@ -16,9 +16,9 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.PrivateMsgIdentity;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 
 public class NewPrivateMessageProcessor extends GenericProcessor
 {
@@ -29,12 +29,14 @@ public class NewPrivateMessageProcessor extends GenericProcessor
     private HH2Session session;
     private GuiCallback guicallback;
     private NewPushProcessor push;
+    private SpamTool spamtool;
 
-    public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, GuiCallback gc )
+    public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, SpamTool st, GuiCallback gc )
     {
         session = s;
         index = i;
         guicallback = gc;
+        spamtool = st;
         push = p;
     }
 
@@ -192,8 +194,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.DECODED, "true" );
                 pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
 
-                pident.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
-                              Wrapper.getGenPayment() );
+                spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                                    pident );
 
                 //Set the rank of the post based on the rank of the
                 //user
@@ -262,8 +264,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
 
-            b.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
-                     Wrapper.getGenPayment() );
+            spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                                b );
 
             //Set the rank of the post based on the rank of the
             //user

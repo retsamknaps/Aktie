@@ -8,8 +8,8 @@ import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.SubscriptionValidator;
 
 public class NewSubscriptionProcessor extends GenericProcessor
@@ -19,12 +19,14 @@ public class NewSubscriptionProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private SubscriptionValidator validator;
+    private SpamTool spamtool;
 
-    public NewSubscriptionProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewSubscriptionProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
         index = i;
         guicallback = cb;
+        spamtool = st;
         validator = new SubscriptionValidator ( index );
     }
 
@@ -141,8 +143,8 @@ public class NewSubscriptionProcessor extends GenericProcessor
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-            o.sign ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
-                     Wrapper.getGenPayment() );
+            spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
+                                o );
 
             //Set the rank of the post based on the rank of the
             //user

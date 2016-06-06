@@ -529,6 +529,11 @@ public class Index implements Runnable
         return getCreatorObjs ( CObj.PRIVIDENTIFIER, creator, first, last );
     }
 
+    public CObjList getSpamEx ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.SPAMEXCEPTION, creator, first, last );
+    }
+
     public CObjList getPrvMsg ( String creator, long first, long last )
     {
         return getCreatorObjs ( CObj.PRIVMESSAGE, creator, first, last );

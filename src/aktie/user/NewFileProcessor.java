@@ -14,6 +14,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.spam.SpamTool;
 import aktie.utils.HasFileCreator;
 
 public class NewFileProcessor extends GenericProcessor
@@ -23,11 +24,11 @@ public class NewFileProcessor extends GenericProcessor
     private Index index;
     private HasFileCreator hsc;
 
-    public NewFileProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewFileProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         index = i;
         guicallback = cb;
-        hsc = new HasFileCreator ( s, i );
+        hsc = new HasFileCreator ( s, i, st );
     }
 
     /**

@@ -15,7 +15,6 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.Destination;
@@ -23,6 +22,7 @@ import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
 import aktie.net.GetSendData2;
 import aktie.net.Net;
+import aktie.spam.SpamTool;
 
 public class NewIdentityProcessor extends GenericProcessor
 {
@@ -38,8 +38,9 @@ public class NewIdentityProcessor extends GenericProcessor
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
+    private SpamTool spamtool;
 
-    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
+    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
         fileHandler = rf;
         connectionMan = cm;
@@ -50,6 +51,7 @@ public class NewIdentityProcessor extends GenericProcessor
         session = s;
         index = i;
         guicallback = g;
+        spamtool = st;
     }
 
     /**
@@ -84,13 +86,13 @@ public class NewIdentityProcessor extends GenericProcessor
                 o.pushString ( CObj.KEY, Utils.stringFromPublicKey (
                                    ( RSAKeyParameters ) pair.getPublic() ) );
                 Destination d = net.getNewDestination();
-                DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler );
+                DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
                 File df = d.savePrivateDestinationInfo();
                 o.pushPrivate ( CObj.DEST, df.getPath() );
                 o.pushString ( CObj.DEST, d.getPublicDestinationInfo() );
                 byte [] id = Utils.digString ( ( byte[] ) null, o.getString ( CObj.KEY ) );
                 o.setId ( Utils.toString ( id ) );
-                o.sign ( ( RSAPrivateCrtKeyParameters ) pair.getPrivate(), Wrapper.getGenPayment() );
+                o.signX ( ( RSAPrivateCrtKeyParameters ) pair.getPrivate(), 0 );
                 o.pushPrivate ( CObj.MINE, "true" );
 
                 o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );

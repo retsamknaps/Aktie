@@ -31,6 +31,7 @@ public class NewDirectoryShareDialog extends Dialog
     private CObj comId;
     private NewDirectoryShareDialog This;
     private Button btnDefaultDownloadLocation;
+    private Button btnDoNotGenerate;
 
     /**
         Create the dialog.
@@ -123,6 +124,11 @@ public class NewDirectoryShareDialog extends Dialog
         btnDefaultDownloadLocation.setText ( "Default Download Location" );
         new Label ( container, SWT.NONE );
         new Label ( container, SWT.NONE );
+
+        btnDoNotGenerate = new Button ( container, SWT.CHECK );
+        btnDoNotGenerate.setText ( "Do not generate anti-spam payment ( Expert )" );
+        new Label ( container, SWT.NONE );
+        new Label ( container, SWT.NONE );
         btnBrowse.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -177,7 +183,8 @@ public class NewDirectoryShareDialog extends Dialog
     {
         app.getNode().getShareManager().addShare ( comId.getDig(),
                 memId.getId(), textShareName.getText(), textSharePath.getText(),
-                btnDefaultDownloadLocation.getSelection() );
+                btnDefaultDownloadLocation.getSelection(),
+                btnDoNotGenerate.getSelection() );
         super.okPressed();
     }
 
@@ -203,6 +210,11 @@ public class NewDirectoryShareDialog extends Dialog
     public Button getBtnDefaultDownloadLocation()
     {
         return btnDefaultDownloadLocation;
+    }
+
+    public Button getBtnDoNotGenerate()
+    {
+        return btnDoNotGenerate;
     }
 
 }

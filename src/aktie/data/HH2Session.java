@@ -51,6 +51,7 @@ public class HH2Session
             configuration.addAnnotatedClass ( CommunityMyMember.class );
             configuration.addAnnotatedClass ( DirectoryShare.class );
             configuration.addAnnotatedClass ( PrivateMsgIdentity.class );
+            configuration.addAnnotatedClass ( DeveloperIdentity.class );
             //--- Gui mappings
             configuration.addAnnotatedClass ( SubTreeEntity.class );
             configuration.buildMapping();

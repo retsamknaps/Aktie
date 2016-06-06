@@ -84,11 +84,11 @@ public class testCryptoUtils
         o.pushString ( "s1", "string1" );
         o.pushText ( "t0", "text0" );
         o.pushText ( "t1", "test1" );
-        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 8 );
+        o.signX ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 8 );
         byte d[] = Utils.toByteArray ( o.getDig() );
         System.out.println ( "DIG: " + Integer.toHexString ( d[0] ) +
                              Integer.toHexString ( d[1] ) + Integer.toHexString ( d[2] ) );
-        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic(), 8 ) );
+        assertTrue ( o.checkSignatureX ( ( RSAKeyParameters ) k.getPublic(), 8 ) );
     }
 
     @Test
@@ -109,10 +109,14 @@ public class testCryptoUtils
         //o.pushString("s1", "string1");
         o.pushText ( "t0", "text0" );
         o.pushText ( "t1", "test1" );
-        o.sign ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 22 );
+        long stt = System.currentTimeMillis();
+        o.signX ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 26 );
+        long edt = System.currentTimeMillis();
+        edt = ( edt - stt ) / 1000L;
+        System.out.println ( "GEN TIME: " + edt + "s" );
         byte d[] = Utils.toByteArray ( o.getDig() );
         System.out.println ( "DIG: " + Utils.bytesToHex ( d ) );
-        assertTrue ( o.checkSignature ( ( RSAKeyParameters ) k.getPublic(), 22 ) );
+        assertTrue ( o.checkSignatureX ( ( RSAKeyParameters ) k.getPublic(), 26 ) );
     }
 
     @Test

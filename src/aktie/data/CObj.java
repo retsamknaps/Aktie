@@ -50,6 +50,7 @@ public class CObj
     public static String QUERY = "query";
     public static String FIELD = "field";
     public static String DUPFILE = "dupfile";
+    public static String SPAMEXCEPTION = "spamex";
 
     //Types - no indexed.
     public static String INDEX_QUERY = "index_query";
@@ -72,6 +73,7 @@ public class CObj
     public static String CON_REQ_IDENTITIES = "con_ident";
     public static String CON_REQ_PRVIDENT = "con_prv_ident";
     public static String CON_REQ_PRVMSG = "con_prv_msg";
+    public static String CON_REQ_SPAMEX = "con_spamex";
     public static String CON_REQ_COMMUNITIES = "con_com";
     public static String CON_REQ_MEMBERSHIPS = "con_mem";
     public static String CON_REQ_SUBS = "con_subs";
@@ -91,6 +93,7 @@ public class CObj
     public static String USR_COMMUNITY_UPDATE = "usr_comupdate";
     public static String USR_MEMBER_UPDATE = "usr_memupdate";
     public static String USR_PRVMSG_UPDATE = "usr_prvmsgupdate";
+    public static String USR_SPAMEX_UPDATE = "usr_spamexupdate";
     public static String USR_SEED = "usr_seed";
     public static String USR_COMMUNITY = "usr_com";
     public static String USR_START_DEST = "start_dest";
@@ -117,6 +120,7 @@ public class CObj
     public static String PRV_QRY_AUTODOWNLOAD = "prv_auto_dl";
     public static String PRV_RECIPIENT   = "prv_to";
     public static String PRV_MSG_ID      = "prv_msg_id";
+    public static String PRV_SKIP_PAYMENT = "prv_skip_payment";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 
@@ -1348,7 +1352,7 @@ public class CObj
 
     }
 
-    public void sign ( RSAPrivateCrtKeyParameters key, int bm )
+    public void signX ( RSAPrivateCrtKeyParameters key, int bm )
     {
         byte dg[] = genPayment ( bm );
         dig = Utils.toString ( dg );
@@ -1375,7 +1379,7 @@ public class CObj
         dig = Utils.toString ( dg );
     }
 
-    public boolean checkSignature ( RSAKeyParameters key, int bm )
+    public boolean checkSignatureX ( RSAKeyParameters key, int bm )
     {
         byte td[] = digest();
 

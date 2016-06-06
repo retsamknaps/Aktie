@@ -13,6 +13,7 @@ import aktie.net.Destination;
 import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
 import aktie.net.Net;
+import aktie.spam.SpamTool;
 
 public class UsrStartDestinationProcessor extends GenericProcessor
 {
@@ -26,8 +27,9 @@ public class UsrStartDestinationProcessor extends GenericProcessor
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
+    private SpamTool spamtool;
 
-    public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf )
+    public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
         fileHandler = rf;
         connectionMan = cm;
@@ -38,6 +40,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
         session = s;
         index = i;
         guicallback = g;
+        spamtool = st;
     }
 
     /**
@@ -83,7 +86,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
 
                     if ( d != null )
                     {
-                        DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler );
+                        DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
                         dt.setIdentity ( o );
                         connectionMan.addDestination ( dt );
                     }

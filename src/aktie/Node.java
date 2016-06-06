@@ -14,6 +14,7 @@ import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
 import aktie.net.Net;
+import aktie.spam.SpamTool;
 import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
@@ -58,6 +59,7 @@ public class Node
     private ShareManager shareManager;
     private Settings settings;
     private HasFileCreator hasFileCreator;
+    private SpamTool spamtool;
 
 
     public Node ( String nodedir, Net net, GuiCallback uc,
@@ -72,15 +74,18 @@ public class Node
         index = new Index();
         index.setIndexdir ( idxdir );
         index.init();
+        spamtool = new SpamTool ( index );
+
         session = new HH2Session();
         session.init ( nodedir + File.separator + "h2" );
         identManager = new IdentityManager ( session, index );
-        NewFileProcessor nfp = new NewFileProcessor ( session, index, usrCallback ) ;
+        NewFileProcessor nfp = new NewFileProcessor ( session, index, spamtool, usrCallback ) ;
         requestHandler = new RequestFileHandler ( session, nodedir + File.separator + "downloads", nfp, index );
         conMan = new ConnectionManager2 ( session, index, requestHandler, identManager, usrCallback );
         userQueue = new ProcessQueue();
 
-        hasFileCreator = new HasFileCreator ( session, index );
+
+        hasFileCreator = new HasFileCreator ( session, index, spamtool );
         //HH2Session s, Index i, HasFileCreator h, ProcessQueue pq
 
         shareManager = new ShareManager ( session, requestHandler, index,
@@ -88,17 +93,17 @@ public class Node
 
         NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
-        userQueue.addProcessor ( new NewCommunityProcessor ( session, index, usrCallback ) );
+        userQueue.addProcessor ( new NewCommunityProcessor ( session, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( nfp );
         userQueue.addProcessor ( new NewIdentityProcessor ( network, conMan, session,
-                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
-        userQueue.addProcessor ( new NewMembershipProcessor ( session, index, usrCallback ) );
-        userQueue.addProcessor ( new NewPostProcessor ( session, index, usrCallback ) );
+                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
+        userQueue.addProcessor ( new NewMembershipProcessor ( session, index, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewPostProcessor ( session, index, spamtool, usrCallback ) );
 
-        userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, usrCallback ) );
-        userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, usrCallback ) );
+        userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
-                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler ) );
+                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
         userQueue.addProcessor ( new UsrReqComProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqFileProcessor ( requestHandler, usrCallback ) );
         userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );
@@ -110,7 +115,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqSetRankProcessor ( index, hasFileCreator, usrCallback ) );
         userQueue.addProcessor ( new UsrReqShareProcessor ( shareManager ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
-        userQueue.addProcessor ( new UsrSeedCommunity ( session, index, netCallback ) );
+        userQueue.addProcessor ( new UsrSeedCommunity ( session, index, spamtool, netCallback ) );
         userQueue.addProcessor ( new UsrCancelFileProcessor ( requestHandler, usrCallback ) );
         userQueue.addProcessor ( pusher );
 
@@ -173,6 +178,11 @@ public class Node
         conMan.stop();
         userQueue.stop();
         index.close();
+    }
+
+    public void newDeveloperIdentity ( String id )
+    {
+        identManager.newDeveloperIdentity ( id );
     }
 
     public void priorityEnqueue ( CObj o )
