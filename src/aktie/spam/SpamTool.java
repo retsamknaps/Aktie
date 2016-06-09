@@ -11,6 +11,8 @@ import aktie.utils.HasFileCreator;
 public class SpamTool
 {
 
+    public static String EXSPAMPREFIX = "EXSPAM";
+
     private Index index;
 
     public SpamTool ( Index i )
@@ -83,7 +85,7 @@ public class SpamTool
                 id = HasFileCreator.getCommunityMemberId ( id, comid );
             }
 
-            CObj spex = index.getById ( "EXSPAM" + id );
+            CObj spex = index.getById ( EXSPAMPREFIX + id );
 
             if ( spex != null && seq != null )
             {

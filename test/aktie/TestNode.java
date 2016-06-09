@@ -13,6 +13,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
@@ -146,7 +147,9 @@ public class TestNode
     @Test
     public void testNode()
     {
-
+    	Wrapper.OLDPAYMENT = 0;
+    	Wrapper.NEWPAYMENT = 5;
+    	
         Logger log = Logger.getLogger ( "aktie" );
         log.setLevel ( Level.INFO );
 

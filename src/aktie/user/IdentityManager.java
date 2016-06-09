@@ -1937,6 +1937,53 @@ public class IdentityManager
 
     }
 
+    public DeveloperIdentity getDeveloperIdentity ( String id )
+    {
+        DeveloperIdentity di = null;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            di = ( DeveloperIdentity ) s.get ( DeveloperIdentity.class, id );
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return di;
+    }
+
     @SuppressWarnings ( "unchecked" )
     public List<CommunityMyMember> getMyMemberships()
     {
@@ -2789,6 +2836,194 @@ public class IdentityManager
 
         }
 
+    }
+
+    public IdentityData getIdentityData ( String id )
+    {
+        Session s = null;
+        IdentityData d = null;
+
+        try
+        {
+            s = session.getSession();
+            d = ( IdentityData ) s.get ( IdentityData.class, id );
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return d;
+    }
+
+    public PrivateMsgIdentity getPrvMsgIdentityData ( String id )
+    {
+        Session s = null;
+        PrivateMsgIdentity d = null;
+
+        try
+        {
+            s = session.getSession();
+            d = ( PrivateMsgIdentity ) s.get ( PrivateMsgIdentity.class, id );
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return d;
+    }
+
+    public CommunityMember getCommunityMember ( String id )
+    {
+        Session s = null;
+        CommunityMember d = null;
+
+        try
+        {
+            s = session.getSession();
+            d = ( CommunityMember ) s.get ( CommunityMember.class, id );
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return d;
+    }
+
+    public CommunityMyMember getCommunityMyMember ( String id )
+    {
+        Session s = null;
+        CommunityMyMember d = null;
+
+        try
+        {
+            s = session.getSession();
+            d = ( CommunityMyMember ) s.get ( CommunityMyMember.class, id );
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return d;
     }
 
 }

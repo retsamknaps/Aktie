@@ -42,7 +42,7 @@ public class Wrapper
     public static int OLDPAYMENT = 0;
     public static long CHECKNEWPAYMENTAFTER = ( 1465144386L * 1000L ) +
             ( 5L * 24L * 60L * 60L * 1000L );
-    public static int NEWPAYMENT = 26;
+    public static int NEWPAYMENT = 27;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";

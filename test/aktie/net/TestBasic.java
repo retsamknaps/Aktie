@@ -8,6 +8,7 @@ import java.util.List;
 
 import aktie.data.CObj;
 import aktie.data.RequestFile;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.FUtils;
@@ -90,6 +91,8 @@ public class TestBasic
     @Test
     public void testIt()
     {
+    	Wrapper.OLDPAYMENT = 0;
+    	Wrapper.NEWPAYMENT = 5;
         Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
 
         TestNode Tn0 = newId ( "n0" );

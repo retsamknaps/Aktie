@@ -13,6 +13,7 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
@@ -38,6 +39,8 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
     @Test
     public void dotest()
     {
+    	Wrapper.OLDPAYMENT = 0;
+    	Wrapper.NEWPAYMENT = 5;
         Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
         File tmpdir = new File ( "h2dbtest" );
         FUtils.deleteDir ( tmpdir );

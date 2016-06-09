@@ -24,6 +24,7 @@ import aktie.user.NewPostProcessor;
 import aktie.user.NewPrivateMessageProcessor;
 import aktie.user.NewPushProcessor;
 import aktie.user.NewQueryProcessor;
+import aktie.user.NewSpamExProcessor;
 import aktie.user.NewSubscriptionProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareManager;
@@ -102,6 +103,8 @@ public class Node
 
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
+
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
         userQueue.addProcessor ( new UsrReqComProcessor ( identManager ) );

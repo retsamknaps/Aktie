@@ -1237,6 +1237,24 @@ public class SWTApp
 
     }
 
+    private void generateSpamEx ( CObj devid, boolean save )
+    {
+        if ( devid != null )
+        {
+            CObj u = new CObj();
+            u.setType ( CObj.SPAMEXCEPTION );
+            u.pushString ( CObj.CREATOR, devid.getId() );
+
+            if ( save )
+            {
+                u.pushPrivate ( CObj.STATUS, "save" );
+            }
+
+            getNode().enqueue ( u );
+        }
+
+    }
+
     private void updateAll()
     {
         CObj u = new CObj();
@@ -3119,7 +3137,12 @@ public class SWTApp
                 @Override
                 public void widgetSelected ( SelectionEvent e )
                 {
-                    //TODO HERE!
+                    if ( selectedIdentity != null )
+                    {
+                        boolean asure = MessageDialog.openConfirm ( shell, "Update", "SAVE SPAM EX?" );
+                        generateSpamEx ( selectedIdentity, asure );
+                    }
+
                 }
 
                 @Override
