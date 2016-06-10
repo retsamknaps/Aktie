@@ -20,7 +20,6 @@ public class UsrReqSpamExProcessor extends GenericProcessor
 
         if ( CObj.USR_SPAMEX_UPDATE.equals ( type ) )
         {
-            System.out.println ( "REQUEST SPAM EXCEPTIONS!!!!!!!! 1111111111" );
             identManager.requestSpamEx();
             return true;
         }

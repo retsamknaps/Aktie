@@ -28,14 +28,11 @@ public class ReqSpamExProcessor extends GenericProcessor
             Long first = b.getNumber ( CObj.FIRSTNUM );
             Long last = b.getNumber ( CObj.LASTNUM );
 
-            System.out.println ( "REQ SPAM EXCEPTIONS! " + creator + " FRST: " + first + " LAST: " + last );
-
             if ( creator != null && first != null && last != null )
             {
                 long maxlast = first + 1000;
                 last = Math.min ( maxlast, last );
                 CObjList cl = index.getSpamEx ( creator, first, last );
-                System.out.println ( "REQ SPAM EXCEPTIONS!  RETURNING: " + cl.size() );
                 connection.enqueue ( cl );
             }
 

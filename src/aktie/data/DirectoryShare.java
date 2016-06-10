@@ -1,5 +1,6 @@
 package aktie.data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -23,6 +24,7 @@ public class DirectoryShare
     private String message;
 
     private boolean defaultDownload;
+    @Column ( columnDefinition = "BOOLEAN(1) NOT NULL default FALSE" )
     private boolean skipSpam;
 
     @Override

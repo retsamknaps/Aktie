@@ -36,7 +36,6 @@ public class InSpamExProcessor extends GenericProcessor
                 //Update creator's ident index
                 String creator = b.getString ( CObj.CREATOR );
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
-                System.out.println ( "IN SPAM EXCEPTION! " + creator + " seq " + seqnum );
 
                 if ( creator != null && seqnum != null )
                 {
@@ -96,7 +95,6 @@ public class InSpamExProcessor extends GenericProcessor
 
                         if ( m != null )
                         {
-                            System.out.println ( "IN SPAM EXCEPTION SAVE!" );
                             index.index ( b );
                         }
 

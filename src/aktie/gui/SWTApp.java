@@ -1331,6 +1331,8 @@ public class SWTApp
     private AdvancedSearchDialog advancedDialog;
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
+    private AktiSpamRankDialog spamDialog;
+
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
@@ -2061,7 +2063,7 @@ public class SWTApp
 
     public void upgrade0418 ( String lastversion )
     {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0419 ) < 0 )
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0418 ) < 0 )
         {
             Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
         }
@@ -2710,6 +2712,8 @@ public class SWTApp
         hasFileDialog.create();
         zeroDialog = new ZeroIdentityDialog ( shell, userRankDialog, this );
         zeroDialog.create();
+        spamDialog = new AktiSpamRankDialog ( shell );
+        spamDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -3088,6 +3092,24 @@ public class SWTApp
 
         } );
 
+        //zeroDialog
+        MenuItem mntmSpam = new MenuItem ( menu_1, SWT.NONE );
+        mntmSpam.setText ( "Set Not Spam Rank" );
+        mntmSpam.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                spamDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
         mntmStartManualUpdate.setText ( "Refresh All Now" );
         mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
@@ -3175,6 +3197,10 @@ public class SWTApp
 
         btnEnableShareManager = new Button ( composite_header, SWT.CHECK );
         btnEnableShareManager.setText ( "Enabled" );
+        new Label ( composite_header, SWT.NONE );
+        new Label ( composite_header, SWT.NONE );
+        new Label ( composite_header, SWT.NONE );
+        new Label ( composite_header, SWT.NONE );
         new Label ( composite_header, SWT.NONE );
         btnEnableShareManager.addSelectionListener ( new SelectionListener()
         {
@@ -5265,7 +5291,9 @@ public class SWTApp
         } );
 
         btnDoNotGenerate = new Button ( composite_14, SWT.CHECK );
-        btnDoNotGenerate.setText ( "Do not generate anti-spam payment ( Expert )" );
+        btnDoNotGenerate.setText ( "Do not generate anti-spam (Expert)" );
+        new Label ( composite_14, SWT.NONE );
+
         btnDoNotGenerate.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -5295,18 +5323,6 @@ public class SWTApp
 
         Button btnDelete = new Button ( composite_14, SWT.NONE );
         btnDelete.setText ( "Delete" );
-
-        new Label ( composite_14, SWT.NONE );
-
-        txtAShareIs = new Text ( composite_14, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL );
-        txtAShareIs.setEditable ( false );
-        txtAShareIs.setText ( "A Share is a directory or folder on your system, where all "
-                              + "files are automatically shared with the community. "
-                              + "Any new files copied into the directory will automatically "
-                              + "be shared.  You can move and rename files within a share, "
-                              + "and ohter users will still be able to download these.  "
-                              + "You can also do download new files to Share directories." );
-        txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         btnDelete.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -5332,6 +5348,18 @@ public class SWTApp
             }
 
         } );
+
+        new Label ( composite_14, SWT.NONE );
+
+        txtAShareIs = new Text ( composite_14, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL );
+        txtAShareIs.setEditable ( false );
+        txtAShareIs.setText ( "A Share is a directory or folder on your system, where all "
+                              + "files are automatically shared with the community. "
+                              + "Any new files copied into the directory will automatically "
+                              + "be shared.  You can move and rename files within a share, "
+                              + "and ohter users will still be able to download these.  "
+                              + "You can also do download new files to Share directories." );
+        txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
 
         TabItem tbtmDownloadds = new TabItem ( tabFolder, SWT.NONE );

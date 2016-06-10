@@ -58,7 +58,6 @@ public class NewSpamExProcessor extends GenericProcessor
             s.getTransaction().commit();
             s.close();
 
-            System.out.println ( "SAVING EX: " + c.getString ( CObj.CREATOR ) + " seq " + c.getNumber ( CObj.SEQNUM ) );
             c.signX ( pkey, 0 );
             index.index ( c );
         }
@@ -155,7 +154,6 @@ public class NewSpamExProcessor extends GenericProcessor
                     nex.setType ( CObj.SPAMEXCEPTION );
                     nex.setId ( sid );
                     nex.pushString ( CObj.CREATOR, creator );
-                    System.out.println ( "SPAMEXECPTION GENERATED FOR: " + ident.getDisplayName() );
                     IdentityData dat = identManager.getIdentity ( ident.getId() );
 
                     if ( dat != null )
@@ -236,7 +234,6 @@ public class NewSpamExProcessor extends GenericProcessor
                                     sb.append ( comname );
                                     sb.append ( " ::: " );
                                     sb.append ( subname );
-                                    System.out.println ( sb.toString() );
                                 }
 
                                 CommunityMember cm = identManager.getCommunityMember ( cid );

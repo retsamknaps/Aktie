@@ -1425,7 +1425,6 @@ public class CObj
         if ( bm > 0 )
         {
             byte tstb[] = Utils.getTarget ( bm, d.length );
-            System.out.println ( "TARGET: " + Utils.bytesToHex ( tstb ) );
 
             Map<String, Long> cm = new HashMap<String, Long>();
             byte tb[] = new byte[d.length];
