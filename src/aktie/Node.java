@@ -38,6 +38,7 @@ import aktie.user.UsrReqPostProcessor;
 import aktie.user.UsrReqPrvMsgProcessor;
 import aktie.user.UsrReqSetRankProcessor;
 import aktie.user.UsrReqShareProcessor;
+import aktie.user.UsrReqSpamExProcessor;
 import aktie.user.UsrReqSubProcessor;
 import aktie.user.UsrSeed;
 import aktie.user.UsrSeedCommunity;
@@ -117,6 +118,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSetRankProcessor ( index, hasFileCreator, usrCallback ) );
         userQueue.addProcessor ( new UsrReqShareProcessor ( shareManager ) );
+        userQueue.addProcessor ( new UsrReqSpamExProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrSeed ( session, index, netCallback ) );
         userQueue.addProcessor ( new UsrSeedCommunity ( session, index, spamtool, netCallback ) );
         userQueue.addProcessor ( new UsrCancelFileProcessor ( requestHandler, usrCallback ) );

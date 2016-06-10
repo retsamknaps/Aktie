@@ -1352,7 +1352,7 @@ public class CObj
 
     }
 
-    public void signX ( RSAPrivateCrtKeyParameters key, int bm )
+    public void signX ( RSAPrivateCrtKeyParameters key, long bm )
     {
         byte dg[] = genPayment ( bm );
         dig = Utils.toString ( dg );
@@ -1379,15 +1379,19 @@ public class CObj
         dig = Utils.toString ( dg );
     }
 
-    public boolean checkSignatureX ( RSAKeyParameters key, int bm )
+    public boolean checkSignatureX ( RSAKeyParameters key, long bm )
     {
         byte td[] = digest();
 
-        byte msk[] = Utils.generateMask ( bm, td.length );
-
-        if ( !Utils.checkDig ( td, msk ) )
+        if ( bm > 0 )
         {
-            return false;
+            byte tstb[] = Utils.getTarget ( bm, td.length );
+
+            if ( !Utils.checkDig ( td, tstb ) )
+            {
+                return false;
+            }
+
         }
 
         if ( !Arrays.equals ( td, Utils.toByteArray ( dig ) ) ) { return false; }
@@ -1410,22 +1414,26 @@ public class CObj
         return false;
     }
 
-    private byte[] genPayment ( int bm )
+    private byte[] genPayment ( long bm )
     {
+
         byte d[] = digest();
+
         byte rb[] = new byte[d.length];
         System.arraycopy ( d, 0, rb, 0, d.length );
 
         if ( bm > 0 )
         {
+            byte tstb[] = Utils.getTarget ( bm, d.length );
+            System.out.println ( "TARGET: " + Utils.bytesToHex ( tstb ) );
+
             Map<String, Long> cm = new HashMap<String, Long>();
-            byte msk[] = Utils.generateMask ( bm, d.length );
             byte tb[] = new byte[d.length];
             long payment = 0L;
             cm.put ( CObj.PAYMENT, payment );
             Utils.digLongMap ( rb, tb, d, cm );
 
-            while ( !Utils.checkDig ( rb, msk ) )
+            while ( !Utils.checkDig ( rb, tstb ) )
             {
                 payment++;
                 cm.put ( CObj.PAYMENT, payment );

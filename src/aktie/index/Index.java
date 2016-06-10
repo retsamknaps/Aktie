@@ -531,7 +531,20 @@ public class Index implements Runnable
 
     public CObjList getSpamEx ( String creator, long first, long last )
     {
-        return getCreatorObjs ( CObj.SPAMEXCEPTION, creator, first, last );
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                         CObj.docNumber ( CObj.SEQNUM ),
+                                         first, last, true, true );
+        builder.add ( nq, BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
     }
 
     public CObjList getPrvMsg ( String creator, long first, long last )

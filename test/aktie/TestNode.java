@@ -147,9 +147,9 @@ public class TestNode
     @Test
     public void testNode()
     {
-    	Wrapper.OLDPAYMENT = 0;
-    	Wrapper.NEWPAYMENT = 5;
-    	
+        Wrapper.OLDPAYMENT = 0;
+        Wrapper.NEWPAYMENT = 0x0400004000000000L;
+
         Logger log = Logger.getLogger ( "aktie" );
         log.setLevel ( Level.INFO );
 
@@ -161,11 +161,13 @@ public class TestNode
         CallbackIntr cb1 = new CallbackIntr();
         CallbackIntr cb2 = new CallbackIntr();
         CallbackIntr cb3 = new CallbackIntr();
+        CallbackIntr cb4 = new CallbackIntr();
 
         ConCallbackIntr cn0 = new ConCallbackIntr();
         ConCallbackIntr cn1 = new ConCallbackIntr();
         ConCallbackIntr cn2 = new ConCallbackIntr();
         ConCallbackIntr cn3 = new ConCallbackIntr();
+        ConCallbackIntr cn4 = new ConCallbackIntr();
 
         File tmpdir = new File ( "tstnode" );
         FUtils.deleteDir ( tmpdir );
@@ -175,6 +177,7 @@ public class TestNode
         RawNet net1 = new RawNet ( tmpdir );
         RawNet net2 = new RawNet ( tmpdir );
         RawNet net3 = new RawNet ( tmpdir );
+        RawNet net4 = new RawNet ( tmpdir );
 
         //public Node(String nodedir, Net net, GuiCallback uc,
         //      GuiCallback nc, ConnectionListener cc) throws IOException {
@@ -185,11 +188,13 @@ public class TestNode
             FUtils.deleteDir ( new File ( "testnode1" ) );
             FUtils.deleteDir ( new File ( "testnode2" ) );
             FUtils.deleteDir ( new File ( "testnode3" ) );
+            FUtils.deleteDir ( new File ( "testnode4" ) );
 
             Node n0 = new Node ( "testnode0", net0, cb0, cb0, cn0 );
             Node n1 = new Node ( "testnode1", net1, cb1, cb1, cn1 );
             Node n2 = new Node ( "testnode2", net2, cb2, cb2, cn2 );
             Node n3 = new Node ( "testnode3", net3, cb3, cb3, cn3 );
+            Node n4 = new Node ( "testnode4", net4, cb4, cb4, cn4 );
 
             System.out.println ( "CREATE IDENTIES.............................." );
             //CObj node0a =
@@ -455,6 +460,14 @@ public class TestNode
 
             assertEquals ( 8, clist.size() );
             clist.close();
+
+            System.out.println ( "SET DEV ID...................................." );
+            n0.newDeveloperIdentity ( n0seed.getId() );
+            n1.newDeveloperIdentity ( n0seed.getId() );
+            n2.newDeveloperIdentity ( n0seed.getId() );
+            n3.newDeveloperIdentity ( n0seed.getId() );
+            n4.newDeveloperIdentity ( n0seed.getId() );
+
 
             System.out.println ( "CREATE COMMUNITY.............................." );
             cb0.oqueue.clear();
@@ -1436,6 +1449,8 @@ public class TestNode
             t = l.get ( 0 );
             assertEquals ( sbj, t.getPrivate ( CObj.SUBJECT ) );
             assertEquals ( bdy, t.getPrivate ( CObj.BODY ) );
+            assertEquals ( "true", t.getPrivate ( CObj.DECODED ) );
+            System.out.println ( "SUB: " + sbj + " BDY: " + bdy );
             assertEquals ( tid, t.getPrivate ( CObj.PRV_MSG_ID ) );
             l.close();
 
@@ -1823,31 +1838,74 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            //Download a localfile to make sure it's just copied over and not really downloaded.
-            File tmp2 = new File ( "testshare2" );
-            FUtils.deleteDir ( tmp2 );
-            tmp2.mkdirs();
+            //            //Download a localfile to make sure it's just copied over and not really downloaded.
+            //            File tmp2 = new File ( "testshare2" );
+            //            FUtils.deleteDir ( tmp2 );
+            //            tmp2.mkdirs();
+            //
+            //            n0.getShareManager().addShare ( com0n0.getDig(), n0seedb.getId(),
+            //                                            "testshare2", tmp2.getPath(), false, false );
+            //
+            //            slst = n0.getShareManager().listShares ( com0n0.getDig(), n0seedb.getId() );
+            //
+            //            for ( int c = 0; c < slst.size(); c++ )
+            //            {
+            //                DirectoryShare ds = slst.get ( 0 );
+            //                System.out.println ( "DS name: " + ds.getShareName() );
+            //            }
 
-            n0.getShareManager().addShare ( com0n0.getDig(), n0seedb.getId(),
-                                            "testshare2", tmp2.getPath(), false, false );
+            //
+            //            assertEquals ( 1, slst.size() );
+            //
+            //            log.setLevel ( Level.INFO );
+            //
+            //            hf0.setType ( CObj.USR_DOWNLOAD_FILE );
+            //            hf0.pushString ( CObj.CREATOR, n0seedb.getId() );
+            //            hf0.pushString ( CObj.SHARE_NAME, "testshare2" );
+            //            hf0.getPrivatedata().remove ( CObj.LOCALFILE );
+            //            n0.enqueue ( hf0 );
+            //
+            //            try
+            //            {
+            //                Thread.sleep ( 10000 );
+            //            }
 
-            slst = n0.getShareManager().listShares ( com0n0.getDig(), n0seedb.getId() );
+            //
+            //            catch ( InterruptedException e )
+            //            {
+            //                e.printStackTrace();
+            //            }
 
-            for ( int c = 0; c < slst.size(); c++ )
-            {
-                DirectoryShare ds = slst.get ( 0 );
-                System.out.println ( "DS name: " + ds.getShareName() );
-            }
+            //
+            //            File tf = new File ( "testshare2" + File.separator + nf.getName() );
+            //            assertTrue ( tf.exists() );
+            //
+            //            assertTrue ( FUtils.diff ( nf, tf ) );
 
-            assertEquals ( 1, slst.size() );
+            System.out.println ( "TEST SPAM CONTROL.................................." );
 
-            log.setLevel ( Level.INFO );
 
-            hf0.setType ( CObj.USR_DOWNLOAD_FILE );
-            hf0.pushString ( CObj.CREATOR, n0seedb.getId() );
-            hf0.pushString ( CObj.SHARE_NAME, "testshare2" );
-            hf0.getPrivatedata().remove ( CObj.LOCALFILE );
-            n0.enqueue ( hf0 );
+            System.out.println ( "CREATE COMMUNITY.............................." );
+            cb0.oqueue.clear();
+            CObj pubcom = new CObj();
+            pubcom.setType ( CObj.COMMUNITY );
+            pubcom.pushPrivate ( CObj.NAME, "pubcom" );
+            pubcom.pushPrivate ( CObj.DESCRIPTION, "description pubcom" );
+            pubcom.pushString ( CObj.CREATOR, n0seed.getId() );
+            pubcom.pushString ( CObj.SCOPE, CObj.SCOPE_PUBLIC );
+            n0.enqueue ( pubcom );
+            cb0.waitForUpdate();
+            co = ( CObj ) cb0.oqueue.poll();
+            assertNull ( co.getString ( CObj.ERROR ) );
+
+            System.out.println ( "UPDATE COMMUNITY.............................." );
+            n1.enqueue ( comupdate );
+            n2.enqueue ( comupdate );
+            n3.enqueue ( comupdate );
+
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
 
             try
             {
@@ -1859,16 +1917,356 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            File tf = new File ( "testshare2" + File.separator + nf.getName() );
-            assertTrue ( tf.exists() );
 
-            assertTrue ( FUtils.diff ( nf, tf ) );
+            comlst = n0.getIndex().getValidCommunities();
+            assertEquals ( 2, comlst.size() );
+            comlst.close();
 
+            comlst = n1.getIndex().getValidCommunities();
+            assertEquals ( 1, comlst.size() );
+            comlst.close();
+
+            comlst = n2.getIndex().getValidCommunities();
+            assertEquals ( 2, comlst.size() );
+            comlst.close();
+
+            comlst = n3.getIndex().getValidCommunities();
+            assertEquals ( 2, comlst.size() );
+            comlst.close();
+
+
+
+
+            Wrapper.OLDPAYMENT = Wrapper.NEWPAYMENT;
+            Wrapper.NEWPAYMENT = 0x0000084000000000L;
+            Wrapper.CHECKNEWPAYMENTAFTER = 0;
+
+            createIdentity ( n4, "node4a" );
+            n0seed.setType ( CObj.USR_SEED );
+            n4.enqueue ( n0seed );
+
+            cb4.waitForUpdate();
+
+            try
+            {
+                Thread.sleep ( 500 );
+            }
+
+            catch ( InterruptedException e1 )
+            {
+                e1.printStackTrace();
+            }
+
+
+            n4.getIndex().forceNewSearcher();
+
+            n4.enqueue ( updateIdent );
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 12L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n4.enqueue ( updateIdent );
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 12L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n4.enqueue ( updateIdent );
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 12L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            clist = n4.getIndex().getIdentities();
+            assertEquals ( 9, clist.size() );
+            clist.close();
+
+            //Make sure we DO NOT GET Updates from others yet
+
+            n4.enqueue ( comupdate );
+
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n4.enqueue ( comupdate );
+
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n4.enqueue ( comupdate );
+
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            comlst = n4.getIndex().getValidCommunities();
+            assertEquals ( 0, comlst.size() );
+            comlst.close();
+
+            System.out.println ( "Add exception." );
+            CObj spamex = new CObj();
+            spamex.setType ( CObj.SPAMEXCEPTION );
+            spamex.pushString ( CObj.CREATOR, n0seed.getId() );
+            spamex.pushPrivate ( CObj.STATUS, "save" );
+            n0.enqueue ( spamex );
+
+            try
+            {
+                Thread.sleep ( 5L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            System.out.println ( "REQUEST SPAM UPDATES................................" );
+            CObj spr = new CObj();
+            spr.setType ( CObj.USR_SPAMEX_UPDATE );
+
+            n1.enqueue ( spr );
+            n2.enqueue ( spr );
+            n3.enqueue ( spr );
+            n4.enqueue ( spr );
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n1.enqueue ( spr );
+            n2.enqueue ( spr );
+            n3.enqueue ( spr );
+            n4.enqueue ( spr );
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n1.enqueue ( spr );
+            n2.enqueue ( spr );
+            n3.enqueue ( spr );
+            n4.enqueue ( spr );
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            comlst = n0.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
+            int expsize = comlst.size();
+            System.out.println ( "EXSPAM: " + expsize );
+            assertTrue ( expsize > 0 );
+            comlst.close();
+            comlst = n1.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( expsize, comlst.size() );
+            comlst.close();
+            comlst = n2.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( expsize, comlst.size() );
+            comlst.close();
+            comlst = n3.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( expsize, comlst.size() );
+            comlst.close();
+            comlst = n4.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( expsize, comlst.size() );
+            comlst.close();
+
+            n4.enqueue ( comupdate );
+
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            comlst = n4.getIndex().getValidCommunities();
+            assertEquals ( 1, comlst.size() );
+            comlst.close();
+
+            //Submit a post with payment
+            cb0.oqueue.clear();
+            CObj sub1 = new CObj();
+            sub1.setType ( CObj.SUBSCRIPTION );
+            sub1.pushString ( CObj.CREATOR, n0seed.getId() );
+            sub1.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            sub1.pushString ( CObj.SUBSCRIBED, "true" );
+            n0.enqueue ( sub1 );
+
+            cb0.oqueue.clear();
+            CObj sub2 = new CObj();
+            sub2.setType ( CObj.SUBSCRIPTION );
+            sub2.pushString ( CObj.CREATOR, node3b.getId() );
+            sub2.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            sub2.pushString ( CObj.SUBSCRIBED, "true" );
+            n3.enqueue ( sub2 );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            updatesubs.setType ( CObj.USR_SUB_UPDATE );
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
+            n4.enqueue ( updatesubs );
+
+            n0.sendRequestsNow();
+            n1.sendRequestsNow();
+            n2.sendRequestsNow();
+            n3.sendRequestsNow();
+            n4.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            CObj post2 = new CObj();
+            post2.setType ( CObj.POST );
+            post2.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            post2.pushString ( CObj.CREATOR, n0seed.getId() );
+            post2.pushString ( CObj.PAYLOAD, "This is a post1." );
+            post2.pushPrivate ( CObj.PRV_SKIP_PAYMENT, "true" );
+            n0.enqueue ( post2 );
+
+            CObj post3 = new CObj();
+            post3.setType ( CObj.POST );
+            post3.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            post3.pushString ( CObj.CREATOR, n0seed.getId() );
+            post3.pushString ( CObj.PAYLOAD, "This is a post2." );
+            n0.enqueue ( post3 );
+
+            n0.enqueue ( pupdate );
+            n3.enqueue ( pupdate );
+
+            n0.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            clst = n3.getIndex().getPosts ( pubcom.getDig(), n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( 1, clst.size() );
+            CObj pstt = clst.get ( 0 );
+            assertEquals ( "This is a post2.", pstt.getString ( CObj.PAYLOAD ) );
+            clst.close();
+
+            //n3 set n0 rank above 5 and rerequests posts.
+            //make sure you get the new one.
+            CObj setrank = new CObj();
+            setrank.setType ( CObj.USR_SET_RANK );
+            setrank.pushNumber ( CObj.PRV_USER_RANK, 8 );
+            setrank.pushString ( CObj.CREATOR, n0seed.getId() );
+            n3.enqueue ( setrank );
+
+            n0.enqueue ( pupdate );
+            n3.enqueue ( pupdate );
+
+            n0.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            clst = n3.getIndex().getPosts ( pubcom.getDig(), n0seed.getId(), 0, Long.MAX_VALUE );
+            assertEquals ( 2, clst.size() );
 
             n0.close();
             n1.close();
             n2.close();
             n3.close();
+            n4.close();
 
         }
 

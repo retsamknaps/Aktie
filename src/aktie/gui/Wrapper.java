@@ -25,9 +25,9 @@ public class Wrapper
     public static String VERSION_0115 = "version 0.1.15";
     public static String VERSION_0403 = "version 0.4.3";
     public static String VERSION_0405 = "version 0.4.5";
-    public static String VERSION_0418 = "version 0.4.18";
+    public static String VERSION_0419 = "version 0.4.19";
 
-    public static String VERSION = VERSION_0418;
+    public static String VERSION = VERSION_0419;
 
     public static String VERSION_FILE = "version.txt";
 
@@ -39,10 +39,12 @@ public class Wrapper
     public static long RELEASETIME = ( 1464264565L * 1000L ) + 3600000L;
 
     //Hash cash payment values
-    public static int OLDPAYMENT = 0;
-    public static long CHECKNEWPAYMENTAFTER = ( 1465144386L * 1000L ) +
-            ( 5L * 24L * 60L * 60L * 1000L );
-    public static int NEWPAYMENT = 27;
+    public static long OLDPAYMENT = 0;
+    public static long CHECKNEWPAYMENTAFTER = ( 1465575801L * 1000L ) +
+            ( 8L * 60L * 60L * 1000L );
+
+    //                              0x0123456789ABCDEFL;
+    public static long NEWPAYMENT = 0x0000004000000000L;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
@@ -932,9 +934,9 @@ public class Wrapper
         savePropsFile ( p );
     }
 
-    public static int getCheckPayment()
+    public static long getCheckPayment()
     {
-        int pm = OLDPAYMENT;
+        long pm = OLDPAYMENT;
         long today = System.currentTimeMillis();
 
         if ( today >= CHECKNEWPAYMENTAFTER )
@@ -945,7 +947,7 @@ public class Wrapper
         return pm;
     }
 
-    public static int getGenPayment()
+    public static long getGenPayment()
     {
         return NEWPAYMENT;
     }

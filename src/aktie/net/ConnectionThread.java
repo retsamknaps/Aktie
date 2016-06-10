@@ -121,6 +121,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, this ) );
         preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, this ) );
         preprocProcessor.addProcessor ( new InSubProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
         preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );
@@ -136,6 +137,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         inProcessor.addProcessor ( new ReqMemProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqPostsProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqSubProcessor ( i, this ) );
+        inProcessor.addProcessor ( new ReqSpamExProcessor ( i, this ) );
         outproc = new OutputProcessor();
         Thread t = new Thread ( this, "Input Connection Process Thread" );
         t.start();

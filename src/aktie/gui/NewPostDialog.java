@@ -542,6 +542,9 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
         Button btnNewField = new Button ( composite_1, SWT.NONE );
         btnNewField.setText ( "New Field" );
         btnNewField.setToolTipText ( "Create a new field of the type selected." );
+
+        btnSkipAntispam = new Button ( composite_1, SWT.CHECK );
+        btnSkipAntispam.setText ( "Skip Anti-Spam" );
         btnNewField.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -766,6 +769,7 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     private File newAttachment;
     private File newPreview;
     private Table table;
+    private Button btnSkipAntispam;
 
     @Override
     protected void okPressed()
@@ -780,6 +784,12 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
             p.pushString ( CObj.COMMUNITY_NAME, community.getPrivateDisplayName() );
             p.pushString ( CObj.SUBJECT, subject.getText() );
             p.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( fileRef, prvFileRef, replyPost ) );
+
+            if ( btnSkipAntispam.getSelection() )
+            {
+                p.pushPrivate ( CObj.PRV_SKIP_PAYMENT, "true" );
+            }
+
             p.pushText ( CObj.BODY, postBody.getText() );
 
             if ( newAttachment == null )
@@ -1025,6 +1035,11 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     public TableViewer getTableViewer()
     {
         return fieldTableViewer;
+    }
+
+    public Button getBtnSkipAntispam()
+    {
+        return btnSkipAntispam;
     }
 
 }

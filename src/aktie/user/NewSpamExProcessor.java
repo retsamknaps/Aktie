@@ -58,6 +58,7 @@ public class NewSpamExProcessor extends GenericProcessor
             s.getTransaction().commit();
             s.close();
 
+            System.out.println ( "SAVING EX: " + c.getString ( CObj.CREATOR ) + " seq " + c.getNumber ( CObj.SEQNUM ) );
             c.signX ( pkey, 0 );
             index.index ( c );
         }

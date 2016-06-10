@@ -410,43 +410,35 @@ public class Utils
         ( byte ) 0xFF
     };
 
-    public static byte[] generateMask ( int bm, int bl )
+    public static byte [] getTarget ( long tv, int len )
     {
-        byte m[] = new byte[bl];
-        Arrays.fill ( m, ( byte ) 0 );
-
-        if ( bm > ( bl * 8 ) )
-        {
-            throw new RuntimeException ( "MASK TOO LONG!" );
-        }
-
-        int idx = 0;
-
-        for ( ; bm > 8; bm -= 8 )
-        {
-            m[idx] = ( byte ) 0xFF;
-            idx++;
-        }
-
-        m[idx] = LASTB[bm];
-        return m;
+        byte r[] = new byte[len];
+        Arrays.fill ( r, ( byte ) 0 );
+        ByteBuffer bf = ByteBuffer.wrap ( r );
+        bf.putLong ( tv );
+        return r;
     }
 
-    public static boolean checkDig ( byte d[], byte m[] )
+    public static boolean checkDig ( byte d[], byte v[] )
     {
-        boolean c = true;
-
-        if ( d.length != m.length )
+        if ( d.length != v.length )
         {
             throw new RuntimeException ( "MASK AND DIG NOT THE SAME LENGTH!" );
         }
 
-        for ( int t = 0; t < d.length && c; t++ )
+        int idx = 0;
+
+        while ( d[idx] == v[idx] && idx < d.length )
         {
-            c = ( ( d[t] & m[t] ) == 0 );
+            idx++;
         }
 
-        return c;
+        if ( idx == d.length )
+        {
+            return true;
+        }
+
+        return ( ( 0xFF & d[idx] ) < ( 0xFF & v[idx] ) );
     }
 
     public static byte[] digStringMap ( byte db[], Map<String, String> m )

@@ -91,8 +91,8 @@ public class TestBasic
     @Test
     public void testIt()
     {
-    	Wrapper.OLDPAYMENT = 0;
-    	Wrapper.NEWPAYMENT = 5;
+        Wrapper.OLDPAYMENT = 0;
+        Wrapper.NEWPAYMENT = 0x0400004000000000L;
         Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
 
         TestNode Tn0 = newId ( "n0" );
