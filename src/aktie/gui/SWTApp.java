@@ -421,57 +421,52 @@ public class SWTApp
     class ConnectionCallback implements ConnectionListener
     {
         public Set<ConnectionThread> connections = new HashSet<ConnectionThread>();
-        private long lastDisplay = 0;
 
-        private long lastTotalInBytes = 0L;
-        private long lastTotalOutBytes = 0L;
         private long totalInBytes = 0L;
         private long totalOutBytes = 0L;
+        // Use individual fine grained locks
+        // synchronized methods would block each other
+        // see https://docs.oracle.com/javase/tutorial/essential/concurrency/locksync.html
+        private Object inByteLock = new Object();
+        private Object outByteLock = new Object();
 
         @Override
 
-        public synchronized void bytesReceived ( long bytes )
+        public void bytesReceived ( long bytes )
         {
-            totalInBytes += bytes;
-        }
-
-        @Override
-
-        public synchronized void bytesSent ( long bytes )
-        {
-            totalOutBytes += bytes;
-        }
-
-        private void updateDisplay ( boolean force )
-        {
-            long curtime = System.currentTimeMillis();
-
-            if ( curtime > ( lastDisplay + UPDATE_INTERVAL ) || force )
+            synchronized ( inByteLock )
             {
-                final long dt = curtime - lastDisplay;
-                lastDisplay = curtime;
-                Display.getDefault().asyncExec ( new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        if ( dt > 0L )
-                        {
-                            long curTotalInBytes = totalInBytes;
-                            long curTotalOutBytes = totalOutBytes;
-                            long deltaInBytes = curTotalInBytes - lastTotalInBytes;
-                            long deltaOutBytes = curTotalOutBytes - lastTotalOutBytes;
-                            lastTotalInBytes = curTotalInBytes;
-                            lastTotalOutBytes = curTotalOutBytes;
-                            updateConnectionSpeed ( deltaInBytes, deltaOutBytes, dt );
+                totalInBytes += bytes;
+            }
 
-                            connectionTable.getTableViewer().setInput ( ConnectionCallback.this );
-                        }
+        }
 
-                    }
+        @Override
 
-                } );
+        public void bytesSent ( long bytes )
+        {
+            synchronized ( outByteLock )
+            {
+                totalOutBytes += bytes;
+            }
 
+        }
+
+        public long getTotalInBytes()
+        {
+            return totalInBytes;
+        }
+
+        public long getTotalOutBytes()
+        {
+            return totalOutBytes;
+        }
+
+        public void updateDisplay ( )
+        {
+            if ( connectionTable != null )
+            {
+                connectionTable.getTableViewer().setInput ( ConnectionCallback.this );
             }
 
         }
@@ -486,7 +481,7 @@ public class SWTApp
                     connections.add ( ct );
                 }
 
-                updateDisplay ( false );
+                //updateDisplay ( false );
             }
 
             else
@@ -504,7 +499,7 @@ public class SWTApp
                 connections.remove ( ct );
             }
 
-            updateDisplay ( true );
+            //updateDisplay ( true );
         }
 
         public ConnectionElement[] getElements()
@@ -2119,6 +2114,9 @@ public class SWTApp
 
     }
 
+    // Periodic GUI update thread
+    private PeriodicGuiUpdateThread periodicUpdateThread;
+
     /**
         Open the window.
     */
@@ -2141,6 +2139,8 @@ public class SWTApp
         startNode();
         splash.open();
 
+        periodicUpdateThread = new PeriodicGuiUpdateThread ( this );
+
         while ( !shell.isDisposed() )
         {
             if ( !display.readAndDispatch() )
@@ -2149,6 +2149,8 @@ public class SWTApp
             }
 
         }
+
+        this.periodicUpdateThread.stop();
 
         System.out.println ( "CLOSING NODE" );
         closeNode();
@@ -3369,7 +3371,7 @@ public class SWTApp
 
         lblSpeed = new Label ( composite_header, SWT.NONE );
         lblSpeed.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
-        updateConnectionSpeed ( 0, 0, 1 ); // use update method to initialize text of speed label
+        updateConnections ( 0, 0, 1 ); // use update method to initialize text of speed label
 
         lblError = new Label ( composite_header, SWT.NONE );
         lblError.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
@@ -5899,11 +5901,17 @@ public class SWTApp
         return lblNotRunning;
     }
 
-    public void updateConnectionSpeed ( long deltaInBytes, long deltaOutBytes, long deltaTime )
+    public ConnectionCallback getConnectionCallback()
+    {
+        return concallback;
+    }
+
+    public void updateConnections ( long deltaInBytes, long deltaOutBytes, long deltaTime )
     {
         String inkBps = String.format ( "%.2f", deltaInBytes / 1.024 / deltaTime );
         String outkBps = String.format ( "%.2f", deltaOutBytes / 1.024 / deltaTime );
         lblSpeed.setText ( new StringBuffer().append ( "down: " ).append ( inkBps ).append ( " kB/s | up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
+        concallback.updateDisplay();
 
     }
 
