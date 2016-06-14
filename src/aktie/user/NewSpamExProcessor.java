@@ -59,6 +59,9 @@ public class NewSpamExProcessor extends GenericProcessor
             s.close();
 
             c.signX ( pkey, 0 );
+            c.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
+            c.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
+
             index.index ( c );
         }
 

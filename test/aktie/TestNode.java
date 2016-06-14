@@ -2229,6 +2229,22 @@ public class TestNode
                 e.printStackTrace();
             }
 
+            n0.enqueue ( pupdate );
+            n3.enqueue ( pupdate );
+
+            n0.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
             clst = n3.getIndex().getPosts ( pubcom.getDig(), n0seed.getId(), 0, Long.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             CObj pstt = clst.get ( 0 );
@@ -2242,6 +2258,22 @@ public class TestNode
             setrank.pushNumber ( CObj.PRV_USER_RANK, 8 );
             setrank.pushString ( CObj.CREATOR, n0seed.getId() );
             n3.enqueue ( setrank );
+
+            n0.enqueue ( pupdate );
+            n3.enqueue ( pupdate );
+
+            n0.sendRequestsNow();
+            n3.sendRequestsNow();
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
 
             n0.enqueue ( pupdate );
             n3.enqueue ( pupdate );

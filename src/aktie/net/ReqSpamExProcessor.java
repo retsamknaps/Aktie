@@ -30,8 +30,6 @@ public class ReqSpamExProcessor extends GenericProcessor
 
             if ( creator != null && first != null && last != null )
             {
-                long maxlast = first + 1000;
-                last = Math.min ( maxlast, last );
                 CObjList cl = index.getSpamEx ( creator, first, last );
                 connection.enqueue ( cl );
             }

@@ -531,6 +531,13 @@ public class Index implements Runnable
 
     public CObjList getSpamEx ( String creator, long first, long last )
     {
+        int maxvals = ( int ) ( last - first );
+
+        if ( maxvals <= 0 || maxvals > 1000 )
+        {
+            maxvals = 1000;
+        }
+
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
@@ -541,10 +548,10 @@ public class Index implements Runnable
 
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
-                                         first, last, true, true );
+                                         first, Long.MAX_VALUE, true, true );
         builder.add ( nq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE );
+        return search ( builder.build(), maxvals );
     }
 
     public CObjList getPrvMsg ( String creator, long first, long last )
@@ -559,6 +566,13 @@ public class Index implements Runnable
 
     private CObjList getCreatorObjs ( String ctyp, String creator, long first, long last )
     {
+        int maxvals = ( int ) ( last - first );
+
+        if ( maxvals <= 0 || maxvals > 1000 )
+        {
+            maxvals = 1000;
+        }
+
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, ctyp );
@@ -574,10 +588,10 @@ public class Index implements Runnable
 
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
-                                         first, last, true, true );
+                                         first, Long.MAX_VALUE, true, true );
         builder.add ( nq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE );
+        return search ( builder.build(), maxvals );
     }
 
     //Could be based on creator and sequence number, but
@@ -1571,6 +1585,13 @@ public class Index implements Runnable
 
     public CObjList getPosts ( String comid, String memid, long first, long last )
     {
+        int maxvals = ( int ) ( last - first );
+
+        if ( maxvals <= 0 || maxvals > 1000 )
+        {
+            maxvals = 1000;
+        }
+
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
@@ -1589,14 +1610,21 @@ public class Index implements Runnable
 
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
-                                         first, last, true, true );
+                                         first, Long.MAX_VALUE, true, true );
         builder.add ( nq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE );
+        return search ( builder.build(), maxvals );
     }
 
     public CObjList getHasFiles ( String comid, String memid, long first, long last )
     {
+        int maxvals = ( int ) ( last - first );
+
+        if ( maxvals <= 0 || maxvals > 1000 )
+        {
+            maxvals = 1000;
+        }
+
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
@@ -1615,10 +1643,10 @@ public class Index implements Runnable
 
         NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
                                          CObj.docNumber ( CObj.SEQNUM ),
-                                         first, last, true, true );
+                                         first, Long.MAX_VALUE, true, true );
         builder.add ( nq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE );
+        return search ( builder.build(), maxvals );
     }
 
     public CObjList getHasFiles ( String comid, String wdig, String pdig )

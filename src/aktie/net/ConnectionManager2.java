@@ -258,7 +258,10 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     if ( CObj.IDENTITY.equals ( tp ) ||
                             CObj.COMMUNITY.equals ( tp ) ||
-                            CObj.MEMBERSHIP.equals ( tp ) )
+                            CObj.MEMBERSHIP.equals ( tp ) ||
+                            CObj.SPAMEXCEPTION.equals ( tp ) ||
+                            CObj.PRIVIDENTIFIER.equals ( tp ) ||
+                            CObj.PRIVMESSAGE.equals ( tp ) )
                     {
                         if ( pubPushes.size() < MAX_PUB_PUSHES )
                         {

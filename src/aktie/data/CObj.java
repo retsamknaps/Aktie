@@ -95,11 +95,13 @@ public class CObj
     public static String USR_PRVMSG_UPDATE = "usr_prvmsgupdate";
     public static String USR_SPAMEX_UPDATE = "usr_spamexupdate";
     public static String USR_SEED = "usr_seed";
+    public static String USR_SPAMEX = "usr_spamex";
     public static String USR_COMMUNITY = "usr_com";
     public static String USR_START_DEST = "start_dest";
     public static String USR_SET_RANK = "set_rank";
     public static String USR_SHARE_MGR = "share_mgr";
     public static String USR_CANCEL_DL = "cancel_dl";
+    public static String USR_FORCE_SEARCHER = "usr_force_searcher";
 
     //Private fields
     public static String PRV_LOCALFILE   = "prv_localfile";
@@ -1710,7 +1712,8 @@ public class CObj
 
             else
             {
-                name = name + " <" + getDig().substring ( 0, 6 ) + ">";
+                String dig = getDig();
+                name = name + " <" + dig.substring ( dig.length() - 6, dig.length() ) + ">";
             }
 
         }
@@ -1731,7 +1734,8 @@ public class CObj
 
             else
             {
-                name = name + " <" + getDig().substring ( 0, 6 ) + ">";
+                String dig = getDig();
+                name = name + " <" + dig.substring ( dig.length() - 6, dig.length() ) + ">";
             }
 
         }

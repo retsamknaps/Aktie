@@ -102,7 +102,6 @@ public class SetUserRankDialog extends Dialog
                 CObj nr = new CObj();
                 nr.setType ( CObj.USR_SET_RANK );
                 nr.pushString ( CObj.CREATOR, c.getId() );
-                System.out.println ( "SET USER RANK: " + nm );
                 nr.pushNumber ( CObj.PRV_USER_RANK, nm );
                 app.getNode().enqueue ( nr );
             }

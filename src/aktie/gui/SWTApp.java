@@ -1796,6 +1796,13 @@ public class SWTApp
                     loadSeed ( defseedfile );
                 }
 
+                File spamex = new File ( nodeDir + File.separator + "spamex.dat" );
+
+                if ( spamex.exists() )
+                {
+                    loadSpamEx ( spamex );
+                }
+
                 //Load default communities and subscribe.
                 File defcomfile = new File ( nodeDir + File.separator + "defcom.dat" );
 
@@ -2550,6 +2557,7 @@ public class SWTApp
             br = new BufferedReader ( new FileReader ( f ) );
             JSONTokener p = new JSONTokener ( br );
             JSONObject o = new JSONObject ( p );
+            CObjList uplst = new CObjList();
 
             while ( o != null )
             {
@@ -2559,17 +2567,32 @@ public class SWTApp
                 if ( CObj.IDENTITY.equals ( co.getType() ) )
                 {
                     co.setType ( CObj.USR_SEED );
-                    node.enqueue ( co );
+                    uplst.add ( co );
                 }
 
-                o = new JSONObject ( p );
+                try
+                {
+                    o = new JSONObject ( p );
+                }
+
+                catch ( Exception xr )
+                {
+                    o = null;
+                }
+
             }
 
             br.close();
+            node.enqueue ( uplst );
+            CObj ns = new CObj();
+            ns.setType ( CObj.USR_FORCE_SEARCHER );
+            node.enqueue ( ns );
         }
 
         catch ( Exception e )
         {
+            e.printStackTrace();
+
             if ( br != null )
             {
                 try
@@ -2627,6 +2650,69 @@ public class SWTApp
 
     }
 
+    private void loadSpamEx ( File f )
+    {
+        BufferedReader br = null;
+
+        try
+        {
+            br = new BufferedReader ( new FileReader ( f ) );
+            JSONTokener p = new JSONTokener ( br );
+            JSONObject o = new JSONObject ( p );
+
+            CObjList uplst = new CObjList();
+
+            while ( o != null )
+            {
+                CObj co = new CObj();
+                co.loadJSON ( o );
+
+                if ( CObj.SPAMEXCEPTION.equals ( co.getType() ) )
+                {
+                    co.setType ( CObj.USR_SPAMEX );
+                    uplst.add ( co );
+                }
+
+                try
+                {
+                    o = new JSONObject ( p );
+                }
+
+                catch ( Exception xr )
+                {
+                    o = null;
+                }
+
+            }
+
+            br.close();
+            node.enqueue ( uplst );
+            CObj ns = new CObj();
+            ns.setType ( CObj.USR_FORCE_SEARCHER );
+            node.enqueue ( ns );
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( br != null )
+            {
+                try
+                {
+                    br.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
     private void loadDefCommunitySubs ( File f )
     {
         BufferedReader br = null;
@@ -2637,6 +2723,7 @@ public class SWTApp
             br = new BufferedReader ( new FileReader ( f ) );
             JSONTokener p = new JSONTokener ( br );
             JSONObject o = new JSONObject ( p );
+            CObjList colst = new CObjList();
 
             while ( o != null )
             {
@@ -2647,12 +2734,23 @@ public class SWTApp
                 {
                     co.setType ( CObj.USR_COMMUNITY );
                     comlst.add ( co );
+                    colst.add ( co );
                 }
 
-                o = new JSONObject ( p );
+                try
+                {
+                    o = new JSONObject ( p );
+                }
+
+                catch ( Exception re )
+                {
+                    o = null;
+                }
+
             }
 
             br.close();
+            node.enqueue ( colst );
         }
 
         catch ( Exception e )
@@ -3110,6 +3208,36 @@ public class SWTApp
 
         } );
 
+        //zeroDialog
+        MenuItem mntmLdSpamEx = new MenuItem ( menu_1, SWT.NONE );
+        mntmLdSpamEx.setText ( "Load Spam Exception File" );
+        mntmLdSpamEx.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                FileDialog fd = new FileDialog ( shell, SWT.OPEN );
+                fd.setText ( "Open" );
+                //fd.setFilterPath();
+                String[] filterExt = { "*.*" };
+
+                fd.setFilterExtensions ( filterExt );
+                String selected = fd.open();
+
+                if ( selected != null && node != null )
+                {
+                    loadSpamEx ( new File ( selected ) );
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
         mntmStartManualUpdate.setText ( "Refresh All Now" );
         mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
@@ -3163,6 +3291,61 @@ public class SWTApp
                     {
                         boolean asure = MessageDialog.openConfirm ( shell, "Update", "SAVE SPAM EX?" );
                         generateSpamEx ( selectedIdentity, asure );
+                    }
+
+                }
+
+                @Override
+                public void widgetDefaultSelected ( SelectionEvent e )
+                {
+                }
+
+            } );
+
+            MenuItem mntmSaveSpamEx = new MenuItem ( menu_1, SWT.NONE );
+            mntmSaveSpamEx.setText ( "SAVE SPAM EX" );
+            mntmSaveSpamEx.addSelectionListener ( new SelectionListener()
+            {
+                @Override
+                public void widgetSelected ( SelectionEvent e )
+                {
+                    if ( selectedIdentity != null )
+                    {
+                        FileDialog fd = new FileDialog ( shell, SWT.SAVE );
+                        fd.setText ( "Save" );
+                        //fd.setFilterPath();
+                        String[] filterExt = { "*" };
+
+                        fd.setFilterExtensions ( filterExt );
+                        String selected = fd.open();
+
+                        if ( node != null && selected != null )
+                        {
+                            try
+                            {
+                                PrintWriter pw = new PrintWriter ( new FileOutputStream ( new File ( selected ) ) );
+                                CObjList ilst = node.getIndex().getSpamEx ( selectedIdentity.getId(),
+                                                0L, Long.MAX_VALUE );
+
+                                for ( int c = 0; c < ilst.size(); c++ )
+                                {
+                                    CObj i = ilst.get ( c );
+                                    JSONObject jo = i.getJSON();
+                                    jo.write ( pw );
+                                    pw.println();
+                                }
+
+                                ilst.close();
+                                pw.close();
+                            }
+
+                            catch ( Exception ex )
+                            {
+
+                            }
+
+                        }
+
                     }
 
                 }

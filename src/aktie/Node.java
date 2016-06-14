@@ -13,11 +13,13 @@ import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
+import aktie.net.InSpamExProcessor;
 import aktie.net.Net;
 import aktie.spam.SpamTool;
 import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
+import aktie.user.NewForceSearcher;
 import aktie.user.NewIdentityProcessor;
 import aktie.user.NewMembershipProcessor;
 import aktie.user.NewPostProcessor;
@@ -105,6 +107,8 @@ public class Node
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
+        userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool ) );
+        userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
@@ -197,7 +201,20 @@ public class Node
 
     public void enqueue ( CObj o )
     {
-        userQueue.enqueue ( o );
+        if ( !userQueue.enqueue ( o ) )
+        {
+            System.out.println ( "WARNING: DATA DROPPED!" );
+        }
+
+    }
+
+    public void enqueue ( CObjList o )
+    {
+        if ( ! userQueue.enqueue ( o ) )
+        {
+            System.out.println ( "WARNING: DATA DROPPED 2" );
+        }
+
     }
 
     public Index getIndex()

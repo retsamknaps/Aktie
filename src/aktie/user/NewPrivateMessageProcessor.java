@@ -193,6 +193,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.MINE, "true" );
                 pident.pushPrivate ( CObj.DECODED, "true" );
                 pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
+                pident.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
                 spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
                                     pident );
@@ -261,6 +262,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
             b.pushString ( CObj.DECODED, "true" );
             b.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
+            b.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
 

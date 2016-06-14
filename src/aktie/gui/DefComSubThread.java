@@ -43,7 +43,7 @@ public class DefComSubThread implements Runnable
                 cid = node.getIndex().getIdentity ( creatorid );
             }
 
-            node.enqueue ( seedcom );
+            //node.enqueue ( seedcom );
             cid = node.getIndex().getCommunity ( seedcom.getDig() );
 
             while ( cid == null )

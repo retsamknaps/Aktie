@@ -29,8 +29,10 @@ public class InSpamExProcessor extends GenericProcessor
     {
         String type = b.getType();
 
-        if ( CObj.SPAMEXCEPTION.equals ( type ) )
+        if ( CObj.SPAMEXCEPTION.equals ( type ) || CObj.USR_SPAMEX.equals ( type ) )
         {
+            b.setType ( CObj.SPAMEXCEPTION );
+
             if ( validator.newAndValid ( b ) )
             {
                 //Update creator's ident index

@@ -26,6 +26,7 @@ public class Wrapper
     public static String VERSION_0403 = "version 0.4.3";
     public static String VERSION_0405 = "version 0.4.5";
     public static String VERSION_0418 = "version 0.4.18";
+    //public static String VERSION_0419 = "version 0.4.19";
 
     public static String VERSION = VERSION_0418;
 
@@ -36,12 +37,12 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1465595547L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1465913170L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     public static long OLDPAYMENT = 0;
     public static long CHECKNEWPAYMENTAFTER = ( 1465595547L * 1000L ) +
-    		( 8L * 60L * 60L * 1000L );
+            ( 8L * 60L * 60L * 1000L );
 
     //                              0x0123456789ABCDEFL;
     public static long NEWPAYMENT = 0x0000004000000000L;
