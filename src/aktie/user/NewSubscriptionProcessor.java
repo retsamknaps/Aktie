@@ -73,6 +73,11 @@ public class NewSubscriptionProcessor extends GenericProcessor
                 return true;
             }
 
+            CObj updatemsg = new CObj();
+            updatemsg.pushString ( CObj.ERROR, "Creating new subscription. " );
+            updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+            guicallback.update ( updatemsg );
+
             //Create the id value.
             String id = Utils.mergeIds ( creator, comid );
             o.setId ( id );

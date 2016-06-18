@@ -75,6 +75,10 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 return true;
             }
 
+            CObj updatemsg = new CObj();
+            updatemsg.pushString ( CObj.ERROR, "Creating new private message. " );
+            updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+            guicallback.update ( updatemsg );
 
             //Get the creator's random identity for the recipient.
             String pid = Utils.mergeIds ( creator, recipient );
@@ -220,6 +224,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     guicallback.update ( b );
                     return true;
                 }
+                
+                guicallback.update ( pident );
 
                 if ( push != null )
                 {
@@ -265,6 +271,8 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
+            b.pushPrivate ( CObj.MINE, "true" );
+            b.pushPrivate ( CObj.NAME, recid.getDisplayName() );
 
             spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
                                 b );

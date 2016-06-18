@@ -993,35 +993,48 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return r;
     }
 
+    private DestinationThread getMyDestinationThread ( Map<String, CObj> myidmap, String myid )
+    {
+        DestinationThread dt = null;
+
+        if ( myid != null )
+        {
+            CObj mid = myidmap.get ( myid );
+
+            if ( mid != null )
+            {
+                String mydest = mid.getString ( CObj.DEST );
+
+                if ( mydest != null )
+                {
+                    synchronized ( destinations )
+                    {
+                        dt = destinations.get ( mydest );
+                    }
+
+                }
+
+            }
+
+        }
+
+        return dt;
+    }
+
     private List<DestinationThread> findMyDestinationsForCommunity ( Map<String, CObj> myidmap, String comid )
     {
         List<CObj> mysubslist = Index.list ( index.getMySubscriptions ( comid ) );
         //Find my destinations for my subscriptions to this community
         List<DestinationThread> dlst = new LinkedList<DestinationThread>();
 
-        synchronized ( destinations )
+        for ( CObj c : mysubslist )
         {
-            for ( CObj c : mysubslist )
+
+            DestinationThread dt = getMyDestinationThread ( myidmap, c.getString ( CObj.CREATOR ) );
+
+            if ( dt != null )
             {
-                CObj mid = myidmap.get ( c.getString ( CObj.CREATOR ) );
-
-                if ( mid != null )
-                {
-                    String mydest = mid.getString ( CObj.DEST );
-
-                    if ( mydest != null )
-                    {
-                        DestinationThread dt = destinations.get ( mydest );
-
-                        if ( dt != null )
-                        {
-                            dlst.add ( dt );
-                        }
-
-                    }
-
-                }
-
+                dlst.add ( dt );
             }
 
         }
@@ -1054,47 +1067,24 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 {
                     for ( CObj c : mymemlist )
                     {
-                        CObj mid = myidmap.get ( c.getPrivate ( CObj.MEMBERID ) );
 
-                        if ( mid != null )
+                        DestinationThread dt = getMyDestinationThread ( myidmap, c.getPrivate ( CObj.MEMBERID ) );
+
+                        if ( dt != null && !dlst.contains ( dt ) )
                         {
-                            String mydest = mid.getString ( CObj.DEST );
-
-                            if ( mydest != null )
-                            {
-                                DestinationThread dt = destinations.get ( mydest );
-
-                                if ( dt != null )
-                                {
-                                    dlst.add ( dt );
-                                }
-
-                            }
-
+                            dlst.add ( dt );
                         }
+
 
                     }
 
                     if ( "true".equals ( com.getPrivate ( CObj.MINE ) ) )
                     {
-                        String creator = com.getString ( CObj.CREATOR );
-                        CObj mid = myidmap.get ( creator );
+                        DestinationThread dt = getMyDestinationThread ( myidmap, com.getString ( CObj.CREATOR ) );
 
-                        if ( mid != null )
+                        if ( dt != null && !dlst.contains ( dt ) )
                         {
-                            String mydest = mid.getString ( CObj.DEST );
-
-                            if ( mydest != null )
-                            {
-                                DestinationThread dt = destinations.get ( mydest );
-
-                                if ( dt != null && !dlst.contains ( dt ) )
-                                {
-                                    dlst.add ( dt );
-                                }
-
-                            }
-
+                            dlst.add ( dt );
                         }
 
                     }
@@ -1317,7 +1307,41 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             if ( st == null || st <= cuttime )
             {
-                List<DestinationThread> dtlst = findMyDestinationsForCommunity ( myids, comid );
+                ConcurrentLinkedQueue<CObj> pushlist = subPushes.get ( comid );
+
+                //Get destinations for pushes first.
+                List<DestinationThread> dtlst = null;
+
+                if ( pushlist != null )
+                {
+                    dtlst = new LinkedList<DestinationThread>();
+                    Iterator<CObj> pi = pushlist.iterator();
+
+                    while ( pi.hasNext() )
+                    {
+                        CObj cobj = pi.next();
+                        String creator = cobj.getString ( CObj.CREATOR );
+
+                        if ( creator != null )
+                        {
+                            DestinationThread dt = getMyDestinationThread ( myids, creator );
+
+                            if ( dt != null && !dtlst.contains ( dt ) )
+                            {
+                                dtlst.add ( dt );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                if ( dtlst == null || dtlst.size() == 0 )
+                {
+                    dtlst = findMyDestinationsForCommunity ( myids, comid );
+                }
+
                 CObjList subs = index.getSubscriptions ( comid, null );
                 int ridx[] = randomList ( subs.size() );
 
@@ -1409,7 +1433,39 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                         }
 
-                        List<DestinationThread> dlst = findAllMyDestinationsForCommunity ( myids, comid );
+                        List<DestinationThread> dlst = null;
+                        ConcurrentLinkedQueue<CObj> pushlist = membershipPushes.get ( comid );
+
+                        if ( pushlist != null )
+                        {
+                            dlst = new LinkedList<DestinationThread>();
+                            Iterator<CObj> pi = pushlist.iterator();
+
+                            while ( pi.hasNext() )
+                            {
+                                CObj cobj = pi.next();
+                                String creator = cobj.getString ( CObj.CREATOR );
+
+                                if ( creator != null )
+                                {
+                                    DestinationThread dt = getMyDestinationThread ( myids, creator );
+
+                                    if ( dt != null && !dlst.contains ( dt ) )
+                                    {
+                                        dlst.add ( dt );
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                        if ( dlst == null || dlst.size() == 0 )
+                        {
+                            dlst = findAllMyDestinationsForCommunity ( myids, comid );
+                        }
+
                         Iterator<DestinationThread> dti = dlst.iterator();
 
                         while ( dti.hasNext() && con < ATTEMPT_CONNECTIONS )
@@ -1481,9 +1537,33 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         //{
         List<DestinationThread> alldest = new LinkedList<DestinationThread>();
 
-        synchronized ( destinations )
+        Iterator<CObj> pushlist = pubPushes.iterator();
+
+        while ( pushlist.hasNext() )
         {
-            alldest.addAll ( destinations.values() );
+            CObj cobj = pushlist.next();
+            String creator = cobj.getString ( CObj.CREATOR );
+
+            if ( creator != null )
+            {
+                DestinationThread dt = getMyDestinationThread ( myids, creator );
+
+                if ( dt != null && !alldest.contains ( dt ) )
+                {
+                    alldest.add ( dt );
+                }
+
+            }
+
+        }
+
+        if ( alldest.size() == 0 )
+        {
+            synchronized ( destinations )
+            {
+                alldest.addAll ( destinations.values() );
+            }
+
         }
 
         CObjList idlst = index.getIdentities();
@@ -1564,7 +1644,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    private Object nextMembershipPush ( String ident, Set<String> mems )
+    private Object nextMembershipPush ( String local, String ident, Set<String> mems )
     {
         Object n = null;
         List<String> sl = new ArrayList<String>();
@@ -1583,18 +1663,23 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 while ( n == null && ci.hasNext() )
                 {
                     CObj co = ci.next();
-                    Set<String> sc = pushedToCache.get ( co.getDig() );
 
-                    if ( sc == null )
+                    if ( local != null && local.equals ( co.getString ( CObj.CREATOR ) ) )
                     {
-                        sc = new CopyOnWriteArraySet<String>();
-                        pushedToCache.put ( co.getDig(), sc );
-                    }
+                        Set<String> sc = pushedToCache.get ( co.getDig() );
 
-                    if ( !sc.contains ( ident ) )
-                    {
-                        n = co;
-                        sc.add ( ident );
+                        if ( sc == null )
+                        {
+                            sc = new CopyOnWriteArraySet<String>();
+                            pushedToCache.put ( co.getDig(), sc );
+                        }
+
+                        if ( !sc.contains ( ident ) )
+                        {
+                            n = co;
+                            sc.add ( ident );
+                        }
+
                     }
 
                 }
@@ -1606,7 +1691,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    private Object nextSubPush ( String ident, Set<String> subs )
+    private Object nextSubPush ( String local, String ident, Set<String> subs )
     {
         Object n = null;
         List<String> sl = new ArrayList<String>();
@@ -1625,18 +1710,23 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 while ( n == null && ci.hasNext() )
                 {
                     CObj co = ci.next();
-                    Set<String> sc = pushedToCache.get ( co.getDig() );
 
-                    if ( sc == null )
+                    if ( local != null && local.equals ( co.getString ( CObj.CREATOR ) ) )
                     {
-                        sc = new CopyOnWriteArraySet<String>();
-                        pushedToCache.put ( co.getDig(), sc );
-                    }
+                        Set<String> sc = pushedToCache.get ( co.getDig() );
 
-                    if ( !sc.contains ( ident ) )
-                    {
-                        n = co;
-                        sc.add ( ident );
+                        if ( sc == null )
+                        {
+                            sc = new CopyOnWriteArraySet<String>();
+                            pushedToCache.put ( co.getDig(), sc );
+                        }
+
+                        if ( !sc.contains ( ident ) )
+                        {
+                            n = co;
+                            sc.add ( ident );
+                        }
+
                     }
 
                 }
@@ -1648,7 +1738,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    private Object nextPubPush ( String ident )
+    private Object nextPubPush ( String local, String ident )
     {
         Object n = null;
         Iterator<CObj> ci = pubPushes.iterator();
@@ -1656,18 +1746,23 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         while ( n == null && ci.hasNext() )
         {
             CObj co = ci.next();
-            Set<String> sc = pushedToCache.get ( co.getDig() );
 
-            if ( sc == null )
+            if ( local != null && local.equals ( co.getString ( CObj.CREATOR ) ) )
             {
-                sc = new CopyOnWriteArraySet<String>();
-                pushedToCache.put ( co.getDig(), sc );
-            }
+                Set<String> sc = pushedToCache.get ( co.getDig() );
 
-            if ( !sc.contains ( ident ) )
-            {
-                n = co;
-                sc.add ( ident );
+                if ( sc == null )
+                {
+                    sc = new CopyOnWriteArraySet<String>();
+                    pushedToCache.put ( co.getDig(), sc );
+                }
+
+                if ( !sc.contains ( ident ) )
+                {
+                    n = co;
+                    sc.add ( ident );
+                }
+
             }
 
         }
@@ -1681,16 +1776,16 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         recentAttempts.remove ( remotedest + false );
 
         Object n = null;
-        n = nextMembershipPush ( remotedest, members );
+        n = nextMembershipPush ( localdest, remotedest, members );
 
         if ( n == null )
         {
-            n = nextSubPush ( remotedest, subs );
+            n = nextSubPush ( localdest, remotedest, subs );
         }
 
         if ( n == null )
         {
-            n = nextPubPush ( remotedest );
+            n = nextPubPush ( localdest, remotedest );
         }
 
         if ( n == null )

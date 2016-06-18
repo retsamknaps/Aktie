@@ -164,6 +164,11 @@ public class NewPostProcessor extends GenericProcessor
 
             opl.close();
 
+            CObj updatemsg = new CObj();
+            updatemsg.pushString ( CObj.ERROR, "Creating new post. " );
+            updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+            guicallback.update ( updatemsg );
+
 
             o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );

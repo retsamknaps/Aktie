@@ -1,5 +1,6 @@
 package aktie.gui.subtree;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -12,6 +13,7 @@ public class SubTreeEntity implements Comparable<Object>
     public static int FOLDER_TYPE = 1;
     public static int PUBCOMMUNITY_TYPE = 2;
     public static int PRVCOMMUNITY_TYPE = 3;
+    public static int PRVMESSAGE_TYPE = 4;
 
     @Id
     @GeneratedValue
@@ -26,6 +28,9 @@ public class SubTreeEntity implements Comparable<Object>
     private String identity;
     private String refId;
     private boolean connected;
+    
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int treeId;
 
     public SubTreeEntity()
     {
@@ -190,5 +195,13 @@ public class SubTreeEntity implements Comparable<Object>
     {
         this.refId = refId;
     }
+
+	public int getTreeId() {
+		return treeId;
+	}
+
+	public void setTreeId(int treeId) {
+		this.treeId = treeId;
+	}
 
 }

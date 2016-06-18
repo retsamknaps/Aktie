@@ -21,6 +21,9 @@ import aktie.index.Index;
 public class SubTreeModel implements ITreeContentProvider
 {
 
+	public static int POST_TREE = 0;
+	public static int MESSAGE_TREE = 1;
+	
     private Map<Long, SubTreeEntity> entities;
     private Map<Long, List<SubTreeEntity>> children;
     private Map<Long, Long> parents;
@@ -29,12 +32,16 @@ public class SubTreeModel implements ITreeContentProvider
     private Map<String, SubTreeEntity> idMap;
     private SubTreeEntityDBInterface db;
     private Index index;
+    private int type;
+    private int treeId;
 
 
-    public SubTreeModel ( Index idx, SubTreeEntityDBInterface d )
+    public SubTreeModel ( Index idx, SubTreeEntityDBInterface d, int t, int tid )
     {
         db = d;
         index = idx;
+        type = t;
+        treeId = tid;
         entities = new HashMap<Long, SubTreeEntity>();
         children = new HashMap<Long, List<SubTreeEntity>>();
         sorted = new LinkedList<SubTreeEntity>();
@@ -84,7 +91,7 @@ public class SubTreeModel implements ITreeContentProvider
 
     public synchronized void init()
     {
-        List<SubTreeEntity> l = db.getEntities();
+        List<SubTreeEntity> l = db.getEntities(treeId);
 
         for ( SubTreeEntity e : l )
         {
@@ -174,6 +181,7 @@ public class SubTreeModel implements ITreeContentProvider
     public synchronized void addFolder ( SubTreeEntity parent, String name )
     {
         SubTreeEntity ne = new SubTreeEntity();
+        ne.setTreeId(treeId);
         ne.setType ( SubTreeEntity.FOLDER_TYPE );
         ne.setText ( name );
 
@@ -230,25 +238,142 @@ public class SubTreeModel implements ITreeContentProvider
 
     }
 
+    public synchronized void clearBlueMessages ( CObj msg )
+    {
+        if ( msg != null )
+        {
+        	String mid = msg.getPrivate(CObj.PRV_MSG_ID);
+        	if (mid != null) {
+        		SubTreeEntity ste = idMap.get(mid);
+        		setBlue ( ste, false );
+            }
+
+        }
+
+    }
+
     public synchronized void update ( CObj c )
     {
-        if ( CObj.POST.equals ( c.getType() ) )
-        {
-            String comid = c.getString ( CObj.COMMUNITYID );
+    	if (type == POST_TREE) 
+    	{
+    		if ( CObj.POST.equals ( c.getType() ) )
+    		{
+    			String comid = c.getString ( CObj.COMMUNITYID );
 
-            for ( Entry<Long, CObj> et : fullObj.entrySet() )
+    			for ( Entry<Long, CObj> et : fullObj.entrySet() )
+    			{
+    				CObj ob = et.getValue();
+
+    				if ( ob.getDig().equals ( comid ) )
+    				{
+    					SubTreeEntity ste = entities.get ( et.getKey() );
+    					setBlue ( ste, true );
+    				}
+
+    			}
+
+    		}
+    		
+            if ( CObj.SUBSCRIPTION.equals ( c.getType() ) )
             {
-                CObj ob = et.getValue();
+                String cid = c.getString ( CObj.CREATOR );
+                String comid = c.getString ( CObj.COMMUNITYID );
+                String mcid = cid + comid;
 
-                if ( ob.getDig().equals ( comid ) )
+                if ( "true".equals ( c.getString ( CObj.SUBSCRIBED ) ) )
                 {
-                    SubTreeEntity ste = entities.get ( et.getKey() );
-                    setBlue ( ste, true );
+                    CObj com = index.getCommunity ( comid );
+
+                    if ( com != null )
+                    {
+                        SubTreeEntity se = idMap.get ( mcid );
+                        SubTreeEntity prt = idMap.get ( cid );
+
+                        if ( se == null && prt != null )
+                        {
+                            se = new SubTreeEntity();
+                            se.setTreeId(treeId);
+                            se.setIdentity ( cid );
+                            se.setRefId ( mcid );
+                            se.setText ( com.getPrivateDisplayName() );
+
+                            if ( CObj.SCOPE_PRIVATE.equals ( com.getString ( CObj.SCOPE ) ) )
+                            {
+                                se.setType ( SubTreeEntity.PRVCOMMUNITY_TYPE );
+                            }
+
+                            else
+                            {
+                                se.setType ( SubTreeEntity.PUBCOMMUNITY_TYPE );
+                            }
+
+                            se.setParent ( prt.getId() );
+                            db.saveEntity ( se );
+                        }
+
+                        fullObj.put ( se.getId(), com );
+                        addSubTreeElement ( se );
+
+                    }
+
+                }
+
+                else
+                {
+                    //Remove the subscription
+                    SubTreeEntity se = idMap.remove ( mcid );
+
+                    if ( se != null )
+                    {
+                        removeFromChildren ( se );
+                        sorted.remove ( se );
+                        parents.remove ( se.getId() );
+                        entities.remove ( se.getId() );
+                        db.deleteElement ( se );
+                    }
+
                 }
 
             }
 
-        }
+    	}
+    	
+    	if (type == MESSAGE_TREE) {
+    		if (CObj.PRIVIDENTIFIER.equals(c.getType())) {
+    			String creator = c.getString(CObj.CREATOR);
+    			String recip = c.getPrivate(CObj.PRV_RECIPIENT);
+    			String msgid = c.getPrivate(CObj.PRV_MSG_ID);
+    			boolean mine = ("true".equals(c.getPrivate(CObj.MINE)));
+    			if (creator != null && recip != null && msgid != null) {
+    				String lid = recip;
+    				if (mine) {
+    					lid = creator;
+    				}
+    				SubTreeEntity le = idMap.get(lid);
+    				SubTreeEntity re = idMap.get(msgid);
+    				if (le != null && re == null) {
+    					re = new SubTreeEntity();
+    					re.setTreeId(treeId);
+    					re.setIdentity ( lid );
+    					re.setRefId ( msgid );
+    					re.setText ( c.getPrivateDisplayName() );
+    					re.setParent(le.getId());
+        	            db.saveEntity ( re );
+        	            fullObj.put ( re.getId(), c );
+        	            addSubTreeElement ( re );
+    				}
+    			}
+    		}
+    		if (CObj.PRIVMESSAGE.equals(c.getType())) {
+    			String msgid = c.getPrivate(CObj.PRV_MSG_ID);
+    			if (msgid != null) {
+    				SubTreeEntity re = idMap.get(msgid);
+    				if (re != null) {
+    					setBlue(re, true);
+    				}
+    			}    			
+    		}
+    	}
 
         if ( CObj.IDENTITY.equals ( c.getType() ) )
         {
@@ -258,6 +383,7 @@ public class SubTreeModel implements ITreeContentProvider
             if ( se == null )
             {
                 se = new SubTreeEntity();
+                se.setTreeId(treeId);
                 se.setIdentity ( c.getId() );
                 se.setRefId ( c.getId() );
                 se.setType ( SubTreeEntity.IDENTITY_TYPE );
@@ -282,66 +408,6 @@ public class SubTreeModel implements ITreeContentProvider
             addSubTreeElement ( se );
         }
 
-        if ( CObj.SUBSCRIPTION.equals ( c.getType() ) )
-        {
-            String cid = c.getString ( CObj.CREATOR );
-            String comid = c.getString ( CObj.COMMUNITYID );
-            String mcid = cid + comid;
-
-            if ( "true".equals ( c.getString ( CObj.SUBSCRIBED ) ) )
-            {
-                CObj com = index.getCommunity ( comid );
-
-                if ( com != null )
-                {
-                    SubTreeEntity se = idMap.get ( mcid );
-                    SubTreeEntity prt = idMap.get ( cid );
-
-                    if ( se == null && prt != null )
-                    {
-                        se = new SubTreeEntity();
-                        se.setIdentity ( cid );
-                        se.setRefId ( mcid );
-                        se.setText ( com.getPrivateDisplayName() );
-
-                        if ( CObj.SCOPE_PRIVATE.equals ( com.getString ( CObj.SCOPE ) ) )
-                        {
-                            se.setType ( SubTreeEntity.PRVCOMMUNITY_TYPE );
-                        }
-
-                        else
-                        {
-                            se.setType ( SubTreeEntity.PUBCOMMUNITY_TYPE );
-                        }
-
-                        se.setParent ( prt.getId() );
-                        db.saveEntity ( se );
-                    }
-
-                    fullObj.put ( se.getId(), com );
-                    addSubTreeElement ( se );
-
-                }
-
-            }
-
-            else
-            {
-                //Remove the subscription
-                SubTreeEntity se = idMap.remove ( mcid );
-
-                if ( se != null )
-                {
-                    removeFromChildren ( se );
-                    sorted.remove ( se );
-                    parents.remove ( se.getId() );
-                    entities.remove ( se.getId() );
-                    db.deleteElement ( se );
-                }
-
-            }
-
-        }
 
         //displayAll();
     }

@@ -137,7 +137,7 @@ public class SubTreeEntityDB implements SubTreeEntityDBInterface
 
     @SuppressWarnings ( "unchecked" )
     @Override
-    public List<SubTreeEntity> getEntities()
+    public List<SubTreeEntity> getEntities(int id)
     {
         List<SubTreeEntity> r = new LinkedList<SubTreeEntity>();
         Session s = null;
@@ -145,7 +145,8 @@ public class SubTreeEntityDB implements SubTreeEntityDBInterface
         try
         {
             s = session.getSession();
-            Query q = s.createQuery ( "SELECT x FROM SubTreeEntity x" );
+            Query q = s.createQuery ( "SELECT x FROM SubTreeEntity x WHERE x.treeId = :tid" );
+            q.setParameter("tid", id);
             r = q.list();
         }
 

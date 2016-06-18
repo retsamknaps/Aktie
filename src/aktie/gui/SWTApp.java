@@ -27,6 +27,7 @@ import aktie.Node;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.RequestFile;
+import aktie.gui.pm.PMTab;
 //import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
 //import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
 import aktie.gui.subtree.SubTreeDragListener;
@@ -1327,6 +1328,8 @@ public class SWTApp
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
     private AktiSpamRankDialog spamDialog;
+    
+    private PMTab pmTab;
 
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
@@ -1741,9 +1744,11 @@ public class SWTApp
 
         //identSubTreeModel = new IdentitySubTreeModel ( this );
         //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
-        //
+        // Post tree must be id 0, the default for the new treeid value is 0 so
+    	// existing entitys for the posts tree will get id 0
         identModel = new SubTreeModel ( node.getIndex(),
-                                        new SubTreeEntityDB ( node.getSession() ) );
+                                        new SubTreeEntityDB ( node.getSession() ), 
+                                        SubTreeModel.POST_TREE, 0 );
         identModel.init();
         identTreeViewer.setContentProvider ( identModel );
         SubTreeListener stl = new SubTreeListener ( identModel );
@@ -1765,6 +1770,8 @@ public class SWTApp
                                     new SubTreeLabelProvider ( identModel ) ) );
         //tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
         //                            new IdentitySubTreeLabelProvider() ) );
+        
+        pmTab.init();
 
         try
         {
@@ -2163,6 +2170,8 @@ public class SWTApp
         identTreeViewer.setInput ( "Here is some data" );
         identModel.setCollaspseState ( identTreeViewer );
 
+        pmTab.update(co);
+        
         splash.reallyClose();
 
     }
@@ -5547,6 +5556,12 @@ public class SWTApp
         txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
 
+        TabItem tbtmPM = new TabItem ( tabFolder, SWT.NONE );
+        tbtmPM.setText ( "Private Messages" );
+
+        pmTab = new PMTab ( tabFolder, SWT.NONE, this );
+        tbtmPM.setControl ( pmTab );
+        
         TabItem tbtmDownloadds = new TabItem ( tabFolder, SWT.NONE );
         tbtmDownloadds.setText ( "Downloads" );
 

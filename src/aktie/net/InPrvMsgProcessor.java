@@ -147,6 +147,10 @@ public class InPrvMsgProcessor extends GenericProcessor
                             {
                                 b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                             }
+                            
+                            if (decoded) {
+                                b.pushPrivate(CObj.NAME, idty.getDisplayName());
+                            }
 
                         }
 

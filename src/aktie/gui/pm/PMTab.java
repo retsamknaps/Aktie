@@ -6,13 +6,26 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.widgets.Tree;
 
+import aktie.data.CObj;
 import aktie.gui.SWTApp;
+import aktie.gui.subtree.SubTreeDragListener;
+import aktie.gui.subtree.SubTreeDropListener;
+import aktie.gui.subtree.SubTreeEntityDB;
+import aktie.gui.subtree.SubTreeLabelProvider;
+import aktie.gui.subtree.SubTreeListener;
+import aktie.gui.subtree.SubTreeModel;
+import aktie.gui.subtree.SubTreeSorter;
 
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
 
 public class PMTab extends Composite
 {
@@ -23,6 +36,8 @@ public class PMTab extends Composite
     private TableViewer tableViewer;
     private StyledText styledText;
     private SWTApp app;
+    
+    private SubTreeModel identModel;
 
     public PMTab ( Composite parent, int style, SWTApp a )
     {
@@ -32,9 +47,11 @@ public class PMTab extends Composite
 
         SashForm sashForm = new SashForm ( this, SWT.NONE );
         sashForm.setLayoutData ( BorderLayout.CENTER );
-
+        
+        
         treeViewer = new TreeViewer ( sashForm, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL );
         tree = treeViewer.getTree();
+        
 
         SashForm sashForm_1 = new SashForm ( sashForm, SWT.VERTICAL );
 
@@ -54,6 +71,38 @@ public class PMTab extends Composite
 
         sashForm.setWeights ( new int[] {1, 4} );
 
+    }
+    
+    public void init() {
+        identModel = new SubTreeModel ( app.getNode().getIndex(),
+                new SubTreeEntityDB ( app.getNode().getSession() ), 
+                SubTreeModel.MESSAGE_TREE, 1 );
+        identModel.init();
+        treeViewer.setContentProvider ( identModel );
+        SubTreeListener stl = new SubTreeListener ( identModel );
+        treeViewer.addTreeListener ( stl );
+        //identTreeViewer.setLabelProvider();
+        treeViewer.setSorter ( new SubTreeSorter() );
+        int operations = DND.DROP_COPY | DND.DROP_MOVE;
+        Transfer[] transferTypes = new Transfer[] {TextTransfer.getInstance() };
+
+        treeViewer.addDragSupport ( operations, transferTypes ,
+                 new SubTreeDragListener ( treeViewer ) );
+        treeViewer.addDropSupport ( operations, transferTypes,
+                 new SubTreeDropListener ( treeViewer, identModel ) );
+
+        TreeViewerColumn tvc1 = new TreeViewerColumn ( treeViewer, SWT.NONE );
+        tvc1.getColumn().setText ( "Name" ); //$NON-NLS-1$
+        tvc1.getColumn().setWidth ( 200 );
+        tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
+        		new SubTreeLabelProvider ( identModel ) ) );
+        
+    }
+    
+    public void update(CObj c) {
+    	identModel.update(c);
+        treeViewer.setInput ( "Here is some data" );
+        identModel.setCollaspseState ( treeViewer );
     }
 
     public Tree getTree()

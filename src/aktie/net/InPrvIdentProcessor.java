@@ -165,6 +165,11 @@ public class InPrvIdentProcessor extends GenericProcessor
 
                                 if ( decoder.decode ( dm, sk ) )
                                 {
+                                    dm.pushPrivate ( CObj.PRV_MSG_ID,
+                                            b.getPrivate ( CObj.PRV_MSG_ID ) );
+                                    dm.pushPrivate ( CObj.PRV_RECIPIENT,
+                                            b.getPrivate ( CObj.PRV_RECIPIENT ) );
+                                    dm.pushPrivate(CObj.NAME, idty.getDisplayName());
                                     dm.pushPrivate ( CObj.DECODED, "true" );
                                     index.index ( dm );
                                     guicallback.update ( dm );

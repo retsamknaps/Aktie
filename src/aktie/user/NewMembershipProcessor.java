@@ -117,6 +117,11 @@ public class NewMembershipProcessor extends GenericProcessor
                 return true;
             }
 
+            CObj updatemsg = new CObj();
+            updatemsg.pushString ( CObj.ERROR, "Creating new membership: " + member.getDisplayName() );
+            updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+            guicallback.update ( updatemsg );
+
             //encrypt the new membership data set payload
             StringBuilder sb = new StringBuilder();
             sb.append ( CObj.COMMUNITYID );

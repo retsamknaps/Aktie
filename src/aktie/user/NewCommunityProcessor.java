@@ -94,6 +94,11 @@ public class NewCommunityProcessor extends GenericProcessor
                 return true;
             }
 
+            CObj updatemsg = new CObj();
+            updatemsg.pushString ( CObj.ERROR, "Creating new community: " + title );
+            updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
+            guicallback.update ( updatemsg );
+
             publicstring.append ( CObj.NAME );
             publicstring.append ( "=" );
             publicstring.append ( title );
