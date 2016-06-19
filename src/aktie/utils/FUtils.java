@@ -7,12 +7,22 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
 public class FUtils
 {
 
+    // One or more arbitrary characters, at the end
+    // a dot followed by at least one word character.
+    // Group contains dot and word characters at the end.
+    public static final Pattern GET_FILE_EXT_PATTERN = Pattern.compile( "^.+(\\.[a-zA-Z_0-9]+)$" );
+    
+    // A dot followed by at least one word character.
+    public static final Pattern IS_FILE_EXT_PATTERN = Pattern.compile( "^\\.[a-zA-Z_0-9]+$" );
+	
     public static File createTestFile ( File dir, long size ) throws IOException
     {
         File f = null;
@@ -153,6 +163,24 @@ public class FUtils
             f.delete();
         }
 
+    }
+    
+    public static String getFileExtension ( String fileName )
+    {
+    	Matcher m = GET_FILE_EXT_PATTERN.matcher ( fileName );
+
+ 		if ( m.matches() )
+ 		{
+ 			return m.group(1);
+ 		}
+ 		
+ 		return null;
+    }
+    
+    public static boolean isFileExtension ( String str )
+    {
+    	Matcher m = IS_FILE_EXT_PATTERN.matcher ( str );
+    	return m.matches();
     }
 
 }

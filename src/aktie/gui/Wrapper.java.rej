@@ -1,0 +1,71 @@
+***************
+*** 50,60 ****
+      public static long NEWPAYMENT = 0x0000004000000000L;
+  
+      public static String RUNDIR = "aktie_run_dir";
+      public static String LIBDIR = RUNDIR + File.separator + "lib";
+      //public static String JARFILE = "aktie.jar";
+  
+      public static void main ( String args[] )
+      {
+          int rc = RESTART_RC;
+  
+          while ( rc == RESTART_RC )
+--- 55,111 ----
+      public static long NEWPAYMENT = 0x0000004000000000L;
+  
+      public static String RUNDIR = "aktie_run_dir";
++     public static String NODEDIR = RUNDIR + File.separator + "aktie_node";
+      public static String LIBDIR = RUNDIR + File.separator + "lib";
+      //public static String JARFILE = "aktie.jar";
++     
++     private static boolean osIsLinux = false;
++     private static boolean osIsMacOsX = false;
++     private static boolean osIsWindows = false;
++     private static boolean vmIs64Bit = false;
++     
++     static
++     {
++     	String osName = System.getProperty ( "os.name" );
++     	// Determine the operating system type
++         if ( osName.startsWith ( "Windows" ) )
++         {
++         	osIsWindows = true;
++         }
++         else if ( osName.equals ( "Mac OS X" ) )
++         {
++         	osIsMacOsX = true;
++         }
++         else if ( osName.startsWith ( "Linux" ) )
++         {
++         	osIsLinux = true;
++         }
++         
++         // Find out if the java virtual machine is 64 bit.
++         // Even if the OS is 64 bit, it could be running a 32 bit VM.
++         if ( System.getProperty( "sun.arch.data.model" ).equals ( "64" ) )
++         {
++         	vmIs64Bit = true;
++         }
++     }
++     
++     private static List<String> doNotShareFileExtensions = null;
++     private static List<String> doNotShareFileNames = null;
++     
++     public static final String FILE_EXT_AKTIEPART = ".aktiepart";
++     public static final String FILE_EXT_AKTIEBACKUP = ".aktiebackup";
++     
++     public static final String NO_SHARE_EXTS_FILE = "noshareexts.dat";
++     public static final String NO_SHARE_FNAMES_FILE = "nosharefnames.dat";
++     
++     public static final String PROP_SHARE_HIDDEN_FILES = "aktie.share_hidden_files";
++     public static final String PROP_SHARE_HIDDEN_DIRS = "aktie.share_hidden_directories";
+  
+      public static void main ( String args[] )
+      {
++         // TODO: Validate new methods and afterwards kick this out.
++         testDoNotShareMethods();
++     	
+          int rc = RESTART_RC;
+  
+          while ( rc == RESTART_RC )

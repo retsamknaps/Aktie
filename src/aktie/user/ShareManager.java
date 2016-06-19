@@ -19,6 +19,7 @@ import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.FUtils;
@@ -165,7 +166,7 @@ public class ShareManager implements Runnable
     private void checkFoundFile ( DirectoryShare s, File f )
     {
         if ( enabled )
-        {
+        {	
             String fp = f.getAbsolutePath();
 
             try
@@ -178,9 +179,8 @@ public class ShareManager implements Runnable
                 e.printStackTrace();
             }
 
-            if ( !fp.endsWith ( ".aktiepart" ) && !fp.endsWith ( ".aktiebackup" ) )
-            {
 
+            // TODO: correct indentation
                 if ( null == rfh.findFileByName ( fp ) )
                 {
 
@@ -291,7 +291,6 @@ public class ShareManager implements Runnable
 
                 }
 
-            }
 
         }
 
@@ -353,20 +352,76 @@ public class ShareManager implements Runnable
         {
             File lsd[] = df.listFiles();
 
+            continueHereWithNextFile:
             for ( int c = 0; c < lsd.length; c++ )
             {
                 File f = lsd[c];
 
-                if ( f.exists() && ( !f.getName().startsWith ( "." ) ) )
+                if ( f.exists() )
                 {
                     if ( f.isDirectory() )
                     {
-                        s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
-                        crawlDirectory ( s, f );
+                    	// If we are supposed to also share hidden directories
+                    	// or otherwise if the directory is not hidden, crawl it.
+                    	if ( Wrapper.getShareHiddenDirs() || !f.isHidden() ) {
+                    		 s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
+                             crawlDirectory ( s, f );
+                    	}
                     }
 
                     else if ( f.isFile() )
                     {
+                    	// If file is hidden and not supposed to share
+                    	// hidden files, do not proceed.
+                    	if ( f.isHidden() && !Wrapper.getShareHiddenFiles() )
+                    	{
+                    		continue continueHereWithNextFile;
+                    	}
+                    	
+                    	String fname = f.getName();
+                        String ext = FUtils.getFileExtension ( fname );   
+                        
+                        // If the file extension is contained in the list of extensions
+                        // not to be shared, do not proceed.           
+                        if ( ext != null )
+                        {
+                        	List<String> doNotShareExts = Wrapper.getDoNotShareFileExtensions();
+                        	for ( String doNotShareExt : doNotShareExts )
+                            {
+                        		// File extensions sometimes don't care about upper and lower case
+                        		// (e.g. ".pdf" = ".PDF"), so do a case-insensitive comparison.
+                            	if ( doNotShareExt.equalsIgnoreCase( ext ) )
+                            	{
+                            		// The file is not supposed to be shared,
+                            		// so continue with the next file
+                            		continue continueHereWithNextFile;
+                            	}
+                            }
+                        }
+                        
+                        // If the file name is contained in the list of file names
+                        // not to be shared, do not proceed.
+                        List<String> doNotShareFileNames = Wrapper.getDoNotShareFileNames();
+                        for ( String doNotShareFileName : doNotShareFileNames )
+                        {
+                        	// Windows does not care about upper and lower case
+                        	if ( Wrapper.osIsWindows() )
+                        	{
+                        		if ( doNotShareFileName.equalsIgnoreCase ( fname ) )
+                        		{
+                        			continue continueHereWithNextFile;
+                        		}
+                        	}
+                        	// Other systems care about case in file names
+                        	else
+                        	{
+                        		if ( doNotShareFileName.equals ( fname ) )
+                        		{
+                        			continue continueHereWithNextFile;
+                        		}
+                        	}
+                        }
+                    	
                         s.setNumberFiles ( s.getNumberFiles() + 1 );
                         checkFoundFile ( s, f );
                     }
@@ -1224,6 +1279,5 @@ public class ShareManager implements Runnable
     {
         return running;
     }
-
 
 }
