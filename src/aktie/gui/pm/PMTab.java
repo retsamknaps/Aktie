@@ -36,7 +36,7 @@ public class PMTab extends Composite
     private TableViewer tableViewer;
     private StyledText styledText;
     private SWTApp app;
-    
+
     private SubTreeModel identModel;
 
     public PMTab ( Composite parent, int style, SWTApp a )
@@ -47,11 +47,11 @@ public class PMTab extends Composite
 
         SashForm sashForm = new SashForm ( this, SWT.NONE );
         sashForm.setLayoutData ( BorderLayout.CENTER );
-        
-        
+
+
         treeViewer = new TreeViewer ( sashForm, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL );
         tree = treeViewer.getTree();
-        
+
 
         SashForm sashForm_1 = new SashForm ( sashForm, SWT.VERTICAL );
 
@@ -72,11 +72,12 @@ public class PMTab extends Composite
         sashForm.setWeights ( new int[] {1, 4} );
 
     }
-    
-    public void init() {
+
+    public void init()
+    {
         identModel = new SubTreeModel ( app.getNode().getIndex(),
-                new SubTreeEntityDB ( app.getNode().getSession() ), 
-                SubTreeModel.MESSAGE_TREE, 1 );
+                                        new SubTreeEntityDB ( app.getNode().getSession() ),
+                                        SubTreeModel.MESSAGE_TREE, 1 );
         identModel.init();
         treeViewer.setContentProvider ( identModel );
         SubTreeListener stl = new SubTreeListener ( identModel );
@@ -87,20 +88,21 @@ public class PMTab extends Composite
         Transfer[] transferTypes = new Transfer[] {TextTransfer.getInstance() };
 
         treeViewer.addDragSupport ( operations, transferTypes ,
-                 new SubTreeDragListener ( treeViewer ) );
+                                    new SubTreeDragListener ( treeViewer ) );
         treeViewer.addDropSupport ( operations, transferTypes,
-                 new SubTreeDropListener ( treeViewer, identModel ) );
+                                    new SubTreeDropListener ( treeViewer, identModel ) );
 
         TreeViewerColumn tvc1 = new TreeViewerColumn ( treeViewer, SWT.NONE );
         tvc1.getColumn().setText ( "Name" ); //$NON-NLS-1$
         tvc1.getColumn().setWidth ( 200 );
         tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
-        		new SubTreeLabelProvider ( identModel ) ) );
-        
+                                    new SubTreeLabelProvider ( identModel ) ) );
+
     }
-    
-    public void update(CObj c) {
-    	identModel.update(c);
+
+    public void update ( CObj c )
+    {
+        identModel.update ( c );
         treeViewer.setInput ( "Here is some data" );
         identModel.setCollaspseState ( treeViewer );
     }

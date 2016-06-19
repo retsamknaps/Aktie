@@ -224,7 +224,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     guicallback.update ( b );
                     return true;
                 }
-                
+
                 guicallback.update ( pident );
 
                 if ( push != null )

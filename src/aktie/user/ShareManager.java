@@ -166,7 +166,7 @@ public class ShareManager implements Runnable
     private void checkFoundFile ( DirectoryShare s, File f )
     {
         if ( enabled )
-        {	
+        {
             String fp = f.getAbsolutePath();
 
             try
@@ -181,67 +181,65 @@ public class ShareManager implements Runnable
 
 
             // TODO: correct indentation
-                if ( null == rfh.findFileByName ( fp ) )
+            if ( null == rfh.findFileByName ( fp ) )
+            {
+
+                CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+
+                if ( mlst.size() == 0 )
                 {
+                    mlst.close();
 
-                    CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+                    //Check if it's a duplicate
+                    CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
 
-                    if ( mlst.size() == 0 )
+                    if ( dlst.size() == 0 )
                     {
-                        mlst.close();
+                        dlst.close();
+                        addFile ( s, f );
+                    }
 
-                        //Check if it's a duplicate
-                        CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
+                    else
+                    {
+                        CObj dlp = null;
 
-                        if ( dlst.size() == 0 )
+                        try
                         {
-                            dlst.close();
-                            addFile ( s, f );
+                            //Check if file referenced by the duplicate exists
+                            dlp = dlst.get ( 0 );
                         }
 
-                        else
+                        catch ( Exception e )
                         {
-                            CObj dlp = null;
+                            e.printStackTrace();
+                        }
 
-                            try
+                        dlst.close();
+
+                        boolean add = true;
+
+                        if ( dlp != null )
+                        {
+                            String rfid = dlp.getString ( CObj.HASFILE );
+
+                            if ( rfid != null )
                             {
-                                //Check if file referenced by the duplicate exists
-                                dlp = dlst.get ( 0 );
-                            }
+                                CObj hf = index.getById ( rfid );
 
-                            catch ( Exception e )
-                            {
-                                e.printStackTrace();
-                            }
-
-                            dlst.close();
-
-                            boolean add = true;
-
-                            if ( dlp != null )
-                            {
-                                String rfid = dlp.getString ( CObj.HASFILE );
-
-                                if ( rfid != null )
+                                if ( hf != null )
                                 {
-                                    CObj hf = index.getById ( rfid );
+                                    //There is a hasfile, check if the file
+                                    //still exists
+                                    String phf = hf.getPrivate ( CObj.LOCALFILE );
+                                    String shf = hf.getString ( CObj.STILLHASFILE );
 
-                                    if ( hf != null )
+                                    if ( phf != null && "true".equals ( shf ) )
                                     {
-                                        //There is a hasfile, check if the file
-                                        //still exists
-                                        String phf = hf.getPrivate ( CObj.LOCALFILE );
-                                        String shf = hf.getString ( CObj.STILLHASFILE );
+                                        File pf = new File ( phf );
 
-                                        if ( phf != null && "true".equals ( shf ) )
+                                        if ( pf.exists() )
                                         {
-                                            File pf = new File ( phf );
-
-                                            if ( pf.exists() )
-                                            {
-                                                add = false;
-                                            }
-
+                                            add = false;
                                         }
 
                                     }
@@ -250,46 +248,48 @@ public class ShareManager implements Runnable
 
                             }
 
-                            if ( add )
-                            {
-                                //There is no hasfile for it.  So add it.
-                                addFile ( s, f );
-                            }
-
                         }
 
-                    }
-
-                    else
-                    {
-                        CObj mhf = null;
-
-                        try
+                        if ( add )
                         {
-                            mhf = mlst.get ( 0 );
-                        }
-
-                        catch ( IOException e )
-                        {
-                            e.printStackTrace();
-                        }
-
-                        mlst.close();
-
-                        if ( mhf != null )
-                        {
-                            String shr = mhf.getString ( CObj.SHARE_NAME );
-
-                            if ( !s.getShareName().equals ( shr ) )
-                            {
-                                addFile ( s, f );
-                            }
-
+                            //There is no hasfile for it.  So add it.
+                            addFile ( s, f );
                         }
 
                     }
 
                 }
+
+                else
+                {
+                    CObj mhf = null;
+
+                    try
+                    {
+                        mhf = mlst.get ( 0 );
+                    }
+
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                    mlst.close();
+
+                    if ( mhf != null )
+                    {
+                        String shr = mhf.getString ( CObj.SHARE_NAME );
+
+                        if ( !s.getShareName().equals ( shr ) )
+                        {
+                            addFile ( s, f );
+                        }
+
+                    }
+
+                }
+
+            }
 
 
         }
@@ -353,6 +353,7 @@ public class ShareManager implements Runnable
             File lsd[] = df.listFiles();
 
             continueHereWithNextFile:
+
             for ( int c = 0; c < lsd.length; c++ )
             {
                 File f = lsd[c];
@@ -361,67 +362,77 @@ public class ShareManager implements Runnable
                 {
                     if ( f.isDirectory() )
                     {
-                    	// If we are supposed to also share hidden directories
-                    	// or otherwise if the directory is not hidden, crawl it.
-                    	if ( Wrapper.getShareHiddenDirs() || !f.isHidden() ) {
-                    		 s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
-                             crawlDirectory ( s, f );
-                    	}
+                        // If we are supposed to also share hidden directories
+                        // or otherwise if the directory is not hidden, crawl it.
+                        if ( Wrapper.getShareHiddenDirs() || !f.isHidden() )
+                        {
+                            s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
+                            crawlDirectory ( s, f );
+                        }
+
                     }
 
                     else if ( f.isFile() )
                     {
-                    	// If file is hidden and not supposed to share
-                    	// hidden files, do not proceed.
-                    	if ( f.isHidden() && !Wrapper.getShareHiddenFiles() )
-                    	{
-                    		continue continueHereWithNextFile;
-                    	}
-                    	
-                    	String fname = f.getName();
-                        String ext = FUtils.getFileExtension ( fname );   
-                        
+                        // If file is hidden and not supposed to share
+                        // hidden files, do not proceed.
+                        if ( f.isHidden() && !Wrapper.getShareHiddenFiles() )
+                        {
+                            continue continueHereWithNextFile;
+                        }
+
+                        String fname = f.getName();
+                        String ext = FUtils.getFileExtension ( fname );
+
                         // If the file extension is contained in the list of extensions
-                        // not to be shared, do not proceed.           
+                        // not to be shared, do not proceed.
                         if ( ext != null )
                         {
-                        	List<String> doNotShareExts = Wrapper.getDoNotShareFileExtensions();
-                        	for ( String doNotShareExt : doNotShareExts )
+                            List<String> doNotShareExts = Wrapper.getDoNotShareFileExtensions();
+
+                            for ( String doNotShareExt : doNotShareExts )
                             {
-                        		// File extensions sometimes don't care about upper and lower case
-                        		// (e.g. ".pdf" = ".PDF"), so do a case-insensitive comparison.
-                            	if ( doNotShareExt.equalsIgnoreCase( ext ) )
-                            	{
-                            		// The file is not supposed to be shared,
-                            		// so continue with the next file
-                            		continue continueHereWithNextFile;
-                            	}
+                                // File extensions sometimes don't care about upper and lower case
+                                // (e.g. ".pdf" = ".PDF"), so do a case-insensitive comparison.
+                                if ( doNotShareExt.equalsIgnoreCase ( ext ) )
+                                {
+                                    // The file is not supposed to be shared,
+                                    // so continue with the next file
+                                    continue continueHereWithNextFile;
+                                }
+
                             }
+
                         }
-                        
+
                         // If the file name is contained in the list of file names
                         // not to be shared, do not proceed.
                         List<String> doNotShareFileNames = Wrapper.getDoNotShareFileNames();
+
                         for ( String doNotShareFileName : doNotShareFileNames )
                         {
-                        	// Windows does not care about upper and lower case
-                        	if ( Wrapper.osIsWindows() )
-                        	{
-                        		if ( doNotShareFileName.equalsIgnoreCase ( fname ) )
-                        		{
-                        			continue continueHereWithNextFile;
-                        		}
-                        	}
-                        	// Other systems care about case in file names
-                        	else
-                        	{
-                        		if ( doNotShareFileName.equals ( fname ) )
-                        		{
-                        			continue continueHereWithNextFile;
-                        		}
-                        	}
+                            // Windows does not care about upper and lower case
+                            if ( Wrapper.osIsWindows() )
+                            {
+                                if ( doNotShareFileName.equalsIgnoreCase ( fname ) )
+                                {
+                                    continue continueHereWithNextFile;
+                                }
+
+                            }
+
+                            // Other systems care about case in file names
+                            else
+                            {
+                                if ( doNotShareFileName.equals ( fname ) )
+                                {
+                                    continue continueHereWithNextFile;
+                                }
+
+                            }
+
                         }
-                    	
+
                         s.setNumberFiles ( s.getNumberFiles() + 1 );
                         checkFoundFile ( s, f );
                     }

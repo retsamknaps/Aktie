@@ -28,7 +28,7 @@ public class SubTreeEntity implements Comparable<Object>
     private String identity;
     private String refId;
     private boolean connected;
-    
+
     @Column ( columnDefinition = "INTEGER(10) default 0" )
     private int treeId;
 
@@ -196,12 +196,14 @@ public class SubTreeEntity implements Comparable<Object>
         this.refId = refId;
     }
 
-	public int getTreeId() {
-		return treeId;
-	}
+    public int getTreeId()
+    {
+        return treeId;
+    }
 
-	public void setTreeId(int treeId) {
-		this.treeId = treeId;
-	}
+    public void setTreeId ( int treeId )
+    {
+        this.treeId = treeId;
+    }
 
 }

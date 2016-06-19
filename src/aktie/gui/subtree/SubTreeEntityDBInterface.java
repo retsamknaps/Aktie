@@ -12,7 +12,7 @@ public interface SubTreeEntityDBInterface
 
     public void saveAll ( List<SubTreeEntity> lst );
 
-    public List<SubTreeEntity> getEntities(int id);
+    public List<SubTreeEntity> getEntities ( int id );
 
     public void deleteElement ( SubTreeEntity e );
 

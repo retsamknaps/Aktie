@@ -137,17 +137,17 @@ public class SWTSplash extends Dialog
         }
 
     }
-    
+
     /**
-     * Return the initial location of the dialog.
-     */
+        Return the initial location of the dialog.
+    */
     @Override
     protected Point getInitialLocation ( Point initialSize )
     {
-    	Shell parent = getParentShell();
-    	int width = parent.getLocation().x + Math.abs(parent.getSize().x - initialSize.x) / 2;
-    	int height = parent.getLocation().y + Math.abs(parent.getSize().y - initialSize.y) / 2;
-    	return new Point ( width, height );
+        Shell parent = getParentShell();
+        int width = parent.getLocation().x + Math.abs ( parent.getSize().x - initialSize.x ) / 2;
+        int height = parent.getLocation().y + Math.abs ( parent.getSize().y - initialSize.y ) / 2;
+        return new Point ( width, height );
     }
 
     /**

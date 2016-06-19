@@ -57,46 +57,50 @@ public class Wrapper
     public static String NODEDIR = RUNDIR + File.separator + "aktie_node";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
     //public static String JARFILE = "aktie.jar";
-    
+
     private static boolean osIsLinux = false;
     private static boolean osIsMacOsX = false;
     private static boolean osIsWindows = false;
     private static boolean vmIs64Bit = false;
-    
+
     static
     {
-    	String osName = System.getProperty ( "os.name" );
-    	// Determine the operating system type
+        String osName = System.getProperty ( "os.name" );
+
+        // Determine the operating system type
         if ( osName.startsWith ( "Windows" ) )
         {
-        	osIsWindows = true;
+            osIsWindows = true;
         }
+
         else if ( osName.equals ( "Mac OS X" ) )
         {
-        	osIsMacOsX = true;
+            osIsMacOsX = true;
         }
+
         else if ( osName.startsWith ( "Linux" ) )
         {
-        	osIsLinux = true;
+            osIsLinux = true;
         }
-        
+
         // Find out if the java virtual machine is 64 bit.
         // Even if the OS is 64 bit, it could be running a 32 bit VM.
-        if ( System.getProperty( "sun.arch.data.model" ).equals ( "64" ) )
+        if ( System.getProperty ( "sun.arch.data.model" ).equals ( "64" ) )
         {
-        	vmIs64Bit = true;
+            vmIs64Bit = true;
         }
+
     }
-    
+
     private static List<String> doNotShareFileExtensions = null;
     private static List<String> doNotShareFileNames = null;
-    
+
     public static final String FILE_EXT_AKTIEPART = ".aktiepart";
     public static final String FILE_EXT_AKTIEBACKUP = ".aktiebackup";
-    
+
     public static final String NO_SHARE_EXTS_FILE = "noshareexts.dat";
     public static final String NO_SHARE_FNAMES_FILE = "nosharefnames.dat";
-    
+
     public static final String PROP_SHARE_HIDDEN_FILES = "aktie.share_hidden_files";
     public static final String PROP_SHARE_HIDDEN_DIRS = "aktie.share_hidden_directories";
 
@@ -110,7 +114,7 @@ public class Wrapper
     {
         // TODO: Validate new methods and afterwards kick this out.
         testDoNotShareMethods();
-    	
+
         int rc = RESTART_RC;
 
         while ( rc == RESTART_RC )
@@ -151,7 +155,7 @@ public class Wrapper
 
             if ( osIsLinux )
             {
-            	
+
                 if ( vmIs64Bit )
                 {
                     File sfile = new File ( RUNDIR + File.separator + "swt" + File.separator + "swt_linux_64.jar" );
@@ -632,25 +636,25 @@ public class Wrapper
         }
 
     }
-    
+
     public static boolean osIsLinux()
     {
-    	return osIsLinux;
+        return osIsLinux;
     }
-    
+
     public static boolean osIsMacOsX()
     {
-    	return osIsMacOsX;
+        return osIsMacOsX;
     }
-    
+
     public static boolean osIsWindows()
     {
-    	return osIsWindows;
+        return osIsWindows;
     }
-    
+
     public static boolean vmIs64Bit()
     {
-    	return vmIs64Bit;
+        return vmIs64Bit;
     }
 
     public static Properties loadExistingProps()
@@ -978,10 +982,10 @@ public class Wrapper
     {
         return NEWPAYMENT;
     }
-    
+
     public static boolean getShareHiddenFiles()
     {
-    	boolean r = false;
+        boolean r = false;
         Properties p = loadExistingProps();
         String m = p.getProperty ( PROP_SHARE_HIDDEN_FILES );
 
@@ -1000,7 +1004,7 @@ public class Wrapper
 
         return r;
     }
-    
+
     public void saveShareHiddenFiles ( boolean s )
     {
         Properties p = loadExistingProps();
@@ -1009,10 +1013,10 @@ public class Wrapper
 
         savePropsFile ( p );
     }
-    
+
     public static boolean getShareHiddenDirs()
     {
-    	boolean r = false;
+        boolean r = false;
         Properties p = loadExistingProps();
         String m = p.getProperty ( PROP_SHARE_HIDDEN_DIRS );
 
@@ -1031,8 +1035,8 @@ public class Wrapper
 
         return r;
     }
-    
-    public void saveShareHiddenDirs( boolean s )
+
+    public void saveShareHiddenDirs ( boolean s )
     {
         Properties p = loadExistingProps();
 
@@ -1040,365 +1044,392 @@ public class Wrapper
 
         savePropsFile ( p );
     }
-    
+
     public static List<String> getDoNotShareFileNames()
     {
-    	if ( doNotShareFileNames == null )
-    	{
-    		doNotShareFileNames = loadDoNotShareFileNames();
-    	}
-    	
+        if ( doNotShareFileNames == null )
+        {
+            doNotShareFileNames = loadDoNotShareFileNames();
+        }
+
         return doNotShareFileNames;
     }
-    
+
     private static List<String> loadDoNotShareFileNames()
     {
         String path = NODEDIR + File.separator + NO_SHARE_FNAMES_FILE;
 
         try
         {
-         	List<String> list = Files.readAllLines ( Paths.get( path ), Charset.defaultCharset() );
-         	return filterInvalidFileNames ( list );
+            List<String> list = Files.readAllLines ( Paths.get ( path ), Charset.defaultCharset() );
+            return filterInvalidFileNames ( list );
         }
 
         catch ( NoSuchFileException e )
         {
-            
+
             // if the config file does not exist,
-        	// try creating an empty one
-        	saveDoNotShareFileNames ( new LinkedList<String>() );
-            
+            // try creating an empty one
+            saveDoNotShareFileNames ( new LinkedList<String>() );
+
         }
-        
+
         catch ( IOException e )
         {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
-        
+
         return new LinkedList<String>();
     }
-    
-    public static boolean saveDoNotShareFileNames( List<String> fileNames )
-    {
-    	List<String> validFileNames = filterInvalidFileNames ( fileNames );
-    	
-    	String path = NODEDIR + File.separator + NO_SHARE_FNAMES_FILE;
-    	
-    	List<String> lines = new LinkedList<String>();
-    	lines.add("# This config file contains file names that should not be shared");
-    	lines.add("# by Aktie even if a share contains files with such a name.");
-    	lines.add("#");
-    	lines.add("# Each file name needs to be listed on a new line");
-    	lines.add("# without any leading or trailing whitespace.");
-    	lines.add("#");
-    	lines.add("# The file name may not contain the system specific path separator");
-    	lines.add("# (usually '/' or '\') and should not start with '#'.");
-    	lines.add("# Malformed file names are ignored by Aktie.");
-    	lines.add("#");    	
-    	lines.addAll ( validFileNames );
 
-    	try
-    	{
-    		Files.write ( Paths.get( path ), lines, Charset.defaultCharset() );
-    		doNotShareFileNames = validFileNames;
-    		return true;
-    	}
-    	
-    	catch (IOException e)
-    	{
-    		e.printStackTrace();
-    		return false;
-    	}
+    public static boolean saveDoNotShareFileNames ( List<String> fileNames )
+    {
+        List<String> validFileNames = filterInvalidFileNames ( fileNames );
+
+        String path = NODEDIR + File.separator + NO_SHARE_FNAMES_FILE;
+
+        List<String> lines = new LinkedList<String>();
+        lines.add ( "# This config file contains file names that should not be shared" );
+        lines.add ( "# by Aktie even if a share contains files with such a name." );
+        lines.add ( "#" );
+        lines.add ( "# Each file name needs to be listed on a new line" );
+        lines.add ( "# without any leading or trailing whitespace." );
+        lines.add ( "#" );
+        lines.add ( "# The file name may not contain the system specific path separator" );
+        lines.add ( "# (usually '/' or '\') and should not start with '#'." );
+        lines.add ( "# Malformed file names are ignored by Aktie." );
+        lines.add ( "#" );
+        lines.addAll ( validFileNames );
+
+        try
+        {
+            Files.write ( Paths.get ( path ), lines, Charset.defaultCharset() );
+            doNotShareFileNames = validFileNames;
+            return true;
+        }
+
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+            return false;
+        }
 
     }
-    
+
     private static LinkedList<String> filterInvalidFileNames ( List<String> list )
     {
-    	LinkedList<String> fnameList = new LinkedList<String>();
-    	for ( String str : list )
-     	{
-    		// 1. Do not consider comment lines of the config file
-    		// 2. Do not consider file names that contain
-    		//    the system-specific file separator and
-    		// Do not be too strict, the list of file names to be excluded
-    		// is up to the user and adding bullshit to the list will just
-    		// be a waste of effort.
-    		if ( !str.startsWith ( "#" ) && !str.contains ( File.separator ) && !str.contains("\t") )
-    		{
-    			fnameList.add(str);
-    		}
-     	}
-    	return fnameList;
+        LinkedList<String> fnameList = new LinkedList<String>();
+
+        for ( String str : list )
+        {
+            // 1. Do not consider comment lines of the config file
+            // 2. Do not consider file names that contain
+            //    the system-specific file separator and
+            // Do not be too strict, the list of file names to be excluded
+            // is up to the user and adding bullshit to the list will just
+            // be a waste of effort.
+            if ( !str.startsWith ( "#" ) && !str.contains ( File.separator ) && !str.contains ( "\t" ) )
+            {
+                fnameList.add ( str );
+            }
+
+        }
+
+        return fnameList;
     }
-    
+
     public static List<String> getDoNotShareFileExtensions()
     {
-    	if ( doNotShareFileExtensions == null )
-    	{
-    		doNotShareFileExtensions = loadDoNotShareFileExtensions();
-        	// add the file extensions used by Aktie which are never shared
-    		doNotShareFileExtensions.add( 0, FILE_EXT_AKTIEPART );
-    		doNotShareFileExtensions.add( 0, FILE_EXT_AKTIEBACKUP );
-    	}
-    	
+        if ( doNotShareFileExtensions == null )
+        {
+            doNotShareFileExtensions = loadDoNotShareFileExtensions();
+            // add the file extensions used by Aktie which are never shared
+            doNotShareFileExtensions.add ( 0, FILE_EXT_AKTIEPART );
+            doNotShareFileExtensions.add ( 0, FILE_EXT_AKTIEBACKUP );
+        }
+
         return doNotShareFileExtensions;
     }
-    
+
     private static List<String> loadDoNotShareFileExtensions()
     {
         String path = NODEDIR + File.separator + NO_SHARE_EXTS_FILE;
 
         try
         {
-         	List<String> list = Files.readAllLines ( Paths.get( path ), Charset.defaultCharset() );
-         	return filterInvalidFileExtensions ( list );
+            List<String> list = Files.readAllLines ( Paths.get ( path ), Charset.defaultCharset() );
+            return filterInvalidFileExtensions ( list );
         }
 
         catch ( NoSuchFileException e )
         {
-            
+
             // if the config file does not exist,
-        	// try creating an empty one
-        	saveDoNotShareFileExtensions ( new LinkedList<String>() );
-            
+            // try creating an empty one
+            saveDoNotShareFileExtensions ( new LinkedList<String>() );
+
         }
-        
+
         catch ( IOException e )
         {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
-        
+
         return new LinkedList<String>();
     }
-    
-    public static boolean saveDoNotShareFileExtensions( List<String> extensions )
-    {
-    	List<String> validFileExtensions = filterInvalidFileExtensions ( extensions );
-    	
-    	String path = NODEDIR + File.separator + NO_SHARE_EXTS_FILE;
-    	
-    	List<String> lines = new LinkedList<String>();
-    	lines.add("# This config file contains file extensions that should not be shared");
-    	lines.add("# by Aktie even if a share contains files with such an extension.");
-    	lines.add("#");
-    	lines.add("# Each extension needs to be listed on a separate line");
-    	lines.add("# without leading or trailing whitespace.");
-    	lines.add("#");
-    	lines.add("# A file extension needs to start with a '.'");
-    	lines.add("# followed by at least one of the characters 'a-z', 'A-Z' '0-9' and '_'.");
-    	lines.add("# Other characters should not be part of a file extension.");
-    	lines.add("# Malformed file extensions are ignored by Aktie.");
-    	lines.add("#");
-    	lines.add("# The extensions '.aktiepart' and '.aktiebackup' are never shared");
-    	lines.add("# by Aktie and do not need to be specified here.");
-    	lines.add("#");
-    	lines.addAll ( validFileExtensions  );
 
-    	try
-    	{
-    		Files.write ( Paths.get( path ), lines, Charset.defaultCharset() );
-    		doNotShareFileExtensions = validFileExtensions;
-    		return true;
-    	}
-    	
-    	catch (IOException e)
-    	{
-    		e.printStackTrace();
-    		return false;
-    	}
+    public static boolean saveDoNotShareFileExtensions ( List<String> extensions )
+    {
+        List<String> validFileExtensions = filterInvalidFileExtensions ( extensions );
+
+        String path = NODEDIR + File.separator + NO_SHARE_EXTS_FILE;
+
+        List<String> lines = new LinkedList<String>();
+        lines.add ( "# This config file contains file extensions that should not be shared" );
+        lines.add ( "# by Aktie even if a share contains files with such an extension." );
+        lines.add ( "#" );
+        lines.add ( "# Each extension needs to be listed on a separate line" );
+        lines.add ( "# without leading or trailing whitespace." );
+        lines.add ( "#" );
+        lines.add ( "# A file extension needs to start with a '.'" );
+        lines.add ( "# followed by at least one of the characters 'a-z', 'A-Z' '0-9' and '_'." );
+        lines.add ( "# Other characters should not be part of a file extension." );
+        lines.add ( "# Malformed file extensions are ignored by Aktie." );
+        lines.add ( "#" );
+        lines.add ( "# The extensions '.aktiepart' and '.aktiebackup' are never shared" );
+        lines.add ( "# by Aktie and do not need to be specified here." );
+        lines.add ( "#" );
+        lines.addAll ( validFileExtensions  );
+
+        try
+        {
+            Files.write ( Paths.get ( path ), lines, Charset.defaultCharset() );
+            doNotShareFileExtensions = validFileExtensions;
+            return true;
+        }
+
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+            return false;
+        }
 
     }
-    
+
     private static LinkedList<String> filterInvalidFileExtensions ( List<String> list )
     {
-    	LinkedList<String> extList = new LinkedList<String>();
-    	continueHereWithNextCandidExt:
-    	for ( String str : list )
-     	{
-     		// Check if we got a valid file extension
-     		if ( FUtils.isFileExtension ( str ) )
-     		{
-     			// Omit Aktie specific file extensions
-     			if ( str.equals ( FILE_EXT_AKTIEPART ) || str.equals ( FILE_EXT_AKTIEBACKUP ) )
-     			{
-     				continue continueHereWithNextCandidExt;
-     			}
-     			
-     			// Only add the extension to the list if it is not yet contained.
-     			// Do case-insensitive comparison.
-     			for ( String listedExt : extList )
-     			{
-     				if ( listedExt.equalsIgnoreCase ( str ) )
-     				{
-     					//System.out.println("filterFileExtensions(): VALID, BUT DUPLICATE EXTENSION: " + str);
-     					continue continueHereWithNextCandidExt;
-     				}
-     			}
-     			extList.add ( str );
- 				//System.out.println("filterFileExtensions(): VALID EXTENSION: " + str);
- 				
-     		}
-     		
-     		/*else
-     		{
-     			System.out.println("filterFileExtensions(): INVALID EXTENSION: " + str);
-     		}*/
-     	}
-    	return extList;
+        LinkedList<String> extList = new LinkedList<String>();
+        continueHereWithNextCandidExt:
+
+        for ( String str : list )
+        {
+            // Check if we got a valid file extension
+            if ( FUtils.isFileExtension ( str ) )
+            {
+                // Omit Aktie specific file extensions
+                if ( str.equals ( FILE_EXT_AKTIEPART ) || str.equals ( FILE_EXT_AKTIEBACKUP ) )
+                {
+                    continue continueHereWithNextCandidExt;
+                }
+
+                // Only add the extension to the list if it is not yet contained.
+                // Do case-insensitive comparison.
+                for ( String listedExt : extList )
+                {
+                    if ( listedExt.equalsIgnoreCase ( str ) )
+                    {
+                        //System.out.println("filterFileExtensions(): VALID, BUT DUPLICATE EXTENSION: " + str);
+                        continue continueHereWithNextCandidExt;
+                    }
+
+                }
+
+                extList.add ( str );
+                //System.out.println("filterFileExtensions(): VALID EXTENSION: " + str);
+
+            }
+
+            /*  else
+                {
+                System.out.println("filterFileExtensions(): INVALID EXTENSION: " + str);
+                }*/
+
+        }
+
+        return extList;
     }
-    
+
     // TODO: Validate new methods and afterwards kick this out.
-    private static void testDoNotShareMethods() {
-    	System.out.println("Testing doNotShareFileNames");
-    	System.out.println();
-    	
-    	System.out.println("Loading from config file ...");
-    	List<String> fnames = getDoNotShareFileNames();
-    	
-    	System.out.println("Valid file names in config file:");
-    	for (String fname: fnames ) {
-    		System.out.println(fname);
-    	}
-    	System.out.println();
-    	
-    	List<String> newFnames = new LinkedList<String>();
-    	newFnames.add("Thumbs.db");
-    	newFnames.add("Desktop.ini");
-    	newFnames.add(".DS_Store");
-    	newFnames.add("# invalid since comment");
-    	newFnames.add("invalid on Unix-like since speparator / contained");
-    	newFnames.add("invalid on Windows since speparator \\ contained");
-    	System.out.println();
-    	
-    	System.out.println("File names for testing saving to config file:");
-    	for ( String fname: newFnames ) {
-    		System.out.println(fname);
-    	}
-    	System.out.println();
-    	
-    	System.out.println("Saving to config file ...");    	
-    	saveDoNotShareFileNames(newFnames);
-    	System.out.println();
-    	
-    	fnames = getDoNotShareFileNames();
-    	System.out.println("Valid file names in config file:");
-    	for (String fname: fnames ) {
-    		System.out.println(fname);
-    	}
-    	System.out.println();
-    	System.out.println();
-    	
-    	System.out.println("Testing doNotShareFileExtensions");
-    	System.out.println();
-    	System.out.println("Loading from config file ...");
-    	List<String> exts = getDoNotShareFileExtensions();
-    	
-    	System.out.println("Valid file extensions in config file:");
-    	for ( String ext : exts )
-    	{
-    		System.out.println(ext);
-    	}   	
-    	System.out.println();
-    	
-    	List<String> newExts = new LinkedList<String>();
-    	newExts.add(".avi");
-    	newExts.add(".mp4");
-    	newExts.add(".534");
-    	newExts.add(".pdf");
-    	newExts.add(".PDF");
-    	newExts.add(".Pdf");
-    	newExts.add(".aktiepart");
-    	newExts.add(".aktiebackup");
-    	newExts.add(".%aa");
-    	newExts.add("._db");
-    	newExts.add("some text");
-    	newExts.add("# comment");
-    	newExts.add("  .leading_space");
-    	newExts.add(".trailing_space  ");
-    	newExts.add(".avi");
-    	newExts.add(".mp4");
-    	newExts.add("Desktop.ini");
-    	
-    	System.out.println("File extensions for testing saving to config file:");
-    	for ( String ext: newExts ) {
-    		System.out.println(ext);
-    	}
-    	System.out.println();
-    	
-    	System.out.println("Saving to config file ...");    	
-    	saveDoNotShareFileExtensions(newExts);
-    	System.out.println();
-    	
-    	exts = getDoNotShareFileExtensions();
-    	System.out.println("Valid file extensions in config file:");
-    	for (String ext : exts ) {
-    		System.out.println(ext);
-    	}
+    private static void testDoNotShareMethods()
+    {
+        System.out.println ( "Testing doNotShareFileNames" );
+        System.out.println();
+
+        System.out.println ( "Loading from config file ..." );
+        List<String> fnames = getDoNotShareFileNames();
+
+        System.out.println ( "Valid file names in config file:" );
+
+        for ( String fname : fnames )
+        {
+            System.out.println ( fname );
+        }
+
+        System.out.println();
+
+        List<String> newFnames = new LinkedList<String>();
+        newFnames.add ( "Thumbs.db" );
+        newFnames.add ( "Desktop.ini" );
+        newFnames.add ( ".DS_Store" );
+        newFnames.add ( "# invalid since comment" );
+        newFnames.add ( "invalid on Unix-like since speparator / contained" );
+        newFnames.add ( "invalid on Windows since speparator \\ contained" );
+        System.out.println();
+
+        System.out.println ( "File names for testing saving to config file:" );
+
+        for ( String fname : newFnames )
+        {
+            System.out.println ( fname );
+        }
+
+        System.out.println();
+
+        System.out.println ( "Saving to config file ..." );
+        saveDoNotShareFileNames ( newFnames );
+        System.out.println();
+
+        fnames = getDoNotShareFileNames();
+        System.out.println ( "Valid file names in config file:" );
+
+        for ( String fname : fnames )
+        {
+            System.out.println ( fname );
+        }
+
+        System.out.println();
+        System.out.println();
+
+        System.out.println ( "Testing doNotShareFileExtensions" );
+        System.out.println();
+        System.out.println ( "Loading from config file ..." );
+        List<String> exts = getDoNotShareFileExtensions();
+
+        System.out.println ( "Valid file extensions in config file:" );
+
+        for ( String ext : exts )
+        {
+            System.out.println ( ext );
+        }
+
+        System.out.println();
+
+        List<String> newExts = new LinkedList<String>();
+        newExts.add ( ".avi" );
+        newExts.add ( ".mp4" );
+        newExts.add ( ".534" );
+        newExts.add ( ".pdf" );
+        newExts.add ( ".PDF" );
+        newExts.add ( ".Pdf" );
+        newExts.add ( ".aktiepart" );
+        newExts.add ( ".aktiebackup" );
+        newExts.add ( ".%aa" );
+        newExts.add ( "._db" );
+        newExts.add ( "some text" );
+        newExts.add ( "# comment" );
+        newExts.add ( "  .leading_space" );
+        newExts.add ( ".trailing_space  " );
+        newExts.add ( ".avi" );
+        newExts.add ( ".mp4" );
+        newExts.add ( "Desktop.ini" );
+
+        System.out.println ( "File extensions for testing saving to config file:" );
+
+        for ( String ext : newExts )
+        {
+            System.out.println ( ext );
+        }
+
+        System.out.println();
+
+        System.out.println ( "Saving to config file ..." );
+        saveDoNotShareFileExtensions ( newExts );
+        System.out.println();
+
+        exts = getDoNotShareFileExtensions();
+        System.out.println ( "Valid file extensions in config file:" );
+
+        for ( String ext : exts )
+        {
+            System.out.println ( ext );
+        }
+
     }
-    
+
     public static Rectangle getWindowBounds ( )
     {
-    	Properties p = loadExistingProps();
-    	
-    	String sx = p.getProperty ( PROP_WINDOW_X );
-    	String sy = p.getProperty ( PROP_WINDOW_Y );
-    	String sw = p.getProperty ( PROP_WINDOW_WIDTH );
-    	String sh = p.getProperty ( PROP_WINDOW_HEIGHT );
-    	
-    	if ( sx == null || sy == null || sw == null || sh == null )
-    	{
-    		return null;
-    	}
-    	
-    	try
-    	{
-    		int x = Integer.parseInt ( sx );
-    		int y = Integer.parseInt ( sy );
-    		int width = Integer.parseInt ( sw );
-    		int height = Integer.parseInt( sh );
-    		return new Rectangle(x, y, width, height);
-    	}
-    	catch ( NumberFormatException e ) 
-    	{	
-    		return null;
-    	}
-	   	
+        Properties p = loadExistingProps();
+
+        String sx = p.getProperty ( PROP_WINDOW_X );
+        String sy = p.getProperty ( PROP_WINDOW_Y );
+        String sw = p.getProperty ( PROP_WINDOW_WIDTH );
+        String sh = p.getProperty ( PROP_WINDOW_HEIGHT );
+
+        if ( sx == null || sy == null || sw == null || sh == null )
+        {
+            return null;
+        }
+
+        try
+        {
+            int x = Integer.parseInt ( sx );
+            int y = Integer.parseInt ( sy );
+            int width = Integer.parseInt ( sw );
+            int height = Integer.parseInt ( sh );
+            return new Rectangle ( x, y, width, height );
+        }
+
+        catch ( NumberFormatException e )
+        {
+            return null;
+        }
+
     }
-    
+
     public static void saveWindowBounds ( Rectangle bounds )
     {
-    	Properties p = loadExistingProps();
-    	
-    	p.setProperty ( PROP_WINDOW_X, Integer.toString(bounds.x) );
-    	p.setProperty ( PROP_WINDOW_Y, Integer.toString(bounds.y) );
-    	p.setProperty ( PROP_WINDOW_WIDTH, Integer.toString(bounds.width) );
-    	p.setProperty ( PROP_WINDOW_HEIGHT, Integer.toString(bounds.height) );
-    	
-    	savePropsFile ( p );
+        Properties p = loadExistingProps();
+
+        p.setProperty ( PROP_WINDOW_X, Integer.toString ( bounds.x ) );
+        p.setProperty ( PROP_WINDOW_Y, Integer.toString ( bounds.y ) );
+        p.setProperty ( PROP_WINDOW_WIDTH, Integer.toString ( bounds.width ) );
+        p.setProperty ( PROP_WINDOW_HEIGHT, Integer.toString ( bounds.height ) );
+
+        savePropsFile ( p );
     }
-    
+
     public static boolean getWindowIsMaximized ( )
     {
-    	Properties p = loadExistingProps();
-    	
-    	boolean maximized = false;
-    	String m = p.getProperty ( PROP_WINDOW_MAXIMIZED );
-    	
-    	if ( m != null && m.equals("true") )
-    	{
-    		maximized = true;
-    	}
-    	
-    	return maximized;
+        Properties p = loadExistingProps();
+
+        boolean maximized = false;
+        String m = p.getProperty ( PROP_WINDOW_MAXIMIZED );
+
+        if ( m != null && m.equals ( "true" ) )
+        {
+            maximized = true;
+        }
+
+        return maximized;
     }
-    
+
     public static void saveWindowIsMaximized ( boolean m )
     {
-    	 Properties p = loadExistingProps();
-    	 
-    	 p.setProperty( PROP_WINDOW_MAXIMIZED, Boolean.toString ( m ) );
-    	 
-    	 savePropsFile ( p );
+        Properties p = loadExistingProps();
+
+        p.setProperty ( PROP_WINDOW_MAXIMIZED, Boolean.toString ( m ) );
+
+        savePropsFile ( p );
     }
 
 }

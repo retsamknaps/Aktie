@@ -1319,7 +1319,7 @@ public class SWTApp
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
     private AktiSpamRankDialog spamDialog;
-    
+
     private PMTab pmTab;
 
     //private IdentitySubTreeModel identSubTreeModel;
@@ -1736,9 +1736,9 @@ public class SWTApp
         //identSubTreeModel = new IdentitySubTreeModel ( this );
         //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
         // Post tree must be id 0, the default for the new treeid value is 0 so
-    	// existing entitys for the posts tree will get id 0
+        // existing entitys for the posts tree will get id 0
         identModel = new SubTreeModel ( node.getIndex(),
-                                        new SubTreeEntityDB ( node.getSession() ), 
+                                        new SubTreeEntityDB ( node.getSession() ),
                                         SubTreeModel.POST_TREE, 0 );
         identModel.init();
         identTreeViewer.setContentProvider ( identModel );
@@ -1761,7 +1761,7 @@ public class SWTApp
                                     new SubTreeLabelProvider ( identModel ) ) );
         //tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
         //                            new IdentitySubTreeLabelProvider() ) );
-        
+
         pmTab.init();
 
         try
@@ -2131,12 +2131,12 @@ public class SWTApp
 
         Display.setAppName ( "aktie" );
         Display display = Display.getDefault();
-        
+
         windowBounds = Wrapper.getWindowBounds();
         windowMaximized = Wrapper.getWindowIsMaximized();
 
         createContents();
-        shell.setVisible(false);
+        shell.setVisible ( false );
         shell.open();
         shell.layout();
 
@@ -2145,24 +2145,31 @@ public class SWTApp
         {
             shell.setBounds ( windowBounds );
         }
+
         // maximize the window if it was maximized the last time before closing
         shell.setMaximized ( windowMaximized );
-        shell.addListener (SWT.Resize,  new Listener ( )
-	    {
-	        public void handleEvent (Event e)
-	        {
-	        	if ( shell.isDisposed() ) {
-	        		return;
-	        	}
-	        	// remember the bounds in non-maximized window state
-	        	windowMaximized = shell.getMaximized();
-	        	if ( !windowMaximized )
-	        	{
-	        		windowBounds = shell.getBounds ( );
-	        	}
-	        }
-	    } );
-        shell.setVisible(true);
+        shell.addListener ( SWT.Resize,  new Listener ( )
+        {
+            public void handleEvent ( Event e )
+            {
+                if ( shell.isDisposed() )
+                {
+                    return;
+                }
+
+                // remember the bounds in non-maximized window state
+                windowMaximized = shell.getMaximized();
+
+                if ( !windowMaximized )
+                {
+                    windowBounds = shell.getBounds ( );
+                }
+
+            }
+
+        } );
+
+        shell.setVisible ( true );
 
         splash = new SWTSplash ( shell );
         startNode();
@@ -2180,13 +2187,14 @@ public class SWTApp
         }
 
         this.periodicUpdateThread.stop();
-        
-	    // save the window state upon closing
-	    if ( windowBounds != null )
-	    {
-	        Wrapper.saveWindowBounds ( windowBounds );
-	    }
-	    Wrapper.saveWindowIsMaximized( windowMaximized );
+
+        // save the window state upon closing
+        if ( windowBounds != null )
+        {
+            Wrapper.saveWindowBounds ( windowBounds );
+        }
+
+        Wrapper.saveWindowIsMaximized ( windowMaximized );
 
         System.out.println ( "CLOSING NODE" );
         closeNode();
@@ -2199,8 +2207,8 @@ public class SWTApp
         identTreeViewer.setInput ( "Here is some data" );
         identModel.setCollaspseState ( identTreeViewer );
 
-        pmTab.update(co);
-        
+        pmTab.update ( co );
+
         splash.reallyClose();
 
     }
@@ -5590,7 +5598,7 @@ public class SWTApp
 
         pmTab = new PMTab ( tabFolder, SWT.NONE, this );
         tbtmPM.setControl ( pmTab );
-        
+
         TabItem tbtmDownloadds = new TabItem ( tabFolder, SWT.NONE );
         tbtmDownloadds.setText ( "Downloads" );
 
@@ -5955,6 +5963,7 @@ public class SWTApp
         String inkBps = String.format ( "%.2f", deltaInBytes / 1.024 / deltaTime );
         String outkBps = String.format ( "%.2f", deltaOutBytes / 1.024 / deltaTime );
         lblSpeed.setText ( new StringBuffer().append ( "down: " ).append ( inkBps ).append ( " kB/s | up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
+
         if ( connectionTable != null )
         {
             connectionTable.getTableViewer().setInput ( concallback );

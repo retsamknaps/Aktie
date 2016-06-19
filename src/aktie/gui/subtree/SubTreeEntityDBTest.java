@@ -26,7 +26,7 @@ public class SubTreeEntityDBTest implements SubTreeEntityDBInterface
     }
 
     @Override
-    public List<SubTreeEntity> getEntities(int id)
+    public List<SubTreeEntity> getEntities ( int id )
     {
         return new LinkedList<SubTreeEntity>();
     }
@@ -38,6 +38,7 @@ public class SubTreeEntityDBTest implements SubTreeEntityDBInterface
     }
 
     @Override
+
     public synchronized void saveAll ( List<SubTreeEntity> lst )
     {
         for ( SubTreeEntity e : lst )
