@@ -941,6 +941,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             appendInput ( "File read " + dstr );
             processFragment ( dstr, tmpf );
+            tmpf.delete();
             //now we have it, tell outproc to go again.
         }
 
