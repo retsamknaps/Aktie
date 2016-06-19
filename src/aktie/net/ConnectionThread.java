@@ -465,7 +465,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                          CObj.IDENTITY.equals ( tt ) ||
                          CObj.CON_CHALLENGE.equals ( tt ) ||
                          CObj.CON_REPLY.equals ( tt ) ||
-                         CObj.CON_FILEMODE.equals ( tt )
+                         CObj.CON_FILEMODE.equals ( tt ) ||
+                         CObj.FRAGFAILED.equals ( tt )
                        ) )
                 {
                     log.severe ( "ERROR: file mode unacceptable type: " + tt );
