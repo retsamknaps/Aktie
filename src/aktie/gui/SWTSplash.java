@@ -53,7 +53,7 @@ public class SWTSplash extends Dialog
 
         Label lblNewLabel = new Label ( container, SWT.NONE );
         lblNewLabel.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, true, false, 1, 1 ) );
-        lblNewLabel.setText ( "Please wait while Aktie starts.." );
+        lblNewLabel.setText ( "Please wait while Aktie starts..." );
 
         Label lblItCanTake = new Label ( container, SWT.NONE );
         lblItCanTake.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, false, false, 1, 1 ) );
@@ -90,17 +90,12 @@ public class SWTSplash extends Dialog
         return false;
     }
 
-    private boolean openned = false;
+    private boolean opened = false;
     public int open()
     {
-        openned = true;
+        opened = true;
         //NOTE: Open will block, so we have to set opened true first
         return super.open();
-    }
-
-    private void superClose()
-    {
-        super.close();
     }
 
     public boolean isClosed()
@@ -131,16 +126,28 @@ public class SWTSplash extends Dialog
 
             }
 
-            while ( !openned );
+            while ( !opened );
 
             if ( splashImg != null && !splashImg.isDisposed() )
             {
                 splashImg.dispose();
             }
 
-            superClose();
+            super.close();
         }
 
+    }
+    
+    /**
+     * Return the initial location of the dialog.
+     */
+    @Override
+    protected Point getInitialLocation ( Point initialSize )
+    {
+    	Shell parent = getParentShell();
+    	int width = parent.getLocation().x + Math.abs(parent.getSize().x - initialSize.x) / 2;
+    	int height = parent.getLocation().y + Math.abs(parent.getSize().y - initialSize.y) / 2;
+    	return new Point ( width, height );
     }
 
     /**

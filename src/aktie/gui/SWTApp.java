@@ -463,15 +463,6 @@ public class SWTApp
             return totalOutBytes;
         }
 
-        public void updateDisplay ( )
-        {
-            if ( connectionTable != null )
-            {
-                connectionTable.getTableViewer().setInput ( ConnectionCallback.this );
-            }
-
-        }
-
         @Override
         public void update ( ConnectionThread ct )
         {
@@ -2123,6 +2114,9 @@ public class SWTApp
 
     // Periodic GUI update thread
     private PeriodicGuiUpdateThread periodicUpdateThread;
+    // Window state
+    private boolean windowMaximized = false;
+    private Rectangle windowBounds = null;
 
     /**
         Open the window.
@@ -2137,10 +2131,38 @@ public class SWTApp
 
         Display.setAppName ( "aktie" );
         Display display = Display.getDefault();
+        
+        windowBounds = Wrapper.getWindowBounds();
+        windowMaximized = Wrapper.getWindowIsMaximized();
 
         createContents();
+        shell.setVisible(false);
         shell.open();
         shell.layout();
+
+        // set the window to the size and position we had last time before closing
+        if ( windowBounds != null )
+        {
+            shell.setBounds ( windowBounds );
+        }
+        // maximize the window if it was maximized the last time before closing
+        shell.setMaximized ( windowMaximized );
+        shell.addListener (SWT.Resize,  new Listener ( )
+	    {
+	        public void handleEvent (Event e)
+	        {
+	        	if ( shell.isDisposed() ) {
+	        		return;
+	        	}
+	        	// remember the bounds in non-maximized window state
+	        	windowMaximized = shell.getMaximized();
+	        	if ( !windowMaximized )
+	        	{
+	        		windowBounds = shell.getBounds ( );
+	        	}
+	        }
+	    } );
+        shell.setVisible(true);
 
         splash = new SWTSplash ( shell );
         startNode();
@@ -2158,6 +2180,13 @@ public class SWTApp
         }
 
         this.periodicUpdateThread.stop();
+        
+	    // save the window state upon closing
+	    if ( windowBounds != null )
+	    {
+	        Wrapper.saveWindowBounds ( windowBounds );
+	    }
+	    Wrapper.saveWindowIsMaximized( windowMaximized );
 
         System.out.println ( "CLOSING NODE" );
         closeNode();
@@ -3380,7 +3409,7 @@ public class SWTApp
 
         lblSpeed = new Label ( composite_header, SWT.NONE );
         lblSpeed.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
-        updateConnections ( 0, 0, 1 ); // use update method to initialize text of speed label
+        updateConnections ( 0L, 0L, 1L ); // use update method to initialize text of speed label
 
         lblError = new Label ( composite_header, SWT.NONE );
         lblError.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, false, false, 1, 1 ) );
@@ -5926,7 +5955,10 @@ public class SWTApp
         String inkBps = String.format ( "%.2f", deltaInBytes / 1.024 / deltaTime );
         String outkBps = String.format ( "%.2f", deltaOutBytes / 1.024 / deltaTime );
         lblSpeed.setText ( new StringBuffer().append ( "down: " ).append ( inkBps ).append ( " kB/s | up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
-        concallback.updateDisplay();
+        if ( connectionTable != null )
+        {
+            connectionTable.getTableViewer().setInput ( concallback );
+        }
 
     }
 

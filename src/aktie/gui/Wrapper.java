@@ -21,6 +21,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import aktie.utils.FUtils;
+import org.eclipse.swt.graphics.Rectangle;
 
 public class Wrapper
 {
@@ -98,6 +99,12 @@ public class Wrapper
     
     public static final String PROP_SHARE_HIDDEN_FILES = "aktie.share_hidden_files";
     public static final String PROP_SHARE_HIDDEN_DIRS = "aktie.share_hidden_directories";
+
+    public static final String PROP_WINDOW_MAXIMIZED = "aktie.window.maximized";
+    public static final String PROP_WINDOW_X = "aktie.window.x";
+    public static final String PROP_WINDOW_Y = "aktie.window.y";
+    public static final String PROP_WINDOW_WIDTH = "aktie.window.width";
+    public static final String PROP_WINDOW_HEIGHT = "aktie.window.height";
 
     public static void main ( String args[] )
     {
@@ -1327,6 +1334,71 @@ public class Wrapper
     	for (String ext : exts ) {
     		System.out.println(ext);
     	}
+    }
+    
+    public static Rectangle getWindowBounds ( )
+    {
+    	Properties p = loadExistingProps();
+    	
+    	String sx = p.getProperty ( PROP_WINDOW_X );
+    	String sy = p.getProperty ( PROP_WINDOW_Y );
+    	String sw = p.getProperty ( PROP_WINDOW_WIDTH );
+    	String sh = p.getProperty ( PROP_WINDOW_HEIGHT );
+    	
+    	if ( sx == null || sy == null || sw == null || sh == null )
+    	{
+    		return null;
+    	}
+    	
+    	try
+    	{
+    		int x = Integer.parseInt ( sx );
+    		int y = Integer.parseInt ( sy );
+    		int width = Integer.parseInt ( sw );
+    		int height = Integer.parseInt( sh );
+    		return new Rectangle(x, y, width, height);
+    	}
+    	catch ( NumberFormatException e ) 
+    	{	
+    		return null;
+    	}
+	   	
+    }
+    
+    public static void saveWindowBounds ( Rectangle bounds )
+    {
+    	Properties p = loadExistingProps();
+    	
+    	p.setProperty ( PROP_WINDOW_X, Integer.toString(bounds.x) );
+    	p.setProperty ( PROP_WINDOW_Y, Integer.toString(bounds.y) );
+    	p.setProperty ( PROP_WINDOW_WIDTH, Integer.toString(bounds.width) );
+    	p.setProperty ( PROP_WINDOW_HEIGHT, Integer.toString(bounds.height) );
+    	
+    	savePropsFile ( p );
+    }
+    
+    public static boolean getWindowIsMaximized ( )
+    {
+    	Properties p = loadExistingProps();
+    	
+    	boolean maximized = false;
+    	String m = p.getProperty ( PROP_WINDOW_MAXIMIZED );
+    	
+    	if ( m != null && m.equals("true") )
+    	{
+    		maximized = true;
+    	}
+    	
+    	return maximized;
+    }
+    
+    public static void saveWindowIsMaximized ( boolean m )
+    {
+    	 Properties p = loadExistingProps();
+    	 
+    	 p.setProperty( PROP_WINDOW_MAXIMIZED, Boolean.toString ( m ) );
+    	 
+    	 savePropsFile ( p );
     }
 
 }
