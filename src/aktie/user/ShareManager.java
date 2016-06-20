@@ -3,6 +3,7 @@ package aktie.user;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -346,10 +347,31 @@ public class ShareManager implements Runnable
 
     }
 
-    private void crawlDirectory ( DirectoryShare s, File df )
+    private void crawlDirectory ( Path dlpath, Path nodepath, DirectoryShare s, File df )
     {
+
         if ( df != null && df.exists() && df.isDirectory() && enabled )
         {
+
+            try
+            {
+                //Do not allow sharing of node dirs except
+                //the download dir
+                Path dfp = df.getCanonicalFile().toPath();
+
+                if ( ( !dfp.startsWith ( dlpath ) ) && dfp.startsWith ( nodepath ) )
+                {
+                    return;
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+                return;
+            }
+
             File lsd[] = df.listFiles();
 
             continueHereWithNextFile:
@@ -367,7 +389,7 @@ public class ShareManager implements Runnable
                         if ( Wrapper.getShareHiddenDirs() || !f.isHidden() )
                         {
                             s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
-                            crawlDirectory ( s, f );
+                            crawlDirectory ( dlpath, nodepath, s, f );
                         }
 
                     }
@@ -450,7 +472,7 @@ public class ShareManager implements Runnable
 
     }
 
-    private void crawlShare ( DirectoryShare s )
+    private void crawlShare ( Path dlpath, Path nodepath, DirectoryShare s )
     {
         if ( enabled )
         {
@@ -459,7 +481,7 @@ public class ShareManager implements Runnable
             if ( ds != null )
             {
                 File df = new File ( ds );
-                crawlDirectory ( s, df );
+                crawlDirectory ( dlpath, nodepath, s, df );
             }
 
             else
@@ -480,6 +502,12 @@ public class ShareManager implements Runnable
 
             try
             {
+                File noderundir = new File ( Wrapper.RUNDIR );
+                Path nodepath = noderundir.getCanonicalFile().toPath();
+
+                File dldir = new File ( Wrapper.DLDIR );
+                Path dlpath = dldir.getCanonicalFile().toPath();
+
                 s = session.getSession();
                 List<DirectoryShare> l = s.createCriteria ( DirectoryShare.class ).list();
 
@@ -489,7 +517,7 @@ public class ShareManager implements Runnable
                     {
                         ds.setNumberSubFolders ( 0 );
                         ds.setNumberFiles ( 0 );
-                        crawlShare ( ds );
+                        crawlShare ( dlpath, nodepath, ds );
                         saveShare ( s, ds );
                     }
 
@@ -1083,6 +1111,7 @@ public class ShareManager implements Runnable
 
             catch ( Exception e )
             {
+                conn = null;
                 e.printStackTrace();
             }
 

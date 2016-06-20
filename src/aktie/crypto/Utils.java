@@ -521,6 +521,38 @@ public class Utils
         return rb;
     }
 
+    public static byte[] digStringMap ( byte rb[], byte tb[], byte db[], Map<String, String> m )
+    {
+        Digest d = new RIPEMD256Digest();
+
+        if ( db == null )
+        {
+            db = new byte[d.getDigestSize()];
+            Arrays.fill ( db, ( byte ) 0 );
+        }
+
+        if ( rb == null )
+        {
+            rb = new byte[d.getDigestSize()];
+        }
+
+        if ( tb == null )
+        {
+            tb = new byte[d.getDigestSize()];
+        }
+
+        for ( Entry<String, String> e : m.entrySet() )
+        {
+            d.reset();
+            digString ( d, e.getKey() );
+            digString ( d, e.getValue() );
+            d.doFinal ( tb, 0 );
+            xorBytes ( rb, db, tb );
+        }
+
+        return rb;
+    }
+
     public static byte[] digDoubleMap ( byte db[], Map<String, Double> m )
     {
         Digest d = new RIPEMD256Digest();

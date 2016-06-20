@@ -46,17 +46,18 @@ public class Wrapper
     public static long RELEASETIME = ( 1465964563L * 1000L ) + 3600000L;
 
     //Hash cash payment values
+    public static long OLDPAYMENT_V0 = 0x0000004000000000L;
     public static long OLDPAYMENT = 0;
-    public static long CHECKNEWPAYMENTAFTER = ( 1465595547L * 1000L ) +
-            ( 8L * 60L * 60L * 1000L );
-
+    public static long CHECKNEWPAYMENTAFTER = ( 1466457255L * 1000L ) +
+            ( 4L * 24L * 60L * 60L * 1000L );
+    //                              0x0000004000000000L;
     //                              0x0123456789ABCDEFL;
-    public static long NEWPAYMENT = 0x0000004000000000L;
+    public static long NEWPAYMENT = 0x0000003FFF000000L;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String NODEDIR = RUNDIR + File.separator + "aktie_node";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
-    //public static String JARFILE = "aktie.jar";
+    public static String DLDIR = NODEDIR + File.separator + "downloads";
 
     private static boolean osIsLinux = false;
     private static boolean osIsMacOsX = false;

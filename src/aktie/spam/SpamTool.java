@@ -106,7 +106,14 @@ public class SpamTool
 
         if ( checkpayment )
         {
-            return c.checkSignatureX ( key, Wrapper.getCheckPayment() );
+            long target = Wrapper.getCheckPayment();
+
+            if ( target == Wrapper.OLDPAYMENT_V0 )
+            {
+                return c.checkSignatureX_V0 ( key, target );
+            }
+
+            return c.checkSignatureX ( key, target );
         }
 
         return c.checkSignatureX ( key, 0 );

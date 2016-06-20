@@ -84,9 +84,10 @@ public class testCryptoUtils
         o.pushString ( "s1", "string1" );
         o.pushText ( "t0", "text0" );
         o.pushText ( "t1", "test1" );
-        o.signX ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 0x0000100000000000L );
+        o.signX ( ( RSAPrivateCrtKeyParameters ) k.getPrivate(), 0x0000040000000000L );
         byte d[] = Utils.toByteArray ( o.getDig() );
         System.out.println ( "DIG: " + Utils.bytesToHex ( d ) );
+        System.out.println ( "PAY: " + o.getString ( CObj.PAYMENT ) );
         assertTrue ( o.checkSignatureX ( ( RSAKeyParameters ) k.getPublic(), 0x0000100000000000L ) );
     }
 

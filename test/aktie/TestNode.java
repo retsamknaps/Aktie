@@ -857,7 +857,7 @@ public class TestNode
 
             System.out.println ( "UPDATE MEMBERSHIP.............................." );
 
-            for ( int c = 0; c < 2; c++ )
+            for ( int c = 0; c < 4; c++ )
             {
                 memupdate = new CObj();
                 memupdate.setType ( CObj.USR_MEMBER_UPDATE );
@@ -893,7 +893,7 @@ public class TestNode
 
                 try
                 {
-                    Thread.sleep ( 4L * 1000L );
+                    Thread.sleep ( 8L * 1000L );
                 }
 
                 catch ( InterruptedException e )

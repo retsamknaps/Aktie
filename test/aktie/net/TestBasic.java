@@ -247,6 +247,12 @@ public class TestBasic
         assertTrue ( o1 instanceof CObj );
         oc1 = ( CObj ) o1;
         assertNotNull ( oc1.getDig() );
+        assertEquals ( CObj.PRIVIDENTIFIER, oc1.getType() );
+        o1 = pollForData ( Tn1 );
+        assertNotNull ( o1 );
+        assertTrue ( o1 instanceof CObj );
+        oc1 = ( CObj ) o1;
+        assertNotNull ( oc1.getDig() );
         assertEquals ( CObj.PRIVMESSAGE, oc1.getType() );
         assertNotNull ( oc1.getString ( CObj.PAYLOAD ) );
         assertNotNull ( oc1.getString ( CObj.PAYLOAD2 ) );
@@ -309,6 +315,13 @@ public class TestBasic
         prv1.pushPrivate ( CObj.PRV_RECIPIENT, n1.getId() );
         Tn0.newUserData ( prv1 );
 
+        o1 = pollForData ( Tn0 );
+        assertNotNull ( o1 );
+        assertTrue ( o1 instanceof CObj );
+        oc1 = ( CObj ) o1;
+        assertNotNull ( oc1.getDig() );
+        assertNull ( oc1.getString ( CObj.ERROR ) );
+        assertEquals ( CObj.PRIVIDENTIFIER, oc1.getType() );
         o1 = pollForData ( Tn0 );
         assertNotNull ( o1 );
         assertTrue ( o1 instanceof CObj );

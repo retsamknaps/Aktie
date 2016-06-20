@@ -9,6 +9,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
@@ -84,7 +85,7 @@ public class Node
         session.init ( nodedir + File.separator + "h2" );
         identManager = new IdentityManager ( session, index );
         NewFileProcessor nfp = new NewFileProcessor ( session, index, spamtool, usrCallback ) ;
-        requestHandler = new RequestFileHandler ( session, nodedir + File.separator + "downloads", nfp, index );
+        requestHandler = new RequestFileHandler ( session, Wrapper.DLDIR, nfp, index );
         conMan = new ConnectionManager2 ( session, index, requestHandler, identManager, usrCallback );
         userQueue = new ProcessQueue();
 

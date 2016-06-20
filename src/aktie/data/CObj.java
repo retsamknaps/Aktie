@@ -1381,7 +1381,7 @@ public class CObj
         dig = Utils.toString ( dg );
     }
 
-    public boolean checkSignatureX ( RSAKeyParameters key, long bm )
+    public boolean checkSignatureX_V0 ( RSAKeyParameters key, long bm )
     {
         byte td[] = digest();
 
@@ -1416,6 +1416,67 @@ public class CObj
         return false;
     }
 
+
+
+    public boolean checkSignatureX ( RSAKeyParameters key, long bm )
+    {
+        byte td[] = digest();
+
+        if ( bm > 0 )
+        {
+            byte tstb[] = Utils.getTarget ( bm, td.length );
+
+            if ( !Utils.checkDig ( td, tstb ) )
+            {
+                return false;
+            }
+
+            String payment = this.getString ( CObj.PAYMENT );
+
+            if ( payment == null )
+            {
+                return false;
+            }
+
+            String pl[] = payment.split ( "," );
+
+            if ( pl.length != 2 )
+            {
+                return false;
+            }
+
+            strings.remove ( CObj.PAYMENT );
+            byte paydig[] = digest();
+            byte basedig[] = Utils.toByteArray ( pl[0] );
+
+            if ( !Arrays.equals ( paydig, basedig ) )
+            {
+                return false;
+            }
+
+            pushString ( CObj.PAYMENT, payment );
+        }
+
+        if ( !Arrays.equals ( td, Utils.toByteArray ( dig ) ) ) { return false; }
+
+        RSAEngine eng = new RSAEngine();
+        PKCS1Encoding enc = new PKCS1Encoding ( eng );
+        enc.init ( false, key );
+
+        try
+        {
+            byte sb[] = Utils.toByteArray ( signature );
+            byte decsig[] = enc.processBlock ( sb, 0, sb.length );
+            return Arrays.equals ( decsig, td );
+        }
+
+        catch ( Exception e )
+        {
+        }
+
+        return false;
+    }
+
     private byte[] genPayment ( long bm )
     {
 
@@ -1428,20 +1489,23 @@ public class CObj
         {
             byte tstb[] = Utils.getTarget ( bm, d.length );
 
-            Map<String, Long> cm = new HashMap<String, Long>();
+            Map<String, String> cm = new HashMap<String, String>();
             byte tb[] = new byte[d.length];
             long payment = 0L;
-            cm.put ( CObj.PAYMENT, payment );
-            Utils.digLongMap ( rb, tb, d, cm );
+            String paymentbase = Utils.toString ( d ) + ",";
+            String paymentstr = paymentbase + Long.toString ( payment );
+            cm.put ( CObj.PAYMENT, paymentstr );
+            Utils.digStringMap ( rb, tb, d, cm );
 
             while ( !Utils.checkDig ( rb, tstb ) )
             {
                 payment++;
-                cm.put ( CObj.PAYMENT, payment );
-                Utils.digLongMap ( rb, tb, d, cm );
+                paymentstr = paymentbase + Long.toString ( payment );
+                cm.put ( CObj.PAYMENT, paymentstr );
+                Utils.digStringMap ( rb, tb, d, cm );
             }
 
-            pushNumber ( CObj.PAYMENT, payment );
+            pushString ( CObj.PAYMENT, paymentstr );
         }
 
         return rb;
