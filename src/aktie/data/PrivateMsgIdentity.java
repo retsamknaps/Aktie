@@ -28,6 +28,10 @@ public class PrivateMsgIdentity
 
     private boolean mine;
 
+    public PrivateMsgIdentity()
+    {
+    }
+
     public String getId()
     {
         return id;

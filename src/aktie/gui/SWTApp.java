@@ -1051,7 +1051,7 @@ public class SWTApp
             FileDialog fd = new FileDialog ( shell, SWT.SAVE );
             fd.setText ( "Save" );
             //fd.setFilterPath();
-            String[] filterExt = { "*" };
+            String[] filterExt = { "*.*" };
 
             fd.setFilterExtensions ( filterExt );
             String selected = fd.open();
@@ -2483,6 +2483,7 @@ public class SWTApp
             String subj = pst.getString ( CObj.SUBJECT );
             String body = pst.getText ( CObj.BODY );
             String auth = pst.getString ( CObj.CREATOR_NAME );
+            Long seq = pst.getNumber ( CObj.SEQNUM );
             Long ts = pst.getNumber ( CObj.CREATEDON );
 
             msg.append ( "FROM: " );
@@ -2508,6 +2509,15 @@ public class SWTApp
             if ( subj != null )
             {
                 msg.append ( subj );
+            }
+
+            msg.append ( "\n" );
+
+            msg.append ( "SEQN: " );
+
+            if ( seq != null )
+            {
+                msg.append ( seq );
             }
 
             msg.append ( "\n" );

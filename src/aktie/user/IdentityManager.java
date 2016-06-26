@@ -20,11 +20,19 @@ import aktie.data.IdentityData;
 import aktie.data.PrivateMsgIdentity;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.sequences.CommunitySequence;
+import aktie.sequences.FileSequence;
+import aktie.sequences.MemberSequence;
+import aktie.sequences.PostSequence;
+import aktie.sequences.PrivIdentSequence;
+import aktie.sequences.PrivMsgSequence;
+import aktie.sequences.SpamSequence;
 
 public class IdentityManager
 {
 
-    public static int MAX_LAST_NUMBER = 20;
+    public static int MAX_LAST_NUMBER = 10;
+    public static int MAX_UPDATE_CYCLE = 15;
 
     private HH2Session session;
     private Index index;
@@ -2051,25 +2059,9 @@ public class IdentityManager
 
             for ( String i : ids )
             {
-                s.getTransaction().begin();
-                IdentityData idat = ( IdentityData ) s.get ( IdentityData.class, i );
+                CommunitySequence seq = new CommunitySequence ( session );
+                seq.request ( s, i, 5, i );
 
-                if ( idat != null )
-                {
-                    if ( idat.getNextClosestCommunityNumber() >
-                            idat.getLastCommunityNumber() &&
-                            idat.getNumClosestCommunityNumber() > MAX_LAST_NUMBER )
-                    {
-                        idat.setLastCommunityNumber ( idat.getNextClosestCommunityNumber() );
-                        idat.setNumClosestCommunityNumber ( 0 );
-                    }
-
-                    idat.setCommunityStatus ( IdentityData.UPDATE );
-                    idat.setCommunityUpdateCycle ( idat.getCommunityUpdateCycle() + 1 );
-                    s.merge ( idat );
-                }
-
-                s.getTransaction().commit();
             }
 
             s.close();
@@ -2135,25 +2127,9 @@ public class IdentityManager
 
             for ( String i : ids )
             {
-                s.getTransaction().begin();
-                IdentityData idat = ( IdentityData ) s.get ( IdentityData.class, i );
+                MemberSequence mseq = new MemberSequence ( session );
+                mseq.request ( s, i, 5, i );
 
-                if ( idat != null )
-                {
-                    if ( idat.getNextClosestMembershipNumber() >
-                            idat.getLastMembershipNumber() &&
-                            idat.getNumClosestMembershipNumber() > MAX_LAST_NUMBER )
-                    {
-                        idat.setLastMembershipNumber ( idat.getNextClosestMembershipNumber() );
-                        idat.setNumClosestMembershipNumber ( 0 );
-                    }
-
-                    idat.setMemberStatus ( IdentityData.UPDATE );
-                    idat.setMemberUpdateCycle ( idat.getMemberUpdateCycle() + 1 );
-                    s.merge ( idat );
-                }
-
-                s.getTransaction().commit();
             }
 
             s.close();
@@ -2219,37 +2195,10 @@ public class IdentityManager
 
             for ( String i : ids )
             {
-                s.getTransaction().begin();
-                PrivateMsgIdentity idat = ( PrivateMsgIdentity ) s.get ( PrivateMsgIdentity.class, i );
-
-                if ( idat != null )
-                {
-                    if ( idat.getNextClosestMsgNumber() >
-                            idat.getLastMsgNumber() &&
-                            idat.getNumClosestMsgNumber() > MAX_LAST_NUMBER )
-                    {
-                        idat.setLastMsgNumber ( idat.getNextClosestMsgNumber() );
-                        idat.setNumClosestMsgNumber ( 0 );
-                    }
-
-                    idat.setMsgStatus ( IdentityData.UPDATE );
-                    idat.setMsgUpdateCycle ( idat.getMsgUpdateCycle() + 1 );
-
-                    if ( idat.getNextClosestIdentNumber() >
-                            idat.getLastIdentNumber() &&
-                            idat.getNumClosestIdentNumber() > MAX_LAST_NUMBER )
-                    {
-                        idat.setLastIdentNumber ( idat.getNextClosestIdentNumber() );
-                        idat.setNumClosestIdentNumber ( 0 );
-                    }
-
-                    idat.setIdentStatus ( IdentityData.UPDATE );
-                    idat.setIdentUpdateCycle ( idat.getIdentUpdateCycle() + 1 );
-                    s.merge ( idat );
-
-                }
-
-                s.getTransaction().commit();
+                PrivIdentSequence pseq = new PrivIdentSequence ( session );
+                pseq.request ( s, i, 5, i );
+                PrivMsgSequence mseq = new PrivMsgSequence ( session );
+                mseq.request ( s, i, 5, i );
             }
 
             s.close();
@@ -2315,29 +2264,10 @@ public class IdentityManager
 
             for ( String i : ids )
             {
-                s.getTransaction().begin();
-                DeveloperIdentity idat = ( DeveloperIdentity ) s.get ( DeveloperIdentity.class, i );
-
-                if ( idat != null )
-                {
-                    if ( idat.getNextClosestSpamExNumber() >
-                            idat.getLastSpamExNumber() &&
-                            idat.getNumClosestSpamExNumber() > MAX_LAST_NUMBER )
-                    {
-                        idat.setLastSpamExNumber ( idat.getNextClosestSpamExNumber() );
-                        idat.setNumClosestSpamExNumber ( 0 );
-                    }
-
-                    idat.setSpamExStatus ( IdentityData.UPDATE );
-
-                    s.merge ( idat );
-
-                }
-
-                s.getTransaction().commit();
+                SpamSequence sseq = new SpamSequence ( session );
+                sseq.request ( s, i, 5, i );
             }
 
-            s.close();
         }
 
         catch ( Exception e )
@@ -2359,6 +2289,14 @@ public class IdentityManager
                 {
                 }
 
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
                 try
                 {
                     s.close();
@@ -2479,38 +2417,8 @@ public class IdentityManager
 
                 if ( id != null )
                 {
-                    s.getTransaction().begin();
-                    CommunityMember cm = ( CommunityMember ) s.get ( CommunityMember.class, id );
-
-                    if ( cm != null )
-                    {
-                        if ( cm.getNextClosestFileNumber() >
-                                cm.getLastFileNumber() &&
-                                cm.getNumClosestFileNumber() > MAX_LAST_NUMBER )
-                        {
-                            cm.setLastFileNumber ( cm.getNextClosestFileNumber() );
-                            cm.setNumClosestFileNumber ( 0 );
-                        }
-
-                        cm.setFileStatus ( CommunityMember.UPDATE );
-                        cm.setFileUpdatePriority ( priority );
-                        cm.setFileUpdateCycle ( cm.getFileUpdateCycle() + 1 );
-                        s.merge ( cm );
-                    }
-
-                    else
-                    {
-                        cm = new CommunityMember();
-                        cm.setId ( id );
-                        cm.setCommunityId ( comid );
-                        cm.setMemberId ( memid );
-                        cm.setFileStatus ( CommunityMember.UPDATE );
-                        cm.setFileUpdateCycle ( 1 );
-                        cm.setFileUpdatePriority ( priority );
-                        s.persist ( cm );
-                    }
-
-                    s.getTransaction().commit();
+                    FileSequence fseq = new FileSequence ( session );
+                    fseq.request ( s, id, 5, id, comid, memid );
                 }
 
             }
@@ -2587,38 +2495,9 @@ public class IdentityManager
 
                 if ( id != null )
                 {
-                    s.getTransaction().begin();
-                    CommunityMember cm = ( CommunityMember ) s.get ( CommunityMember.class, id );
+                    PostSequence pseq = new PostSequence ( session );
+                    pseq.request ( s, id, priority, id, comid, memid );
 
-                    if ( cm != null )
-                    {
-                        if ( cm.getNextClosestPostNumber() >
-                                cm.getLastPostNumber() &&
-                                cm.getNumClosestPostNumber() > MAX_LAST_NUMBER )
-                        {
-                            cm.setLastPostNumber ( cm.getNextClosestPostNumber() );
-                            cm.setNumClosestPostNumber ( 0 );
-                        }
-
-                        cm.setPostStatus ( CommunityMember.UPDATE );
-                        cm.setPostUpdatePriority ( priority );
-                        cm.setPostUpdateCycle ( cm.getPostUpdateCycle() + 1 );
-                        s.merge ( cm );
-                    }
-
-                    else
-                    {
-                        cm = new CommunityMember();
-                        cm.setId ( id );
-                        cm.setCommunityId ( comid );
-                        cm.setMemberId ( memid );
-                        cm.setPostStatus ( CommunityMember.UPDATE );
-                        cm.setPostUpdatePriority ( priority );
-                        cm.setPostUpdateCycle ( 1 );
-                        s.persist ( cm );
-                    }
-
-                    s.getTransaction().commit();
                 }
 
             }

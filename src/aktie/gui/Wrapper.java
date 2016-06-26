@@ -47,7 +47,7 @@ public class Wrapper
 
     //Hash cash payment values
     public static long OLDPAYMENT_V0 = 0x0000004000000000L;
-    public static long OLDPAYMENT = 0;
+    public static long OLDPAYMENT = 0x0000004000000000L;
     public static long CHECKNEWPAYMENTAFTER = ( 1466457255L * 1000L ) +
             ( 4L * 24L * 60L * 60L * 1000L );
     //                              0x0000004000000000L;

@@ -1,5 +1,6 @@
 package aktie.data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -17,6 +18,9 @@ public class DeveloperIdentity
     private long lastSpamExUpdate;
     private int spamExStatus;
     private int spamExUpdatePriority;
+
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int spamExUpdateCycle;
 
     public String getId()
     {
@@ -86,6 +90,16 @@ public class DeveloperIdentity
     public void setSpamExUpdatePriority ( int spamExUpdatePriority )
     {
         this.spamExUpdatePriority = spamExUpdatePriority;
+    }
+
+    public int getSpamExUpdateCycle()
+    {
+        return spamExUpdateCycle;
+    }
+
+    public void setSpamExUpdateCycle ( int spamExUpdateCycle )
+    {
+        this.spamExUpdateCycle = spamExUpdateCycle;
     }
 
 

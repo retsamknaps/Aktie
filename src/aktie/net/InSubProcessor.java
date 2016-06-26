@@ -40,8 +40,9 @@ public class InSubProcessor extends GenericProcessor
         if ( CObj.SUBSCRIPTION.equals ( type ) )
         {
             //Check if it's valid and new
-            if ( validator.newAndValid ( b ) )
+            if ( validator.newAndValidX ( b ) )
             {
+
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 String comid = b.getString ( CObj.COMMUNITYID );

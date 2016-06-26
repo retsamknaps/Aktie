@@ -75,7 +75,7 @@ public class DigestValidator
 
     }
 
-    public boolean newAndValid ( CObj b )
+    public boolean newAndValidX ( CObj b )
     {
         String digid = b.getDig();
 

@@ -12,9 +12,9 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
-import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.sequences.CommunitySequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
@@ -47,131 +47,95 @@ public class InComProcessor extends GenericProcessor
 
         if ( CObj.COMMUNITY.equals ( type ) )
         {
-            if ( validator.newAndValid ( b ) )
+            if ( validator.valid ( b ) )
             {
+                boolean isnew = ( null == index.getByDig ( b.getDig() ) );
+
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 b.pushPrivate ( CObj.MINE, "false" );
 
                 if ( seqnum != null && creatorid != null )
                 {
+
                     Session s = null;
 
                     try
                     {
-                        s = session.getSession();
-                        s.getTransaction().begin();
-                        IdentityData id = ( IdentityData )
-                                          s.get ( IdentityData.class, creatorid );
+                        //Find the last sequence number to set.
+                        CommunitySequence comseq = new CommunitySequence ( session );
+                        comseq.setId ( creatorid );
+                        comseq.updateSequence ( b );
 
-                        if ( id != null )
+                        s = session.getSession();
+
+                        if ( isnew )
                         {
-                            //Do not update the last number unless it is in sequence
-                            //keeping track of wholes in the sequence nubmers is stupid.
-                            if ( seqnum == ( id.getLastCommunityNumber() + 1 ) )
+                            String scope = b.getString ( CObj.SCOPE );
+
+                            if ( CObj.SCOPE_PRIVATE.equals ( scope ) )
                             {
-                                id.setLastCommunityNumber ( seqnum );
-                                id.setNextClosestCommunityNumber ( seqnum );
-                                id.setNumClosestCommunityNumber ( 1 );
-                                s.merge ( id );
+                                //Get my memberships, attempt to decode - in case
+                                //we got our membership before the community data
+                                Query q = s.createQuery ( "SELECT x FROM CommunityMyMember x" );
+                                List<CommunityMyMember> mmlst = q.list();
+                                boolean decoded = false;
+                                CommunityMyMember themember = null;
+                                Iterator<CommunityMyMember> i = mmlst.iterator();
+
+                                while ( i.hasNext() && !decoded )
+                                {
+                                    CommunityMyMember cmm = i.next();
+                                    KeyParameter sk = new KeyParameter ( cmm.getKey() );
+
+                                    if ( decoder.decode ( b, sk ) )
+                                    {
+                                        decoded = true;
+                                        themember = cmm;
+                                    }
+
+                                }
+
+                                if ( themember != null )
+                                {
+                                    b.pushPrivate ( CObj.KEY, Utils.toString ( themember.getKey() ) );
+                                    b.pushPrivate ( CObj.MINE, "true" );
+                                }
+
                             }
 
                             else
                             {
-                                /*
-                                    if there is a permanent gap in a sequence number
-                                    count how many times we see the next number, so
-                                    if we see it too many times we just use it for last
-                                    number instead
-                                */
-                                if ( seqnum > id.getLastCommunityNumber() )
+                                decoder.decodeText ( b, b.getString ( CObj.PAYLOAD ), b.getString ( CObj.PAYLOAD2 ) );
+
+                                if ( b.getPrivate ( CObj.NAME ) != null )
                                 {
-                                    if ( id.getNextClosestCommunityNumber() > seqnum ||
-                                            id.getNextClosestCommunityNumber() <= id.getLastCommunityNumber() )
-                                    {
-                                        id.setNextClosestCommunityNumber ( seqnum );
-                                        id.setNumClosestCommunityNumber ( 1 );
-                                        s.merge ( id );
-                                    }
-
-                                    else if ( id.getNextClosestCommunityNumber() == seqnum )
-                                    {
-                                        id.setNumClosestCommunityNumber (
-                                            id.getNumClosestCommunityNumber() + 1 );
-                                        s.merge ( id );
-                                    }
-
+                                    b.pushPrivate ( CObj.MINE, "true" );
                                 }
 
                             }
 
-                        }
+                            //Set the rank of the post based on the rank of the
+                            //user
+                            CObj idty = index.getIdentity ( creatorid );
 
-                        s.getTransaction().commit();
-
-                        String scope = b.getString ( CObj.SCOPE );
-
-                        if ( CObj.SCOPE_PRIVATE.equals ( scope ) )
-                        {
-                            //Get my memberships, attempt to decode - in case
-                            //we got our membership before the community data
-                            Query q = s.createQuery ( "SELECT x FROM CommunityMyMember x" );
-                            List<CommunityMyMember> mmlst = q.list();
-                            boolean decoded = false;
-                            CommunityMyMember themember = null;
-                            Iterator<CommunityMyMember> i = mmlst.iterator();
-
-                            while ( i.hasNext() && !decoded )
+                            if ( idty != null )
                             {
-                                CommunityMyMember cmm = i.next();
-                                KeyParameter sk = new KeyParameter ( cmm.getKey() );
+                                Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
 
-                                if ( decoder.decode ( b, sk ) )
+                                if ( rnk != null )
                                 {
-                                    decoded = true;
-                                    themember = cmm;
+                                    b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                                 }
 
                             }
 
-                            if ( themember != null )
-                            {
-                                b.pushPrivate ( CObj.KEY, Utils.toString ( themember.getKey() ) );
-                                b.pushPrivate ( CObj.MINE, "true" );
-                            }
-
-                        }
-
-                        else
-                        {
-                            decoder.decodeText ( b, b.getString ( CObj.PAYLOAD ), b.getString ( CObj.PAYLOAD2 ) );
-
-                            if ( b.getPrivate ( CObj.NAME ) != null )
-                            {
-                                b.pushPrivate ( CObj.MINE, "true" );
-                            }
-
+                            index.index ( b, true );
+                            guicallback.update ( b );
                         }
 
                         s.close();
 
-                        //Set the rank of the post based on the rank of the
-                        //user
-                        CObj idty = index.getIdentity ( creatorid );
-
-                        if ( idty != null )
-                        {
-                            Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
-
-                            if ( rnk != null )
-                            {
-                                b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
-                            }
-
-                        }
-
-                        index.index ( b, true );
-                        guicallback.update ( b );
                     }
 
                     catch ( Exception e )

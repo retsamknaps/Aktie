@@ -1,15 +1,11 @@
 package aktie.net;
 
-import java.io.IOException;
-
-import org.hibernate.Session;
-
 import aktie.GenericProcessor;
 import aktie.data.CObj;
-import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.sequences.FileSequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.HasFileCreator;
@@ -44,8 +40,10 @@ public class InHasFileProcessor extends GenericProcessor
 
         if ( CObj.HASFILE.equals ( type ) )
         {
-            if ( validator.newAndValid ( b ) )
+            if ( validator.valid ( b ) )
             {
+                boolean isnew = ( null == index.getByDig ( b.getDig() ) );
+
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 String comid = b.getString ( CObj.COMMUNITYID );
@@ -73,113 +71,40 @@ public class InHasFileProcessor extends GenericProcessor
 
                     if ( mysubid != null && sid != null )
                     {
-                        Session s = null;
-
                         try
                         {
-                            s = session.getSession();
-                            s.getTransaction().begin();
-                            CommunityMember m = ( CommunityMember )
-                                                s.get ( CommunityMember.class, id );
 
-                            if ( m == null )
-                            {
-                                m = new CommunityMember();
-                                m.setId ( id );
-                                m.setCommunityId ( comid );
-                                m.setMemberId ( creatorid );
-                                s.persist ( m );
-                            }
+                            FileSequence fseq = new FileSequence ( session );
+                            fseq.setId ( id );
+                            fseq.updateSequence ( b );
 
-                            if ( m.getLastFileNumber() + 1 == ( long ) seqnum )
+                            if ( isnew )
                             {
-                                m.setLastFileNumber ( seqnum );
-                                m.setNextClosestFileNumber ( seqnum );
-                                m.setNumClosestFileNumber ( 1 );
-                                s.merge ( m );
-                            }
+                                //Set the rank of the post based on the rank of the
+                                //user
+                                CObj idty = index.getIdentity ( creatorid );
 
-                            else
-                            {
-                                /*
-                                    if there is a permanent gap in a sequence number
-                                    count how many times we see the next number, so
-                                    if we see it too many times we just use it for last
-                                    number instead
-                                */
-                                if ( seqnum > m.getLastFileNumber() )
+                                if ( idty != null )
                                 {
-                                    if ( m.getNextClosestFileNumber() > seqnum ||
-                                            m.getNextClosestFileNumber() <= m.getLastFileNumber() )
-                                    {
-                                        m.setNextClosestFileNumber ( seqnum );
-                                        m.setNumClosestFileNumber ( 1 );
-                                        s.merge ( m );
-                                    }
+                                    Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
 
-                                    else if ( m.getNextClosestFileNumber() == seqnum )
+                                    if ( rnk != null )
                                     {
-                                        m.setNumClosestFileNumber (
-                                            m.getNumClosestFileNumber() + 1 );
-                                        s.merge ( m );
+                                        b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                                     }
 
                                 }
 
+                                index.index ( b );
+                                hfc.updateFileInfo ( b );
+                                guicallback.update ( b );
                             }
 
-                            s.getTransaction().commit();
-                            s.close();
-
-                            //Set the rank of the post based on the rank of the
-                            //user
-                            CObj idty = index.getIdentity ( creatorid );
-
-                            if ( idty != null )
-                            {
-                                Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
-
-                                if ( rnk != null )
-                                {
-                                    b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
-                                }
-
-                            }
-
-                            index.index ( b );
-                            hfc.updateFileInfo ( b );
-                            guicallback.update ( b );
                         }
 
-                        catch ( IOException e )
+                        catch ( Exception e )
                         {
                             e.printStackTrace();
-
-                            if ( s != null )
-                            {
-                                try
-                                {
-                                    if ( s.getTransaction().isActive() )
-                                    {
-                                        s.getTransaction().rollback();
-                                    }
-
-                                }
-
-                                catch ( Exception e2 )
-                                {
-                                }
-
-                                try
-                                {
-                                    s.close();
-                                }
-
-                                catch ( Exception e2 )
-                                {
-                                }
-
-                            }
 
                         }
 

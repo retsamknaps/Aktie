@@ -1,17 +1,14 @@
 package aktie.net;
 
-import java.io.IOException;
 import java.util.List;
-
-import org.hibernate.Session;
 
 import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
-import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.sequences.PostSequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
@@ -43,7 +40,7 @@ public class InPostProcessor extends GenericProcessor
 
         if ( CObj.POST.equals ( type ) )
         {
-            if ( validator.newAndValid ( b ) )
+            if ( validator.valid ( b ) )
             {
                 //Make sure this identity
                 String comid = b.getString ( CObj.COMMUNITYID );
@@ -53,140 +50,69 @@ public class InPostProcessor extends GenericProcessor
 
                 if ( comid != null && creatorid != null && mysubid != null && seqnum != null )
                 {
-                    String id = Utils.mergeIds ( creatorid, comid );
+                    boolean isnew = ( null == index.getByDig ( b.getDig() ) );
+
                     CObj usub = subvalidator.isUserSubscribed ( comid, creatorid );
 
                     if ( usub != null )
                     {
-                        Session s = null;
 
                         try
                         {
-                            s = session.getSession();
-                            s.getTransaction().begin();
-                            CommunityMember m = ( CommunityMember )
-                                                s.get ( CommunityMember.class, id );
+                            String cid = Utils.mergeIds ( comid, creatorid );
+                            PostSequence pseq = new PostSequence ( session );
+                            pseq.setId ( cid );
+                            pseq.updateSequence ( b );
 
-                            if ( m == null )
+                            if ( isnew )
                             {
-                                m = new CommunityMember();
-                                m.setId ( id );
-                                m.setCommunityId ( comid );
-                                m.setMemberId ( creatorid );
-                                s.persist ( m );
-                            }
+                                //Set the rank of the post based on the rank of the
+                                //user
+                                CObj idty = index.getIdentity ( creatorid );
 
-                            if ( m.getLastPostNumber() + 1 == ( long ) seqnum )
-                            {
-                                m.setLastPostNumber ( seqnum );
-                                m.setNextClosestPostNumber ( seqnum );
-                                m.setNumClosestPostNumber ( 1 );
-                                s.merge ( m );
-                            }
-
-                            else
-                            {
-                                /*
-                                    if there is a permanent gap in a sequence number
-                                    count how many times we see the next number, so
-                                    if we see it too many times we just use it for last
-                                    number instead
-                                */
-                                if ( seqnum > m.getLastPostNumber() )
+                                if ( idty != null )
                                 {
-                                    if ( m.getNextClosestPostNumber() > seqnum ||
-                                            m.getNextClosestPostNumber() <= m.getLastPostNumber() )
-                                    {
-                                        m.setNextClosestPostNumber ( seqnum );
-                                        m.setNumClosestPostNumber ( 1 );
-                                        s.merge ( m );
-                                    }
+                                    Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
 
-                                    else if ( m.getNextClosestPostNumber() == seqnum )
+                                    if ( rnk != null )
                                     {
-                                        m.setNumClosestPostNumber (
-                                            m.getNumClosestPostNumber() + 1 );
-                                        s.merge ( m );
+                                        b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                                     }
 
                                 }
 
-                            }
+                                b.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 1L );
+                                index.index ( b );
 
-                            s.getTransaction().commit();
-                            s.close();
+                                //Save any new fields listed by the post
+                                List<CObj> fldlist = b.listNewFields();
 
-                            //Set the rank of the post based on the rank of the
-                            //user
-                            CObj idty = index.getIdentity ( creatorid );
-
-                            if ( idty != null )
-                            {
-                                Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
-
-                                if ( rnk != null )
+                                for ( CObj fld : fldlist )
                                 {
-                                    b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
-                                }
+                                    CObj ft = index.getByDig ( fld.getDig() );
 
-                            }
-
-                            b.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 1L );
-                            index.index ( b );
-
-                            //Save any new fields listed by the post
-                            List<CObj> fldlist = b.listNewFields();
-
-                            for ( CObj fld : fldlist )
-                            {
-                                CObj ft = index.getByDig ( fld.getDig() );
-
-                                if ( ft != null )
-                                {
-                                    String deflt = ft.getPrivate ( CObj.PRV_DEF_FIELD );
-
-                                    if ( deflt != null )
+                                    if ( ft != null )
                                     {
-                                        fld.pushPrivate ( CObj.PRV_DEF_FIELD, deflt );
+                                        String deflt = ft.getPrivate ( CObj.PRV_DEF_FIELD );
+
+                                        if ( deflt != null )
+                                        {
+                                            fld.pushPrivate ( CObj.PRV_DEF_FIELD, deflt );
+                                        }
+
                                     }
 
+                                    index.index ( fld );
                                 }
 
-                                index.index ( fld );
+                                guicallback.update ( b );
                             }
-
-                            guicallback.update ( b );
 
                         }
 
-                        catch ( IOException e )
+                        catch ( Exception e )
                         {
-                            if ( s != null )
-                            {
-                                try
-                                {
-                                    if ( s.getTransaction().isActive() )
-                                    {
-                                        s.getTransaction().rollback();
-                                    }
-
-                                }
-
-                                catch ( Exception e2 )
-                                {
-                                }
-
-                                try
-                                {
-                                    s.close();
-                                }
-
-                                catch ( Exception e2 )
-                                {
-                                }
-
-                            }
-
+                            e.printStackTrace();
                         }
 
                     }

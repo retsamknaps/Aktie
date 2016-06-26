@@ -1,15 +1,14 @@
 package aktie.net;
 
 import org.bouncycastle.crypto.params.KeyParameter;
-import org.hibernate.Session;
 
 import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.data.PrivateMsgIdentity;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.sequences.PrivMsgSequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
@@ -39,8 +38,9 @@ public class InPrvMsgProcessor extends GenericProcessor
 
         if ( CObj.PRIVMESSAGE.equals ( type ) )
         {
-            if ( validator.newAndValid ( b ) )
+            if ( validator.valid ( b ) )
             {
+                boolean isnew = ( null == index.getByDig ( b.getDig() ) );
                 //Update creator's ident index
                 String creator = b.getString ( CObj.CREATOR );
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
@@ -48,118 +48,74 @@ public class InPrvMsgProcessor extends GenericProcessor
 
                 if ( creator != null && seqnum != null && msgid != null )
                 {
-                    Session s = null;
 
                     try
                     {
-                        s = session.getSession();
-                        s.getTransaction().begin();
-                        PrivateMsgIdentity m = ( PrivateMsgIdentity )
-                                               s.get ( PrivateMsgIdentity.class, creator );
+                        PrivMsgSequence mseq = new PrivMsgSequence ( session );
+                        mseq.setId ( creator );
+                        mseq.updateSequence ( b );
 
-                        if ( m == null )
+                        if ( isnew )
                         {
-                            m = new PrivateMsgIdentity();
-                            m.setId ( creator );
-                            s.persist ( m );
-                        }
+                            //Find identity for message
+                            boolean decoded = false;
+                            CObj mident = index.getPrivateMsgIdentity ( creator, msgid );
 
-                        if ( m.getLastMsgNumber() + 1 == ( long ) seqnum )
-                        {
-                            m.setLastMsgNumber ( seqnum );
-                            m.setNextClosestMsgNumber ( seqnum );
-                            m.setNumClosestMsgNumber ( 1 );
-                            s.merge ( m );
-                        }
-
-                        else
-                        {
-                            /*
-                                if there is a permanent gap in a sequence number
-                                count how many times we see the next number, so
-                                if we see it too many times we just use it for last
-                                number instead
-                            */
-                            if ( seqnum > m.getLastMsgNumber() )
+                            if ( mident != null )
                             {
-                                if ( m.getNextClosestMsgNumber() > seqnum ||
-                                        m.getNextClosestMsgNumber() <= m.getLastMsgNumber() )
-                                {
-                                    m.setNextClosestMsgNumber ( seqnum );
-                                    m.setNumClosestMsgNumber ( 1 );
-                                    s.merge ( m );
-                                }
+                                String key = mident.getPrivate ( CObj.KEY );
 
-                                else if ( m.getNextClosestMsgNumber() == seqnum )
+                                if ( key != null )
                                 {
-                                    m.setNumClosestMsgNumber (
-                                        m.getNumClosestMsgNumber() + 1 );
-                                    s.merge ( m );
+                                    byte dec[] = Utils.toByteArray ( key );
+                                    KeyParameter sk = new KeyParameter ( dec );
+
+                                    if ( decoder.decode ( b, sk ) )
+                                    {
+                                        b.pushPrivate ( CObj.DECODED, "true" );
+                                        b.pushPrivate ( CObj.PRV_MSG_ID,
+                                                        mident.getPrivate ( CObj.PRV_MSG_ID ) );
+                                        b.pushPrivate ( CObj.PRV_RECIPIENT,
+                                                        mident.getPrivate ( CObj.PRV_RECIPIENT ) );
+                                        decoded = true;
+                                    }
+
                                 }
 
                             }
 
-                        }
-
-                        s.getTransaction().commit();
-
-                        //Find identity for message
-                        boolean decoded = false;
-                        CObj mident = index.getPrivateMsgIdentity ( creator, msgid );
-
-                        if ( mident != null )
-                        {
-                            String key = mident.getPrivate ( CObj.KEY );
-
-                            if ( key != null )
+                            if ( !decoded )
                             {
-                                byte dec[] = Utils.toByteArray ( key );
-                                KeyParameter sk = new KeyParameter ( dec );
+                                b.pushPrivate ( CObj.DECODED, "false" );
+                            }
 
-                                if ( decoder.decode ( b, sk ) )
+                            //Set the rank of the post based on the rank of the
+                            //user
+                            CObj idty = index.getIdentity ( creator );
+
+                            if ( idty != null )
+                            {
+                                Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                                if ( rnk != null )
                                 {
-                                    b.pushPrivate ( CObj.DECODED, "true" );
-                                    b.pushPrivate ( CObj.PRV_MSG_ID,
-                                                    mident.getPrivate ( CObj.PRV_MSG_ID ) );
-                                    b.pushPrivate ( CObj.PRV_RECIPIENT,
-                                                    mident.getPrivate ( CObj.PRV_RECIPIENT ) );
-                                    decoded = true;
+                                    b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                                }
+
+                                if ( decoded )
+                                {
+                                    b.pushPrivate ( CObj.NAME, idty.getDisplayName() );
                                 }
 
                             }
 
-                        }
-
-                        if ( !decoded )
-                        {
-                            b.pushPrivate ( CObj.DECODED, "false" );
-                        }
-
-                        //Set the rank of the post based on the rank of the
-                        //user
-                        CObj idty = index.getIdentity ( creator );
-
-                        if ( idty != null )
-                        {
-                            Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
-
-                            if ( rnk != null )
-                            {
-                                b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
-                            }
+                            index.index ( b );
 
                             if ( decoded )
                             {
-                                b.pushPrivate ( CObj.NAME, idty.getDisplayName() );
+                                guicallback.update ( b );
                             }
 
-                        }
-
-                        index.index ( b );
-
-                        if ( decoded )
-                        {
-                            guicallback.update ( b );
                         }
 
                     }
@@ -167,41 +123,6 @@ public class InPrvMsgProcessor extends GenericProcessor
                     catch ( Exception e )
                     {
                         e.printStackTrace();
-
-                        if ( s != null )
-                        {
-                            try
-                            {
-                                if ( s.getTransaction().isActive() )
-                                {
-                                    s.getTransaction().rollback();
-                                }
-
-                            }
-
-                            catch ( Exception e2 )
-                            {
-                            }
-
-                        }
-
-                    }
-
-                    finally
-                    {
-                        if ( s != null )
-                        {
-                            try
-                            {
-                                s.close();
-                            }
-
-                            catch ( Exception e )
-                            {
-                                e.printStackTrace();
-                            }
-
-                        }
 
                     }
 

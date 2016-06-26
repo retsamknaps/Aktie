@@ -108,7 +108,7 @@ public class Node
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
-        userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool ) );
+        userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
         userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,

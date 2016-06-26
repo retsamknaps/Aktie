@@ -9,10 +9,10 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
-import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.sequences.MemberSequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
@@ -43,8 +43,10 @@ public class InMemProcessor extends GenericProcessor
         if ( CObj.MEMBERSHIP.equals ( type ) )
         {
             //Check with enckey only!  Decode with sym key later.
-            if ( validator.newAndValid ( b ) )
+            if ( validator.valid ( b ) )
             {
+                boolean isnew = ( null == index.getByDig ( b.getDig() ) );
+
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
 
@@ -56,7 +58,7 @@ public class InMemProcessor extends GenericProcessor
                     byte dec[] = null;
                     String enckey = b.getString ( CObj.ENCKEY );
 
-                    if ( enckey != null )
+                    if ( enckey != null && isnew )
                     {
                         byte encb[] = Utils.toByteArray ( enckey );
                         CObjList myids = index.getMyIdentities();
@@ -141,53 +143,13 @@ public class InMemProcessor extends GenericProcessor
 
                     try
                     {
+                        //Find the last sequence number to set.
+                        MemberSequence memseq = new MemberSequence ( session );
+                        memseq.setId ( creatorid );
+                        memseq.updateSequence ( b );
+
                         s = session.getSession();
                         s.getTransaction().begin();
-                        IdentityData id = ( IdentityData )
-                                          s.get ( IdentityData.class, creatorid );
-
-                        if ( id != null )
-                        {
-                            //Do not update the last number unless it is in sequence
-                            //keeping track of wholes in the sequence nubmers is stupid.
-                            if ( seqnum == ( id.getLastMembershipNumber() + 1 ) )
-                            {
-                                id.setLastMembershipNumber ( seqnum );
-                                id.setNextClosestMembershipNumber ( seqnum );
-                                id.setNumClosestMembershipNumber ( 1 );
-                                s.merge ( id );
-                            }
-
-                            else
-                            {
-                                /*
-                                    if there is a permanent gap in a sequence number
-                                    count how many times we see the next number, so
-                                    if we see it too many times we just use it for last
-                                    number instead
-                                */
-                                if ( seqnum > id.getLastMembershipNumber() )
-                                {
-                                    if ( id.getNextClosestMembershipNumber() > seqnum ||
-                                            id.getNextClosestMembershipNumber() <= id.getLastMembershipNumber() )
-                                    {
-                                        id.setNextClosestMembershipNumber ( seqnum );
-                                        id.setNumClosestMembershipNumber ( 1 );
-                                        s.merge ( id );
-                                    }
-
-                                    else if ( id.getNextClosestMembershipNumber() == seqnum )
-                                    {
-                                        id.setNumClosestMembershipNumber (
-                                            id.getNumClosestMembershipNumber() + 1 );
-                                        s.merge ( id );
-                                    }
-
-                                }
-
-                            }
-
-                        }
 
                         String comid = b.getPrivate ( CObj.COMMUNITYID );
                         String myid = b.getPrivate ( CObj.MEMBERID );
@@ -205,25 +167,31 @@ public class InMemProcessor extends GenericProcessor
 
                         s.getTransaction().commit();
                         s.close();
-                        b.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
 
-                        //Set the rank of the post based on the rank of the
-                        //user
-                        CObj idty = index.getIdentity ( creatorid );
-
-                        if ( idty != null )
+                        if ( isnew )
                         {
-                            Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+                            b.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
 
-                            if ( rnk != null )
+                            //Set the rank of the post based on the rank of the
+                            //user
+
+                            CObj idty = index.getIdentity ( creatorid );
+
+                            if ( idty != null )
                             {
-                                b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                                Long rnk = idty.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+                                if ( rnk != null )
+                                {
+                                    b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+                                }
+
                             }
 
+                            index.index ( b );
+                            guicallback.update ( b );
                         }
 
-                        index.index ( b );
-                        guicallback.update ( b );
                     }
 
                     catch ( Exception e )
