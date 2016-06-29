@@ -15,11 +15,18 @@ public class CObjListDateColumnLabelProvider extends StyledCellLabelProvider
 
     private String key;
     private SimpleDateFormat dateformat;
+    private boolean prvDate;
 
 
     public CObjListDateColumnLabelProvider ( String k )
     {
+        this ( k, false );
+    }
+
+    public CObjListDateColumnLabelProvider ( String k, boolean prv )
+    {
         key = k;
+        prvDate = prv;
         dateformat = new SimpleDateFormat ( "d MMM yyyy HH:mm z" );
     }
 
@@ -33,7 +40,17 @@ public class CObjListDateColumnLabelProvider extends StyledCellLabelProvider
         {
             String r = "";
 
-            Long cl = co.getNumber ( key );
+            Long cl = null;
+
+            if ( !prvDate )
+            {
+                cl = co.getNumber ( key );
+            }
+
+            else
+            {
+                cl = co.getPrivateNumber ( key );
+            }
 
             if ( cl != null )
             {

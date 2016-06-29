@@ -1545,6 +1545,20 @@ public class TestNode
             l.close();
 
 
+            l = n0.getIndex().getPrivateMsgIdentForIdentity ( n0seed.getId() );
+            assertEquals ( 2, l.size() );
+            l.close();
+            l = n2.getIndex().getPrivateMsgIdentForIdentity ( node2a.getId() );
+            assertEquals ( 2, l.size() );
+            l.close();
+            l = n1.getIndex().getPrivateMsgIdentForIdentity ( n0seed.getId() );
+            assertEquals ( 0, l.size() );
+            l.close();
+            l = n3.getIndex().getPrivateMsgIdentForIdentity ( node2a.getId() );
+            assertEquals ( 0, l.size() );
+            l.close();
+
+
             System.out.println ( "CREATE FILE...................................." );
             cb3.oqueue.clear();
 

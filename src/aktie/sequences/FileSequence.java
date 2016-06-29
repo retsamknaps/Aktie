@@ -146,7 +146,7 @@ public class FileSequence extends AbstractSequence<CommunityMember>
     {
         if ( getObj() != null )
         {
-            getObj().getFileUpdatePriority();
+            return getObj().getFileUpdatePriority();
         }
 
         return 0;
@@ -167,7 +167,7 @@ public class FileSequence extends AbstractSequence<CommunityMember>
     {
         if ( getObj() != null )
         {
-            getObj().getFileUpdateCycle();
+            return getObj().getFileUpdateCycle();
         }
 
         return 0;

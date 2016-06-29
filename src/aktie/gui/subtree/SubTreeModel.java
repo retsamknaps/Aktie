@@ -369,7 +369,12 @@ public class SubTreeModel implements ITreeContentProvider
                         re.setRefId ( msgid );
                         re.setText ( c.getPrivateDisplayName() );
                         re.setParent ( le.getId() );
+                        re.setType ( SubTreeEntity.PRVMESSAGE_TYPE );
                         db.saveEntity ( re );
+                    }
+
+                    if ( re != null )
+                    {
                         fullObj.put ( re.getId(), c );
                         addSubTreeElement ( re );
                     }

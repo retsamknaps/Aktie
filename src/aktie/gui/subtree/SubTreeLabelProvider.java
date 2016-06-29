@@ -81,7 +81,8 @@ public class SubTreeLabelProvider implements IStyledLabelProvider
                 return SWTApp.imgReg.get ( "folder" );
             }
 
-            if ( SubTreeEntity.PRVCOMMUNITY_TYPE == s.getType() )
+            if ( SubTreeEntity.PRVCOMMUNITY_TYPE == s.getType() ||
+                    SubTreeEntity.PRVMESSAGE_TYPE == s.getType() )
             {
                 return SWTApp.imgReg.get ( "privsub" );
             }
@@ -102,13 +103,19 @@ public class SubTreeLabelProvider implements IStyledLabelProvider
         if ( c != null && c instanceof SubTreeEntity )
         {
             SubTreeEntity e = ( SubTreeEntity ) c;
+            String txt = e.getText();
+
+            if ( txt == null )
+            {
+                txt = "";
+            }
 
             if ( e.isBlue() )
             {
-                return new StyledString ( e.getText(), blueStyle );
+                return new StyledString ( txt, blueStyle );
             }
 
-            return new StyledString ( e.getText() );
+            return new StyledString ( txt );
         }
 
         return null;

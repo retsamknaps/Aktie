@@ -10,7 +10,7 @@ import aktie.user.IdentityManager;
 public abstract class AbstractSequence<T>
 {
 
-    private T Obj;
+    public T Obj;
     private Class<T> Typ;
     private HH2Session session;
 

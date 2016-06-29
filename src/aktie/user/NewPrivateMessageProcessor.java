@@ -198,6 +198,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                 pident.pushPrivate ( CObj.DECODED, "true" );
                 pident.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
                 pident.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
+                pident.pushPrivate ( CObj.NAME, recid.getDisplayName() );
 
                 spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
                                     pident );

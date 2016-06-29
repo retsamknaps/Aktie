@@ -147,7 +147,7 @@ public class CommunitySequence extends AbstractSequence<IdentityData>
     {
         if ( getObj() != null )
         {
-            getObj().getCommunityUpdatePriority();
+            return getObj().getCommunityUpdatePriority();
         }
 
         return 0;
@@ -168,7 +168,7 @@ public class CommunitySequence extends AbstractSequence<IdentityData>
     {
         if ( getObj() != null )
         {
-            getObj().getCommunityUpdateCycle();
+            return getObj().getCommunityUpdateCycle();
         }
 
         return 0;

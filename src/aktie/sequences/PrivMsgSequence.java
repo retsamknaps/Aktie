@@ -145,7 +145,7 @@ public class PrivMsgSequence extends AbstractSequence<PrivateMsgIdentity>
     {
         if ( getObj() != null )
         {
-            getObj().getMsgUpdatePriority();
+            return getObj().getMsgUpdatePriority();
         }
 
         return 0;
@@ -166,7 +166,7 @@ public class PrivMsgSequence extends AbstractSequence<PrivateMsgIdentity>
     {
         if ( getObj() != null )
         {
-            getObj().getMsgUpdateCycle();
+            return getObj().getMsgUpdateCycle();
         }
 
         return 0;

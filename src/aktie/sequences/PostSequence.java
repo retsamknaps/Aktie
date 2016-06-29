@@ -146,7 +146,7 @@ public class PostSequence extends AbstractSequence<CommunityMember>
     {
         if ( getObj() != null )
         {
-            getObj().getPostUpdatePriority();
+            return getObj().getPostUpdatePriority();
         }
 
         return 0;
@@ -167,7 +167,7 @@ public class PostSequence extends AbstractSequence<CommunityMember>
     {
         if ( getObj() != null )
         {
-            getObj().getPostUpdateCycle();
+            return getObj().getPostUpdateCycle();
         }
 
         return 0;

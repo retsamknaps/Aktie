@@ -1,0 +1,14 @@
+# This config file contains file extensions that should not be shared
+# by Aktie even if a share contains files with such an extension.
+#
+# Each extension needs to be listed on a separate line
+# without leading or trailing whitespace.
+#
+# A file extension needs to start with a '.'
+# followed by at least one of the characters 'a-z', 'A-Z' '0-9' and '_'.
+# Other characters should not be part of a file extension.
+# Malformed file extensions are ignored by Aktie.
+#
+# The extensions '.aktiepart' and '.aktiebackup' are never shared
+# by Aktie and do not need to be specified here.
+#

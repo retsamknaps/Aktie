@@ -145,7 +145,7 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
     {
         if ( getObj() != null )
         {
-            getObj().getSpamExUpdatePriority();
+            return getObj().getSpamExUpdatePriority();
         }
 
         return 0;
@@ -166,7 +166,7 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
     {
         if ( getObj() != null )
         {
-            getObj().getSpamExUpdateCycle();
+            return getObj().getSpamExUpdateCycle();
         }
 
         return 0;

@@ -147,7 +147,7 @@ public class MemberSequence extends AbstractSequence<IdentityData>
     {
         if ( getObj() != null )
         {
-            getObj().getMemberUpdatePriority();
+            return getObj().getMemberUpdatePriority();
         }
 
         return 0;
@@ -168,7 +168,7 @@ public class MemberSequence extends AbstractSequence<IdentityData>
     {
         if ( getObj() != null )
         {
-            getObj().getMemberUpdateCycle();
+            return getObj().getMemberUpdateCycle();
         }
 
         return 0;

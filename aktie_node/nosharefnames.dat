@@ -1,0 +1,13 @@
+# This config file contains file names that should not be shared
+# by Aktie even if a share contains files with such a name.
+#
+# Each file name needs to be listed on a new line
+# without any leading or trailing whitespace.
+#
+# The file name may not contain the system specific path separator
+# (usually '/' or '') and should not start with '#'.
+# Malformed file names are ignored by Aktie.
+#
+Thumbs.db
+Desktop.ini
+.DS_Store

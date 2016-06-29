@@ -21,7 +21,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import aktie.utils.FUtils;
-import org.eclipse.swt.graphics.Rectangle;
 
 public class Wrapper
 {
@@ -43,12 +42,12 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1465964563L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1467049236L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     public static long OLDPAYMENT_V0 = 0x0000004000000000L;
     public static long OLDPAYMENT = 0x0000004000000000L;
-    public static long CHECKNEWPAYMENTAFTER = ( 1466457255L * 1000L ) +
+    public static long CHECKNEWPAYMENTAFTER = ( 1467049236L * 1000L ) +
             ( 4L * 24L * 60L * 60L * 1000L );
     //                              0x0000004000000000L;
     //                              0x0123456789ABCDEFL;
@@ -113,9 +112,6 @@ public class Wrapper
 
     public static void main ( String args[] )
     {
-        // TODO: Validate new methods and afterwards kick this out.
-        testDoNotShareMethods();
-
         int rc = RESTART_RC;
 
         while ( rc == RESTART_RC )
@@ -1104,7 +1100,11 @@ public class Wrapper
 
         try
         {
-            Files.write ( Paths.get ( path ), lines, Charset.defaultCharset() );
+            File f = new File ( path );
+
+            if ( !f.exists() ) { f.createNewFile(); }
+
+            Files.write ( f.toPath(), lines, Charset.defaultCharset() );
             doNotShareFileNames = validFileNames;
             return true;
         }
@@ -1204,7 +1204,11 @@ public class Wrapper
 
         try
         {
-            Files.write ( Paths.get ( path ), lines, Charset.defaultCharset() );
+            File f = new File ( path );
+
+            if ( !f.exists() ) { f.createNewFile(); }
+
+            Files.write ( f.toPath(), lines, Charset.defaultCharset() );
             doNotShareFileExtensions = validFileExtensions;
             return true;
         }
@@ -1258,179 +1262,6 @@ public class Wrapper
         }
 
         return extList;
-    }
-
-    // TODO: Validate new methods and afterwards kick this out.
-    private static void testDoNotShareMethods()
-    {
-        System.out.println ( "Testing doNotShareFileNames" );
-        System.out.println();
-
-        System.out.println ( "Loading from config file ..." );
-        List<String> fnames = getDoNotShareFileNames();
-
-        System.out.println ( "Valid file names in config file:" );
-
-        for ( String fname : fnames )
-        {
-            System.out.println ( fname );
-        }
-
-        System.out.println();
-
-        List<String> newFnames = new LinkedList<String>();
-        newFnames.add ( "Thumbs.db" );
-        newFnames.add ( "Desktop.ini" );
-        newFnames.add ( ".DS_Store" );
-        newFnames.add ( "# invalid since comment" );
-        newFnames.add ( "invalid on Unix-like since speparator / contained" );
-        newFnames.add ( "invalid on Windows since speparator \\ contained" );
-        System.out.println();
-
-        System.out.println ( "File names for testing saving to config file:" );
-
-        for ( String fname : newFnames )
-        {
-            System.out.println ( fname );
-        }
-
-        System.out.println();
-
-        System.out.println ( "Saving to config file ..." );
-        saveDoNotShareFileNames ( newFnames );
-        System.out.println();
-
-        fnames = getDoNotShareFileNames();
-        System.out.println ( "Valid file names in config file:" );
-
-        for ( String fname : fnames )
-        {
-            System.out.println ( fname );
-        }
-
-        System.out.println();
-        System.out.println();
-
-        System.out.println ( "Testing doNotShareFileExtensions" );
-        System.out.println();
-        System.out.println ( "Loading from config file ..." );
-        List<String> exts = getDoNotShareFileExtensions();
-
-        System.out.println ( "Valid file extensions in config file:" );
-
-        for ( String ext : exts )
-        {
-            System.out.println ( ext );
-        }
-
-        System.out.println();
-
-        List<String> newExts = new LinkedList<String>();
-        newExts.add ( ".avi" );
-        newExts.add ( ".mp4" );
-        newExts.add ( ".534" );
-        newExts.add ( ".pdf" );
-        newExts.add ( ".PDF" );
-        newExts.add ( ".Pdf" );
-        newExts.add ( ".aktiepart" );
-        newExts.add ( ".aktiebackup" );
-        newExts.add ( ".%aa" );
-        newExts.add ( "._db" );
-        newExts.add ( "some text" );
-        newExts.add ( "# comment" );
-        newExts.add ( "  .leading_space" );
-        newExts.add ( ".trailing_space  " );
-        newExts.add ( ".avi" );
-        newExts.add ( ".mp4" );
-        newExts.add ( "Desktop.ini" );
-
-        System.out.println ( "File extensions for testing saving to config file:" );
-
-        for ( String ext : newExts )
-        {
-            System.out.println ( ext );
-        }
-
-        System.out.println();
-
-        System.out.println ( "Saving to config file ..." );
-        saveDoNotShareFileExtensions ( newExts );
-        System.out.println();
-
-        exts = getDoNotShareFileExtensions();
-        System.out.println ( "Valid file extensions in config file:" );
-
-        for ( String ext : exts )
-        {
-            System.out.println ( ext );
-        }
-
-    }
-
-    public static Rectangle getWindowBounds ( )
-    {
-        Properties p = loadExistingProps();
-
-        String sx = p.getProperty ( PROP_WINDOW_X );
-        String sy = p.getProperty ( PROP_WINDOW_Y );
-        String sw = p.getProperty ( PROP_WINDOW_WIDTH );
-        String sh = p.getProperty ( PROP_WINDOW_HEIGHT );
-
-        if ( sx == null || sy == null || sw == null || sh == null )
-        {
-            return null;
-        }
-
-        try
-        {
-            int x = Integer.parseInt ( sx );
-            int y = Integer.parseInt ( sy );
-            int width = Integer.parseInt ( sw );
-            int height = Integer.parseInt ( sh );
-            return new Rectangle ( x, y, width, height );
-        }
-
-        catch ( NumberFormatException e )
-        {
-            return null;
-        }
-
-    }
-
-    public static void saveWindowBounds ( Rectangle bounds )
-    {
-        Properties p = loadExistingProps();
-
-        p.setProperty ( PROP_WINDOW_X, Integer.toString ( bounds.x ) );
-        p.setProperty ( PROP_WINDOW_Y, Integer.toString ( bounds.y ) );
-        p.setProperty ( PROP_WINDOW_WIDTH, Integer.toString ( bounds.width ) );
-        p.setProperty ( PROP_WINDOW_HEIGHT, Integer.toString ( bounds.height ) );
-
-        savePropsFile ( p );
-    }
-
-    public static boolean getWindowIsMaximized ( )
-    {
-        Properties p = loadExistingProps();
-
-        boolean maximized = false;
-        String m = p.getProperty ( PROP_WINDOW_MAXIMIZED );
-
-        if ( m != null && m.equals ( "true" ) )
-        {
-            maximized = true;
-        }
-
-        return maximized;
-    }
-
-    public static void saveWindowIsMaximized ( boolean m )
-    {
-        Properties p = loadExistingProps();
-
-        p.setProperty ( PROP_WINDOW_MAXIMIZED, Boolean.toString ( m ) );
-
-        savePropsFile ( p );
     }
 
 }

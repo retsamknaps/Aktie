@@ -2262,6 +2262,8 @@ public class IdentityManager
 
             }
 
+            System.out.println ( "REQUEST SPAM EX UPDATE: " + ids.size() );
+
             for ( String i : ids )
             {
                 SpamSequence sseq = new SpamSequence ( session );

@@ -28,6 +28,7 @@ import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.RequestFile;
 import aktie.gui.pm.PMTab;
+import aktie.gui.pm.PrivateMessageDialog;
 //import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
 //import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
 import aktie.gui.subtree.SubTreeDragListener;
@@ -836,6 +837,21 @@ public class SWTApp
 
                         }
 
+                        if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) ||
+                                CObj.PRIVMESSAGE.equals ( co.getType() ) )
+                        {
+                            Display.getDefault().asyncExec ( new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    pmTab.update ( co );
+                                }
+
+                            } );
+
+                        }
+
                     }
 
                 }
@@ -1033,6 +1049,21 @@ public class SWTApp
                             } );
 
                         }
+
+                    }
+
+                    if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) ||
+                            CObj.PRIVMESSAGE.equals ( co.getType() ) )
+                    {
+                        Display.getDefault().asyncExec ( new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                pmTab.update ( co );
+                            }
+
+                        } );
 
                     }
 
@@ -1319,6 +1350,7 @@ public class SWTApp
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
     private AktiSpamRankDialog spamDialog;
+    private PrivateMessageDialog prvMsgDialog;
 
     private PMTab pmTab;
 
@@ -2118,6 +2150,74 @@ public class SWTApp
     private boolean windowMaximized = false;
     private Rectangle windowBounds = null;
 
+    public static Rectangle getWindowBounds ( )
+    {
+        Properties p = Wrapper.loadExistingProps();
+
+        String sx = p.getProperty ( Wrapper.PROP_WINDOW_X );
+        String sy = p.getProperty ( Wrapper.PROP_WINDOW_Y );
+        String sw = p.getProperty ( Wrapper.PROP_WINDOW_WIDTH );
+        String sh = p.getProperty ( Wrapper.PROP_WINDOW_HEIGHT );
+
+        if ( sx == null || sy == null || sw == null || sh == null )
+        {
+            return null;
+        }
+
+        try
+        {
+            int x = Integer.parseInt ( sx );
+            int y = Integer.parseInt ( sy );
+            int width = Integer.parseInt ( sw );
+            int height = Integer.parseInt ( sh );
+            return new Rectangle ( x, y, width, height );
+        }
+
+        catch ( NumberFormatException e )
+        {
+            return null;
+        }
+
+    }
+
+    public static void saveWindowBounds ( Rectangle bounds )
+    {
+        Properties p = Wrapper.loadExistingProps();
+
+        p.setProperty ( Wrapper.PROP_WINDOW_X, Integer.toString ( bounds.x ) );
+        p.setProperty ( Wrapper.PROP_WINDOW_Y, Integer.toString ( bounds.y ) );
+        p.setProperty ( Wrapper.PROP_WINDOW_WIDTH, Integer.toString ( bounds.width ) );
+        p.setProperty ( Wrapper.PROP_WINDOW_HEIGHT, Integer.toString ( bounds.height ) );
+
+        Wrapper.savePropsFile ( p );
+    }
+
+    public static boolean getWindowIsMaximized ( )
+    {
+        Properties p = Wrapper.loadExistingProps();
+
+        boolean maximized = false;
+        String m = p.getProperty ( Wrapper.PROP_WINDOW_MAXIMIZED );
+
+        if ( m != null && m.equals ( "true" ) )
+        {
+            maximized = true;
+        }
+
+        return maximized;
+    }
+
+    public static void saveWindowIsMaximized ( boolean m )
+    {
+        Properties p = Wrapper.loadExistingProps();
+
+        p.setProperty ( Wrapper.PROP_WINDOW_MAXIMIZED, Boolean.toString ( m ) );
+
+        Wrapper.savePropsFile ( p );
+    }
+
+
+
     /**
         Open the window.
     */
@@ -2132,8 +2232,8 @@ public class SWTApp
         Display.setAppName ( "aktie" );
         Display display = Display.getDefault();
 
-        windowBounds = Wrapper.getWindowBounds();
-        windowMaximized = Wrapper.getWindowIsMaximized();
+        windowBounds = getWindowBounds();
+        windowMaximized = getWindowIsMaximized();
 
         createContents();
         shell.setVisible ( false );
@@ -2191,10 +2291,10 @@ public class SWTApp
         // save the window state upon closing
         if ( windowBounds != null )
         {
-            Wrapper.saveWindowBounds ( windowBounds );
+            saveWindowBounds ( windowBounds );
         }
 
-        Wrapper.saveWindowIsMaximized ( windowMaximized );
+        saveWindowIsMaximized ( windowMaximized );
 
         System.out.println ( "CLOSING NODE" );
         closeNode();
@@ -2870,6 +2970,9 @@ public class SWTApp
         zeroDialog.create();
         spamDialog = new AktiSpamRankDialog ( shell );
         spamDialog.create();
+        prvMsgDialog = new PrivateMessageDialog ( shell, this );
+        prvMsgDialog.create();
+        pmTab.setMessageDialog ( prvMsgDialog );
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -4783,6 +4886,51 @@ public class SWTApp
                             CObjListArrayElement ae = ( CObjListArrayElement ) selo;
                             CObj pst = ae.getCObj();
                             newPostDialog.reply ( selectedIdentity, selectedCommunity, pst );
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem prvReply = new MenuItem ( menu_5, SWT.NONE );
+        prvReply.setText ( "Send Private Msg" );
+        prvReply.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null )
+                {
+                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+
+                    @SuppressWarnings ( "rawtypes" )
+                    Iterator i = sel.iterator();
+
+                    while ( i.hasNext() )
+                    {
+                        Object selo = i.next();
+
+                        if ( selo instanceof CObjListArrayElement )
+                        {
+                            CObjListArrayElement ae = ( CObjListArrayElement ) selo;
+                            CObj pst = ae.getCObj();
+                            String pr = pst.getString ( CObj.CREATOR );
+                            String ps = selectedIdentity.getId();
+
+                            if ( pr != null && ps != null )
+                            {
+                                prvMsgDialog.open ( ps, pr );
+                            }
 
                         }
 

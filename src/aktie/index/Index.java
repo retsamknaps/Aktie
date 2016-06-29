@@ -364,6 +364,33 @@ public class Index implements Runnable
 
     }
 
+    public CObjList getPrivateMsgIdentForIdentity ( String id )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        BooleanQuery.Builder brcp = new BooleanQuery.Builder();
+        Term memterm = new Term ( CObj.docPrivate ( CObj.PRV_RECIPIENT ), id );
+        brcp.add ( new TermQuery ( memterm ), BooleanClause.Occur.SHOULD );
+
+        Term cterm = new Term ( CObj.docString ( CObj.CREATOR ), id );
+        brcp.add ( new TermQuery ( cterm ), BooleanClause.Occur.SHOULD );
+
+        builder.add ( brcp.build(), BooleanClause.Occur.MUST );
+
+        Term mineterm = new Term ( CObj.docPrivate ( CObj.DECODED ), "true" );
+        builder.add ( new TermQuery ( mineterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getPrivateMyMsgIdentity ( String msgid, Sort s )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

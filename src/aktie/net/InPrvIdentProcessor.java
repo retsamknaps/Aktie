@@ -101,6 +101,8 @@ public class InPrvIdentProcessor extends GenericProcessor
                                     b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                                 }
 
+                                b.pushPrivate ( CObj.NAME, idty.getDisplayName() );
+
                             }
 
                             index.index ( b );
