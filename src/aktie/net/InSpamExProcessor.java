@@ -53,7 +53,6 @@ public class InSpamExProcessor extends GenericProcessor
                         //sseq.getObj() is only set if a prior developer identity was added
                         if ( sseq.getObj() != null && isnew )
                         {
-                            System.out.println ( "IN SPAMEX: INDEXING" );
                             index.index ( b );
                         }
 

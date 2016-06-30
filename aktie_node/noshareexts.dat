@@ -12,3 +12,7 @@
 # The extensions '.aktiepart' and '.aktiebackup' are never shared
 # by Aktie and do not need to be specified here.
 #
+.DONOTSHARE
+.NOSHARE
+.donotshare
+.noshare

@@ -405,12 +405,7 @@ public class NewMemberDialog extends Dialog
     @Override
     protected void cancelPressed()
     {
-        CObjList clst = ( CObjList ) tableViewer.getInput();
-
-        if ( clst != null )
-        {
-            clst.close();
-        }
+        closeCObjList();
 
         super.cancelPressed();
     }
@@ -469,12 +464,21 @@ public class NewMemberDialog extends Dialog
 
         }
 
-        if ( clst != null )
-        {
-            clst.close();
-        }
+        closeCObjList();
 
         super.okPressed();
+    }
+
+    public void closeCObjList()
+    {
+        CObjList lst = ( CObjList ) tableViewer.getInput();
+        tableViewer.setInput ( null );
+
+        if ( lst != null )
+        {
+            lst.close();
+        }
+
     }
 
     /**

@@ -9,10 +9,14 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Table;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -33,7 +37,10 @@ import aktie.gui.CObjListArrayElement;
 import aktie.gui.CObjListContentProvider;
 import aktie.gui.CObjListDateColumnLabelProvider;
 import aktie.gui.CObjListPrivateColumnLabelProvider;
+import aktie.gui.IdentitySelectedInterface;
+import aktie.gui.NewPostDialog;
 import aktie.gui.SWTApp;
+import aktie.gui.SelectIdentityDialog;
 import aktie.gui.subtree.SubTreeDragListener;
 import aktie.gui.subtree.SubTreeDropListener;
 import aktie.gui.subtree.SubTreeEntity;
@@ -58,9 +65,14 @@ public class PMTab extends Composite
     private SWTApp app;
     private PrivateMessageDialog msgDialog;
     private CObjListContentProvider provider;
+    private SelectIdentityDialog selectDialog;
 
     private SubTreeModel identModel;
     private CObj currentMsgId;
+
+    private String sortPostField;
+    private boolean sortPostReverse;
+    private SortField.Type sortPostType;
 
     public PMTab ( Composite parent, int style, SWTApp a )
     {
@@ -70,7 +82,6 @@ public class PMTab extends Composite
 
         SashForm sashForm = new SashForm ( this, SWT.NONE );
         sashForm.setLayoutData ( BorderLayout.CENTER );
-
 
         treeViewer = new TreeViewer ( sashForm, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL );
         tree = treeViewer.getTree();
@@ -96,22 +107,8 @@ public class PMTab extends Composite
                         {
                             if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) )
                             {
-                                String lid = co.getPrivate ( CObj.PRV_MSG_ID );
-
-                                if ( lid != null )
-                                {
-                                    currentMsgId = co;
-                                    CObjList oldlst = ( CObjList ) tableViewer.getInput();
-                                    CObjList nlst = app.getNode().getIndex().getDecodedPrvMessages ( lid, null );
-                                    tableViewer.setInput ( nlst );
-
-                                    if ( oldlst != null )
-                                    {
-                                        oldlst.close();
-                                    }
-
-                                }
-
+                                currentMsgId = co;
+                                updateMessageTable();
                             }
 
                         }
@@ -170,6 +167,23 @@ public class PMTab extends Composite
 
         } );
 
+        MenuItem newmsg = new MenuItem ( menu_5, SWT.NONE );
+        newmsg.setText ( "Send Message To..." );
+        newmsg.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                selectDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         SashForm sashForm_1 = new SashForm ( sashForm, SWT.VERTICAL );
 
         tableViewer = new TableViewer ( sashForm_1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
@@ -177,6 +191,7 @@ public class PMTab extends Composite
         tableViewer.setContentProvider ( provider );
         table = tableViewer.getTable();
         table.setLinesVisible ( true );
+        table.setHeaderVisible ( true );
         tableViewer.addSelectionChangedListener ( new ISelectionChangedListener()
         {
             @SuppressWarnings ( "rawtypes" )
@@ -194,14 +209,54 @@ public class PMTab extends Composite
                     {
                         CObjListArrayElement selm = ( CObjListArrayElement ) selo;
                         CObj msg = selm.getCObj();
-                        String bdy = msg.getPrivate ( CObj.BODY );
 
-                        if ( bdy == null )
+                        if ( msg != null )
                         {
-                            bdy = "";
+                            identModel.clearBlueMessages ( msg );
+                            treeViewer.refresh ( true );
+                            Long np = msg.getPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS );
+
+                            if ( np != null && !np.equals ( 0L ) )
+                            {
+                                msg.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 0L );
+
+                                try
+                                {
+                                    app.getNode().getIndex().index ( msg );
+                                }
+
+                                catch ( IOException e1 )
+                                {
+                                    e1.printStackTrace();
+                                }
+
+                            }
+
+                            String ft[] = getFromTo ( msg );
+
+                            if ( ft != null )
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                sb.append ( "FROM: " );
+                                sb.append ( app.getIdCache().getName ( ft[0] ) );
+                                sb.append ( "\n" );
+                                sb.append ( "TO:   " );
+                                sb.append ( app.getIdCache().getName ( ft[1] ) );
+                                sb.append ( "\n======================================\n" );
+
+                                String bdy = msg.getPrivate ( CObj.BODY );
+
+                                if ( bdy != null )
+                                {
+                                    sb.append ( bdy );
+                                }
+
+                                String prttxt = NewPostDialog.formatDisplay ( sb.toString(), false );
+                                styledText.setText ( prttxt );
+                            }
+
                         }
 
-                        styledText.setText ( bdy );
                     }
 
                 }
@@ -238,11 +293,70 @@ public class PMTab extends Composite
         col2.getColumn().setText ( "Date" );
         col2.getColumn().setWidth ( 100 );
         col2.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.CREATEDON, true ) );
+        col2.getColumn().addSelectionListener ( new SelectionListener()
+        {
+
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docPrivateNumber ( CObj.CREATEDON );
+
+                if ( ns.equals ( sortPostField ) )
+                {
+                    sortPostReverse = !sortPostReverse;
+                }
+
+                else
+                {
+                    sortPostField = ns;
+                    sortPostReverse = true;
+                    sortPostType = SortedNumericSortField.Type.LONG;
+                }
+
+                updateMessageTable();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         TableViewerColumn col1 = new TableViewerColumn ( tableViewer, SWT.NONE );
         col1.getColumn().setText ( "Subject" );
         col1.getColumn().setWidth ( 300 );
         col1.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.SUBJECT ) );
+        col1.getColumn().addSelectionListener ( new SelectionListener()
+        {
+
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docPrivate ( CObj.SUBJECT );
+
+                if ( ns.equals ( sortPostField ) )
+                {
+                    sortPostReverse = !sortPostReverse;
+                }
+
+                else
+                {
+                    sortPostField = ns;
+                    sortPostReverse = true;
+                    sortPostType = SortedNumericSortField.Type.STRING;
+                }
+
+                updateMessageTable();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
 
         Composite composite = new Composite ( sashForm_1, SWT.NONE );
         composite.setLayout ( new BorderLayout ( 0, 0 ) );
@@ -257,11 +371,58 @@ public class PMTab extends Composite
 
         sashForm.setWeights ( new int[] {1, 4} );
 
+        selectDialog = new SelectIdentityDialog ( getShell(), app, new IdentitySelectedInterface()
+        {
+            @Override
+            public void selectedIdentity ( CObj i )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) treeViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator it = sel.iterator();
+
+                if ( it.hasNext() )
+                {
+                    Object selo = it.next();
+
+                    if ( selo instanceof SubTreeEntity )
+                    {
+                        SubTreeEntity sm = ( SubTreeEntity ) selo;
+                        CObj co = identModel.getCObj ( sm.getId() );
+
+                        if ( co != null && i != null )
+                        {
+                            if ( CObj.IDENTITY.equals ( co.getType() ) )
+                            {
+                                msgDialog.open ( co.getId(), i.getId() );
+                            }
+
+                            if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) )
+                            {
+                                String ft[] = getFromTo ( co );
+
+                                if ( ft != null )
+                                {
+                                    msgDialog.open ( ft[0], i.getId() );
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        } );
+
     }
 
-    public void openDialog ( CObj msgIdent )
+    public static String[] getFromTo ( CObj msgIdent )
     {
-        if ( msgDialog != null && msgIdent != null )
+        if ( msgIdent != null )
         {
             boolean mine = "true".equals ( msgIdent.getPrivate ( CObj.MINE ) );
             String fid = null;
@@ -281,7 +442,24 @@ public class PMTab extends Composite
 
             if ( fid != null && tid != null )
             {
-                msgDialog.open ( fid, tid );
+                return new String[] {fid, tid};
+
+            }
+
+        }
+
+        return null;
+    }
+
+    public void openDialog ( CObj msgIdent )
+    {
+        if ( msgDialog != null && msgIdent != null )
+        {
+            String ft[] = getFromTo ( msgIdent );
+
+            if ( ft != null )
+            {
+                msgDialog.open ( ft[0], ft[1] );
             }
 
         }
@@ -291,6 +469,50 @@ public class PMTab extends Composite
     public void setMessageDialog ( PrivateMessageDialog d )
     {
         msgDialog = d;
+    }
+
+    private void updateMessageTable()
+    {
+        if ( currentMsgId != null )
+        {
+            Sort s = new Sort();
+
+            if ( sortPostField != null && sortPostType != null )
+            {
+                if ( SortedNumericSortField.Type.LONG.equals ( sortPostType ) )
+                {
+                    s.setSort ( new SortedNumericSortField ( sortPostField, sortPostType, sortPostReverse ) );
+                }
+
+                else
+                {
+                    s.setSort ( new SortField ( sortPostField, sortPostType, sortPostReverse ) );
+                }
+
+            }
+
+            else
+            {
+                s.setSort ( new SortedNumericSortField ( CObj.docPrivateNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
+            }
+
+            String pid = currentMsgId.getPrivate ( CObj.PRV_MSG_ID );
+
+            if ( pid != null )
+            {
+                CObjList oldlst = ( CObjList ) tableViewer.getInput();
+                CObjList nlst = app.getNode().getIndex().getDecodedPrvMessages ( pid, s );
+                tableViewer.setInput ( nlst );
+
+                if ( oldlst != null )
+                {
+                    oldlst.close();
+                }
+
+            }
+
+        }
+
     }
 
     public void updateMessages()
@@ -382,6 +604,7 @@ public class PMTab extends Composite
         identModel.update ( c );
         treeViewer.setInput ( "Here is some data" );
         identModel.setCollaspseState ( treeViewer );
+        updateMessageTable();
     }
 
     public Tree getTree()

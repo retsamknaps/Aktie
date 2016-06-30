@@ -1,5 +1,7 @@
 package aktie.gui;
 
+import java.util.Iterator;
+
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.eclipse.jface.dialogs.Dialog;
@@ -16,13 +18,17 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 
 import aktie.data.CObj;
+import aktie.gui.pm.PrivateMessageDialog;
 import aktie.index.CObjList;
 
 public class ShowPrivComDialog extends Dialog
@@ -31,6 +37,7 @@ public class ShowPrivComDialog extends Dialog
     private Table communityTable;
     private SWTApp app;
     private TableViewer communityTableViewer;
+    private PrivateMessageDialog msgDialog;
 
     /**
         Create the dialog.
@@ -41,6 +48,11 @@ public class ShowPrivComDialog extends Dialog
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
+    }
+
+    public void setMessageDialog ( PrivateMessageDialog m )
+    {
+        msgDialog = m;
     }
 
     @Override
@@ -65,7 +77,7 @@ public class ShowPrivComDialog extends Dialog
         new Label ( container, SWT.NONE );
 
         Label lblRequestAccessFrom = new Label ( container, SWT.NONE );
-        lblRequestAccessFrom.setText ( "Request access from the creator." );
+        lblRequestAccessFrom.setText ( "Request access from the creator. (Right click - Send Message)" );
         new Label ( container, SWT.NONE );
 
         searchTxt = new Text ( container, SWT.BORDER );
@@ -108,6 +120,58 @@ public class ShowPrivComDialog extends Dialog
         communityTable.setLinesVisible ( true );
         new Label ( container, SWT.NONE );
         communityTableViewer.setContentProvider ( new CObjListContentProvider() );
+
+        Menu menu_5 = new Menu ( communityTable );
+        communityTable.setMenu ( menu_5 );
+
+        MenuItem newmsg = new MenuItem ( menu_5, SWT.NONE );
+        newmsg.setText ( "Send Message" );
+        newmsg.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( msgDialog != null )
+                {
+                    CObj selid = app.getSelectedIdentity();
+
+                    if ( selid != null )
+                    {
+                        IStructuredSelection sel = ( IStructuredSelection ) communityTableViewer.getSelection();
+                        @SuppressWarnings ( "rawtypes" )
+                        Iterator i = sel.iterator();
+
+                        if ( i.hasNext() )
+                        {
+                            CObjListArrayElement ae = ( CObjListArrayElement ) i.next();
+                            CObj com = ae.getCObj();
+
+                            if ( com != null )
+                            {
+                                String creator = com.getString ( CObj.CREATOR );
+
+                                if ( creator != null )
+                                {
+                                    msgDialog.open ( selid.getId(), creator );
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
 
         TableViewerColumn col0 = new TableViewerColumn ( communityTableViewer, SWT.NONE );
         col0.getColumn().setText ( "Community" );

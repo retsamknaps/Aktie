@@ -1493,6 +1493,11 @@ public class SWTApp
         return selectedCommunity;
     }
 
+    public CObj getSelectedIdentity()
+    {
+        return selectedIdentity;
+    }
+
     public Node getNode()
     {
         return node;
@@ -2973,6 +2978,7 @@ public class SWTApp
         prvMsgDialog = new PrivateMessageDialog ( shell, this );
         prvMsgDialog.create();
         pmTab.setMessageDialog ( prvMsgDialog );
+        privComDialog.setMessageDialog ( prvMsgDialog );
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }

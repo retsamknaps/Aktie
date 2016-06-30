@@ -31,7 +31,6 @@ public class ReqSpamExProcessor extends GenericProcessor
             if ( creator != null && first != null && last != null )
             {
                 CObjList cl = index.getSpamEx ( creator, first, last );
-                System.out.println ( "RETURNING SPAM EX!: " + cl.size() );
                 connection.enqueue ( cl );
             }
 
