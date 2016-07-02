@@ -1866,6 +1866,8 @@ public class SWTApp
 
             mlst.close();
 
+            pmTab.updateMessages();
+
             if ( Wrapper.getStartDestinationsOnStartup() )
             {
                 node.startDestinations ( Wrapper.getStartDestinationDelay() );

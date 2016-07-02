@@ -1,8 +1,5 @@
 package aktie.utils;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 
@@ -11,7 +8,28 @@ import org.bouncycastle.crypto.params.KeyParameter;
 public class SymDecoder
 {
 
-    public boolean decode ( CObj b, KeyParameter kp )
+    public static String SPLITTER = "~%@ASeP&_~";
+
+    public static StringBuilder encodeText ( StringBuilder sb, String k, String v )
+    {
+        if ( sb == null )
+        {
+            sb = new StringBuilder();
+        }
+
+        if ( k.contains ( "=" ) )
+        {
+            throw new RuntimeException ( "= may not be in key!" );
+        }
+
+        sb.append ( SPLITTER );
+        sb.append ( k );
+        sb.append ( "=" );
+        sb.append ( v );
+        return sb;
+    }
+
+    public static boolean decode ( CObj b, KeyParameter kp )
     {
         String pl = b.getString ( CObj.PAYLOAD );
         String pl2 = b.getString ( CObj.PAYLOAD2 );
@@ -57,21 +75,27 @@ public class SymDecoder
         return false;
     }
 
-    public void decodeText ( CObj b, String pl0, String pl1 )
+    public static void decodeText ( CObj b, String pl0, String pl1 )
     {
         if ( pl0 != null )
         {
-            String prts[] =  pl0.split ( "," );
-            Matcher m = Pattern.compile ( "(\\S+)=(.+)" ).matcher ( "" );
+            String splitwith = ",";
+
+            if ( pl0.contains ( SPLITTER ) )
+            {
+                splitwith = SPLITTER;
+            }
+
+            String prts[] =  pl0.split ( splitwith );
 
             for ( int c = 0; c < prts.length; c++ )
             {
-                m.reset ( prts[c] );
+                int eat = prts[c].indexOf ( "=" );
 
-                if ( m.find() )
+                if ( eat > 0 )
                 {
-                    String k = m.group ( 1 );
-                    String v = m.group ( 2 );
+                    String k = prts[c].substring ( 0, eat );
+                    String v = prts[c].substring ( eat + 1 );
                     b.pushPrivate ( k, v );
                 }
 
@@ -81,20 +105,28 @@ public class SymDecoder
 
         if ( pl1 != null )
         {
-            String prts[] =  pl1.split ( "," );
-            Matcher m = Pattern.compile ( "(\\S+)=(.+)" ).matcher ( "" );
+            String splitwith = ",";
+
+            if ( pl0.contains ( SPLITTER ) )
+            {
+                splitwith = SPLITTER;
+            }
+
+            String prts[] =  pl1.split ( splitwith );
 
             for ( int c = 0; c < prts.length; c++ )
             {
-                m.reset ( prts[c] );
 
-                if ( m.find() )
+                int eat = prts[c].indexOf ( "=" );
+
+                if ( eat > 0 )
                 {
-                    String k = m.group ( 1 );
+                    String k = prts[c].substring ( 0, eat );
+                    String vs = prts[c].substring ( eat + 1 );
 
                     try
                     {
-                        Long v = Long.valueOf ( m.group ( 2 ) );
+                        Long v = Long.valueOf ( vs );
                         b.pushPrivateNumber ( k, v );
                     }
 

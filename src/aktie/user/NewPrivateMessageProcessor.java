@@ -19,6 +19,7 @@ import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
+import aktie.utils.SymDecoder;
 
 public class NewPrivateMessageProcessor extends GenericProcessor
 {
@@ -243,14 +244,9 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushNumber ( CObj.SEQNUM, msgnum );
             b.pushString ( CObj.MSGIDENT, pident.getString ( CObj.MSGIDENT ) );
 
-            StringBuilder sb = new StringBuilder();
-            sb.append ( CObj.SUBJECT );
-            sb.append ( "=" );
-            sb.append ( b.getPrivate ( CObj.SUBJECT ) );
-            sb.append ( "," );
-            sb.append ( CObj.BODY );
-            sb.append ( "=" );
-            sb.append ( b.getPrivate ( CObj.BODY ) );
+            StringBuilder sb =
+                SymDecoder.encodeText ( null, CObj.SUBJECT, b.getPrivate ( CObj.SUBJECT ) );
+            SymDecoder.encodeText ( sb, CObj.BODY, b.getPrivate ( CObj.BODY ) );
             String rawstr = sb.toString();
             byte raw[] = Utils.stringToByteArray ( rawstr );
             //encrypt the community key with the identity public key

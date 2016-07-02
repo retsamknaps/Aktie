@@ -117,7 +117,7 @@ public class SubTreeEntity implements Comparable<Object>
             {
                 if ( s.type == type )
                 {
-                    if ( text != null )
+                    if ( text != null && s.text != null )
                     {
                         return text.compareTo ( s.text );
                     }

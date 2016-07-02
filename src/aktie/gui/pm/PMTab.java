@@ -10,6 +10,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Table;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -66,6 +68,7 @@ public class PMTab extends Composite
     private PrivateMessageDialog msgDialog;
     private CObjListContentProvider provider;
     private SelectIdentityDialog selectDialog;
+    private SimpleDateFormat dateformat;
 
     private SubTreeModel identModel;
     private CObj currentMsgId;
@@ -77,6 +80,9 @@ public class PMTab extends Composite
     public PMTab ( Composite parent, int style, SWTApp a )
     {
         super ( parent, style );
+
+        dateformat = new SimpleDateFormat ( "d MMM yyyy HH:mm z" );
+
         app = a;
         setLayout ( new BorderLayout ( 0, 0 ) );
 
@@ -184,6 +190,25 @@ public class PMTab extends Composite
 
         } );
 
+        MenuItem refresh = new MenuItem ( menu_5, SWT.NONE );
+        refresh.setText ( "Refresh" );
+        refresh.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                CObj u = new CObj();
+                u.setType ( CObj.USR_PRVMSG_UPDATE );
+                app.getNode().enqueue ( u );
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         SashForm sashForm_1 = new SashForm ( sashForm, SWT.VERTICAL );
 
         tableViewer = new TableViewer ( sashForm_1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
@@ -232,16 +257,29 @@ public class PMTab extends Composite
 
                             }
 
-                            String ft[] = getFromTo ( msg );
+                            String pfrom = msg.getString ( CObj.CREATOR );
+                            String pto = msg.getPrivate ( CObj.PRV_RECIPIENT );
 
-                            if ( ft != null )
+                            if ( pfrom != null && pto != null )
                             {
                                 StringBuilder sb = new StringBuilder();
                                 sb.append ( "FROM: " );
-                                sb.append ( app.getIdCache().getName ( ft[0] ) );
+                                sb.append ( app.getIdCache().getName ( pfrom ) );
                                 sb.append ( "\n" );
                                 sb.append ( "TO:   " );
-                                sb.append ( app.getIdCache().getName ( ft[1] ) );
+                                sb.append ( app.getIdCache().getName ( pto ) );
+                                sb.append ( "\n" );
+                                sb.append ( "DATE: " );
+                                Long co = msg.getPrivateNumber ( CObj.CREATEDON );
+
+                                if ( co != null )
+                                {
+                                    sb.append ( dateformat.format ( new Date ( co ) ) );
+                                }
+
+                                sb.append ( "\n" );
+                                sb.append ( "SUBJ: " );
+                                sb.append ( msg.getPrivate ( CObj.SUBJECT ) );
                                 sb.append ( "\n======================================\n" );
 
                                 String bdy = msg.getPrivate ( CObj.BODY );
@@ -594,8 +632,6 @@ public class PMTab extends Composite
         tvc1.getColumn().setWidth ( 200 );
         tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
                                     new SubTreeLabelProvider ( identModel ) ) );
-
-        updateMessages();
 
     }
 
