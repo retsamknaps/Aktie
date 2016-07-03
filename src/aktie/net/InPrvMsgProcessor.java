@@ -19,7 +19,6 @@ public class InPrvMsgProcessor extends GenericProcessor
     private DigestValidator validator;
     private Index index;
     private HH2Session session;
-    private SymDecoder decoder;
     private GuiCallback guicallback;
 
     public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
@@ -27,7 +26,6 @@ public class InPrvMsgProcessor extends GenericProcessor
         index = i;
         session = s;
         guicallback = cb;
-        decoder = new SymDecoder();
         validator = new DigestValidator ( index, st );
     }
 
@@ -70,7 +68,7 @@ public class InPrvMsgProcessor extends GenericProcessor
                                     byte dec[] = Utils.toByteArray ( key );
                                     KeyParameter sk = new KeyParameter ( dec );
 
-                                    if ( decoder.decode ( b, sk ) )
+                                    if ( SymDecoder.decode ( b, sk ) )
                                     {
                                         b.pushPrivate ( CObj.DECODED, "true" );
                                         b.pushPrivate ( CObj.PRV_MSG_ID,

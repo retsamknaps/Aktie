@@ -21,7 +21,6 @@ public class InPrvIdentProcessor extends GenericProcessor
     private DigestValidator validator;
     private Index index;
     private HH2Session session;
-    private SymDecoder decoder;
     private GuiCallback guicallback;
 
     public InPrvIdentProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
@@ -29,7 +28,6 @@ public class InPrvIdentProcessor extends GenericProcessor
         index = i;
         session = s;
         guicallback = cb;
-        decoder = new SymDecoder();
         validator = new DigestValidator ( index, st );
     }
 
@@ -120,7 +118,7 @@ public class InPrvIdentProcessor extends GenericProcessor
                                 {
                                     CObj dm = ndmsg.get ( c );
 
-                                    if ( decoder.decode ( dm, sk ) )
+                                    if ( SymDecoder.decode ( dm, sk ) )
                                     {
                                         dm.pushPrivate ( CObj.PRV_MSG_ID,
                                                          b.getPrivate ( CObj.PRV_MSG_ID ) );

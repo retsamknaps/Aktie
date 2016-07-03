@@ -24,7 +24,6 @@ public class InMemProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
-    private SymDecoder decoder;
 
     public InMemProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
@@ -32,7 +31,6 @@ public class InMemProcessor extends GenericProcessor
         session = s;
         guicallback = cb;
         validator = new DigestValidator ( index, st );
-        decoder = new SymDecoder();
     }
 
     @Override
@@ -82,7 +80,7 @@ public class InMemProcessor extends GenericProcessor
                                     String kstr = Utils.toString ( dec );
                                     KeyParameter sk = new KeyParameter ( dec );
                                     b.pushPrivate ( CObj.KEY, kstr );
-                                    decoder.decode ( b, sk );
+                                    SymDecoder.decode ( b, sk );
                                     //Attempt to decode the community data.
                                     //Note we may not have the community data yet!
                                     //Be sure to attempt to decode communtiy data as it
@@ -99,7 +97,7 @@ public class InMemProcessor extends GenericProcessor
                                         if ( com != null )
                                         {
                                             //Add the key to the community data.
-                                            if ( decoder.decode ( com, sk ) )
+                                            if ( SymDecoder.decode ( com, sk ) )
                                             {
                                                 b.pushPrivate ( CObj.MINE, "true" );
                                                 com.pushPrivate ( CObj.KEY, kstr );

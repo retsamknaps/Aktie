@@ -1,5 +1,6 @@
 package aktie.gui.subtree;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +17,8 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 
 import aktie.data.CObj;
+import aktie.gui.IdentityCache;
+import aktie.index.CObjList;
 import aktie.index.Index;
 
 public class SubTreeModel implements ITreeContentProvider
@@ -32,6 +35,7 @@ public class SubTreeModel implements ITreeContentProvider
     private Map<String, SubTreeEntity> idMap;
     private SubTreeEntityDBInterface db;
     private Index index;
+    private IdentityCache cache;
     private int type;
     private int treeId;
 
@@ -48,6 +52,7 @@ public class SubTreeModel implements ITreeContentProvider
         parents = new HashMap<Long, Long>();
         fullObj = new HashMap<Long, CObj>();
         idMap = new HashMap<String, SubTreeEntity>();
+        cache = new IdentityCache ( idx );
     }
 
     private synchronized void removeFromChildren ( SubTreeEntity se )
@@ -342,21 +347,101 @@ public class SubTreeModel implements ITreeContentProvider
 
         if ( type == MESSAGE_TREE )
         {
-            if ( CObj.PRIVIDENTIFIER.equals ( c.getType() ) )
+            if ( CObj.PRIVIDENTIFIER.equals ( c.getType() ) &&
+                    "true".equals ( c.getPrivate ( CObj.DECODED ) ) )
             {
                 String creator = c.getString ( CObj.CREATOR );
                 String recip = c.getPrivate ( CObj.PRV_RECIPIENT );
                 String msgid = c.getPrivate ( CObj.PRV_MSG_ID );
+
                 boolean mine = ( "true".equals ( c.getPrivate ( CObj.MINE ) ) );
 
                 if ( creator != null && recip != null && msgid != null )
                 {
                     String lid = recip;
+                    String rid = creator;
 
                     if ( mine )
                     {
                         lid = creator;
+                        rid = recip;
                     }
+
+                    //-------------------------------------------------
+                    //Fix bugs where the name is not set correctly
+                    //It was that only messages without names were because
+                    //msgid's were without names, so only check messages
+                    //if msgid is withoutname
+                    //REMOVE ME?
+                    //------------------------------------------------
+                    String privname = c.getPrivate ( CObj.NAME );
+                    
+                    if ( privname == null )
+                    {
+                        privname = cache.getName ( rid );
+                        
+                        if ( privname != null )
+                        {
+
+                            c.pushPrivate ( CObj.NAME, privname );
+
+                            CObjList msglst = null;
+
+                            try
+                            {
+                                index.index ( c );
+
+                                msglst = index.getDecodedPrvMessages ( msgid, null );
+
+                                for ( int ct = 0; ct < msglst.size(); ct++ )
+                                {
+                                    CObj msg = msglst.get ( ct );
+                                    String nm = msg.getPrivate ( CObj.NAME );
+
+                                    if ( nm == null )
+                                    {
+                                        String mcreator = msg.getString ( CObj.CREATOR );
+                                        if ( mcreator != null )
+                                        {
+                                            String cname = cache.getName ( mcreator );
+                                            msg.pushPrivate ( CObj.NAME, cname );
+                                            index.index(msg);
+                                        }
+
+                                    }
+
+                                }
+
+                            }
+
+                            catch ( IOException e )
+                            {
+                                e.printStackTrace();
+                            }
+
+                            finally
+                            {
+                                if ( msglst != null )
+                                {
+                                    try
+                                    {
+                                        msglst.close();
+                                    }
+
+                                    catch ( Exception e2 )
+                                    {
+                                    }
+
+                                }
+
+                            }
+
+
+                        }
+
+                    }
+
+                    //-------------------------------------------
 
                     SubTreeEntity le = idMap.get ( lid );
                     SubTreeEntity re = idMap.get ( msgid );
@@ -364,17 +449,17 @@ public class SubTreeModel implements ITreeContentProvider
                     if ( le != null && re == null )
                     {
                         re = new SubTreeEntity();
+                    }
+
+                    if ( re != null && le != null )
+                    {
                         re.setTreeId ( treeId );
                         re.setIdentity ( lid );
                         re.setRefId ( msgid );
-                        re.setText ( c.getPrivateDisplayName() );
+                        re.setText ( privname );
                         re.setParent ( le.getId() );
                         re.setType ( SubTreeEntity.PRVMESSAGE_TYPE );
                         db.saveEntity ( re );
-                    }
-
-                    if ( re != null )
-                    {
                         fullObj.put ( re.getId(), c );
                         addSubTreeElement ( re );
                     }
@@ -383,7 +468,8 @@ public class SubTreeModel implements ITreeContentProvider
 
             }
 
-            if ( CObj.PRIVMESSAGE.equals ( c.getType() ) )
+            if ( CObj.PRIVMESSAGE.equals ( c.getType() ) &&
+                    "true".equals ( c.getPrivate ( CObj.DECODED ) ) )
             {
                 String msgid = c.getPrivate ( CObj.PRV_MSG_ID );
 

@@ -60,7 +60,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private Index index;
     private RequestFileHandler fileHandler;
     private IdentityManager identityManager;
-    private SymDecoder symdec;
     private MembershipValidator memvalid;
     private boolean stop;
     private GuiCallback callback;
@@ -137,7 +136,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         identityManager = id;
         callback = cb;
         fileManager = new ConnectionFileManager ( s, i, r );
-        symdec = new SymDecoder();
         memvalid = new MembershipValidator ( index );
         Thread t = new Thread ( this );
         t.setDaemon ( true );
@@ -2089,7 +2087,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 {
                     CObj um = unlst.get ( cnt );
 
-                    if ( symdec.decode ( um, kp ) )
+                    if ( SymDecoder.decode ( um, kp ) )
                     {
                         um.pushPrivate ( CObj.DECODED, "true" );
                         index.index ( um );
@@ -2164,7 +2162,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                     {
                                         KeyParameter sk = new KeyParameter ( bk );
 
-                                        if ( !symdec.decode ( com, sk ) )
+                                        if ( !SymDecoder.decode ( com, sk ) )
                                         {
                                             log.severe ( "Community failed to decode! " + comid );
                                         }

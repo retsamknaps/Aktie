@@ -363,6 +363,15 @@ public class Index implements Runnable
         return null;
 
     }
+    
+    public CObjList getAllPrivIdents() {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
 
     public CObjList getPrivateMsgIdentForIdentity ( String id )
     {
@@ -2255,6 +2264,24 @@ public class Index implements Runnable
 
     public void indexNoCommit ( IndexWriter idx, CObj o, boolean onlynew ) throws IOException
     {
+
+        //REMOVE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        //DEBUG FOR MISSING NAMES IN PRV MESSAGES
+        if ( CObj.PRIVIDENTIFIER.equals ( o.getType() ) ||
+                CObj.PRIVMESSAGE.equals ( o.getType() ) )
+        {
+            String pm = o.getPrivate ( CObj.NAME );
+
+            if ( pm == null && "true".equals ( o.getPrivate ( CObj.DECODED ) ) )
+            {
+                System.out.println ( "---------- SEND THIS TO DEVELOPERS PLEASE ----------" );
+                Thread.dumpStack();
+            }
+
+        }
+
+        //<<REMOVE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
         if ( o.getDig() == null && o.getId() == null )
         {

@@ -1,6 +1,7 @@
 package aktie.gui.pm;
 
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
@@ -38,6 +39,7 @@ import aktie.data.CObj;
 import aktie.gui.CObjListArrayElement;
 import aktie.gui.CObjListContentProvider;
 import aktie.gui.CObjListDateColumnLabelProvider;
+import aktie.gui.CObjListPrivDispNameColumnLabelProvider;
 import aktie.gui.CObjListPrivateColumnLabelProvider;
 import aktie.gui.IdentitySelectedInterface;
 import aktie.gui.NewPostDialog;
@@ -327,6 +329,40 @@ public class PMTab extends Composite
 
         } );
 
+        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
+        col0.getColumn().setText ( "Sender" );
+        col0.getColumn().setWidth ( 100 );
+        col0.setLabelProvider ( new CObjListPrivDispNameColumnLabelProvider ( ) );
+        col0.getColumn().addSelectionListener ( new SelectionListener()
+        {
+
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docPrivate ( CObj.NAME );
+
+                if ( ns.equals ( sortPostField ) )
+                {
+                    sortPostReverse = !sortPostReverse;
+                }
+
+                else
+                {
+                    sortPostField = ns;
+                    sortPostReverse = true;
+                    sortPostType = SortedNumericSortField.Type.STRING;
+                }
+
+                updateMessageTable();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         TableViewerColumn col2 = new TableViewerColumn ( tableViewer, SWT.NONE );
         col2.getColumn().setText ( "Date" );
         col2.getColumn().setWidth ( 100 );
@@ -555,56 +591,65 @@ public class PMTab extends Composite
 
     public void updateMessages()
     {
-        CObjList clst = null;
-
-        try
+        Display.getDefault().asyncExec ( new Runnable()
         {
-            Set<String> myset = new HashSet<String>();
-            clst = app.getNode().getIndex().getMyIdentities();
-
-            for ( int c = 0; c < clst.size(); c++ )
+            @Override
+            public void run()
             {
-                myset.add ( clst.get ( c ).getId() );
-            }
+                CObjList clst = null;
 
-            clst.close();
-
-            for ( String id : myset )
-            {
-                clst = app.getNode().getIndex().getPrivateMsgIdentForIdentity ( id );
-
-                for ( int c = 0; c < clst.size(); c++ )
-                {
-                    CObj pid = clst.get ( c );
-                    update ( pid );
-                }
-
-                clst.close();
-            }
-
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-        }
-
-        finally
-        {
-            if ( clst != null )
-            {
                 try
                 {
+                    Set<String> myset = new HashSet<String>();
+                    clst = app.getNode().getIndex().getMyIdentities();
+
+                    for ( int c = 0; c < clst.size(); c++ )
+                    {
+                        myset.add ( clst.get ( c ).getId() );
+                    }
+
                     clst.close();
+
+                    for ( String id : myset )
+                    {
+                        clst = app.getNode().getIndex().getPrivateMsgIdentForIdentity ( id );
+
+                        for ( int c = 0; c < clst.size(); c++ )
+                        {
+                            CObj pid = clst.get ( c );
+                            update ( pid );
+                        }
+
+                        clst.close();
+                    }
+
                 }
 
-                catch ( Exception e2 )
+                catch ( Exception e )
                 {
+                    e.printStackTrace();
+                }
+
+                finally
+                {
+                    if ( clst != null )
+                    {
+                        try
+                        {
+                            clst.close();
+                        }
+
+                        catch ( Exception e2 )
+                        {
+                        }
+
+                    }
+
                 }
 
             }
 
-        }
+        } );
 
     }
 

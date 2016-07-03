@@ -26,7 +26,6 @@ public class InComProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
-    private SymDecoder decoder;
     private SpamTool spamtool;
 
     public InComProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
@@ -35,7 +34,6 @@ public class InComProcessor extends GenericProcessor
         session = s;
         guicallback = cb;
         spamtool = st;
-        decoder = new SymDecoder();
         validator = new DigestValidator ( index, spamtool );
     }
 
@@ -88,7 +86,7 @@ public class InComProcessor extends GenericProcessor
                                     CommunityMyMember cmm = i.next();
                                     KeyParameter sk = new KeyParameter ( cmm.getKey() );
 
-                                    if ( decoder.decode ( b, sk ) )
+                                    if ( SymDecoder.decode ( b, sk ) )
                                     {
                                         decoded = true;
                                         themember = cmm;
@@ -106,7 +104,7 @@ public class InComProcessor extends GenericProcessor
 
                             else
                             {
-                                decoder.decodeText ( b, b.getString ( CObj.PAYLOAD ), b.getString ( CObj.PAYLOAD2 ) );
+                                SymDecoder.decodeText ( b, b.getString ( CObj.PAYLOAD ), b.getString ( CObj.PAYLOAD2 ) );
 
                                 if ( b.getPrivate ( CObj.NAME ) != null )
                                 {

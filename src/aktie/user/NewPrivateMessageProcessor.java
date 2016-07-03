@@ -274,7 +274,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
             b.pushPrivate ( CObj.PRV_RECIPIENT, recipient );
             b.pushPrivate ( CObj.MINE, "true" );
-            b.pushPrivate ( CObj.NAME, recid.getDisplayName() );
+            b.pushPrivate ( CObj.NAME, myid.getDisplayName() );
 
             spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ),
                                 b );
