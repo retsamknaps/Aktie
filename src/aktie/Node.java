@@ -118,7 +118,7 @@ public class Node
         userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqIdentityProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqMemProcessor ( identManager ) );
-        userQueue.addProcessor ( new UsrReqPrvMsgProcessor ( identManager ) );
+        userQueue.addProcessor ( new UsrReqPrvMsgProcessor ( session, index ) );
         userQueue.addProcessor ( new UsrReqPostProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSubProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqSetRankProcessor ( index, hasFileCreator, usrCallback ) );

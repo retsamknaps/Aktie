@@ -363,8 +363,9 @@ public class Index implements Runnable
         return null;
 
     }
-    
-    public CObjList getAllPrivIdents() {
+
+    public CObjList getAllPrivIdents()
+    {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );

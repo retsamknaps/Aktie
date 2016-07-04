@@ -1294,10 +1294,13 @@ public class CObj
 
                     String nk = k.substring ( "numbers_".length() );
                     Number nm = i.numericValue();
-                    if (nm == null) {
-                    	String st = i.stringValue();
-                    	nm = Long.valueOf(st);
+
+                    if ( nm == null )
+                    {
+                        String st = i.stringValue();
+                        nm = Long.valueOf ( st );
                     }
+
                     Long v = nm.longValue();
                     numbers.put ( nk, v );
                 }
@@ -1337,10 +1340,13 @@ public class CObj
 
                     String nk = k.substring ( "PRIVNUM_".length() );
                     Number nm = i.numericValue();
-                    if (nm == null) {
-                    	String st = i.stringValue();
-                    	nm = Long.valueOf(st);
+
+                    if ( nm == null )
+                    {
+                        String st = i.stringValue();
+                        nm = Long.valueOf ( st );
                     }
+
                     privatenumbers.put ( nk, nm.longValue() );
                 }
 

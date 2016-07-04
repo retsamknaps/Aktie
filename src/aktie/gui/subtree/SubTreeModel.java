@@ -375,11 +375,11 @@ public class SubTreeModel implements ITreeContentProvider
                     //REMOVE ME?
                     //------------------------------------------------
                     String privname = c.getPrivate ( CObj.NAME );
-                    
+
                     if ( privname == null )
                     {
                         privname = cache.getName ( rid );
-                        
+
                         if ( privname != null )
                         {
 
@@ -401,11 +401,12 @@ public class SubTreeModel implements ITreeContentProvider
                                     if ( nm == null )
                                     {
                                         String mcreator = msg.getString ( CObj.CREATOR );
+
                                         if ( mcreator != null )
                                         {
                                             String cname = cache.getName ( mcreator );
                                             msg.pushPrivate ( CObj.NAME, cname );
-                                            index.index(msg);
+                                            index.index ( msg );
                                         }
 
                                     }

@@ -2170,7 +2170,7 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public void requestPrvIdentMsg()
+    public void requestPrvIdentMsg ( String uid )
     {
         List<String> myids = getMyIds();
         Session s = null;
@@ -2178,7 +2178,8 @@ public class IdentityManager
         try
         {
             s = session.getSession();
-            Query q = s.createQuery ( "SELECT x FROM PrivateMsgIdentity x WHERE x.mine = false" );
+            Query q = s.createQuery ( "SELECT x FROM PrivateMsgIdentity x WHERE x.id = :uid" );
+            q.setParameter ( "uid", uid );
             List<String> ids = new LinkedList<String>();
             List<PrivateMsgIdentity> idl = q.list();
 
