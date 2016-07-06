@@ -1699,12 +1699,12 @@ public class SWTApp
                                 {
                                     if ( running )
                                     {
-                                        lblNotRunning.setText ( "Share Manager RUNNING" );
+                                        lblNotRunning.setText ( "The share manager is RUNNING" );
                                     }
 
                                     else
                                     {
-                                        lblNotRunning.setText ( "Share Manger Not Running" );
+                                        lblNotRunning.setText ( "The share manager is not running" );
                                     }
 
                                 }
@@ -1726,12 +1726,12 @@ public class SWTApp
 
                             if ( node.getShareManager().isRunning() )
                             {
-                                lblNotRunning.setText ( "Share Manager RUNNING" );
+                                lblNotRunning.setText ( "The share manager is RUNNING" );
                             }
 
                             else
                             {
-                                lblNotRunning.setText ( "Share Manger Not Running" );
+                                lblNotRunning.setText ( "The share manager is not running" );
                             }
 
                             btnEnableShareManager.setSelection ( en );
@@ -3361,7 +3361,7 @@ public class SWTApp
 
         //zeroDialog
         MenuItem mntmSpam = new MenuItem ( menu_1, SWT.NONE );
-        mntmSpam.setText ( "Set Not Spam Rank" );
+        mntmSpam.setText ( "Set 'Not Spam' Rank" );
         mntmSpam.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -3431,7 +3431,7 @@ public class SWTApp
 
         //zeroDialog
         MenuItem mntmDumpOpen = new MenuItem ( menu_1, SWT.NONE );
-        mntmDumpOpen.setText ( "Dump Open Searchers(debug)" );
+        mntmDumpOpen.setText ( "Dump Open Searchers (debug)" );
         mntmDumpOpen.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -3545,7 +3545,7 @@ public class SWTApp
         lblError.setText ( "" );
 
         lblNotRunning = new Label ( composite_header, SWT.NONE );
-        lblNotRunning.setText ( "Share Manger Not Running" );
+        lblNotRunning.setText ( "The share manager is not running" );
 
         btnEnableShareManager = new Button ( composite_header, SWT.CHECK );
         btnEnableShareManager.setText ( "Enabled" );
@@ -5566,7 +5566,7 @@ public class SWTApp
         composite_14.setLayout ( new GridLayout ( 2, false ) );
 
         Button btnShare = new Button ( composite_14, SWT.NONE );
-        btnShare.setText ( "Add Share Directory" );
+        btnShare.setText ( "Add a directory to share" );
         btnShare.addSelectionListener ( new SelectionListener()
         {
 
@@ -5660,7 +5660,7 @@ public class SWTApp
         new Label ( composite_14, SWT.NONE );
 
         btnDefaultDownloadLocation = new Button ( composite_14, SWT.CHECK );
-        btnDefaultDownloadLocation.setText ( "Default Download Location" );
+        btnDefaultDownloadLocation.setText ( "Default download location" );
         btnDefaultDownloadLocation.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -5754,7 +5754,7 @@ public class SWTApp
                               + "files are automatically shared with the community. "
                               + "Any new files copied into the directory will automatically "
                               + "be shared.  You can move and rename files within a share, "
-                              + "and ohter users will still be able to download these.  "
+                              + "and other users will still be able to download these.  "
                               + "You can also do download new files to Share directories." );
         txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
@@ -6128,7 +6128,7 @@ public class SWTApp
     {
         String inkBps = String.format ( "%.2f", deltaInBytes / 1.024 / deltaTime );
         String outkBps = String.format ( "%.2f", deltaOutBytes / 1.024 / deltaTime );
-        lblSpeed.setText ( new StringBuffer().append ( "down: " ).append ( inkBps ).append ( " kB/s | up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
+        lblSpeed.setText ( new StringBuffer().append ( "Down: " ).append ( inkBps ).append ( " kB/s | Up: " ).append ( outkBps ).append ( " kB/s" ).toString() );
 
         if ( connectionTable != null )
         {
