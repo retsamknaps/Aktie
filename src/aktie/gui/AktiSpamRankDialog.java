@@ -57,10 +57,10 @@ public class AktiSpamRankDialog extends Dialog
         text_1 = new Text ( container, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL );
         text_1.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, true, 1, 1 ) );
         text_1.setEditable ( false );
-        text_1.setText ( "Here you set the minimum rank a user must have "
-                         + "for you not to require an anti-spam payment.  For users "
-                         + "that you trust, you can set their rank above this value. "
-                         + "Then they won't have to generate anit-spam for you to "
+        text_1.setText ( "Here you set the minimum rank that a user must have "
+                         + "for you, in order to not require an anti-spam payment. For users "
+                         + "that you trust, you can set their rank above this value, "
+                         + "then they will not have to generate anti-spam for you to "
                          + "see their files and posts." );
 
         Label lblNewRank = new Label ( container, SWT.NONE );

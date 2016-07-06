@@ -32,15 +32,15 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
         this.addColumn ( "Local", 200, new ConnectionColumnLocalDest() );
         this.addColumn ( "Remote", 200, new ConnectionColumnRemoteDest() );
-        this.addColumn ( "Upload (b)", 100, new ConnectionColumnUpload() );
-        this.addColumn ( "Download (b)", 100, new ConnectionColumnDownload() );
+        this.addColumn ( "Upload (B)", 100, new ConnectionColumnUpload() );
+        this.addColumn ( "Download (B)", 100, new ConnectionColumnDownload() );
         this.addColumn ( "Time (s)", 90, new ConnectionColumnTime() );
-        this.addColumn ( "Last Sent", 100, new ConnectionColumnLastSent() );
-        this.addColumn ( "Last Read", 100, new ConnectionColumnLastRead() );
+        this.addColumn ( "Last sent", 100, new ConnectionColumnLastSent() );
+        this.addColumn ( "Last read", 100, new ConnectionColumnLastRead() );
         this.addColumn ( "Pending", 100, new ConnectionColumnPending() );
         this.addColumn ( "Mode", 100, new ConnectionColumnMode() );
-        this.addColumn ( "Down File", 200, SWT.RIGHT, new ConnectionColumnFileDown() );
-        this.addColumn ( "Up File", 200, SWT.RIGHT, new ConnectionColumnFileUp() );
+        this.addColumn ( "Down file", 200, SWT.RIGHT, new ConnectionColumnFileDown() );
+        this.addColumn ( "Up file", 200, SWT.RIGHT, new ConnectionColumnFileUp() );
 
         Menu menu = this.getMenu();
 
