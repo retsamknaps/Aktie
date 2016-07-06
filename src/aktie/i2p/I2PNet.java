@@ -55,7 +55,7 @@ public class I2PNet  implements Net
         {
             if ( !testClient() )
             {
-                System.out.println ( "No i2p found.  Starting router." );
+                System.out.println ( "No I2P found. Starting router." );
                 startI2P ();
             }
 
@@ -158,7 +158,7 @@ public class I2PNet  implements Net
 
                 if ( manager == null )
                 {
-                    System.out.println ( "Wating for socket manager for existing destination." );
+                    System.out.println ( "Waiting for socket manager for existing destination." );
                     Thread.sleep ( 1000 );
                 }
 
@@ -218,7 +218,7 @@ public class I2PNet  implements Net
 
             if ( manager == null )
             {
-                System.out.println ( "Wating for socket manager for new destination." );
+                System.out.println ( "Waiting for socket manager for new destination." );
 
                 try
                 {
