@@ -5750,12 +5750,12 @@ public class SWTApp
 
         txtAShareIs = new Text ( composite_14, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL );
         txtAShareIs.setEditable ( false );
-        txtAShareIs.setText ( "A Share is a directory or folder on your system, where all "
+        txtAShareIs.setText ( "A 'Share' is a directory or folder on your system, where all "
                               + "files are automatically shared with the community. "
                               + "Any new files copied into the directory will automatically "
-                              + "be shared.  You can move and rename files within a share, "
+                              + "be shared. You can move and rename files within a share, "
                               + "and other users will still be able to download these.  "
-                              + "You can also do download new files to Share directories." );
+                              + "You can also download new files into your 'Share' directories." );
         txtAShareIs.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
 
