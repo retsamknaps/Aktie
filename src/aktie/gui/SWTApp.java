@@ -27,6 +27,7 @@ import aktie.Node;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.RequestFile;
+import aktie.gui.launchers.LauncherDialog;
 import aktie.gui.pm.PMTab;
 import aktie.gui.pm.PrivateMessageDialog;
 //import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
@@ -118,7 +119,7 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.jface.viewers.ComboViewer;
 
-public class SWTApp
+public class SWTApp implements UpdateInterface
 {
     Logger log = Logger.getLogger ( "aktie" );
 
@@ -1351,6 +1352,7 @@ public class SWTApp
     private ZeroIdentityDialog zeroDialog;
     private AktiSpamRankDialog spamDialog;
     private PrivateMessageDialog prvMsgDialog;
+    private LauncherDialog launcherDialog;
 
     private PMTab pmTab;
 
@@ -1684,6 +1686,8 @@ public class SWTApp
                     node = new Node ( nodeDir, i2pnet, usrcallback,
                                       netcallback, concallback );
 
+                    updateAfterNodeStart();
+
                     idCache = new IdentityCache ( node.getIndex() );
 
                     node.getShareManager().setShareListener ( new ShareListener()
@@ -1914,9 +1918,16 @@ public class SWTApp
 
         startNodeThread ( p );
 
+    }
+
+    public void updateAfterNodeStart()
+    {
+        String lastversion = lastVersion();
+
         if ( lastversion != null )
         {
             upgrade0115 ( lastversion );
+            upgrade0505 ( lastversion );
         }
 
     }
@@ -2077,7 +2088,7 @@ public class SWTApp
     {
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0115 ) < 0 )
         {
-            node.getHasFileCreator().updateHasFile();
+            node.getHasFileCreator().updateHasFile ( this );
         }
 
     }
@@ -2091,7 +2102,7 @@ public class SWTApp
 
     }
 
-    public void upgrade0405 ( String lastversion )
+    private void upgrade0405 ( String lastversion )
     {
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0405 ) < 0 )
         {
@@ -2100,11 +2111,38 @@ public class SWTApp
 
     }
 
-    public void upgrade0418 ( String lastversion )
+    private void upgrade0418 ( String lastversion )
     {
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0418 ) < 0 )
         {
             Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
+        }
+
+    }
+
+    public void updateStatus ( String st )
+    {
+        if ( splash != null )
+        {
+            try
+            {
+                splash.setVersion ( st );
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    private void upgrade0505 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0505 ) < 0 )
+        {
+            node.getHasFileCreator().updateOnlyHasFile ( this );
         }
 
     }
@@ -2281,6 +2319,7 @@ public class SWTApp
         splash = new SWTSplash ( shell );
         startNode();
         splash.open();
+        splash.setVersion ( Wrapper.VERSION );
 
         periodicUpdateThread = new PeriodicGuiUpdateThread ( this );
 
@@ -2540,7 +2579,13 @@ public class SWTApp
 
             else
             {
-                s.setSort ( new SortField ( CObj.docString ( CObj.NAME ), SortField.Type.STRING, false ) );
+            	
+                sortFileField1 = CObj.docNumber ( CObj.CREATEDON );
+                sortFileReverse = true;
+                sortFileType1 = SortedNumericSortField.Type.LONG;
+                sortFileField2 = null;
+                sortFileType2 = null;
+                s.setSort ( new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse ) );
             }
 
             String fshare = null;
@@ -2981,6 +3026,8 @@ public class SWTApp
         prvMsgDialog.create();
         pmTab.setMessageDialog ( prvMsgDialog );
         privComDialog.setMessageDialog ( prvMsgDialog );
+        launcherDialog = new LauncherDialog ( shell, this );
+        launcherDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -3295,6 +3342,24 @@ public class SWTApp
         mntmFile.setMenu ( menu_1 );
 
         doUpgrade = Wrapper.getAutoUpdate();
+
+        final MenuItem launchItem = new MenuItem ( menu_1, SWT.NONE );
+        launchItem.setText ( "Set Launcher Programs" );
+        launchItem.addSelectionListener ( new SelectionListener()
+        {
+
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                launcherDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         final MenuItem mntmAutoupdate = new MenuItem ( menu_1, SWT.NONE );
         mntmAutoupdate.setText ( doUpgrade ? "Disable auto upgrade" : "Enable auto upgrade" );
@@ -4652,6 +4717,50 @@ public class SWTApp
         Menu menu_5 = new Menu ( postTable );
         postTable.setMenu ( menu_5 );
 
+        MenuItem mntmOpen = new MenuItem ( menu_5, SWT.NONE );
+        mntmOpen.setText ( "Open" );
+        mntmOpen.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null )
+                {
+                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+
+                    @SuppressWarnings ( "rawtypes" )
+                    Iterator i = sel.iterator();
+
+                    if ( i.hasNext() )
+                    {
+                        Object selo = i.next();
+
+                        if ( selo instanceof CObjListArrayElement )
+                        {
+                            CObjListArrayElement ae = ( CObjListArrayElement ) selo;
+                            CObj fr = ae.getCObj();
+                            String lf = fr.getPrivate ( CObj.LOCALFILE );
+
+                            if ( !launcherDialog.open ( lf ) )
+                            {
+                                MessageDialog.openWarning ( shell, "No program selected file extension.", "Sorry, you haven't set a launcher for this file type." );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         MenuItem mntmDownloadFile2 = new MenuItem ( menu_5, SWT.NONE );
         mntmDownloadFile2.setText ( "Download File(s)" );
         mntmDownloadFile2.addSelectionListener ( new SelectionListener()
@@ -5385,9 +5494,153 @@ public class SWTApp
         fcol4.getColumn().setText ( "Number Has" );
         fcol4.getColumn().setWidth ( 50 );
         fcol4.setLabelProvider ( new CObjListLongColumnLabelProvider ( CObj.NUMBER_HAS ) );
+        fcol4.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docNumber ( CObj.NUMBER_HAS );
+
+                if ( ns.equals ( sortFileField1 ) )
+                {
+                    sortFileReverse = !sortFileReverse;
+                }
+
+                else
+                {
+                    sortFileField1 = ns;
+                    sortFileReverse = false;
+                    sortFileType1 = SortedNumericSortField.Type.LONG;
+                    sortFileField2 = null;
+                    sortFileType2 = null;
+                }
+
+                filesSearch();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        TableViewerColumn fcol5 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
+        fcol5.getColumn().setText ( "First Seen" );
+        fcol5.getColumn().setWidth ( 120 );
+        fcol5.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.CREATEDON ) );
+        fcol5.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docNumber ( CObj.CREATEDON );
+
+                if ( ns.equals ( sortFileField1 ) )
+                {
+                    sortFileReverse = !sortFileReverse;
+                }
+
+                else
+                {
+                    sortFileField1 = ns;
+                    sortFileReverse = false;
+                    sortFileType1 = SortedNumericSortField.Type.LONG;
+                    sortFileField2 = null;
+                    sortFileType2 = null;
+                }
+
+                filesSearch();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        TableViewerColumn fcol6 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
+        fcol6.getColumn().setText ( "Last Seen" );
+        fcol6.getColumn().setWidth ( 120 );
+        fcol6.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.LASTUPDATE ) );
+        fcol6.getColumn().addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                String ns = CObj.docNumber ( CObj.LASTUPDATE );
+
+                if ( ns.equals ( sortFileField1 ) )
+                {
+                    sortFileReverse = !sortFileReverse;
+                }
+
+                else
+                {
+                    sortFileField1 = ns;
+                    sortFileReverse = false;
+                    sortFileType1 = SortedNumericSortField.Type.LONG;
+                    sortFileField2 = null;
+                    sortFileType2 = null;
+                }
+
+                filesSearch();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         Menu menu_3 = new Menu ( fileTable );
         fileTable.setMenu ( menu_3 );
+
+        MenuItem mntmFileOpen = new MenuItem ( menu_3, SWT.NONE );
+        mntmFileOpen.setText ( "Open" );
+        mntmFileOpen.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                if ( selectedIdentity != null )
+                {
+                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+
+                    @SuppressWarnings ( "rawtypes" )
+                    Iterator i = sel.iterator();
+
+                    while ( i.hasNext() )
+                    {
+                        Object selo = i.next();
+
+                        if ( selo instanceof CObjListArrayElement )
+                        {
+                            CObjListArrayElement ae = ( CObjListArrayElement ) selo;
+                            CObj fr = ae.getCObj();
+                            String lf = fr.getString ( CObj.LOCALFILE );
+
+                            if ( !launcherDialog.open ( lf ) )
+                            {
+                                MessageDialog.openWarning ( shell, "No program selected file extension.", "Sorry, you haven't set a launcher for this file type." );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
 
         MenuItem mntmDownloadFile = new MenuItem ( menu_3, SWT.NONE );
         mntmDownloadFile.setText ( "Download File" );

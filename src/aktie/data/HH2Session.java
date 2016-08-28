@@ -34,7 +34,8 @@ public class HH2Session
             tmpdir = new File ( dir );
 
             configuration.setProperty ( "hibernate.dialect", "org.hibernate.dialect.H2Dialect" );
-            configuration.setProperty ( "hibernate.connection.url", "jdbc:h2:" + tmpdir.getCanonicalPath() + File.separator + "data" );
+            configuration.setProperty ( "hibernate.connection.url", "jdbc:h2:" + tmpdir.getCanonicalPath() +
+                                        File.separator + "data;MVCC=TRUE;LOCK_TIMEOUT=10000" );
             configuration.setProperty ( "hibernate.connection.username", "root" );
             configuration.setProperty ( "hibernate.connection.password", "" );
             configuration.setProperty ( "hibernate.hbm2ddl.auto", "update" );
@@ -54,6 +55,7 @@ public class HH2Session
             configuration.addAnnotatedClass ( DeveloperIdentity.class );
             //--- Gui mappings
             configuration.addAnnotatedClass ( SubTreeEntity.class );
+            configuration.addAnnotatedClass ( Launcher.class );
             configuration.buildMapping();
 
             StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder().

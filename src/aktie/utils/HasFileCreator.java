@@ -2,14 +2,20 @@ package aktie.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.hibernate.Session;
 
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
+import aktie.gui.UpdateInterface;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -74,8 +80,30 @@ public class HasFileCreator
                 fragsize != null && fragnumber != null )
         {
 
-            CObjList wl = index.getHasFiles ( comid, wholedig, digofdigs );
+            long latest = 0;
+            long earliest = 0;
+            Sort s = new Sort();
+            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
+            CObjList wl = index.getHasFiles ( comid, wholedig, digofdigs, s );
             int numberhasfile = wl.size();
+
+            if ( numberhasfile > 0 )
+            {
+                try
+                {
+                    CObj lat = wl.get ( 0 );
+                    latest = lat.getNumber ( CObj.CREATEDON );
+                    CObj ear = wl.get ( numberhasfile - 1 );
+                    earliest = ear.getNumber ( CObj.CREATEDON );
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
             wl.close();
 
             String id = Utils.mergeIds ( comid, digofdigs, wholedig );
@@ -88,6 +116,8 @@ public class HasFileCreator
                 fi.setType ( CObj.FILE );
             }
 
+            fi.pushNumber ( CObj.LASTUPDATE, latest );
+            fi.pushNumber ( CObj.CREATEDON, earliest );
             fi.pushNumber ( CObj.NUMBER_HAS, numberhasfile );
             String creatorid = f.getString ( CObj.CREATOR );
 
@@ -175,12 +205,29 @@ public class HasFileCreator
 
     public void updateHasFile()
     {
+        updateHasFile ( null );
+    }
+
+    public void updateHasFile ( UpdateInterface up )
+    {
         CObjList hflst = index.getAllHasFiles();
 
         for ( int c = 0; c < hflst.size(); c++ )
         {
             try
             {
+                if ( c % 10 == 0 && up != null )
+                {
+                    long percent = ( c * 100 ) / hflst.size();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append ( "Update to " );
+                    sb.append ( Wrapper.VERSION );
+                    sb.append ( "    " );
+                    sb.append ( percent );
+                    sb.append ( "% complete." );
+                    up.updateStatus ( sb.toString() );
+                }
+
                 CObj b = hflst.get ( c );
 
                 String creatorid = b.getString ( CObj.CREATOR );
@@ -204,6 +251,54 @@ public class HasFileCreator
                     index.delete ( b );
                     b.setId ( hasfileid );
                     index.index ( b );
+                    updateFileInfo ( b );
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        hflst.close();
+
+    }
+
+    public void updateOnlyHasFile ( UpdateInterface up )
+    {
+        Set<String> doneset = new HashSet<String>();
+        CObjList hflst = index.getAllHasFiles();
+
+        for ( int c = 0; c < hflst.size(); c++ )
+        {
+            try
+            {
+                if ( c % 10 == 0 && up != null )
+                {
+                    long percent = ( c * 100 ) / hflst.size();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append ( "Update to " );
+                    sb.append ( Wrapper.VERSION );
+                    sb.append ( "    " );
+                    sb.append ( percent );
+                    sb.append ( "% complete." );
+                    up.updateStatus ( sb.toString() );
+                }
+
+                CObj b = hflst.get ( c );
+
+                String creatorid = b.getString ( CObj.CREATOR );
+                String comid = b.getString ( CObj.COMMUNITYID );
+                String wdig = b.getString ( CObj.FILEDIGEST );
+                String ddig = b.getString ( CObj.FRAGDIGEST );
+
+                if ( creatorid != null && comid != null &&
+                        wdig != null && ddig != null && !doneset.contains ( ddig ) )
+                {
+                    doneset.add ( ddig );
                     updateFileInfo ( b );
                 }
 

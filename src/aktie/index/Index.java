@@ -1688,6 +1688,11 @@ public class Index implements Runnable
 
     public CObjList getHasFiles ( String comid, String wdig, String pdig )
     {
+        return getHasFiles ( comid, wdig, pdig, null );
+    }
+
+    public CObjList getHasFiles ( String comid, String wdig, String pdig, Sort s )
+    {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
@@ -1710,7 +1715,7 @@ public class Index implements Runnable
                                           0L, Long.MAX_VALUE, false, true );
         builder.add ( nrq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE );
+        return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
     public CObjList getMyHasFiles ( String comid, String wdig, String pdig )
@@ -1770,6 +1775,11 @@ public class Index implements Runnable
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }

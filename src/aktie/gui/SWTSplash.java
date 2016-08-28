@@ -3,6 +3,8 @@ package aktie.gui;
 import java.io.InputStream;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
@@ -50,6 +52,14 @@ public class SWTSplash extends Dialog
     {
         Composite container = ( Composite ) super.createDialogArea ( parent );
         container.setLayout ( new GridLayout ( 1, false ) );
+
+        lblVersion = new Label ( container, SWT.NONE );
+        lblVersion.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        lblVersion.setText ( Wrapper.VERSION );
+        FontData fontData = lblVersion.getFont().getFontData() [0];
+        Font font = new Font ( Display.getDefault(), new FontData ( fontData.getName(), fontData
+                               .getHeight(), SWT.BOLD ) );
+        lblVersion.setFont ( font );
 
         Label lblNewLabel = new Label ( container, SWT.NONE );
         lblNewLabel.setLayoutData ( new GridData ( SWT.CENTER, SWT.CENTER, true, false, 1, 1 ) );
@@ -104,6 +114,7 @@ public class SWTSplash extends Dialog
     }
 
     boolean isclosed = false;
+    private Label lblVersion;
     public void reallyClose()
     {
         if ( !isclosed )
@@ -157,6 +168,29 @@ public class SWTSplash extends Dialog
     protected Point getInitialSize()
     {
         return new Point ( 450, 400 );
+    }
+
+    public void setVersion ( final String st )
+    {
+        Display.getDefault().asyncExec ( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                if ( lblVersion != null && !lblVersion.isDisposed() )
+                {
+                    lblVersion.setText ( st );
+                }
+
+            }
+
+        } );
+
+    }
+
+    public Label getLblVersion()
+    {
+        return lblVersion;
     }
 
 }
