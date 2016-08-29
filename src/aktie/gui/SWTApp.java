@@ -1353,6 +1353,7 @@ public class SWTApp implements UpdateInterface
     private AktiSpamRankDialog spamDialog;
     private PrivateMessageDialog prvMsgDialog;
     private LauncherDialog launcherDialog;
+    private ConnectionDialog connectionDialog;
 
     private PMTab pmTab;
 
@@ -2579,7 +2580,7 @@ public class SWTApp implements UpdateInterface
 
             else
             {
-            	
+
                 sortFileField1 = CObj.docNumber ( CObj.CREATEDON );
                 sortFileReverse = true;
                 sortFileType1 = SortedNumericSortField.Type.LONG;
@@ -3028,6 +3029,8 @@ public class SWTApp implements UpdateInterface
         privComDialog.setMessageDialog ( prvMsgDialog );
         launcherDialog = new LauncherDialog ( shell, this );
         launcherDialog.create();
+        connectionDialog = new ConnectionDialog ( shell, this );
+        connectionDialog.create();
         localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
@@ -6253,7 +6256,7 @@ public class SWTApp implements UpdateInterface
         tbtmConnections.setControl ( composite_8 );
         composite_8.setLayout ( new FillLayout ( SWT.HORIZONTAL ) );
 
-        connectionTable = new ConnectionTable ( composite_8, node );
+        connectionTable = new ConnectionTable ( composite_8, this );
 
         bannerText = new Text ( shell, SWT.BORDER );
         bannerText.setEditable ( false );
@@ -6286,6 +6289,11 @@ public class SWTApp implements UpdateInterface
         {
         return connectionTable;
         }*/
+
+    public ConnectionDialog getConnectionDialog()
+    {
+        return connectionDialog;
+    }
 
     public Table getFileTable()
     {

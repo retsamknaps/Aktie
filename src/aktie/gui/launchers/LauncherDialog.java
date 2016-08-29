@@ -117,7 +117,6 @@ public class LauncherDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                System.out.println ( "BUTTON PRESSED" );
                 model.addLauncher ( program.getText(), extensions.getText() );
                 tableViewer.setInput ( model.getLaunchers() );
                 tableViewer.refresh();

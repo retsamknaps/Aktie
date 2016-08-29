@@ -50,7 +50,7 @@ public class AktieTable<T>
         Making direct use may break type conversion.
         @return The wrapped table.
     */
-    protected Table getTable()
+    public Table getTable()
     {
         return this.table;
     }

@@ -37,7 +37,7 @@ public class ConnectionElement
             if ( ct.getLocalDestination() != null
                     && ct.getLocalDestination().getIdentity() != null )
             {
-                fullremoteid = ct.getLocalDestination().getIdentity().getId();
+                fulllocalid = ct.getLocalDestination().getIdentity().getId();
                 localId = ct.getLocalDestination().getIdentity()
                           .getDisplayName();
             }

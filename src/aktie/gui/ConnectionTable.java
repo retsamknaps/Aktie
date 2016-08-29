@@ -1,17 +1,13 @@
 package aktie.gui;
 
-import java.util.Iterator;
-
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 
-import aktie.Node;
 import aktie.gui.SWTApp.ConnectionCallback;
 import aktie.gui.table.AktieTable;
 import aktie.gui.table.AktieTableCellLabelProvider;
@@ -21,12 +17,12 @@ import aktie.net.ConnectionElement;
 public class ConnectionTable extends AktieTable<ConnectionElement>
 {
 
-    private Node node;
+    private SWTApp app;
 
-    public ConnectionTable ( Composite composite, Node node )
+    public ConnectionTable ( Composite composite, SWTApp a )
     {
         super ( composite, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        this.node = node;
+        this.app = a;
 
         this.setContentProvider ( new ConnectionContentProvider() );
 
@@ -42,36 +38,26 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
         this.addColumn ( "Down file", 200, SWT.RIGHT, new ConnectionColumnFileDown() );
         this.addColumn ( "Up file", 200, SWT.RIGHT, new ConnectionColumnFileUp() );
 
-        Menu menu = this.getMenu();
-
-        // TODO: this could be done more elegant
-        MenuItem closecon = new MenuItem ( menu, SWT.NONE );
-        closecon.setText ( "Close Connection" );
-        closecon.addSelectionListener ( new SelectionListener()
+        final TableViewer conViewer = this.getTableViewer();
+        conViewer.addSelectionChangedListener ( new ISelectionChangedListener()
         {
-            @SuppressWarnings ( "rawtypes" )
             @Override
-            public void widgetSelected ( SelectionEvent e )
+            public void selectionChanged ( SelectionChangedEvent event )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) ConnectionTable.this.getTableViewer().getSelection();
-                Iterator i = sel.iterator();
+                IStructuredSelection selection = conViewer.getStructuredSelection();
+                Object firstElement = selection.getFirstElement();
 
-                while ( i.hasNext() )
+                if ( firstElement != null )
                 {
-                    ConnectionElement ct = ( ConnectionElement ) i.next();
+                    ConnectionElement ct = ( ConnectionElement ) firstElement;
 
                     if ( ct.fulllocalid != null && ct.fullremoteid != null )
                     {
-                        ConnectionTable.this.node.getConnectionManager().closeConnection ( ct.fulllocalid, ct.fullremoteid );
+                        app.getConnectionDialog().open ( ct.fulllocalid, ct.fullremoteid );
                     }
 
                 }
 
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
             }
 
         } );

@@ -787,7 +787,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                         {
                             CObj c = ( CObj ) o;
 
-                            if ( log.getLevel() == Level.INFO )
+                            if ( log.getLevel() == Level.INFO || logit )
                             {
                                 appendOutput ( c.getType() + "=============" );
                                 appendOutput ( "comid:   " + c.getString ( CObj.COMMUNITYID ) );
@@ -871,7 +871,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 catch ( Exception e )
                 {
-                    if ( log.getLevel() == Level.INFO )
+                    if ( log.getLevel() == Level.INFO || logit )
                     {
                         e.printStackTrace();
                     }
@@ -1305,7 +1305,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 lastRead = r.getType();
                 lastReadTime = System.currentTimeMillis();
 
-                if ( log.getLevel() == Level.INFO )
+                if ( log.getLevel() == Level.INFO || logit )
                 {
                     appendInput ( r.getType() + "=============" );
                     appendInput ( "dig:     " + r.getDig() );
@@ -1416,7 +1416,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         catch ( Exception e )
         {
-            if ( log.getLevel() == Level.INFO )
+            if ( log.getLevel() == Level.INFO || logit )
             {
                 e.printStackTrace();
             }
@@ -1459,9 +1459,71 @@ public class ConnectionThread implements Runnable, GuiCallback
     private PrintWriter outtrace;
     private PrintWriter intrace;
 
+    private boolean logit = false;
+    public void toggleLogging()
+    {
+        if ( logit )
+        {
+            appendInput ( "STOP LOGGING!" );
+            appendOutput ( "STOP LOGGING!" );
+        }
+
+        logit = !logit;
+
+        if ( !logit )
+        {
+            PrintWriter it = intrace;
+            intrace = null;
+
+            if ( it != null )
+            {
+                try
+                {
+                    it.close();
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            PrintWriter ot = outtrace;
+            outtrace = null;
+
+            if ( ot != null )
+            {
+                try
+                {
+                    ot.close();
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+        else
+        {
+            appendInput ( "START LOGGING!" );
+            appendOutput ( "START LOGGING!" );
+        }
+
+    }
+
+    public boolean getLogging()
+    {
+        return logit;
+    }
+
     private void appendOutput ( String msg )
     {
-        if ( log.getLevel() == Level.INFO )
+        if ( log.getLevel() == Level.INFO || logit )
         {
             if ( endDestination != null )
             {
@@ -1508,7 +1570,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     private void appendInput ( String msg )
     {
-        if ( log.getLevel() == Level.INFO )
+        if ( log.getLevel() == Level.INFO || logit )
         {
             if ( endDestination != null )
             {
