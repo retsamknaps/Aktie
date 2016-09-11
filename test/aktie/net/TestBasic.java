@@ -475,6 +475,9 @@ public class TestBasic
         CObj subreq0 = new CObj();
         subreq0.setType ( CObj.CON_REQ_SUBS );
         subreq0.pushString ( CObj.COMMUNITYID, com0.getDig() );
+        subreq0.pushString ( CObj.CREATOR, n1.getId());
+        subreq0.pushNumber(CObj.FIRSTNUM, 0);
+        subreq0.pushNumber(CObj.LASTNUM, Long.MAX_VALUE);
 
         Tn0.getTestReq().enqueue ( subreq0 );
 
@@ -487,7 +490,11 @@ public class TestBasic
         CObj subreq1 = new CObj();
         subreq1.setType ( CObj.CON_REQ_SUBS );
         subreq1.pushString ( CObj.COMMUNITYID, com0.getDig() );
+        subreq1.pushString ( CObj.CREATOR, n0.getId());
+        subreq1.pushNumber(CObj.FIRSTNUM, 0);
+        subreq1.pushNumber(CObj.LASTNUM, Long.MAX_VALUE);
 
+        System.out.println("Test request subscriptions...");
         Tn1.getTestReq().enqueue ( subreq1 );
 
         o1 = pollForData ( Tn1 );

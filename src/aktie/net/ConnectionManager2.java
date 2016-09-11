@@ -282,12 +282,16 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             for ( String memid : e.getValue() )
             {
                 IdentityData id = identityManager.getIdentity ( memid );
-                CObj cr = new CObj();
-                cr.setType ( CObj.CON_REQ_SUBS );
-                cr.pushString ( CObj.CREATOR, id.getId() );
-                cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
-                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                q.add ( cr );
+                if (id != null) 
+                {
+                	CObj cr = new CObj();
+                	cr.setType ( CObj.CON_REQ_SUBS );
+                	cr.pushString ( CObj.CREATOR, id.getId() );
+                	cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
+                	cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                	q.add ( cr );
+                }
+
             }
 
         }

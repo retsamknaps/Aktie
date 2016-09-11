@@ -358,11 +358,15 @@ public class ConnectionThread implements Runnable, GuiCallback
             {
                 ConcurrentLinkedQueue<CObj> memreq = conMan.getPrivSubRequests().get ( comid );
 
-                for ( CObj req : memreq )
+                if (memreq != null) 
                 {
-                    enqueue ( req );
+                	for ( CObj req : memreq )
+                	{
+                		enqueue ( req );
+                	}
+                	
                 }
-
+                
             }
 
         }

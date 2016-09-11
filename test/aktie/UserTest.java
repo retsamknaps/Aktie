@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
 
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.junit.Test;
@@ -382,5 +384,11 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
         // TODO Auto-generated method stub
 
     }
+
+	@Override
+	public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

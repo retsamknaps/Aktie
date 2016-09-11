@@ -1,5 +1,7 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -12,6 +14,8 @@ import aktie.utils.SubscriptionValidator;
 
 public class InSubProcessor extends GenericProcessor
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private HH2Session session;
     private Index index;
@@ -66,6 +70,7 @@ public class InSubProcessor extends GenericProcessor
                             //discard.
                             if ( seqnum > co.getNumber ( CObj.SEQNUM ) )
                             {
+                            	log.info("Newer version found!");
                                 update = true;
                             }
 
@@ -76,6 +81,7 @@ public class InSubProcessor extends GenericProcessor
                             //We need to see if this user can subscribe.
                             if ( subvalidator.canSubscribe ( comid, creatorid ) )
                             {
+                            	log.info("New subscription, can subscribe.");
                                 update = true;
                             }
 
