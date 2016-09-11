@@ -87,7 +87,7 @@ public class Node
         NewFileProcessor nfp = new NewFileProcessor ( session, index, spamtool, usrCallback ) ;
         requestHandler = new RequestFileHandler ( session, Wrapper.DLDIR, nfp, index );
         conMan = new ConnectionManager2 ( session, index, requestHandler, identManager, usrCallback );
-        userQueue = new ProcessQueue();
+        userQueue = new ProcessQueue ( "userQueue" );
 
 
         hasFileCreator = new HasFileCreator ( session, index, spamtool );

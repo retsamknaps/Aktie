@@ -189,11 +189,13 @@ public class CObjList implements Closeable, AutoCloseable
     }
 
     @Override
-    public void close()
+
+    public synchronized void close()
     {
         if ( searcher != null )
         {
             searcher.closeSearch();
+            searcher = null;
         }
 
         synchronized ( alllists )

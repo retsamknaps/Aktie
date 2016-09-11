@@ -78,6 +78,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //List of objects to push to anyone
     public static int MAX_PUB_PUSHES = 10;
     private ConcurrentLinkedQueue<CObj> pubPushes;
+    //Community dig -> List of subscription requests from members
+    private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> privSubRequests;
 
     //key: remotedest
     private ConcurrentMap<String, Long> recentAttempts;
@@ -86,12 +88,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //Requests only sent to subscribers of communities
     public int MAX_COM_REQUESTS = 100;
     private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> communityRequests;
-
-    //Membership update requests for private communites
-    //Only members can be sent request.  For public communities membership
-    //requests can be sent to anyone
-    public int MAX_PRIV_REQUESTS = 100;
-    private ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> subPrivRequests;
 
     //Requests that can be sent to any node
     public int MAX_PUB_REQUESTS = 1000;
@@ -116,8 +112,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public ConnectionManager2 ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
                                 GuiCallback cb )
     {
+        privSubRequests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
         communityRequests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
-        subPrivRequests = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
         nonCommunityRequests = new ConcurrentLinkedQueue<CObj>();
         communityTime = new ConcurrentHashMap<String, Long>();
         destinations = new HashMap<String, DestinationThread>();
@@ -166,50 +162,161 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return fileManager.getLastFileUpdate();
     }
 
+    public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests()
+    {
+        return privSubRequests;
+    }
+
+    private void gatherPrivSubRequests()
+    {
+        Set<String> comids = new HashSet<String>();
+
+        for ( String mid : getMyIdMap().keySet() )
+        {
+            CObjList sl = index.getIdentityMemberships ( mid );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+                    String sbid = sb.getPrivate ( CObj.COMMUNITYID );
+
+                    if ( sbid != null )
+                    {
+                        comids.add ( sbid );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+            sl = index.getIdentityPrivateCommunities ( mid );
+
+            for ( int c = 0; c < sl.size(); c++ )
+            {
+                try
+                {
+                    CObj sb = sl.get ( c );
+
+                    if ( sb != null && sb.getDig() != null )
+                    {
+                        comids.add ( sb.getDig() );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            sl.close();
+        }
+
+        ConcurrentMap<String, Set<String>> tempComMemberships =
+            new ConcurrentHashMap<String, Set<String>>() ;
+
+        for ( String comid : comids )
+        {
+            CObj comc = index.getCommunity ( comid );
+
+            if ( comc != null )
+            {
+                pushMember ( tempComMemberships, comid,
+                             comc.getString ( CObj.CREATOR ) );
+            }
+
+            CObjList mems = index.getMemberships ( comid, null );
+
+            for ( int c = 0; c < mems.size(); c++ )
+            {
+                try
+                {
+                    CObj mem = mems.get ( c );
+
+                    if ( mem != null )
+                    {
+                        String memid = mem.getPrivate ( CObj.MEMBERID );
+
+                        if ( memid != null )
+                        {
+                            pushMember ( tempComMemberships, comid, memid );
+                        }
+
+                    }
+
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            mems.close();
+        }
+
+        ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> tmpPrivSubList = new
+        ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>();
+
+        for ( Entry<String, Set<String>> e : tempComMemberships.entrySet() )
+        {
+            ConcurrentLinkedQueue<CObj> q = tmpPrivSubList.get ( e.getKey() );
+
+            if ( q == null )
+            {
+                q = new ConcurrentLinkedQueue<CObj>();
+                tmpPrivSubList.put ( e.getKey(), q );
+            }
+
+            for ( String memid : e.getValue() )
+            {
+                IdentityData id = identityManager.getIdentity ( memid );
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_SUBS );
+                cr.pushString ( CObj.CREATOR, id.getId() );
+                cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                q.add ( cr );
+            }
+
+        }
+
+        privSubRequests = tmpPrivSubList;
+    }
+
+    private void pushMember ( Map<String, Set<String>> cm, String com, String mid )
+    {
+        if ( com != null && mid != null )
+        {
+            Set<String> ms = cm.get ( com );
+
+            if ( ms == null )
+            {
+                ms = new HashSet<String>();
+                cm.put ( com, ms );
+            }
+
+            ms.add ( mid );
+        }
+
+    }
+
     private boolean procComQueue()
     {
         int qsize = 0;
         int lastsize = -1;
         boolean gonext = false;
-
-        CObjList chlst = index.getPublicCommunities ( null );
-        List<CObj> pubcoms = new LinkedList<CObj>();
-
-        for ( int c = 0; c < chlst.size(); c++ )
-        {
-            try
-            {
-                pubcoms.add ( chlst.get ( c ) );
-            }
-
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        chlst.close();
-
-        //Private sub updates, get all my private communities
-        List<CObj> myprivcoms = new LinkedList<CObj>();
-        CObjList mymlst = index.getMyValidMemberships ( null );
-
-        for ( int c = 0; c < mymlst.size(); c++ )
-        {
-            try
-            {
-                myprivcoms.add ( mymlst.get ( c ) );
-            }
-
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        mymlst.close();
 
         //My subs
         CObjList mslist = index.getMySubscriptions();
@@ -370,52 +477,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //initial connection.  No need to enqueue identity updates
             //here.
 
-            //Private sub updates, get all my private communities
-            //CObjList comlist = index.getMyValidMemberships ( null );
-
-            for ( int c = 0; c < myprivcoms.size(); c++ )
-            {
-                log.info ( "procComQueue loop " + c );
-                CObj com = myprivcoms.get ( c );
-                ConcurrentLinkedQueue<CObj> r = subPrivRequests.get ( com.getDig() );
-
-                if ( r == null )
-                {
-                    r = new ConcurrentLinkedQueue<CObj>();
-                    subPrivRequests.put ( com.getDig(), r );
-                }
-
-                if ( r.size() < MAX_PRIV_REQUESTS )
-                {
-                    List<CommunityMember> cl = identityManager.claimSubUpdate ( com.getDig(), 10 );
-                    Iterator<CommunityMember> il = cl.iterator();
-
-                    //Must add all of them because we've already claimed them
-                    while ( il.hasNext() )
-                    {
-                        CommunityMember cm = il.next();
-                        CObj cr = new CObj();
-                        cr.setType ( CObj.CON_REQ_SUBS );
-                        cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                        cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
-                        cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                        r.add ( cr );
-                        gonext = true;
-                        qsize++;
-                        Long tm = communityTime.get ( com.getDig() );
-
-                        if ( tm == null )
-                        {
-                            tm = System.currentTimeMillis();
-                            communityTime.put ( com.getDig(), tm );
-                        }
-
-                    }
-
-                }
-
-            }
-
             //CObjList slist = index.getMySubscriptions();
 
             for ( int c = 0; c < mysubs.size(); c++ )
@@ -554,6 +615,27 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             }
 
+            //Membership updates
+            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
+            {
+                List<IdentityData> ci = identityManager.claimSubUpdate ( 10 );
+                Iterator<IdentityData> il = ci.iterator();
+
+                while ( il.hasNext() )
+                {
+                    IdentityData id = il.next();
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_SUBS );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    nonCommunityRequests.add ( cr );
+                    qsize++;
+                    gonext = true;
+                }
+
+            }
+
             if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
             {
                 List<PrivateMsgIdentity> cl = identityManager.claimPrvtIdentUpdate ( 10 );
@@ -590,42 +672,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     nonCommunityRequests.add ( cr );
                     gonext = true;
                     qsize++;
-                }
-
-            }
-
-            //Subscription updates for public coms
-            if ( nonCommunityRequests.size() < MAX_PUB_REQUESTS )
-            {
-                for ( int c = 0; c < pubcoms.size() &&
-                        nonCommunityRequests.size() < MAX_PUB_REQUESTS; c++ )
-                {
-                    log.info ( "procComQueue loop BB " + c );
-                    CObj com = pubcoms.get ( c );
-                    List<CommunityMember> cl = identityManager.claimSubUpdate ( com.getDig(), 10 );
-                    Iterator<CommunityMember> il = cl.iterator();
-
-                    while ( il.hasNext() )
-                    {
-                        CommunityMember cm = il.next();
-                        CObj cr = new CObj();
-                        cr.setType ( CObj.CON_REQ_SUBS );
-                        cr.pushString ( CObj.COMMUNITYID, cm.getCommunityId() );
-                        cr.pushNumber ( CObj.FIRSTNUM, cm.getLastSubscriptionNumber() + 1L );
-                        cr.pushString ( CObj.CREATOR, cm.getMemberId() );
-                        nonCommunityRequests.add ( cr );
-                        qsize++;
-                        gonext = true;
-                        Long tm = communityTime.get ( com.getDig() );
-
-                        if ( tm == null )
-                        {
-                            tm = System.currentTimeMillis();
-                            communityTime.put ( com.getDig(), tm );
-                        }
-
-                    }
-
                 }
 
             }
@@ -767,7 +813,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             {
                 ci.remove();
                 communityRequests.remove ( e.getKey() );
-                subPrivRequests.remove ( e.getKey() );
             }
 
         }
@@ -874,47 +919,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         return r;
-    }
-
-    private Object nextPrivSubRequest ( Set<String> mems )
-    {
-        Object n = null;
-        long ct = System.currentTimeMillis();
-        List<String> sl = new ArrayList<String>();
-        sl.addAll ( mems );
-        int r[] = randomList ( sl.size() );
-
-        for ( int i = 0; i < r.length && n == null; i++ )
-        {
-            int ix = r[i];
-            String sbs = sl.get ( ix );
-            ConcurrentLinkedQueue<CObj> requests = subPrivRequests.get ( sbs );
-
-            if ( requests != null )
-            {
-                if ( requests.size() == 0 )
-                {
-                    subPrivRequests.remove ( sbs );
-                }
-
-                else
-                {
-                    n = requests.poll();
-
-                    if ( n != null )
-                    {
-                        communityTime.put ( sbs, ct );
-                        currentActiveSubPrivRequests.put ( sbs, ct );
-
-                    }
-
-                }
-
-            }
-
-        }
-
-        return n;
     }
 
     private Map<String, CObj> getMyIdMap()
@@ -1072,7 +1076,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         {
                             dlst.add ( dt );
                         }
-
 
                     }
 
@@ -1388,139 +1391,80 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         //======================================================
-        // Attempt subscription update connections for private communities
-        ct = System.currentTimeMillis();
-        cuttime = ct - MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION;
-        comids = new HashSet<String>();
+        //Attempt connections to private members of communities
+        //First gather a list of all possible identities we might
+        //want to connect to based for private communities based
+        //on the privSubRequests.
+        //attemptlist = identity > set of private communities
+        Map<String, Set<String>> attemptlist = new HashMap<String, Set<String>>();
+        //list of identities we can select from randomly
+        List<String> memlst = new LinkedList<String>();
 
-        comids.addAll ( subPrivRequests.keySet() );
-        comids.addAll ( membershipPushes.keySet() );
-
-        is = comids.iterator();
-
-        while ( is.hasNext() && con < ATTEMPT_CONNECTIONS )
+        for ( Entry<String, ConcurrentLinkedQueue<CObj>> e : privSubRequests.entrySet() )
         {
-            String comid = is.next();
-            //First make sure we don't currently have a connection
-            //actively servicing subscription updates for this community
-            Long st = currentActiveSubPrivRequests.get ( comid );
-
-            if ( st == null || st <= cuttime )
+            for ( CObj co : e.getValue() )
             {
-                //Get the list of requests for this community
-                ConcurrentLinkedQueue<CObj> lq = subPrivRequests.get ( comid );
+                String cr = co.getString ( CObj.CREATOR );
 
-                if ( lq != null )
+                if ( cr != null )
                 {
-                    CObj c = lq.peek();
+                    memlst.add ( cr );
+                    Set<String> cs = attemptlist.get ( cr );
 
-                    if ( c != null )
+                    if ( cs == null )
                     {
-                        //Get the community so we can try the creator
-                        CObj com = index.getCommunity ( comid );
-                        CObj comidentity = null;
+                        cs = new HashSet<String>();
+                        attemptlist.put ( cr, cs );
+                    }
 
-                        if ( com != null )
-                        {
-                            String creator = com.getString ( CObj.CREATOR );
+                    cs.add ( e.getKey() );
+                }
 
-                            if ( creator != null )
-                            {
-                                comidentity = index.getIdentity ( creator );
-                            }
+            }
 
-                        }
+        }
 
-                        List<DestinationThread> dlst = null;
-                        ConcurrentLinkedQueue<CObj> pushlist = membershipPushes.get ( comid );
+        //Now to randomly try to connect to an identity
+        int rl[] = randomList ( memlst.size() );
+        Map<String, List<DestinationThread>> comThreads = new HashMap<String, List<DestinationThread>>();
 
-                        if ( pushlist != null )
-                        {
-                            dlst = new LinkedList<DestinationThread>();
-                            Iterator<CObj> pi = pushlist.iterator();
+        for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS ; c++ )
+        {
+            String memberid = memlst.get ( rl[c] );
+            CObj identity = getIdentity ( memberid );
+            Set<String> memcoms = attemptlist.get ( memberid );
+            Iterator<String> it = memcoms.iterator();
+            List<DestinationThread> dl = null;
 
-                            while ( pi.hasNext() )
-                            {
-                                CObj cobj = pi.next();
-                                String creator = cobj.getString ( CObj.CREATOR );
+            while ( it.hasNext() && dl == null )
+            {
+                String comid = it.next();
+                List<DestinationThread> dlt = comThreads.get ( comid );
 
-                                if ( creator != null )
-                                {
-                                    DestinationThread dt = getMyDestinationThread ( myids, creator );
+                if ( dlt == null )
+                {
+                    dlt = findAllMyDestinationsForCommunity ( myids, comid );
+                    comThreads.put ( comid, dlt );
+                }
 
-                                    if ( dt != null && !dlst.contains ( dt ) )
-                                    {
-                                        dlst.add ( dt );
-                                    }
+                if ( dlt.size() > 0 )
+                {
+                    dl = dlt;
+                }
 
-                                }
+            }
 
-                            }
+            if ( dl != null )
+            {
+                Iterator<DestinationThread> dit = dl.iterator();
 
-                        }
+                while ( dit.hasNext() && con < ATTEMPT_CONNECTIONS )
+                {
+                    DestinationThread dt = dit.next();
 
-                        if ( dlst == null || dlst.size() == 0 )
-                        {
-                            dlst = findAllMyDestinationsForCommunity ( myids, comid );
-                        }
-
-                        Iterator<DestinationThread> dti = dlst.iterator();
-
-                        while ( dti.hasNext() && con < ATTEMPT_CONNECTIONS )
-                        {
-                            DestinationThread dt = dti.next();
-
-                            if ( dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS )
-                            {
-                                //Attempt connection to creator
-                                if ( comidentity != null )
-                                {
-                                    if ( attemptConnection ( dt, comidentity, false, myids ) )
-                                    {
-                                        con++;
-                                    }
-
-                                }
-
-                                CObjList memlst = index.getMemberships ( comid, null );
-                                int ridx[] = randomList ( memlst.size() );
-
-                                for ( int c0 = 0; c0 < memlst.size() && con < ATTEMPT_CONNECTIONS; c0++ )
-                                {
-                                    try
-                                    {
-                                        CObj membership = memlst.get ( ridx[c0] );
-                                        String memid = membership.getString ( CObj.MEMBERID );
-
-                                        if ( memid != null )
-                                        {
-                                            CObj memidentity = index.getIdentity ( memid );
-
-                                            if ( memidentity != null )
-                                            {
-                                                if ( attemptConnection ( dt, memidentity, false, myids ) )
-                                                {
-                                                    con++;
-                                                }
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                    catch ( Exception e )
-                                    {
-                                        e.printStackTrace();
-                                    }
-
-                                }
-
-                                memlst.close();
-                            }
-
-                        }
-
+                    if ( attemptConnection ( dt, identity, false, myids ) )
+                    {
+                        con++;
                     }
 
                 }
@@ -1788,7 +1732,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         if ( n == null )
         {
-            int tnd = Utils.Random.nextInt ( 3 );
+            int tnd = Utils.Random.nextInt ( 2 );
 
             if ( tnd == 0 )
             {
@@ -1796,11 +1740,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             }
 
             if ( n == null || tnd == 1 )
-            {
-                n = nextPrivSubRequest ( members );
-            }
-
-            if ( n == null || tnd == 2 )
             {
                 n = nonCommunityRequests.poll();
             }
@@ -1810,11 +1749,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         if ( n == null )
         {
             n = nextCommunityRequest ( subs );
-        }
-
-        if ( n == null )
-        {
-            n = nextPrivSubRequest ( members );
         }
 
         if ( n == null )
@@ -2307,6 +2241,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 if ( System.currentTimeMillis() >= nextdecode )
                 {
                     log.info ( "MANAGER2 LOOP!!!!!!!!!!!!!!!!! 4" );
+                    gatherPrivSubRequests();
                     decodeMemberships();
                     clearRecentConnections();
                     checkConnections();

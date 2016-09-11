@@ -10,6 +10,8 @@ import aktie.user.IdentityManager;
 public abstract class AbstractSequence<T>
 {
 
+    public static int MAXPRIORITY = 20;
+
     public T Obj;
     private Class<T> Typ;
     private HH2Session session;
@@ -81,8 +83,18 @@ public abstract class AbstractSequence<T>
                 setUpdateCycle ( 0 );
             }
 
+            if ( getStatus() == CommunityMember.UPDATE &&
+                    getUpdatePriority() < MAXPRIORITY )
+            {
+                setUpdatePriority ( getUpdatePriority() + 1 );
+            }
+
+            else
+            {
+                setUpdatePriority ( priority );
+            }
+
             setStatus ( CommunityMember.UPDATE );
-            setUpdatePriority ( priority );
             setUpdateCycle ( getUpdateCycle() + 1 );
             s.merge ( Obj );
 

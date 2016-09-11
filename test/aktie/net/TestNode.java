@@ -32,7 +32,7 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
     private RequestFileHandler requestFile;
     private TestReq req = new TestReq();
     private Net net;
-    private ProcessQueue userQueue = new ProcessQueue();
+    private ProcessQueue userQueue = new ProcessQueue ( "testQueue" );
     private ConcurrentLinkedQueue<Object> updateQueue = new ConcurrentLinkedQueue<Object>();
 
     public TestNode ( String wkdir )

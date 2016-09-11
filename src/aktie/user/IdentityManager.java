@@ -27,6 +27,7 @@ import aktie.sequences.PostSequence;
 import aktie.sequences.PrivIdentSequence;
 import aktie.sequences.PrivMsgSequence;
 import aktie.sequences.SpamSequence;
+import aktie.sequences.SubSequence;
 
 public class IdentityManager
 {
@@ -739,255 +740,6 @@ public class IdentityManager
     }
 
     @SuppressWarnings ( "unchecked" )
-    public CommunityMember claimSubUpdate ( String thisid, Map<String, Integer> comids, int rereqperiod )
-    {
-        Session s = null;
-
-        try
-        {
-            s = session.getSession();
-            s.getTransaction().begin();
-            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
-                                      + "x.subscriptionStatus = :st ORDER BY "
-                                      + "x.subscriptionUpdatePriority DESC, "
-                                      + "x.lastSubscriptionUpdate ASC" );
-            q.setParameter ( "st", CommunityMember.UPDATE );
-            //q.setMaxResults ( 100 );
-            CommunityMember cm = null;
-            List<CommunityMember> r = q.list();
-            Iterator<CommunityMember> i = r.iterator();
-
-            while ( i.hasNext() && cm == null )
-            {
-                CommunityMember c = i.next();
-
-                Integer nummem = comids.get ( c.getCommunityId() );
-
-                if ( nummem != null )
-                {
-                    //If only 1 member (2 counting creator), then just always get
-                    //update from other member.
-                    if ( nummem <= 1 )
-                    {
-                        cm = c;
-                    }
-
-                    //More than 1(2) members, get update from someone other than
-                    //same person got last one.  if updates have been requested
-                    //a few times sense the last time we got updates then ok
-                    else if ( ( !thisid.equals ( c.getLastSubscriptionUpdateFrom() ) ) ||
-                              c.getSubscriptionUpdateCycle() > rereqperiod )
-                    {
-                        cm = c;
-                    }
-
-                }
-
-            }
-
-            if ( cm != null )
-            {
-                cm.setSubscriptionStatus ( CommunityMember.DONE );
-                cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
-                cm.setSubscriptionUpdateCycle ( 0 );
-                cm.setLastSubscriptionUpdateFrom ( thisid );
-                s.merge ( cm );
-            }
-
-            s.getTransaction().commit();
-            s.close();
-            return cm;
-        }
-
-        catch ( Exception e )
-        {
-            ////e.printStackTrace();
-
-            if ( s != null )
-            {
-                try
-                {
-                    if ( s.getTransaction().isActive() )
-                    {
-                        s.getTransaction().rollback();
-                    }
-
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-                try
-                {
-                    s.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-        return null;
-    }
-
-    @SuppressWarnings ( "unchecked" )
-    public List<CommunityMember> claimSubUpdate ( String comid, int max )
-    {
-        List<CommunityMember> rl = new LinkedList<CommunityMember>();
-        Session s = null;
-
-        try
-        {
-            s = session.getSession();
-            s.getTransaction().begin();
-            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
-                                      + "x.subscriptionStatus = :st AND "
-                                      + "x.communityId = :comid ORDER BY "
-                                      + "x.subscriptionUpdatePriority DESC, "
-                                      + "x.lastSubscriptionUpdate ASC" );
-            q.setParameter ( "st", CommunityMember.UPDATE );
-            q.setParameter ( "comid", comid );
-            q.setMaxResults ( max );
-            CommunityMember cm = null;
-            List<CommunityMember> r = q.list();
-            Iterator<CommunityMember> i = r.iterator();
-
-            while ( i.hasNext() )
-            {
-                cm = i.next();
-
-                if ( cm != null )
-                {
-                    cm.setSubscriptionStatus ( CommunityMember.DONE );
-                    cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
-                    cm.setSubscriptionUpdateCycle ( 0 );
-                    cm.setLastSubscriptionUpdateFrom ( "" );
-                    s.merge ( cm );
-                    rl.add ( cm );
-                }
-
-            }
-
-            s.getTransaction().commit();
-            s.close();
-        }
-
-        catch ( Exception e )
-        {
-            ////e.printStackTrace();
-
-            if ( s != null )
-            {
-                try
-                {
-                    if ( s.getTransaction().isActive() )
-                    {
-                        s.getTransaction().rollback();
-                    }
-
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-                try
-                {
-                    s.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-        return rl;
-    }
-
-    @SuppressWarnings ( "unchecked" )
-    public List<CommunityMember> claimSubUpdate ( int max )
-    {
-        Session s = null;
-        List<CommunityMember> rl = new LinkedList<CommunityMember>();
-
-        try
-        {
-            s = session.getSession();
-            s.getTransaction().begin();
-            Query q = s.createQuery ( "SELECT x FROM CommunityMember x WHERE "
-                                      + "x.subscriptionStatus = :st ORDER BY "
-                                      + "x.subscriptionUpdatePriority DESC, "
-                                      + "x.lastSubscriptionUpdate ASC" );
-            q.setParameter ( "st", CommunityMember.UPDATE );
-            q.setMaxResults ( max );
-            CommunityMember cm = null;
-            List<CommunityMember> r = q.list();
-            Iterator<CommunityMember> i = r.iterator();
-
-            while ( i.hasNext() )
-            {
-                cm = i.next();
-
-                if ( cm != null )
-                {
-                    cm.setSubscriptionStatus ( CommunityMember.DONE );
-                    cm.setLastSubscriptionUpdate ( System.currentTimeMillis() );
-                    cm.setSubscriptionUpdateCycle ( 0 );
-                    cm.setLastSubscriptionUpdateFrom ( "" );
-                    s.merge ( cm );
-                    rl.add ( cm );
-                }
-
-            }
-
-
-            s.getTransaction().commit();
-            s.close();
-        }
-
-        catch ( Exception e )
-        {
-            ////e.printStackTrace();
-
-            if ( s != null )
-            {
-                try
-                {
-                    if ( s.getTransaction().isActive() )
-                    {
-                        s.getTransaction().rollback();
-                    }
-
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-                try
-                {
-                    s.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-        return rl;
-    }
-
-    @SuppressWarnings ( "unchecked" )
     public IdentityData claimMemberUpdate ( String fromid, int upcycle )
     {
         Session s = null;
@@ -1095,6 +847,81 @@ public class IdentityManager
                     id.setMemberStatus ( IdentityData.DONE );
                     id.setMemberUpdateCycle ( 0 );
                     id.setLastMemberUpdateFrom ( "" );
+                    s.merge ( id );
+                    rl.add ( id );
+                }
+
+            }
+
+            s.getTransaction().commit();
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            ////e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return rl;
+    }
+
+    @SuppressWarnings ( "unchecked" )
+    public List<IdentityData> claimSubUpdate ( int max )
+    {
+        List<IdentityData> rl = new LinkedList<IdentityData>();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            Query q = s.createQuery ( "SELECT x FROM IdentityData x WHERE x.mine = false AND "
+                                      + "x.subStatus = :st ORDER BY "
+                                      + "x.subUpdatePriority DESC, "
+                                      + "x.lastSubUpdate ASC" );
+            q.setParameter ( "st", IdentityData.UPDATE );
+            q.setMaxResults ( 1 );
+            List<IdentityData> r = q.list();
+            IdentityData id = null;
+            Iterator<IdentityData> i = r.iterator();
+
+            while ( i.hasNext() )
+            {
+                id = i.next();
+
+                if ( id != null )
+                {
+                    id.setLastSubUpdate ( System.currentTimeMillis() );
+                    id.setSubStatus ( IdentityData.DONE );
+                    id.setSubUpdateCycle ( 0 );
+                    id.setLastSubUpdateFrom ( "" );
                     s.merge ( id );
                     rl.add ( id );
                 }
@@ -2540,26 +2367,72 @@ public class IdentityManager
 
     }
 
-    public void requestAllSubscriptions ( int priority )
+    @SuppressWarnings ( "unchecked" )
+    public void requestAllSubscriptions ( )
     {
-        CObjList coml = index.getValidCommunities();
+        List<String> myids = getMyIds();
+        Session s = null;
 
-        for ( int c = 0; c < coml.size(); c++ )
+        try
         {
-            try
+            s = session.getSession();
+            Query q = s.createQuery ( "SELECT x FROM IdentityData x WHERE x.mine = false" );
+            List<String> ids = new LinkedList<String>();
+            List<IdentityData> idl = q.list();
+
+            for ( IdentityData i : idl )
             {
-                CObj com = coml.get ( c );
-                requestSubscriptions ( com.getDig(), priority );
+                String id = i.getId();
+
+                if ( id != null && !myids.contains ( id ) )
+                {
+                    ids.add ( i.getId() );
+                }
+
             }
 
-            catch ( IOException e )
+            for ( String i : ids )
             {
-                //e.printStackTrace();
+                SubSequence mseq = new SubSequence ( session );
+                mseq.request ( s, i, 5, i );
+
+            }
+
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
             }
 
         }
 
-        coml.close();
     }
 
     private List<String> getMembers ( String comid )
@@ -2628,94 +2501,6 @@ public class IdentityManager
         }
 
         return r;
-    }
-
-    public void requestSubscriptions ( String comid, int priority )
-    {
-        List<String> myid = getMyIds();
-        List<String> mems = getMembers ( comid );
-        Session s = null;
-
-        try
-        {
-            s = session.getSession();
-            Iterator<String> i = mems.iterator();
-
-            while ( i.hasNext() )
-            {
-                String id = null;
-                String mid = i.next();
-
-                if ( !myid.contains ( mid ) )
-                {
-                    id = Utils.mergeIds ( mid, comid );
-                }
-
-                if ( id != null )
-                {
-                    s.getTransaction().begin();
-                    CommunityMember cm = ( CommunityMember ) s.get ( CommunityMember.class, id );
-
-                    if ( cm != null )
-                    {
-                        cm.setSubscriptionStatus ( CommunityMember.UPDATE );
-                        cm.setSubscriptionUpdatePriority ( priority );
-                        cm.setSubscriptionUpdateCycle ( cm.getSubscriptionUpdateCycle() + 1 );
-                        s.merge ( cm );
-                    }
-
-                    else
-                    {
-                        cm = new CommunityMember();
-                        cm.setId ( id );
-                        cm.setCommunityId ( comid );
-                        cm.setMemberId ( mid );
-                        cm.setSubscriptionStatus ( CommunityMember.UPDATE );
-                        cm.setSubscriptionUpdatePriority ( priority );
-                        cm.setSubscriptionUpdateCycle ( 1 );
-                        s.persist ( cm );
-                    }
-
-                    s.getTransaction().commit();
-                }
-
-            }
-
-            s.close();
-        }
-
-        catch ( Exception e )
-        {
-            //e.printStackTrace();
-
-            if ( s != null )
-            {
-                try
-                {
-                    if ( s.getTransaction().isActive() )
-                    {
-                        s.getTransaction().rollback();
-                    }
-
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-                try
-                {
-                    s.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
     }
 
     public IdentityData getIdentityData ( String id )

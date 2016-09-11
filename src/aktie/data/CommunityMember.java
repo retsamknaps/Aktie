@@ -84,15 +84,16 @@ public class CommunityMember
         this.memberId = memberId;
     }
 
-    public long getLastSubscriptionNumber()
-    {
-        return lastSubscriptionNumber;
-    }
+    //    public long getLastSubscriptionNumber()
+    //    {
+    //        return lastSubscriptionNumber;
+    //    }
 
-    public void setLastSubscriptionNumber ( long lastSubscriptionNumber )
-    {
-        this.lastSubscriptionNumber = lastSubscriptionNumber;
-    }
+    //
+    //    public void setLastSubscriptionNumber ( long lastSubscriptionNumber )
+    //    {
+    //        this.lastSubscriptionNumber = lastSubscriptionNumber;
+    //    }
 
     public long getLastPostNumber()
     {
@@ -114,25 +115,28 @@ public class CommunityMember
         this.lastFileNumber = lastFileNumber;
     }
 
-    public long getLastSubscriptionUpdate()
-    {
-        return lastSubscriptionUpdate;
-    }
+    //    public long getLastSubscriptionUpdate()
+    //    {
+    //        return lastSubscriptionUpdate;
+    //    }
 
-    public void setLastSubscriptionUpdate ( long lastSubscriptionUpdate )
-    {
-        this.lastSubscriptionUpdate = lastSubscriptionUpdate;
-    }
+    //
+    //    public void setLastSubscriptionUpdate ( long lastSubscriptionUpdate )
+    //    {
+    //        this.lastSubscriptionUpdate = lastSubscriptionUpdate;
+    //    }
 
-    public int getSubscriptionStatus()
-    {
-        return subscriptionStatus;
-    }
+    //
+    //    public int getSubscriptionStatus()
+    //    {
+    //        return subscriptionStatus;
+    //    }
 
-    public void setSubscriptionStatus ( int subscriptionStatus )
-    {
-        this.subscriptionStatus = subscriptionStatus;
-    }
+    //
+    //    public void setSubscriptionStatus ( int subscriptionStatus )
+    //    {
+    //        this.subscriptionStatus = subscriptionStatus;
+    //    }
 
     public long getLastPostUpdate()
     {
@@ -174,15 +178,16 @@ public class CommunityMember
         this.fileStatus = fileStatus;
     }
 
-    public int getSubscriptionUpdatePriority()
-    {
-        return subscriptionUpdatePriority;
-    }
+    //    public int getSubscriptionUpdatePriority()
+    //    {
+    //        return subscriptionUpdatePriority;
+    //    }
 
-    public void setSubscriptionUpdatePriority ( int subscriptionUpdatePriority )
-    {
-        this.subscriptionUpdatePriority = subscriptionUpdatePriority;
-    }
+    //
+    //    public void setSubscriptionUpdatePriority ( int subscriptionUpdatePriority )
+    //    {
+    //        this.subscriptionUpdatePriority = subscriptionUpdatePriority;
+    //    }
 
     public int getPostUpdatePriority()
     {
@@ -204,15 +209,16 @@ public class CommunityMember
         this.fileUpdatePriority = fileUpdatePriority;
     }
 
-    public long getNextClosestSubscriptionNumber()
-    {
-        return nextClosestSubscriptionNumber;
-    }
+    //    public long getNextClosestSubscriptionNumber()
+    //    {
+    //        return nextClosestSubscriptionNumber;
+    //    }
 
-    public void setNextClosestSubscriptionNumber ( long nextClosestSubscriptionNumber )
-    {
-        this.nextClosestSubscriptionNumber = nextClosestSubscriptionNumber;
-    }
+    //
+    //    public void setNextClosestSubscriptionNumber ( long nextClosestSubscriptionNumber )
+    //    {
+    //        this.nextClosestSubscriptionNumber = nextClosestSubscriptionNumber;
+    //    }
 
     public long getNextClosestPostNumber()
     {
@@ -234,15 +240,16 @@ public class CommunityMember
         this.nextClosestFileNumber = nextClosestFileNumber;
     }
 
-    public int getNumClosestSubscriptionNumber()
-    {
-        return numClosestSubscriptionNumber;
-    }
+    //    public int getNumClosestSubscriptionNumber()
+    //    {
+    //        return numClosestSubscriptionNumber;
+    //    }
 
-    public void setNumClosestSubscriptionNumber ( int numClosestSubscriptionNumber )
-    {
-        this.numClosestSubscriptionNumber = numClosestSubscriptionNumber;
-    }
+    //
+    //    public void setNumClosestSubscriptionNumber ( int numClosestSubscriptionNumber )
+    //    {
+    //        this.numClosestSubscriptionNumber = numClosestSubscriptionNumber;
+    //    }
 
     public int getNumClosestPostNumber()
     {
@@ -264,15 +271,16 @@ public class CommunityMember
         this.numClosestFileNumber = numClosestFileNumber;
     }
 
-    public String getLastSubscriptionUpdateFrom()
-    {
-        return lastSubscriptionUpdateFrom;
-    }
+    //    public String getLastSubscriptionUpdateFrom()
+    //    {
+    //        return lastSubscriptionUpdateFrom;
+    //    }
 
-    public void setLastSubscriptionUpdateFrom ( String lastSubscriptionUpdateFrom )
-    {
-        this.lastSubscriptionUpdateFrom = lastSubscriptionUpdateFrom;
-    }
+    //
+    //    public void setLastSubscriptionUpdateFrom ( String lastSubscriptionUpdateFrom )
+    //    {
+    //        this.lastSubscriptionUpdateFrom = lastSubscriptionUpdateFrom;
+    //    }
 
     public String getLastPostUpdateFrom()
     {
@@ -294,15 +302,16 @@ public class CommunityMember
         this.lastFileUpdateFrom = lastFileUpdateFrom;
     }
 
-    public int getSubscriptionUpdateCycle()
-    {
-        return subscriptionUpdateCycle;
-    }
+    //    public int getSubscriptionUpdateCycle()
+    //    {
+    //        return subscriptionUpdateCycle;
+    //    }
 
-    public void setSubscriptionUpdateCycle ( int subscriptionUpdateCycle )
-    {
-        this.subscriptionUpdateCycle = subscriptionUpdateCycle;
-    }
+    //
+    //    public void setSubscriptionUpdateCycle ( int subscriptionUpdateCycle )
+    //    {
+    //        this.subscriptionUpdateCycle = subscriptionUpdateCycle;
+    //    }
 
     public int getPostUpdateCycle()
     {

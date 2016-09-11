@@ -1,15 +1,11 @@
 package aktie.net;
 
-import java.io.IOException;
-
-import org.hibernate.Session;
-
 import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
-import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
 import aktie.index.Index;
+import aktie.sequences.SubSequence;
 import aktie.spam.SpamTool;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
@@ -40,9 +36,8 @@ public class InSubProcessor extends GenericProcessor
         if ( CObj.SUBSCRIPTION.equals ( type ) )
         {
             //Check if it's valid and new
-            if ( validator.newAndValidX ( b ) )
+            if ( validator.valid ( b ) )
             {
-
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 String comid = b.getString ( CObj.COMMUNITYID );
@@ -56,6 +51,7 @@ public class InSubProcessor extends GenericProcessor
                     //be bad.
                     if ( id.equals ( b.getId() ) )
                     {
+
                         boolean update = false;
                         //We already made this getSubscription method before we
                         //decided to do the merged id thing, just go with it.
@@ -85,31 +81,15 @@ public class InSubProcessor extends GenericProcessor
 
                         }
 
-                        if ( update )
+                        try
                         {
-                            Session s = null;
 
-                            try
+                            SubSequence seq = new SubSequence ( session );
+                            seq.setId ( creatorid );
+                            seq.updateSequence ( b );
+
+                            if ( update )
                             {
-                                s = session.getSession();
-                                s.getTransaction().begin();
-                                CommunityMember m = ( CommunityMember )
-                                                    s.get ( CommunityMember.class, id );
-
-                                if ( m == null )
-                                {
-                                    m = new CommunityMember();
-                                    m.setId ( id );
-                                    m.setCommunityId ( comid );
-                                    m.setMemberId ( creatorid );
-                                    s.persist ( m );
-                                }
-
-                                m.setLastSubscriptionNumber ( seqnum );
-                                s.merge ( m );
-                                s.getTransaction().commit();
-                                s.close();
-
                                 //Set the rank of the post based on the rank of the
                                 //user
                                 CObj idty = index.getIdentity ( creatorid );
@@ -129,39 +109,14 @@ public class InSubProcessor extends GenericProcessor
                                 conThread.update ( b );
                             }
 
-                            catch ( IOException e )
-                            {
-                                e.printStackTrace();
+                        }
 
-                                if ( s != null )
-                                {
-                                    try
-                                    {
-                                        if ( s.getTransaction().isActive() )
-                                        {
-                                            s.getTransaction().rollback();
-                                        }
-
-                                    }
-
-                                    catch ( Exception e2 )
-                                    {
-                                    }
-
-                                    try
-                                    {
-                                        s.close();
-                                    }
-
-                                    catch ( Exception e2 )
-                                    {
-                                    }
-
-                                }
-
-                            }
+                        catch ( Exception e )
+                        {
+                            e.printStackTrace();
 
                         }
+
 
                     }
 

@@ -5,8 +5,8 @@ import org.hibernate.Session;
 import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
-import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
+import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -88,21 +88,17 @@ public class NewSubscriptionProcessor extends GenericProcessor
             {
                 s = session.getSession();
                 s.getTransaction().begin();
-                CommunityMember m = ( CommunityMember ) s.get ( CommunityMember.class, id );
+                IdentityData m = ( IdentityData ) s.get ( IdentityData.class, creator );
 
                 if ( m == null )
                 {
-                    m = new CommunityMember();
-                    m.setId ( id );
-                    m.setCommunityId ( comid );
-                    m.setMemberId ( creator );
-                    s.persist ( m );
+                    throw new Exception ( "Identity missing" );
                 }
 
-                long num = m.getLastSubscriptionNumber();
+                long num = m.getLastSubNumber();
                 num++;
                 o.pushNumber ( CObj.SEQNUM, num );
-                m.setLastSubscriptionNumber ( num );
+                m.setLastSubNumber ( num );
                 s.merge ( m );
                 s.getTransaction().commit();
                 s.close();

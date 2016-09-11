@@ -556,6 +556,11 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
 
+    public CObjList getSubscriptions ( String creator, long first, long last )
+    {
+        return getCreatorObjs ( CObj.SUBSCRIPTION, creator, first, last );
+    }
+
     public CObjList getCommunities ( String creator, long first, long last )
     {
         return getCreatorObjs ( CObj.COMMUNITY, creator, first, last );

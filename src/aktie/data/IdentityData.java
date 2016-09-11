@@ -58,6 +58,22 @@ public class IdentityData
     @Column ( columnDefinition = "INTEGER(10) default 0" )
     private int memberUpdateCycle;
 
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastSubUpdate;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastSubNumber;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long nextClosestSubNumber;
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int numClosestSubNumber;
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int subStatus;
+    private String lastSubUpdateFrom;
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int subUpdateCycle;
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int subUpdatePriority;
+
     private boolean mine;
 
     public String getId()
@@ -358,6 +374,86 @@ public class IdentityData
     public void setMemberUpdateCycle ( int memberUpdateCycle )
     {
         this.memberUpdateCycle = memberUpdateCycle;
+    }
+
+    public long getLastSubUpdate()
+    {
+        return lastSubUpdate;
+    }
+
+    public void setLastSubUpdate ( long lastSubUpdate )
+    {
+        this.lastSubUpdate = lastSubUpdate;
+    }
+
+    public long getLastSubNumber()
+    {
+        return lastSubNumber;
+    }
+
+    public void setLastSubNumber ( long lastSubNumber )
+    {
+        this.lastSubNumber = lastSubNumber;
+    }
+
+    public long getNextClosestSubNumber()
+    {
+        return nextClosestSubNumber;
+    }
+
+    public void setNextClosestSubNumber ( long nextClosestSubNumber )
+    {
+        this.nextClosestSubNumber = nextClosestSubNumber;
+    }
+
+    public int getNumClosestSubNumber()
+    {
+        return numClosestSubNumber;
+    }
+
+    public void setNumClosestSubNumber ( int numClosestSubNumber )
+    {
+        this.numClosestSubNumber = numClosestSubNumber;
+    }
+
+    public int getSubStatus()
+    {
+        return subStatus;
+    }
+
+    public void setSubStatus ( int subStatus )
+    {
+        this.subStatus = subStatus;
+    }
+
+    public String getLastSubUpdateFrom()
+    {
+        return lastSubUpdateFrom;
+    }
+
+    public void setLastSubUpdateFrom ( String lastSubUpdateFrom )
+    {
+        this.lastSubUpdateFrom = lastSubUpdateFrom;
+    }
+
+    public int getSubUpdateCycle()
+    {
+        return subUpdateCycle;
+    }
+
+    public void setSubUpdateCycle ( int subUpdateCycle )
+    {
+        this.subUpdateCycle = subUpdateCycle;
+    }
+
+    public int getSubUpdatePriority()
+    {
+        return subUpdatePriority;
+    }
+
+    public void setSubUpdatePriority ( int subUpdatePriority )
+    {
+        this.subUpdatePriority = subUpdatePriority;
     }
 
 }

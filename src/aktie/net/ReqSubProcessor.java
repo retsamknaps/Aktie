@@ -1,5 +1,6 @@
 package aktie.net;
 
+import java.util.Set;
 import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
@@ -28,72 +29,62 @@ public class ReqSubProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_SUBS.equals ( type ) )
         {
-            String comid = b.getString ( CObj.COMMUNITYID );
-            String conid = connection.getEndDestination().getId();
-            CObj community = index.getCommunity ( comid );
+            String creatorid = b.getString ( CObj.CREATOR );
+            Long first = b.getNumber ( CObj.FIRSTNUM );
+            Long last = b.getNumber ( CObj.LASTNUM );
+            Set<String> memberships = connection.getMemberships();
 
-            if ( community != null && conid != null )
+            if ( creatorid != null && first != null && last != null && memberships != null )
             {
-                boolean ok = false;
-                String creator = community.getString ( CObj.CREATOR );
 
-                if ( CObj.SCOPE_PUBLIC.equals ( community.getString ( CObj.SCOPE ) ) )
+                CObjList cr = new CObjList();
+                CObjList cl = index.getSubscriptions ( creatorid, first, last );
+
+                for ( int c = 0; c < cl.size(); c++ )
                 {
-                    ok = true;
-                }
-
-                else if ( conid.equals ( creator ) )
-                {
-                    ok = true;
-                }
-
-                else
-                {
-                    CObjList mem = index.getMembership ( comid, conid );
-
-                    if ( mem.size() > 0 )
+                    try
                     {
-                        ok = true;
-                    }
+                        CObj sb = cl.get ( c );
+                        String comid = sb.getString ( CObj.COMMUNITYID );
 
-                    mem.close();
-                }
-
-                if ( ok )
-                {
-
-                    //See if creator and first num set
-                    String memid = b.getString ( CObj.CREATOR );
-                    Long fnum = b.getNumber ( CObj.FIRSTNUM );
-
-                    if ( memid != null && fnum != null )
-                    {
-                        CObj sb = index.getSubscriptionUnsub ( comid, memid );
-
-                        if ( sb != null )
+                        if ( comid != null )
                         {
-                            Long ln = sb.getNumber ( CObj.SEQNUM );
-
-                            if ( ln != null && ln >= fnum )
+                            if ( memberships.contains ( comid ) )
                             {
-                                connection.enqueue ( sb );
+                                cr.add ( sb );
+                            }
+
+                            else
+                            {
+                                CObj com = index.getCommunity ( comid );
+
+                                if ( com != null )
+                                {
+                                    if ( CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
+                                    {
+                                        cr.add ( sb );
+                                    }
+
+                                }
+
                             }
 
                         }
 
                     }
 
-                    else
+                    catch ( Exception e )
                     {
-                        CObjList cl = index.getSubsUnsubs ( comid );
-                        connection.enqueue ( cl );
+                        e.printStackTrace();
                     }
 
                 }
 
-                else
+                cl.close();
+
+                if ( cr.size() > 0 )
                 {
-                    log.warning ( "Requested subscriptions without membership!" );
+                    connection.enqueue ( cr );
                 }
 
             }

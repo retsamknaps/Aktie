@@ -1,6 +1,7 @@
 package aktie;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Logger;
 
 import aktie.data.CObj;
 import aktie.index.CObjList;
@@ -8,16 +9,21 @@ import aktie.index.CObjList;
 public class ProcessQueue implements Runnable
 {
 
-    public static int MAXQUEUESIZE = 100; //Long lists should be in CObjList each one could have open indexreader!
+    Logger log = Logger.getLogger ( "aktie" );
+
+    public static int MAXQUEUESIZE = 500; //Long lists should be in CObjList each one could have open indexreader!
 
     private ConcurrentLinkedDeque<Object> queue;
     private BatchProcessor processor;
     private boolean stop;
 
-    public ProcessQueue()
+    private String name;
+
+    public ProcessQueue ( String n )
     {
         queue = new ConcurrentLinkedDeque<Object>();
         processor = new BatchProcessor();
+        name = n;
         Thread t = new Thread ( this, "Process Queue Thread" );
         t.start();
     }
@@ -31,6 +37,7 @@ public class ProcessQueue implements Runnable
     {
         if ( !stop )
         {
+            log.info ( "process " + name + " : " + queue.size() );
             Object o = queue.poll();
 
             try
@@ -91,6 +98,8 @@ public class ProcessQueue implements Runnable
             notifyAll();
             return true;
         }
+
+        log.info ( "enqueue rejected. " + name + " size: " + queue.size() );
 
         if ( b instanceof CObjList )
         {

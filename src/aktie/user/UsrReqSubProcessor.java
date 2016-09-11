@@ -20,26 +20,7 @@ public class UsrReqSubProcessor extends GenericProcessor
 
         if ( CObj.USR_SUB_UPDATE.equals ( type ) )
         {
-            long priority = 5;
-            Long pril = b.getNumber ( CObj.PRIORITY );
-
-            if ( pril != null )
-            {
-                priority = pril;
-            }
-
-            String comid = b.getString ( CObj.COMMUNITYID );
-
-            if ( comid == null )
-            {
-                identManager.requestAllSubscriptions ( ( int ) priority );
-            }
-
-            else
-            {
-                identManager.requestSubscriptions ( comid, ( int ) priority );
-            }
-
+            identManager.requestAllSubscriptions ( );
             return true;
         }
 

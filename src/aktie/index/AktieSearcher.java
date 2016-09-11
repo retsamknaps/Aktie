@@ -175,7 +175,7 @@ public class AktieSearcher
 
     }
 
-    private void doClose()
+    private synchronized void doClose()
     {
         if ( closeAll && numOpen == 0 )
         {

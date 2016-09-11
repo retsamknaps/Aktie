@@ -343,6 +343,32 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     }
 
+    /*
+        At the beginning of each connection request all subscriptions
+        for private communities the two have in common.
+    */
+    private boolean subRequestSent = false;
+    private void sendInitialSubRequest()
+    {
+        if ( !subRequestSent )
+        {
+            subRequestSent = true;
+
+            for ( String comid : memberships )
+            {
+                ConcurrentLinkedQueue<CObj> memreq = conMan.getPrivSubRequests().get ( comid );
+
+                for ( CObj req : memreq )
+                {
+                    enqueue ( req );
+                }
+
+            }
+
+        }
+
+    }
+
     private void updateSubsAndFiles()
     {
         long nu = conMan.getLastFileUpdate();
@@ -355,6 +381,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             lastFileUpdate = nu;
             updateMemberships();
             updateSubs();
+            sendInitialSubRequest();
             lastFileUpdate = conMan.getLastFileUpdate();
             appendOutput ( "updateSubsAndFiles: subs: " + subs );
 
@@ -1653,6 +1680,11 @@ public class ConnectionThread implements Runnable, GuiCallback
     public void setFileDown ( String fileDown )
     {
         this.fileDown = fileDown;
+    }
+
+    public Set<String> getMemberships()
+    {
+        return memberships;
     }
 
 }

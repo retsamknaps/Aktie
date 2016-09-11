@@ -249,7 +249,6 @@ public class NewSpamExProcessor extends GenericProcessor
                                     ccm.pushString ( CObj.CREATOR, creator );
                                     ccm.pushNumber ( CObj.HASFILE, cm.getLastFileNumber() );
                                     ccm.pushNumber ( CObj.POST, cm.getLastPostNumber() );
-                                    ccm.pushNumber ( CObj.SUBSCRIPTION, cm.getLastSubscriptionNumber() );
 
                                     if ( "save".equals ( save ) )
                                     {
