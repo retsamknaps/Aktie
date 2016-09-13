@@ -70,7 +70,7 @@ public class InSubProcessor extends GenericProcessor
                             //discard.
                             if ( seqnum > co.getNumber ( CObj.SEQNUM ) )
                             {
-                            	log.info("Newer version found!");
+                                log.info ( "Newer version found!" );
                                 update = true;
                             }
 
@@ -81,7 +81,7 @@ public class InSubProcessor extends GenericProcessor
                             //We need to see if this user can subscribe.
                             if ( subvalidator.canSubscribe ( comid, creatorid ) )
                             {
-                            	log.info("New subscription, can subscribe.");
+                                log.info ( "New subscription, can subscribe." );
                                 update = true;
                             }
 

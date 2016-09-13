@@ -218,6 +218,11 @@ public class Node
 
     }
 
+    public SpamTool getSpamTool()
+    {
+        return spamtool;
+    }
+
     public Index getIndex()
     {
         return index;

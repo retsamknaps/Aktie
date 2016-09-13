@@ -1031,6 +1031,11 @@ public class TestNode
             assertEquals ( "true", co.getPrivate ( CObj.VALIDMEMBER ) );
             clist.close();
 
+            n0.closeAllConnections();
+            n1.closeAllConnections();
+            n2.closeAllConnections();
+            n3.closeAllConnections();
+
             System.out.println ( "UPDATE SUBSCRIPTION.............................." );
             updatesubs = new CObj();
             updatesubs.setType ( CObj.USR_SUB_UPDATE );

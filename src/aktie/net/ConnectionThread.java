@@ -350,7 +350,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private boolean subRequestSent = false;
     private void sendInitialSubRequest()
     {
-        if ( !subRequestSent )
+        if ( !subRequestSent && endDestination != null )
         {
             subRequestSent = true;
 
@@ -358,15 +358,15 @@ public class ConnectionThread implements Runnable, GuiCallback
             {
                 ConcurrentLinkedQueue<CObj> memreq = conMan.getPrivSubRequests().get ( comid );
 
-                if (memreq != null) 
+                if ( memreq != null )
                 {
-                	for ( CObj req : memreq )
-                	{
-                		enqueue ( req );
-                	}
-                	
+                    for ( CObj req : memreq )
+                    {
+                        enqueue ( req );
+                    }
+
                 }
-                
+
             }
 
         }

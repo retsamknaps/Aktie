@@ -1431,6 +1431,27 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getMySeqSubscriptions ( String creator, long num )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term mustterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        builder.add ( new TermQuery ( mustterm ), BooleanClause.Occur.MUST );
+
+        Term comterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nq = NumericRangeQuery.newLongRange (
+                                         CObj.docNumber ( CObj.SEQNUM ),
+                                         num, num, true, true );
+        builder.add ( nq, BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getDefFields ( String comid )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

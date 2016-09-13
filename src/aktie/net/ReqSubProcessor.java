@@ -51,7 +51,7 @@ public class ReqSubProcessor extends GenericProcessor
                         {
                             if ( memberships.contains ( comid ) )
                             {
-                            	log.info("Private subscription found. " + comid);
+                                log.info ( "Private subscription found. " + comid );
                                 cr.add ( sb );
                             }
 
@@ -59,16 +59,19 @@ public class ReqSubProcessor extends GenericProcessor
                             {
                                 CObj com = index.getCommunity ( comid );
 
-                               	log.info("Check if public com. " + com + " " + comid);
+                                log.info ( "Check if public com. " + com + " " + comid );
+
                                 if ( com != null )
                                 {
                                     if ( CObj.SCOPE_PUBLIC.equals ( com.getString ( CObj.SCOPE ) ) )
                                     {
-                                    	log.info("Public community found. " + comid);
+                                        log.info ( "Public community found. " + comid );
                                         cr.add ( sb );
                                     }
-                                    else {
-                                    	log.info("Community was not public and I am not member.");
+
+                                    else
+                                    {
+                                        log.info ( "Community was not public and I am not member." );
                                     }
 
                                 }
@@ -88,7 +91,8 @@ public class ReqSubProcessor extends GenericProcessor
 
                 cl.close();
 
-                log.info("Sending subscriptions: " + cr.size());
+                log.info ( "Sending subscriptions: " + cr.size() );
+
                 if ( cr.size() > 0 )
                 {
                     connection.enqueue ( cr );

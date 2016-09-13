@@ -174,6 +174,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         for ( String mid : getMyIdMap().keySet() )
         {
             CObjList sl = index.getIdentityMemberships ( mid );
+            log.info ( "Memberships for " + mid + " " + sl.size() );
 
             for ( int c = 0; c < sl.size(); c++ )
             {
@@ -184,6 +185,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     if ( sbid != null )
                     {
+                        log.info ( "Adding comunity: " + sbid );
                         comids.add ( sbid );
                     }
 
@@ -198,6 +200,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
             sl.close();
             sl = index.getIdentityPrivateCommunities ( mid );
+            log.info ( "Private communitys created by "  + mid + " " + sl.size() );
 
             for ( int c = 0; c < sl.size(); c++ )
             {
@@ -207,6 +210,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     if ( sb != null && sb.getDig() != null )
                     {
+                        log.info ( "Adding comunity: " + sb.getDig() );
                         comids.add ( sb.getDig() );
                     }
 
@@ -264,6 +268,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             }
 
             mems.close();
+            log.info ( "Number of members for : " + comid + " " + tempComMemberships.get ( comid ).size() );
+
         }
 
         ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> tmpPrivSubList = new
@@ -282,14 +288,16 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             for ( String memid : e.getValue() )
             {
                 IdentityData id = identityManager.getIdentity ( memid );
-                if (id != null) 
+                log.info ( "identityData for " + memid + " " + id );
+
+                if ( id != null )
                 {
-                	CObj cr = new CObj();
-                	cr.setType ( CObj.CON_REQ_SUBS );
-                	cr.pushString ( CObj.CREATOR, id.getId() );
-                	cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
-                	cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
-                	q.add ( cr );
+                    CObj cr = new CObj();
+                    cr.setType ( CObj.CON_REQ_SUBS );
+                    cr.pushString ( CObj.CREATOR, id.getId() );
+                    cr.pushNumber ( CObj.FIRSTNUM, id.getLastSubNumber() + 1 );
+                    cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                    q.add ( cr );
                 }
 
             }

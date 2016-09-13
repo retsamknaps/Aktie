@@ -44,6 +44,7 @@ import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
 import aktie.index.Upgrade0405;
+import aktie.index.Upgrade0506;
 import aktie.net.ConnectionElement;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
@@ -1929,6 +1930,7 @@ public class SWTApp implements UpdateInterface
         {
             upgrade0115 ( lastversion );
             upgrade0505 ( lastversion );
+            upgrade0506 ( lastversion );
         }
 
     }
@@ -2144,6 +2146,22 @@ public class SWTApp implements UpdateInterface
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0505 ) < 0 )
         {
             node.getHasFileCreator().updateOnlyHasFile ( this );
+        }
+
+    }
+
+    private void upgrade0506 ( String lastversion )
+    {
+        //Note, upgrading to 0.5.6 will take some time
+        //because new subscriptions have to be generated, so we run it
+        //in a background thread whenever we start 0.5.6.
+        //We're assuming when we make the next release everyone's
+        //subscription sequences will be updated.
+        if ( Wrapper.VERSION.equals ( Wrapper.VERSION_0506 ) )
+        {
+            Upgrade0506 up = new Upgrade0506 ( node );
+            Thread t = new Thread ( up );
+            t.start();
         }
 
     }

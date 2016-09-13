@@ -385,10 +385,11 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
 
     }
 
-	@Override
-	public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests()
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }
