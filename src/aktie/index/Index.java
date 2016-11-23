@@ -35,7 +35,7 @@ public class Index implements Runnable
     // This IS thread safe!
     private Analyzer analyzer;
     private IndexWriter writer;
-    private AktieSearcher searcher;
+    //private AktieSearcher searcher;
 
     private File indexdir;
 
@@ -87,156 +87,22 @@ public class Index implements Runnable
         IndexWriterConfig idxconf = new IndexWriterConfig ( analyzer );
         writer = new IndexWriter ( fsdir, idxconf );
         writer.commit();
-        buildNewSearcher();
         Thread t = new Thread ( this );
         t.setDaemon ( true );
         t.start();
 
     }
 
-    public static long MIN_TIME_BETWEEN_SEARCHERS = 5L * 1000L; //10 seconds
-    private boolean buildnewsearcher = false;
-
-    private List<WaitForNewSearcher> newsearcherlist = new LinkedList<WaitForNewSearcher>();
-
     public void forceNewSearcher()
     {
-        WaitForNewSearcher w = getNewWaitForNewSearcher();
-        w.waitForNewSearcher();
-    }
-
-    private synchronized WaitForNewSearcher getNewWaitForNewSearcher()
-    {
-        WaitForNewSearcher w = new WaitForNewSearcher();
-        newsearcherlist.add ( w );
-        notifyAll();
-        return w;
-    }
-
-    private synchronized void buildComplete()
-    {
-        Iterator<WaitForNewSearcher> i = newsearcherlist.iterator();
-
-        while ( i.hasNext() )
-        {
-            WaitForNewSearcher w = i.next();
-            w.buildComplete();
-
-            if ( w.isComplete() )
-            {
-                i.remove();
-            }
-
-        }
-
-    }
-
-    private synchronized boolean checkIfBuildNew()
-    {
-        boolean r = buildnewsearcher && ( !stop );
-        buildnewsearcher = false;
-
-        if ( !stop )
-        {
-            for ( WaitForNewSearcher w : newsearcherlist )
-            {
-                r = true;
-                w.buildStarted();
-            }
-
-        }
-
-        return r;
-    }
-
-    private synchronized void waitToBuildNewSearcher()
-    {
-        if ( !stop && newsearcherlist.size() == 0 )
-        {
-            try
-            {
-                wait ( MIN_TIME_BETWEEN_SEARCHERS );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-    }
-
-    private void initiateNewSearcher()
-    {
-        if ( MIN_TIME_BETWEEN_SEARCHERS <= 0 )
-        {
-            forceNewSearcher();
-        }
-
-        else
-        {
-            buildnewsearcher = true;
-        }
-
-    }
-
-    private void buildNewSearcher() throws IOException
-    {
-        AktieSearcher old = searcher;
-
-        searcher = AktieSearcher.newSearcher ( writer );
-
-        if ( old != null )
-        {
-            old.shutdown();
-        }
-
-        buildComplete();
-
-    }
-
-    private boolean stop = false;
-    public void run()
-    {
-        while ( !stop )
-        {
-            waitToBuildNewSearcher();
-
-            if ( checkIfBuildNew() )
-            {
-                try
-                {
-                    buildNewSearcher();
-                }
-
-                catch ( Exception e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-        }
-
+        //Not used anymore
     }
 
     public void close()
     {
-        stop = true;
-
         try
         {
             writer.close();
-        }
-
-        catch ( Exception e )
-        {
-        }
-
-        try
-        {
-            searcher.closeSearch();
         }
 
         catch ( Exception e )
@@ -254,15 +120,7 @@ public class Index implements Runnable
     {
         try
         {
-            //DirectoryReader reader = DirectoryReader.open ( writer, true );
-            //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = searcher.incrNumOpen();
-
-            while ( cs == null )
-            {
-                cs = searcher.incrNumOpen();
-            }
-
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
             CObjList l = new CObjList ( cs, q, srt );
             l.executeQuery ( max );
             return l;
@@ -289,12 +147,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = searcher.incrNumOpen();
-
-            while ( cs == null )
-            {
-                cs = searcher.incrNumOpen();
-            }
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
 
             CObjList l = new CObjList ( cs, analyzer, qs, s );
             l.executeQuery ( max );
@@ -316,12 +169,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = searcher.incrNumOpen();
-
-            while ( cs == null )
-            {
-                cs = searcher.incrNumOpen();
-            }
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
 
             CObjList l = new CObjList ( bq, cs, analyzer, qs, s );
             l.executeQuery ( max );
@@ -343,12 +191,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = searcher.incrNumOpen();
-
-            while ( cs == null )
-            {
-                cs = searcher.incrNumOpen();
-            }
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
 
             CObjList l = new CObjList ( bq, cs, analyzer, qs, null );
             l.executeQuery ( max );
@@ -2387,7 +2230,6 @@ public class Index implements Runnable
         {
             writer.deleteDocuments ( updateterm );
             writer.commit();
-            initiateNewSearcher();
         }
 
     }
@@ -2396,7 +2238,6 @@ public class Index implements Runnable
     {
         indexNoCommit ( writer, o, onlynew );
         writer.commit();
-        initiateNewSearcher();
     }
 
     public void index ( List<CObj> l, boolean onlynew ) throws IOException
@@ -2407,14 +2248,12 @@ public class Index implements Runnable
         }
 
         writer.commit();
-        initiateNewSearcher();
     }
 
     public void index ( CObj o ) throws IOException
     {
         indexNoCommit ( writer, o, false );
         writer.commit();
-        initiateNewSearcher();
     }
 
     public void index ( List<CObj> l ) throws IOException
@@ -2425,7 +2264,13 @@ public class Index implements Runnable
         }
 
         writer.commit();
-        initiateNewSearcher();
+    }
+
+    @Override
+    public void run()
+    {
+        // TODO Auto-generated method stub
+
     }
 
 }

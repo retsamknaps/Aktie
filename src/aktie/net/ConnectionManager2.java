@@ -2055,7 +2055,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 //Find all membership records we've received after this time.
                 KeyParameter kp = new KeyParameter ( c.getKey() );
                 CObjList unlst = index.getUnDecodedMemberships ( lastdecode -
-                                 ( 2 * Index.MIN_TIME_BETWEEN_SEARCHERS ) );
+                                 ( 2 * 5000 ) ) ; //Index.MIN_TIME_BETWEEN_SEARCHERS ) );
 
                 for ( int cnt = 0; cnt < unlst.size(); cnt++ )
                 {

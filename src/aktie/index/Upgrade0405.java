@@ -42,7 +42,7 @@ public class Upgrade0405
 
                 System.out.println();
 
-                Thread.sleep ( Index.MIN_TIME_BETWEEN_SEARCHERS );
+                //Thread.sleep ( Index.MIN_TIME_BETWEEN_SEARCHERS );
 
                 idlst.close();
                 index.close();

@@ -10,7 +10,6 @@ import aktie.data.CObj;
 import aktie.data.RequestFile;
 import aktie.gui.Wrapper;
 import aktie.index.CObjList;
-import aktie.index.Index;
 import aktie.utils.FUtils;
 
 import org.hibernate.Session;
@@ -93,7 +92,7 @@ public class TestBasic
     {
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
-        Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
+        //Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
 
         TestNode Tn0 = newId ( "n0" );
         TestNode Tn1 = newId ( "n1" );

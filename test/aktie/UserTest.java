@@ -43,7 +43,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
     {
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
-        Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
+        //Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
         File tmpdir = new File ( "h2dbtest" );
         FUtils.deleteDir ( tmpdir );
         assertTrue ( tmpdir.mkdirs() );
