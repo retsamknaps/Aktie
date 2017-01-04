@@ -17,6 +17,128 @@ public class testIndex
 {
 
     @Test
+    public void testGetAllMissingSeqNumbers()
+    {
+        File id = new File ( "testindex" );
+        FUtils.deleteDir ( id );
+        Index i = new Index();
+        i.setIndexdir ( id );
+
+        try
+        {
+            i.init();
+
+            CObj fldkeyword = new CObj();
+            fldkeyword.setType ( CObj.FIELD );
+            fldkeyword.pushString ( CObj.COMMUNITYID, "community0000" );
+            fldkeyword.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_STRING );
+            fldkeyword.pushString ( CObj.FLD_NAME, "keyword" );
+            fldkeyword.pushString ( CObj.FLD_DESC, "keyword field" );
+            fldkeyword.simpleDigest();
+
+            CObj fldnum = new CObj();
+            fldnum.setType ( CObj.FIELD );
+            fldnum.pushString ( CObj.COMMUNITYID, "community0000" );
+            fldnum.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_NUMBER );
+            fldnum.pushString ( CObj.FLD_NAME, "number" );
+            fldnum.pushString ( CObj.FLD_DESC, "number field" );
+            fldnum.simpleDigest();
+
+            CObj flddec = new CObj();
+            flddec.setType ( CObj.FIELD );
+            flddec.pushString ( CObj.COMMUNITYID, "community0000" );
+            flddec.pushString ( CObj.FLD_TYPE, CObj.FLD_TYPE_DECIMAL );
+            flddec.pushString ( CObj.FLD_NAME, "decimal" );
+            flddec.pushString ( CObj.FLD_DESC, "decimal field" );
+            flddec.simpleDigest();
+
+            CObj postred = new CObj();
+            postred.setType ( CObj.POST );
+            postred.pushString ( CObj.COMMUNITYID, "community0000" );
+            postred.pushString ( CObj.SUBJECT, "Test subject zork color" );
+            postred.pushText ( CObj.BODY, "Body of zork dang" );
+            postred.pushString ( CObj.CREATOR, "1" );
+            postred.pushNumber ( CObj.CREATEDON, 1000000 );
+            postred.pushPrivateNumber ( CObj.PRV_USER_RANK, 5L );
+            postred.setFieldString ( fldkeyword.getDig(), "red" );
+            postred.setFieldNumber ( fldnum.getDig(), 300L );
+            postred.setFieldDecimal ( flddec.getDig(), 2.1D );
+            postred.simpleDigest();
+
+            i.index ( postred );
+
+            CObj postblue = new CObj();
+            postblue.setType ( CObj.POST );
+            postblue.pushString ( CObj.COMMUNITYID, "community0000" );
+            postblue.pushString ( CObj.SUBJECT, "Test subject umpa derg" );
+            postblue.pushText ( CObj.BODY, "Body of umpa color" );
+            postblue.pushString ( CObj.CREATOR, "2" );
+            postblue.pushNumber ( CObj.CREATEDON, 2000000 );
+            postblue.pushPrivateNumber ( CObj.PRV_USER_RANK, 8L );
+            postblue.setFieldString ( fldkeyword.getDig(), "blue" );
+            postblue.setFieldNumber ( fldnum.getDig(), 200L );
+            postblue.setFieldDecimal ( flddec.getDig(), 7.6D );
+            postblue.simpleDigest();
+
+            i.index ( postblue );
+
+            CObj postgreen = new CObj();
+            postgreen.setType ( CObj.POST );
+            postgreen.pushString ( CObj.COMMUNITYID, "community0001" );
+            postgreen.pushString ( CObj.SUBJECT, "Test subject umpa derg" );
+            postgreen.pushText ( CObj.BODY, "Body of umpa color" );
+            postgreen.pushString ( CObj.CREATOR, "2" );
+            postgreen.pushNumber ( CObj.CREATEDON, 2000000 );
+            postgreen.pushPrivateNumber ( CObj.PRV_USER_RANK, 8L );
+            postgreen.setFieldString ( fldkeyword.getDig(), "blue" );
+            postgreen.setFieldNumber ( fldnum.getDig(), 200L );
+            postgreen.setFieldDecimal ( flddec.getDig(), 7.6D );
+            postgreen.simpleDigest();
+
+            i.index ( postgreen );
+
+            i.forceNewSearcher();
+
+            CObjList cl = i.getAllMissingSeqNumbers ( "blah", 1000 );
+            assertEquals ( 3, cl.size() );
+
+            for ( int c = 0; c < cl.size(); c++ )
+            {
+                CObj co = cl.get ( c );
+                co.pushPrivateNumber ( CObj.getGlobalSeq ( "blah" ), 1L );
+                i.index ( co );
+            }
+
+            cl.close();
+
+            i.forceNewSearcher();
+
+            cl = i.getAllCObj();
+            assertEquals ( 3, cl.size() );
+
+            for ( int c = 0; c < cl.size(); c++ )
+            {
+                CObj co = cl.get ( c );
+                assertEquals ( 1L, ( long ) co.getPrivateNumber ( CObj.getGlobalSeq ( "blah" ) ) );
+            }
+
+            cl.close();
+
+            cl = i.getAllMissingSeqNumbers ( "blah", 1000 );
+            assertEquals ( 0, cl.size() );
+            cl.close();
+
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+            fail();
+        }
+
+    }
+
+    @Test
     public void testSearcher()
     {
         File id = new File ( "testindex" );

@@ -20,6 +20,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
     private HH2Session session;
     private SubscriptionValidator validator;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewSubscriptionProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
@@ -27,6 +28,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
         index = i;
         guicallback = cb;
         spamtool = st;
+        identManager = new IdentityManager ( s, i );
         validator = new SubscriptionValidator ( index );
     }
 
@@ -155,6 +157,9 @@ public class NewSubscriptionProcessor extends GenericProcessor
             {
                 o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
             }
+
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
             {

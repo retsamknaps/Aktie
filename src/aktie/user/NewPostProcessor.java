@@ -27,6 +27,7 @@ public class NewPostProcessor extends GenericProcessor
     private HH2Session session;
     private SubscriptionValidator validator;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewPostProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
@@ -34,6 +35,7 @@ public class NewPostProcessor extends GenericProcessor
         index = i;
         guicallback = cb;
         spamtool = st;
+        identManager = new IdentityManager ( s, i );
         validator = new SubscriptionValidator ( index );
     }
 
@@ -194,6 +196,9 @@ public class NewPostProcessor extends GenericProcessor
                 }
 
             }
+
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             //List any new fields that were added by the post
             //save them.

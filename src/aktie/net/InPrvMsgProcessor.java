@@ -10,6 +10,7 @@ import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.sequences.PrivMsgSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
 
@@ -20,12 +21,16 @@ public class InPrvMsgProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private GuiCallback guicallback;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
+        ConId = mid;
+        identManager = im;
         validator = new DigestValidator ( index, st );
     }
 
@@ -106,6 +111,9 @@ public class InPrvMsgProcessor extends GenericProcessor
                                 }
 
                             }
+
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                             index.index ( b );
 

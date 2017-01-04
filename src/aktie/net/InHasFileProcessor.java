@@ -7,6 +7,7 @@ import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.sequences.FileSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 import aktie.utils.HasFileCreator;
 import aktie.utils.SubscriptionValidator;
@@ -21,14 +22,18 @@ public class InHasFileProcessor extends GenericProcessor
     private SubscriptionValidator subvalid;
     private CObj destIdent;
     private HasFileCreator hfc;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InHasFileProcessor ( CObj id, HH2Session s, Index i, GuiCallback cb, HasFileCreator h, SpamTool st )
+    public InHasFileProcessor ( CObj id, HH2Session s, Index i, IdentityManager im, CObj mid, GuiCallback cb, HasFileCreator h, SpamTool st )
     {
         hfc = h;
         destIdent = id;
         index = i;
         session = s;
         guicallback = cb;
+        ConId = mid;
+        identManager = im;
         validator = new DigestValidator ( index, st );
         subvalid = new SubscriptionValidator ( index );
     }
@@ -94,6 +99,9 @@ public class InHasFileProcessor extends GenericProcessor
                                     }
 
                                 }
+
+                                long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                                 index.index ( b );
                                 hfc.updateFileInfo ( b );

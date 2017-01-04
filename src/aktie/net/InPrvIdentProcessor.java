@@ -12,6 +12,7 @@ import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.PrivIdentSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
 
@@ -22,12 +23,16 @@ public class InPrvIdentProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private GuiCallback guicallback;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InPrvIdentProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public InPrvIdentProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
+        ConId = mid;
+        identManager = im;
         validator = new DigestValidator ( index, st );
     }
 
@@ -102,6 +107,9 @@ public class InPrvIdentProcessor extends GenericProcessor
                                 b.pushPrivate ( CObj.NAME, idty.getDisplayName() );
 
                             }
+
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                             index.index ( b );
                             //Force new searcher so new private messages received after this

@@ -1,20 +1,19 @@
 package aktie.index;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldCollector;
 import org.apache.lucene.search.TopScoreDocCollector;
-import org.apache.lucene.store.FSDirectory;
 
 public class AktieSearcher
 {
@@ -25,16 +24,16 @@ public class AktieSearcher
     private boolean closed;
     public long closedAt;
 
-    public synchronized static AktieSearcher newSearcher ( String dir ) throws IOException
+    public synchronized static AktieSearcher newSearcher ( String dir, IndexWriter w ) throws IOException
     {
-        AktieSearcher a = new AktieSearcher ( dir );
+        AktieSearcher a = new AktieSearcher ( dir, w );
         return a;
     }
 
-    private AktieSearcher ( String dir ) throws IOException
+    private AktieSearcher ( String dir, IndexWriter w ) throws IOException
     {
 
-        IndexReader reader = DirectoryReader.open ( FSDirectory.open ( Paths.get ( dir ) ) );
+        IndexReader reader =  DirectoryReader.open ( w, true ); //DirectoryReader.open ( FSDirectory.open ( Paths.get ( dir ) ) );
         searcher = new IndexSearcher ( reader );
     }
 

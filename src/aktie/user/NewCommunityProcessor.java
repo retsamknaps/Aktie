@@ -23,6 +23,7 @@ public class NewCommunityProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewCommunityProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
@@ -30,6 +31,7 @@ public class NewCommunityProcessor extends GenericProcessor
         index = i;
         guicallback = cb;
         spamtool = st;
+        identManager = new IdentityManager ( s, i );
     }
 
     /**
@@ -226,6 +228,9 @@ public class NewCommunityProcessor extends GenericProcessor
             {
                 o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
             }
+
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
             {

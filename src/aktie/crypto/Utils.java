@@ -247,6 +247,19 @@ public class Utils
         return Base64.decode ( s );
     }
 
+    public static byte[] fixLength ( byte[] b, int len )
+    {
+        if ( b.length >= len )
+        {
+            return b;
+        }
+
+        byte [] r = new byte[len];
+        Arrays.fill ( r, ( byte ) 0 );
+        System.arraycopy ( b, 0, r, 0, b.length );
+        return r;
+    }
+
     public static void digBytes ( Digest d, byte[] b )
     {
         d.update ( b, 0, b.length );
@@ -721,10 +734,14 @@ public class Utils
         byte i0[] = toByteArray ( id0 );
         byte i1[] = toByteArray ( id1 );
 
-        if ( i0.length != i1.length )
-        {
-            throw new RuntimeException ( "Lengths must be equal." );
-        }
+        int mlen = Math.max ( i0.length, i1.length );
+        i0 = fixLength ( i0, mlen );
+        i1 = fixLength ( i1, mlen );
+
+        //if ( i0.length != i1.length )
+        //{
+        //    throw new RuntimeException ( "Lengths must be equal." );
+        //}
 
         for ( int c = 0; c < i0.length; c++ )
         {
@@ -740,10 +757,16 @@ public class Utils
         byte i1[] = toByteArray ( id1 );
         byte i2[] = toByteArray ( id2 );
 
-        if ( i0.length != i1.length || i0.length != i2.length )
-        {
-            throw new RuntimeException ( "Lengths must be equal." );
-        }
+        int mlen = Math.max ( i0.length, i1.length );
+        mlen = Math.max ( mlen, i2.length );
+        i0 = fixLength ( i0, mlen );
+        i1 = fixLength ( i1, mlen );
+        i2 = fixLength ( i2, mlen );
+
+        //if ( i0.length != i1.length || i0.length != i2.length )
+        //{
+        //    throw new RuntimeException ( "Lengths must be equal." );
+        //}
 
         for ( int c = 0; c < i0.length; c++ )
         {

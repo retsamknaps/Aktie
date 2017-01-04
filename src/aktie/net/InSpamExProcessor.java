@@ -6,6 +6,7 @@ import aktie.data.HH2Session;
 import aktie.index.Index;
 import aktie.sequences.SpamSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 
 public class InSpamExProcessor extends GenericProcessor
@@ -15,12 +16,21 @@ public class InSpamExProcessor extends GenericProcessor
     private HH2Session session;
     private DigestValidator validator;
     private ConnectionThread connection;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InSpamExProcessor ( HH2Session s, Index i, SpamTool st, ConnectionThread ct )
+    public InSpamExProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
     {
         index = i;
         session = s;
         connection = ct;
+        identManager = im;
+
+        if ( connection != null )
+        {
+            ConId = connection.getLocalDestination().getIdentity();
+        }
+
         validator = new DigestValidator ( index, st );
     }
 
@@ -53,6 +63,12 @@ public class InSpamExProcessor extends GenericProcessor
                         //sseq.getObj() is only set if a prior developer identity was added
                         if ( sseq.getObj() != null && isnew )
                         {
+                            if ( identManager != null && ConId != null )
+                            {
+                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
+                            }
+
                             index.index ( b );
                         }
 

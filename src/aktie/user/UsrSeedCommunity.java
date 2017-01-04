@@ -14,7 +14,7 @@ public class UsrSeedCommunity extends GenericProcessor
 
     public UsrSeedCommunity ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
-        comProcessor = new InComProcessor ( s, i, st, cb );
+        comProcessor = new InComProcessor ( s, i, st, null, null, cb );
     }
 
     @Override

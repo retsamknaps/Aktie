@@ -13,6 +13,12 @@ import javax.persistence.Id;
 public class IdentityData
 {
 
+    //Max Objects for a global sequence value.
+    public static long MAXGLOBALSEQUENCECOUNT = 200;
+
+    //Make sure the sequence number is incremented at least once a day.
+    public static long MAXGLOBALSEQUENCETIME = 24L * 60L * 60L * 1000L;
+
     public static int DONE = 0;
     public static int UPDATE = 1;
     public static int REQUESTED = 2;
@@ -73,6 +79,17 @@ public class IdentityData
     private int subUpdateCycle;
     @Column ( columnDefinition = "INTEGER(10) default 0" )
     private int subUpdatePriority;
+
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastGlobalSequence;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long countForLastGlobalSequence;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long nextGlobalSequenceUpdateTime;
+
+
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastDataTime;
 
     private boolean mine;
 
@@ -454,6 +471,46 @@ public class IdentityData
     public void setSubUpdatePriority ( int subUpdatePriority )
     {
         this.subUpdatePriority = subUpdatePriority;
+    }
+
+    public long getLastGlobalSequence()
+    {
+        return lastGlobalSequence;
+    }
+
+    public void setLastGlobalSequence ( long lastGlobalSequence )
+    {
+        this.lastGlobalSequence = lastGlobalSequence;
+    }
+
+    public long getCountForLastGlobalSequence()
+    {
+        return countForLastGlobalSequence;
+    }
+
+    public void setCountForLastGlobalSequence ( long countForLastGlobalSequence )
+    {
+        this.countForLastGlobalSequence = countForLastGlobalSequence;
+    }
+
+    public long getLastDataTime()
+    {
+        return lastDataTime;
+    }
+
+    public void setLastDataTime ( long lastDataTime )
+    {
+        this.lastDataTime = lastDataTime;
+    }
+
+    public long getNextGlobalSequenceUpdateTime()
+    {
+        return nextGlobalSequenceUpdateTime;
+    }
+
+    public void setNextGlobalSequenceUpdateTime ( long nextGlobalSequenceUpdateTime )
+    {
+        this.nextGlobalSequenceUpdateTime = nextGlobalSequenceUpdateTime;
     }
 
 }

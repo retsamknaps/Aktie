@@ -444,6 +444,7 @@ public class HasFileCreator
         //See if there is an existing file already for it
         //Make the old one a duplicate
         CObj oldfile = index.getById ( hasfileid );
+        System.out.println ( "OLDFILE: " + oldfile );
 
         if ( oldfile != null )
         {

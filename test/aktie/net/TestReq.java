@@ -2,9 +2,6 @@ package aktie.net;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
-
-import aktie.data.CObj;
 import aktie.data.RequestFile;
 
 import static org.junit.Assert.*;
@@ -81,13 +78,6 @@ public class TestReq implements GetSendData2
     public long getLastFileUpdate()
     {
         return ++lastupdate;
-    }
-
-    @Override
-    public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests()
-    {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

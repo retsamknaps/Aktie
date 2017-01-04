@@ -12,6 +12,7 @@ import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.user.IdentityManager;
 
 public class InIdentityProcessor extends GenericProcessor
 {
@@ -21,12 +22,16 @@ public class InIdentityProcessor extends GenericProcessor
     private GuiCallback guicallback;
     private Index index;
     private HH2Session session;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InIdentityProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public InIdentityProcessor ( HH2Session s, Index i, IdentityManager im, CObj mid, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
+        ConId = mid;
+        identManager = im;
     }
 
     @Override
@@ -79,6 +84,13 @@ public class InIdentityProcessor extends GenericProcessor
                     if ( insert )
                     {
                         b.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
+
+                        if ( identManager != null && ConId != null )
+                        {
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
+                        }
+
                         index.index ( b, true );
                         guicallback.update ( b );
                     }

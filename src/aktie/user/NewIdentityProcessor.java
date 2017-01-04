@@ -39,6 +39,7 @@ public class NewIdentityProcessor extends GenericProcessor
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
@@ -49,6 +50,7 @@ public class NewIdentityProcessor extends GenericProcessor
         conMan = sd;
         net = n;
         session = s;
+        identManager = new IdentityManager ( s, i );
         index = i;
         guicallback = g;
         spamtool = st;
@@ -98,23 +100,6 @@ public class NewIdentityProcessor extends GenericProcessor
                 o.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
                 o.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
-                try
-                {
-                    dt.setIdentity ( o );
-                    o.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
-                    index.index ( o );
-                    index.forceNewSearcher();
-                    connectionMan.addDestination ( dt );
-                }
-
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
-                    o.pushString ( CObj.ERROR, "failed to index new identity" );
-                    guicallback.update ( o );
-                    return true;
-                }
-
                 Session s = null;
 
                 try
@@ -162,6 +147,27 @@ public class NewIdentityProcessor extends GenericProcessor
 
                     }
 
+                    return true;
+                }
+
+                try
+                {
+                    dt.setIdentity ( o );
+                    o.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
+
+                    long gseq = identManager.getGlobalSequenceNumber ( o.getId() );
+                    o.pushPrivateNumber ( CObj.getGlobalSeq ( o.getId() ), gseq );
+
+                    index.index ( o );
+                    index.forceNewSearcher();
+                    connectionMan.addDestination ( dt );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                    o.pushString ( CObj.ERROR, "failed to index new identity" );
+                    guicallback.update ( o );
                     return true;
                 }
 

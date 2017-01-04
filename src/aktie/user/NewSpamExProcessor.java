@@ -62,6 +62,9 @@ public class NewSpamExProcessor extends GenericProcessor
             c.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             c.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
 
+            long gseq = identManager.getGlobalSequenceNumber ( creator );
+            c.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), gseq );
+
             index.index ( c );
         }
 

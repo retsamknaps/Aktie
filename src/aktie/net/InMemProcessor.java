@@ -14,6 +14,7 @@ import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.MemberSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 import aktie.utils.SymDecoder;
 
@@ -24,12 +25,16 @@ public class InMemProcessor extends GenericProcessor
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InMemProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public InMemProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
     {
         index = i;
         session = s;
         guicallback = cb;
+        ConId = mid;
+        identManager = im;
         validator = new DigestValidator ( index, st );
     }
 
@@ -185,6 +190,9 @@ public class InMemProcessor extends GenericProcessor
                                 }
 
                             }
+
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                             index.index ( b );
                             guicallback.update ( b );

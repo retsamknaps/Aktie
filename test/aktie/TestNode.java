@@ -19,6 +19,7 @@ import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
 import aktie.net.RawNet;
+import aktie.user.ShareManager;
 import aktie.utils.FUtils;
 
 import org.apache.lucene.search.Sort;
@@ -156,6 +157,8 @@ public class TestNode
         ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 2L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
         ConnectionManager2.REQUEST_UPDATE_DELAY = 200L;
+        ShareManager.CHECKHASFILE_DELAY = 2000L;
+        ShareManager.SHARE_DELAY = 2000L;
 
         CallbackIntr cb0 = new CallbackIntr();
         CallbackIntr cb1 = new CallbackIntr();
@@ -1743,6 +1746,23 @@ public class TestNode
             assertEquals ( 1, clst.size() );
             clst.close();
 
+            System.out.println ( "RENAME FILE...................." );
+            nf.renameTo ( new File ( tmp.getPath() + File.separator + "RENAMED_FILE_NAME.dat" ) );
+            File tm = new File ( tmp.getPath() + File.separator + "RENAMED_FILE_NAME.dat" );
+            assertTrue ( tm.exists() );
+            assertFalse ( nf.exists() );
+            nf = tm;
+
+            try
+            {
+                Thread.sleep ( 5000L );
+            }
+
+            catch ( InterruptedException e2 )
+            {
+                e2.printStackTrace();
+            }
+
             System.out.println ( "DOWNLOAD FILE .............. " + n0seed.getId() );
             File nlf = File.createTempFile ( "download", ".dat" );
             hf0.setType ( CObj.USR_DOWNLOAD_FILE );
@@ -1823,6 +1843,7 @@ public class TestNode
             clst = n3.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             clst.close();
+
 
             //subscribe wtih seed0b
             CObj sub0b = new CObj();

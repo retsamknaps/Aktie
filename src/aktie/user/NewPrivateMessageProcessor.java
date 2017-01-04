@@ -31,6 +31,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
     private GuiCallback guicallback;
     private NewPushProcessor push;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, SpamTool st, GuiCallback gc )
     {
@@ -39,6 +40,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
         guicallback = gc;
         spamtool = st;
         push = p;
+        identManager = new IdentityManager ( s, i );
     }
 
     @Override
@@ -213,6 +215,9 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                     pident.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
                 }
 
+                long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+                pident.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
+
                 try
                 {
                     index.index ( pident );
@@ -287,6 +292,9 @@ public class NewPrivateMessageProcessor extends GenericProcessor
             {
                 b.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
             }
+
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            b.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
             {

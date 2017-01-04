@@ -25,6 +25,7 @@ public class NewMembershipProcessor extends GenericProcessor
     private MembershipValidator validator;
     private HH2Session session;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public NewMembershipProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
@@ -32,6 +33,7 @@ public class NewMembershipProcessor extends GenericProcessor
         index = i;
         guicallback = cb;
         spamtool = st;
+        identManager = new IdentityManager ( s, i );
         validator = new MembershipValidator ( index );
     }
 
@@ -260,6 +262,9 @@ public class NewMembershipProcessor extends GenericProcessor
                 }
 
             }
+
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
             {

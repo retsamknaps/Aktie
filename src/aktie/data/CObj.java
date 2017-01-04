@@ -123,6 +123,7 @@ public class CObj
     public static String PRV_RECIPIENT   = "prv_to";
     public static String PRV_MSG_ID      = "prv_msg_id";
     public static String PRV_SKIP_PAYMENT = "prv_skip_payment";
+    public static String PRV_GLOBAL_SEQ  = "prv_glbseq";
 
     public static String PRV_TEMP_NEWPOSTS = "newposts";
 
@@ -238,6 +239,10 @@ public class CObj
     public static String QRY_MAX_DATE = "q_max_dt";
     public static String QRY_DAYS_BACK = "q_days_old";
 
+    public static String getGlobalSeq ( String id )
+    {
+        return CObj.PRV_GLOBAL_SEQ + id;
+    }
 
     public static String getSubid ( String id )
     {

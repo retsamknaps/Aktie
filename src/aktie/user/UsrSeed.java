@@ -14,7 +14,7 @@ public class UsrSeed extends GenericProcessor
 
     public UsrSeed ( HH2Session s, Index i, GuiCallback cb )
     {
-        identProcessor = new InIdentityProcessor ( s, i, cb );
+        identProcessor = new InIdentityProcessor ( s, i, null, null, cb );
     }
 
     @Override

@@ -104,7 +104,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         accumulateTypes = new HashSet<String>();
         accumulateTypes.add ( CObj.FRAGMENT );
         preprocProcessor = new BatchProcessor();
-        InIdentityProcessor ip = new InIdentityProcessor ( session, index, this );
+        InIdentityProcessor ip = new InIdentityProcessor ( session, index, IdentManager, dest.getIdentity(), this );
         preprocProcessor.addProcessor ( new ConnectionValidatorProcessor ( ip, d, this ) );
         //!!!!!!!!!!!!!!!!!! InFragProcessor - should be first !!!!!!!!!!!!!!!!!!!!!!!
         //Otherwise the list of fragments will be interate though for preceding processors
@@ -113,15 +113,14 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InFileModeProcessor ( this ) );
         preprocProcessor.addProcessor ( ip );
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
-        preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, this, hfc, st ) );
-        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InSubProcessor ( session, index, st, this ) );
-        preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, this ) );
+        preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
+        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, dest.getIdentity(), this, hfc, st ) );
+        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
+        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
+        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
+        preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, IdentManager, dest.getIdentity(), this ) );
+        preprocProcessor.addProcessor ( new InSubProcessor ( session, index, st, IdentManager, this ) );
+        preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, IdentManager, this ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
         preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );
@@ -343,36 +342,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     }
 
-    /*
-        At the beginning of each connection request all subscriptions
-        for private communities the two have in common.
-    */
-    private boolean subRequestSent = false;
-    private void sendInitialSubRequest()
-    {
-        if ( !subRequestSent && endDestination != null )
-        {
-            subRequestSent = true;
-
-            for ( String comid : memberships )
-            {
-                ConcurrentLinkedQueue<CObj> memreq = conMan.getPrivSubRequests().get ( comid );
-
-                if ( memreq != null )
-                {
-                    for ( CObj req : memreq )
-                    {
-                        enqueue ( req );
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
     private void updateSubsAndFiles()
     {
         long nu = conMan.getLastFileUpdate();
@@ -385,7 +354,6 @@ public class ConnectionThread implements Runnable, GuiCallback
             lastFileUpdate = nu;
             updateMemberships();
             updateSubs();
-            sendInitialSubRequest();
             lastFileUpdate = conMan.getLastFileUpdate();
             appendOutput ( "updateSubsAndFiles: subs: " + subs );
 

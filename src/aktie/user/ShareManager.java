@@ -1231,7 +1231,7 @@ public class ShareManager implements Runnable
     }
 
     public static long SHARE_DELAY = 60L * 1000L;
-    public static long CHECKHASFILE_DELAY = 8L * 60L * 60L * 1000L;
+    public static long CHECKHASFILE_DELAY = 1L * 60L * 60L * 1000L;
 
     private long nextcheckhasfile = 0;
 
@@ -1270,12 +1270,14 @@ public class ShareManager implements Runnable
         while ( !stop )
         {
             newshare = false;
+            boolean updateindex = false;
 
             if ( enabled )
             {
                 setRunning ( true );
                 processShares();
                 setRunning ( false );
+                updateindex = true;
             }
 
             if ( !newshare )
@@ -1295,10 +1297,16 @@ public class ShareManager implements Runnable
                     checkFragments();
                     nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
                     setRunning ( false );
+                    updateindex = true;
                 }
 
                 autoDownload();
 
+            }
+
+            if ( updateindex )
+            {
+                index.forceNewSearcher();
             }
 
         }

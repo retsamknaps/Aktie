@@ -15,6 +15,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.NumericRangeQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
@@ -27,6 +28,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 
 import aktie.data.CObj;
+import aktie.data.IdentityData;
 
 public class Index implements Runnable
 {
@@ -95,7 +97,6 @@ public class Index implements Runnable
 
     public void forceNewSearcher()
     {
-        //Not used anymore
     }
 
     public void close()
@@ -120,7 +121,7 @@ public class Index implements Runnable
     {
         try
         {
-            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath(), writer );
             CObjList l = new CObjList ( cs, q, srt );
             l.executeQuery ( max );
             return l;
@@ -147,7 +148,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath(), writer );
 
             CObjList l = new CObjList ( cs, analyzer, qs, s );
             l.executeQuery ( max );
@@ -169,7 +170,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath(), writer );
 
             CObjList l = new CObjList ( bq, cs, analyzer, qs, s );
             l.executeQuery ( max );
@@ -191,7 +192,7 @@ public class Index implements Runnable
         {
             //DirectoryReader reader = DirectoryReader.open ( writer, true );
             //IndexSearcher searcher = new IndexSearcher ( reader );
-            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath() );
+            AktieSearcher cs = AktieSearcher.newSearcher ( indexdir.getPath(), writer );
 
             CObjList l = new CObjList ( bq, cs, analyzer, qs, null );
             l.executeQuery ( max );
@@ -205,6 +206,47 @@ public class Index implements Runnable
 
         return null;
 
+    }
+
+    public CObjList getAllMissingSeqNumbers ( String ident, int max )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        MatchAllDocsQuery alld = new MatchAllDocsQuery();
+        builder.add ( alld, BooleanClause.Occur.MUST );
+
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.MEMBERSHIP );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          0L, Long.MAX_VALUE, true, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
+
+        return search ( builder.build(), max );
+    }
+
+    public CObjList getAllCObj()
+    {
+        MatchAllDocsQuery alld = new MatchAllDocsQuery();
+
+        return search ( alld, ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
     }
 
     public CObjList getAllPrivIdents()
@@ -2144,24 +2186,6 @@ public class Index implements Runnable
 
     public void indexNoCommit ( IndexWriter idx, CObj o, boolean onlynew ) throws IOException
     {
-
-        //REMOVE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //DEBUG FOR MISSING NAMES IN PRV MESSAGES
-        if ( CObj.PRIVIDENTIFIER.equals ( o.getType() ) ||
-                CObj.PRIVMESSAGE.equals ( o.getType() ) )
-        {
-            String pm = o.getPrivate ( CObj.NAME );
-
-            if ( pm == null && "true".equals ( o.getPrivate ( CObj.DECODED ) ) )
-            {
-                System.out.println ( "---------- SEND THIS TO DEVELOPERS PLEASE ----------" );
-                Thread.dumpStack();
-            }
-
-        }
-
-        //<<REMOVE ME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
         if ( o.getDig() == null && o.getId() == null )
         {

@@ -1537,6 +1537,86 @@ public class IdentityManager
         return new LinkedList<IdentityData>();
     }
 
+    public long getGlobalSequenceNumber ( String id )
+    {
+        long sn = 0;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+            boolean update = false;
+
+            if ( dat.getLastGlobalSequence() == 0 )
+            {
+                dat.setLastGlobalSequence ( Utils.Random.nextInt ( 10000 ) );
+                update = true;
+            }
+
+            update = update ||
+                     ( dat.getNextGlobalSequenceUpdateTime() < System.currentTimeMillis() );
+            update = update ||
+                     ( dat.getCountForLastGlobalSequence() > IdentityData.MAXGLOBALSEQUENCECOUNT );
+
+            if ( update )
+            {
+                dat.setLastGlobalSequence ( dat.getLastGlobalSequence() + 1 );
+                dat.setNextGlobalSequenceUpdateTime ( System.currentTimeMillis() +
+                                                      ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCETIME ) );
+                dat.setCountForLastGlobalSequence (
+                    ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT ) );
+            }
+
+            dat.setCountForLastGlobalSequence (
+                dat.getCountForLastGlobalSequence() + 1 );
+            s.getTransaction().commit();
+            sn = dat.getLastGlobalSequence() + 1;
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return sn;
+    }
+
     @SuppressWarnings ( "unchecked" )
     public List<IdentityData> nextMemberUpdate ( int max )
     {

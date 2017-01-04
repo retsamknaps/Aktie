@@ -1,10 +1,6 @@
 package aktie.net;
 
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentMap;
-
-import aktie.data.CObj;
 import aktie.data.RequestFile;
 
 public interface GetSendData2
@@ -17,7 +13,5 @@ public interface GetSendData2
     public Set<RequestFile> getHasFileForConnection ( String remotedest, Set<String> subs );
 
     public long getLastFileUpdate();
-
-    public ConcurrentMap<String, ConcurrentLinkedQueue<CObj>> getPrivSubRequests();
 
 }

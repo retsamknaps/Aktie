@@ -9,6 +9,7 @@ import aktie.data.HH2Session;
 import aktie.index.Index;
 import aktie.sequences.SubSequence;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 import aktie.utils.SubscriptionValidator;
 
@@ -22,12 +23,16 @@ public class InSubProcessor extends GenericProcessor
     private DigestValidator validator;
     private SubscriptionValidator subvalidator;
     private ConnectionThread conThread;
+    private CObj ConId;
+    private IdentityManager identManager;
 
-    public InSubProcessor ( HH2Session s, Index i, SpamTool st, ConnectionThread ct )
+    public InSubProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
     {
         session = s;
         conThread = ct;
         index = i;
+        identManager = im;
+        ConId = conThread.getLocalDestination().getIdentity();
         validator = new DigestValidator ( index, st );
         subvalidator = new SubscriptionValidator ( index );
     }
@@ -110,6 +115,9 @@ public class InSubProcessor extends GenericProcessor
                                     }
 
                                 }
+
+                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
 
                                 index.index ( b );
                                 conThread.update ( b );
