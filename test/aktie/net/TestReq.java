@@ -40,7 +40,7 @@ public class TestReq implements GetSendData2
     }
 
     @Override
-    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
+    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs, boolean b )
     {
         System.out.println ( "CALLING NEXT: " + localdest + " -> " + remotedest );
 

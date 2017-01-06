@@ -17,7 +17,7 @@ public class IdentityData
     public static long MAXGLOBALSEQUENCECOUNT = 200;
 
     //Make sure the sequence number is incremented at least once a day.
-    public static long MAXGLOBALSEQUENCETIME = 24L * 60L * 60L * 1000L;
+    public static long MAXGLOBALSEQUENCETIME = 5L * 60L * 1000L;
 
     public static int DONE = 0;
     public static int UPDATE = 1;

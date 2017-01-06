@@ -51,6 +51,8 @@ public class CObj
     public static String FIELD = "field";
     public static String DUPFILE = "dupfile";
     public static String SPAMEXCEPTION = "spamex";
+    public static String OBJDIG = "d";
+    public static String SEQCOMP = "seqcomp";
 
     //Types - no indexed.
     public static String INDEX_QUERY = "index_query";
@@ -81,6 +83,8 @@ public class CObj
     public static String CON_REQ_HASFILE = "con_has";
     public static String CON_REQ_FRAGLIST = "con_flist";
     public static String CON_REQ_FRAG = "con_frag";
+    public static String CON_REQ_GLOBAL = "con_glb";
+    public static String CON_REQ_DIG = "con_dig";
     public static String CON_LIST = "lsttype";
     public static String CON_FILEMODE = "filemode";
 

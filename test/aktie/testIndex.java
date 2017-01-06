@@ -128,6 +128,7 @@ public class testIndex
             assertEquals ( 0, cl.size() );
             cl.close();
 
+            i.close();
         }
 
         catch ( Exception e )
@@ -400,7 +401,7 @@ public class testIndex
             cl.close();
 
 
-
+            i.close();
         }
 
         catch ( Exception e )

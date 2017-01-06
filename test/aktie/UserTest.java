@@ -342,7 +342,7 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
     }
 
     @Override
-    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
+    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs, boolean b )
     {
         // TODO Auto-generated method stub
         return null;

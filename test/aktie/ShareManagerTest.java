@@ -99,6 +99,8 @@ public class ShareManagerTest implements GuiCallback
             assertEquals ( nf.getCanonicalFile().getPath(), hf.getPrivate ( CObj.LOCALFILE ) );
             cl.close();
 
+            i.close();
+
         }
 
         catch ( Exception e )

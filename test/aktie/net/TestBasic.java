@@ -92,6 +92,7 @@ public class TestBasic
     {
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
+        ConnectionThread.MINGLOBALSEQDELAY = 1000L;
         //Index.MIN_TIME_BETWEEN_SEARCHERS = 0;
 
         TestNode Tn0 = newId ( "n0" );

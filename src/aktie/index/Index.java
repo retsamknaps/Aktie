@@ -212,9 +212,6 @@ public class Index implements Runnable
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
-        MatchAllDocsQuery alld = new MatchAllDocsQuery();
-        builder.add ( alld, BooleanClause.Occur.MUST );
-
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
@@ -240,6 +237,25 @@ public class Index implements Runnable
         builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
 
         return search ( builder.build(), max );
+    }
+
+    public CObjList getGlobalSeqNumbers ( String ident, long lastseq, long curseq )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          lastseq, curseq, false, true );
+
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+            SortField.Type.LONG );
+
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
     }
 
     public CObjList getAllCObj()

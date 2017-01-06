@@ -98,6 +98,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         membershipPushes = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>() ;
         subPushes = new ConcurrentHashMap<String, ConcurrentLinkedQueue<CObj>>() ;
         pubPushes = new ConcurrentLinkedQueue<CObj>();
+        subCache = new ConcurrentHashMap<String, WeakReference<Set<String>>>();
         index = i;
         fileHandler = r;
         identityManager = id;
@@ -1082,7 +1083,16 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs )
+    private Object nextGlobalReq ( String remotedest )
+    {
+        long gr = identityManager.getLastGlobalSequenceNumber ( remotedest );
+        CObj r = new CObj();
+        r.setType ( CObj.CON_REQ_GLOBAL );
+        r.pushNumber ( CObj.SEQNUM, gr );
+        return r;
+    }
+
+    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs, boolean getNextGlobal )
     {
 
         recentAttempts.remove ( remotedest + false );
@@ -1098,6 +1108,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         if ( n == null )
         {
             n = nextPubPush ( localdest, remotedest );
+        }
+
+        if ( n == null && getNextGlobal )
+        {
+            n = nextGlobalReq ( remotedest );
         }
 
         return n;
@@ -1345,9 +1360,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 for ( int c0 = 0; c0 < misslst.size(); c0++ )
                 {
                     CObj ob = misslst.get ( c0 );
-                    String sid = ob.getId();
-                    long sn = identityManager.getGlobalSequenceNumber ( sid );
-                    ob.pushPrivateNumber ( CObj.getGlobalSeq ( sid ), sn );
+                    long sn = identityManager.getGlobalSequenceNumber ( id.getId() );
+                    ob.pushPrivateNumber ( CObj.getGlobalSeq ( id.getId() ), sn );
                     index.index ( ob );
                 }
 

@@ -1537,9 +1537,9 @@ public class IdentityManager
         return new LinkedList<IdentityData>();
     }
 
-    public long getGlobalSequenceNumber ( String id )
+
+    public void updateGlobalSequenceNumber ( String id, long seq )
     {
-        long sn = 0;
         Session s = null;
 
         try
@@ -1547,32 +1547,13 @@ public class IdentityManager
             s = session.getSession();
             s.getTransaction().begin();
             IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
-            boolean update = false;
 
-            if ( dat.getLastGlobalSequence() == 0 )
+            if ( dat != null )
             {
-                dat.setLastGlobalSequence ( Utils.Random.nextInt ( 10000 ) );
-                update = true;
+                dat.setLastGlobalSequence ( seq );
             }
 
-            update = update ||
-                     ( dat.getNextGlobalSequenceUpdateTime() < System.currentTimeMillis() );
-            update = update ||
-                     ( dat.getCountForLastGlobalSequence() > IdentityData.MAXGLOBALSEQUENCECOUNT );
-
-            if ( update )
-            {
-                dat.setLastGlobalSequence ( dat.getLastGlobalSequence() + 1 );
-                dat.setNextGlobalSequenceUpdateTime ( System.currentTimeMillis() +
-                                                      ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCETIME ) );
-                dat.setCountForLastGlobalSequence (
-                    ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT ) );
-            }
-
-            dat.setCountForLastGlobalSequence (
-                dat.getCountForLastGlobalSequence() + 1 );
             s.getTransaction().commit();
-            sn = dat.getLastGlobalSequence() + 1;
         }
 
         catch ( Exception e )
@@ -1614,6 +1595,168 @@ public class IdentityManager
 
         }
 
+    }
+
+    public long getLastGlobalSequenceNumber ( String id )
+    {
+        long sn = 0;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+
+            if ( dat != null )
+            {
+                if ( checkGlobalSequenceNumber ( dat ) )
+                {
+                    s.merge ( dat );
+                }
+
+                sn = dat.getLastGlobalSequence();
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return sn;
+    }
+
+    private boolean checkGlobalSequenceNumber ( IdentityData dat )
+    {
+        boolean update = false;
+
+        if ( dat.getLastGlobalSequence() == 0 )
+        {
+            dat.setLastGlobalSequence ( 1 + Utils.Random.nextInt ( 10000 ) );
+            update = true;
+        }
+
+        update = update ||
+                 ( dat.getNextGlobalSequenceUpdateTime() < System.currentTimeMillis() );
+        update = update ||
+                 ( dat.getCountForLastGlobalSequence() > IdentityData.MAXGLOBALSEQUENCECOUNT );
+
+        if ( update )
+        {
+            dat.setLastGlobalSequence ( dat.getLastGlobalSequence() + 1 );
+            dat.setNextGlobalSequenceUpdateTime ( System.currentTimeMillis() +
+                                                  ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCETIME ) );
+            dat.setCountForLastGlobalSequence (
+                ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT ) );
+        }
+
+        return update;
+    }
+
+    public long getGlobalSequenceNumber ( String id )
+    {
+        long sn = 0;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+
+            if ( dat != null )
+            {
+                checkGlobalSequenceNumber ( dat );
+
+                dat.setCountForLastGlobalSequence (
+                    dat.getCountForLastGlobalSequence() + 1 );
+
+                s.merge ( dat );
+
+                sn = dat.getLastGlobalSequence() + 1;
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        System.out.println ( "getGlobalSequenceNumber: " + id + " SN: " + sn );
         return sn;
     }
 

@@ -44,6 +44,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public static int MAXQUEUESIZE = 1000; //Long lists should be in CObjList each one could have open indexreader!
     public static long GUIUPDATEPERIOD = 10L * 1000L; // 10 seconds
+    public static long MINGLOBALSEQDELAY = 10L * 60L * 60L * 1000L; //1 minute.
 
     private boolean stop;
     private boolean fileOnly;
@@ -52,6 +53,8 @@ public class ConnectionThread implements Runnable, GuiCallback
     private BatchProcessor inProcessor;
     private ConcurrentLinkedQueue<CObj> inQueue;
     private ConcurrentLinkedQueue<Object> outqueue;
+    private Set<String> reqdigs;
+    private long nextSeqNum;
     private GetSendData2 conMan;
     private OutputProcessor outproc;
     private CObj endDestination;
@@ -92,6 +95,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         index = i;
         session = s;
         fileHandler = rf;
+        reqdigs = new CopyOnWriteArraySet<String>();
         subs = new CopyOnWriteArraySet<String>();
         memberships = new CopyOnWriteArraySet<String>();
         filesHasRequested = new CopyOnWriteArraySet<RequestFile>();
@@ -110,9 +114,12 @@ public class ConnectionThread implements Runnable, GuiCallback
         //Otherwise the list of fragments will be interate though for preceding processors
         //that don't need to and time will be wasted.
         preprocProcessor.addProcessor ( new InFragProcessor ( session, index, this ) );
+        preprocProcessor.addProcessor ( new InCheckDigProcessor ( this, index, IdentManager ) );
         preprocProcessor.addProcessor ( new InFileModeProcessor ( this ) );
         preprocProcessor.addProcessor ( ip );
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
+        preprocProcessor.addProcessor ( new InDigProcessor ( this, index ) );
+        preprocProcessor.addProcessor ( new InGlbSeqProcessor ( this ) );
         preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, dest.getIdentity(), this, hfc, st ) );
         preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
@@ -126,6 +133,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );
         //These process requests from the other node.
         inProcessor = new BatchProcessor();
+        inProcessor.addProcessor ( new ReqGlobalSeq ( i, IdentManager, this ) );
+        inProcessor.addProcessor ( new ReqDigProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqIdentProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqFragListProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqFragProcessor ( i, this ) );
@@ -175,6 +184,45 @@ public class ConnectionThread implements Runnable, GuiCallback
     public DestinationThread getLocalDestination()
     {
         return dest;
+    }
+
+    public void addReqDig ( String d )
+    {
+        System.out.println ( "ADDING REQ DIG: " + d + " size: " + reqdigs.size() );
+        reqdigs.add ( d );
+    }
+
+    public void setLastSeq ( long s )
+    {
+        nextSeqNum = s;
+        CObjList rlst = new CObjList();
+
+        if ( reqdigs.size() == 0 )
+        {
+            IdentManager.updateGlobalSequenceNumber (
+                getEndDestination().getId(), s );
+        }
+
+        for ( String n : reqdigs )
+        {
+            System.out.println ( "REQUESTING DIG: " + n );
+            CObj r = new CObj();
+            r.setType ( CObj.CON_REQ_DIG );
+            r.setDig ( n );
+            rlst.add ( r );
+        }
+
+        enqueue ( rlst );
+    }
+
+    public Set<String> getDigReq()
+    {
+        return reqdigs;
+    }
+
+    public long getLastSeq()
+    {
+        return nextSeqNum;
     }
 
     private void updateMemberships()
@@ -561,6 +609,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private class OutputProcessor implements Runnable
     {
         private int tick = 0;
+        private long lastGlobalReq = 0;
 
         public synchronized void go()
         {
@@ -668,10 +717,21 @@ public class ConnectionThread implements Runnable, GuiCallback
                         subcnt = subs.size();
                     }
 
+                    boolean reqgbl = false;
+                    long curtime = System.currentTimeMillis();
+                    curtime -= MINGLOBALSEQDELAY;
+
+                    if ( curtime > lastGlobalReq && reqdigs.isEmpty() )
+                    {
+                        lastGlobalReq = System.currentTimeMillis();
+                        reqgbl = true;
+                    }
+
                     appendOutput ( "nextNonFile mem: " + memberships + " " +
                                    memcnt + " subs: " + subs + " " + subcnt );
                     Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
-                                                    endDestination.getId(), memberships, subs );
+                                                    endDestination.getId(),
+                                                    memberships, subs, reqgbl );
                     appendOutput ( "nextNonFile " + r );
                     return r;
                 }
@@ -1657,6 +1717,11 @@ public class ConnectionThread implements Runnable, GuiCallback
     public Set<String> getMemberships()
     {
         return memberships;
+    }
+
+    public Set<String> getSubs()
+    {
+        return subs;
     }
 
 }

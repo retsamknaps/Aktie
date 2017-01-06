@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
+import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.gui.Wrapper;
 import aktie.index.CObjList;
@@ -157,8 +158,11 @@ public class TestNode
         ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 2L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
         ConnectionManager2.REQUEST_UPDATE_DELAY = 200L;
+        //ConnectionManager2.
         ShareManager.CHECKHASFILE_DELAY = 2000L;
         ShareManager.SHARE_DELAY = 2000L;
+        IdentityData.MAXGLOBALSEQUENCETIME = 2L * 1000L;
+        ConnectionThread.MINGLOBALSEQDELAY = 1000L;
 
         CallbackIntr cb0 = new CallbackIntr();
         CallbackIntr cb1 = new CallbackIntr();

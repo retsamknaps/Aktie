@@ -6,7 +6,7 @@ import aktie.data.RequestFile;
 public interface GetSendData2
 {
 
-    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs );
+    public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs, boolean getNextGlobal );
 
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles );
 
