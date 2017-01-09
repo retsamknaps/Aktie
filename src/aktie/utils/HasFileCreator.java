@@ -19,6 +19,7 @@ import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 
 public class HasFileCreator
 {
@@ -28,12 +29,14 @@ public class HasFileCreator
     private Index index;
     private SubscriptionValidator validator;
     private SpamTool spamtool;
+    private IdentityManager identManager;
 
     public HasFileCreator ( HH2Session s, Index i, SpamTool st )
     {
         index = i;
         session = s;
         spamtool = st;
+        identManager = new IdentityManager ( s, i );
         validator = new SubscriptionValidator ( index );
     }
 
@@ -526,8 +529,13 @@ public class HasFileCreator
         //Set the created on time
         o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
 
+        long sq = identManager.getGlobalSequenceNumber ( creator );
+        o.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), sq );
+
         //Sign it.
         spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+
+        System.out.println ( "CREATE HAS FILE: " + creator + " sq: " + sq + " dig: " + o.getDig() );
 
         try
         {

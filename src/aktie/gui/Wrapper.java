@@ -33,9 +33,9 @@ public class Wrapper
     public static String VERSION_0418 = "version 0.4.18";
     public static String VERSION_0505 = "version 0.5.5";
     public static String VERSION_0506 = "version 0.5.6";
-    public static String VERSION_0507 = "version 0.5.7";
+    public static String VERSION_0508 = "version 0.5.8";
 
-    public static String VERSION = VERSION_0507;
+    public static String VERSION = VERSION_0508;
 
     public static String VERSION_FILE = "version.txt";
 

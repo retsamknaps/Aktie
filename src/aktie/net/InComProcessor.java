@@ -50,6 +50,7 @@ public class InComProcessor extends GenericProcessor
 
         if ( CObj.COMMUNITY.equals ( type ) )
         {
+
             if ( validator.valid ( b ) )
             {
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );

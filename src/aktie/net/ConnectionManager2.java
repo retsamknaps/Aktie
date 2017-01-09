@@ -43,16 +43,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public static int MAX_TOTAL_DEST_CONNECTIONS = 100;
     public static long REQUEST_UPDATE_DELAY = 60L * 1000L;
     public static long DECODE_AND_NEW_CONNECTION_DELAY = 2L * 60L * 1000L;
-    public static long UPDATE_CACHE_PERIOD = 60L * 1000L;
     public static long MAX_TIME_IN_QUEUE = 24L * 60L * 60L * 1000L;
     public static long MIN_TIME_TO_NEW_CONNECTION = 10L * 60L * 1000L;
     public static int QUEUE_DEPTH_FILE = 100;
     public static int ATTEMPT_CONNECTIONS = 10;
-    public static long MAX_TIME_COMMUNITY_ACTIVE_UNTIL_NEW_CONNECTION = 2L * 60L * 1000L;
     public static long MAX_TIME_WITH_NO_REQUESTS = 60L * 60L * 1000L;
     public static long MAX_CONNECTION_TIME  = 2L * 60L * 60L * 1000L; //Only keep connections for 2 hours
     public static int MAX_PUSH_LOOPS = 20; //The number of times we attempt to connect to a node to push to
     public static int PUSH_NODES = 5;  //The number of nodes we'd like to push to
+    public static long ALLOWGLOBALAFTERSTARTUP = 10L * 60L * 1000L;
 
     private Index index;
     private RequestFileHandler fileHandler;
@@ -1083,7 +1082,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    private Object nextGlobalReq ( String remotedest )
+    private Object nextGlobalReq ( String localdest, String remotedest )
     {
         long gr = identityManager.getLastGlobalSequenceNumber ( remotedest );
         CObj r = new CObj();
@@ -1092,6 +1091,10 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return r;
     }
 
+    //Do not send global requests for a while until we have had a chance
+    //to update spam exceptions.
+    private boolean AllowGlobalReuqests = false;
+    private long FirstConnection = -1;
     public Object nextNonFile ( String localdest, String remotedest, Set<String> members, Set<String> subs, boolean getNextGlobal )
     {
 
@@ -1110,9 +1113,20 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             n = nextPubPush ( localdest, remotedest );
         }
 
-        if ( n == null && getNextGlobal )
+        if ( FirstConnection == -1 )
         {
-            n = nextGlobalReq ( remotedest );
+            FirstConnection = System.currentTimeMillis();
+        }
+
+        if ( !AllowGlobalReuqests )
+        {
+            AllowGlobalReuqests = ( System.currentTimeMillis() - ALLOWGLOBALAFTERSTARTUP )
+                                  > FirstConnection;
+        }
+
+        if ( n == null && getNextGlobal && AllowGlobalReuqests )
+        {
+            n = nextGlobalReq ( localdest, remotedest );
         }
 
         return n;

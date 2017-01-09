@@ -188,7 +188,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void addReqDig ( String d )
     {
-        System.out.println ( "ADDING REQ DIG: " + d + " size: " + reqdigs.size() );
         reqdigs.add ( d );
     }
 
@@ -205,7 +204,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         for ( String n : reqdigs )
         {
-            System.out.println ( "REQUESTING DIG: " + n );
             CObj r = new CObj();
             r.setType ( CObj.CON_REQ_DIG );
             r.setDig ( n );
@@ -397,7 +395,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
         appendOutput ( "updateSubsAndFiles: nu: " + nu + " > " + lastFileUpdate );
 
-        if ( nu > lastFileUpdate )
+        if ( endDestination != null && nu > lastFileUpdate )
         {
             lastFileUpdate = nu;
             updateMemberships();
@@ -423,6 +421,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void stop()
     {
+        Thread.dumpStack();
         boolean wasstopped = stop;
         stop = true;
         outproc.go();
@@ -622,7 +621,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             {
                 try
                 {
-                    wait ( 30000 );
+                    wait ( MINGLOBALSEQDELAY );
                 }
 
                 catch ( InterruptedException e )
@@ -728,7 +727,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                     }
 
                     appendOutput ( "nextNonFile mem: " + memberships + " " +
-                                   memcnt + " subs: " + subs + " " + subcnt );
+                                   memcnt + " subs: " + subs + " " + subcnt + " reqgbl: " + reqgbl + " size: " + reqdigs.size() );
                     Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
                                                     endDestination.getId(),
                                                     memberships, subs, reqgbl );

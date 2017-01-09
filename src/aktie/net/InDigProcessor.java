@@ -22,12 +22,10 @@ public class InDigProcessor extends GenericProcessor
         if ( CObj.OBJDIG.equals ( b.getType() ) )
         {
             String d = b.getDig();
-            System.out.println ( "DIG FOR SEQ: " + d );
 
             if ( d != null )
             {
                 CObj o = index.getByDig ( d );
-                System.out.println ( "OBJ FOUND FOR DIG " + d + " " + o );
 
                 if ( o == null )
                 {

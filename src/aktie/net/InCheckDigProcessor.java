@@ -45,10 +45,6 @@ public class InCheckDigProcessor extends GenericProcessor
 
                 if ( b.checkSignatureX ( pubk, 0 ) )
                 {
-                    System.out.println ( "PENDING DIGS: " + conThread.getLocalDestination().getIdentity().getId() + " from " +
-                                         conThread.getEndDestination().getId() + " size: " +
-                                         conThread.getDigReq().size() );
-
                     if ( conThread.getDigReq().remove ( b.getDig() ) )
                     {
                         if ( conThread.getDigReq().isEmpty() )

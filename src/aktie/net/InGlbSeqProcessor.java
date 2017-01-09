@@ -22,8 +22,6 @@ public class InGlbSeqProcessor extends GenericProcessor
 
             if ( sq != null )
             {
-                System.out.println ( "DONE GETTING GL SEQ: " + conThread.getLocalDestination().getIdentity().getId() + " from: " +
-                                     conThread.getEndDestination().getId() + " NUM: " + sq );
                 conThread.setLastSeq ( sq );
             }
 

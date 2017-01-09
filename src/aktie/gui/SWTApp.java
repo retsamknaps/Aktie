@@ -47,7 +47,6 @@ import aktie.index.Upgrade0405;
 import aktie.index.Upgrade0506;
 import aktie.net.ConnectionElement;
 import aktie.net.ConnectionListener;
-import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
 //import aktie.net.RawNet;
 import aktie.user.RequestFileHandler;
@@ -1889,7 +1888,6 @@ public class SWTApp implements UpdateInterface
         createDialogs();
         exportCommunities();
 
-        startUpdateTimer();
         saveVersionFile();
         startNetUpdateStatusTimer();
 
@@ -1977,33 +1975,6 @@ public class SWTApp implements UpdateInterface
             }
 
         } );
-
-    }
-
-    private void startUpdateTimer()
-    {
-        Timer t = new Timer ( "Update timer", true );
-        t.schedule ( new TimerTask()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    updateAll();
-                }
-
-                catch ( Exception e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-            //Make the update period shorter than the max time with no requests, so that we
-            //actually send requests before the time is up.  That way we don't loose the connection
-            //when it is actually useful to us.
-        }, 0, Math.min ( 30L * 60L * 1000L, ConnectionManager2.MAX_TIME_WITH_NO_REQUESTS - ( 10L * 60L * 1000L ) ) );
 
     }
 
@@ -3494,7 +3465,7 @@ public class SWTApp implements UpdateInterface
         } );
 
         MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
-        mntmStartManualUpdate.setText ( "Refresh All Now" );
+        mntmStartManualUpdate.setText ( "Legacy Update" );
         mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
 
         MenuItem mntmI2Popts = new MenuItem ( menu_1, SWT.NONE );

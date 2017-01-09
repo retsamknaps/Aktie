@@ -217,6 +217,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
                 long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
                 pident.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
+                System.out.println ( "NEW PRIVATE IDENT: ME: " + myid.getId() + " dig: " + pident.getDig() );
 
                 try
                 {
@@ -295,6 +296,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
             long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
             b.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
+            System.out.println ( "NEW PRIVATE MSG: ME: " + myid.getId() + " dig: " + b.getDig() + " seq " + gseq );
 
             try
             {

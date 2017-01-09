@@ -232,6 +232,8 @@ public class NewCommunityProcessor extends GenericProcessor
             long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
+            System.out.println ( "NEWCOMMUNITY: ME: " + creator + " DIG: " + o.getDig() + " SEQ: " + gseq );
+
             try
             {
                 index.index ( o );

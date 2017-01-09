@@ -155,14 +155,18 @@ public class TestNode
         Logger log = Logger.getLogger ( "aktie" );
         log.setLevel ( Level.INFO );
 
-        ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 2L * 1000L;
+        ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 13L * 1000L;
+        ConnectionManager2.MAX_CONNECTION_TIME = 10L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
         ConnectionManager2.REQUEST_UPDATE_DELAY = 200L;
+        ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 30L * 1000L;
         //ConnectionManager2.
         ShareManager.CHECKHASFILE_DELAY = 2000L;
         ShareManager.SHARE_DELAY = 2000L;
-        IdentityData.MAXGLOBALSEQUENCETIME = 2L * 1000L;
+        IdentityData.MAXGLOBALSEQUENCECOUNT = 20;
+        IdentityData.MAXGLOBALSEQUENCETIME = 1000L;
         ConnectionThread.MINGLOBALSEQDELAY = 1000L;
+
 
         CallbackIntr cb0 = new CallbackIntr();
         CallbackIntr cb1 = new CallbackIntr();
@@ -667,7 +671,7 @@ public class TestNode
             System.out.println ( co.getString ( CObj.PAYLOAD2 ) );
             clist.close();
 
-            System.out.println ( "CREATE SUBSCRIPTION.............................." );
+            System.out.println ( "CREATE SUBSCRIPTION.............................. " );
             cb0.oqueue.clear();
             CObj sub0 = new CObj();
             sub0.setType ( CObj.SUBSCRIPTION );
@@ -854,7 +858,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 1000L );
+                Thread.sleep ( 20000L );
             }
 
             catch ( InterruptedException e )
@@ -1402,7 +1406,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 40000 );
             }
 
             catch ( InterruptedException e )
@@ -1571,7 +1575,7 @@ public class TestNode
             l.close();
 
 
-            System.out.println ( "CREATE FILE...................................." );
+            System.out.println ( "CREATE FILE.................................... " + node3b.getId() );
             cb3.oqueue.clear();
 
             File tmp = new File ( "testshare" );
@@ -1625,7 +1629,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 40000 );
             }
 
             catch ( InterruptedException e )
@@ -1650,7 +1654,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 40000 );
             }
 
             catch ( InterruptedException e )
@@ -1985,7 +1989,22 @@ public class TestNode
             Wrapper.NEWPAYMENT = 0x0000084000000000L;
             Wrapper.CHECKNEWPAYMENTAFTER = 0;
 
-            createIdentity ( n4, "node4a" );
+            CObj n4ident = createIdentity ( n4, "node4a" );
+
+            while ( n4ident.getId() == null )
+            {
+                try
+                {
+                    Thread.sleep ( 1000L );
+                }
+
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
             n0seed.setType ( CObj.USR_SEED );
             n4.enqueue ( n0seed );
 
@@ -2004,12 +2023,9 @@ public class TestNode
 
             n4.getIndex().forceNewSearcher();
 
-            n4.enqueue ( updateIdent );
-            n4.sendRequestsNow();
-
             try
             {
-                Thread.sleep ( 12L * 1000L );
+                Thread.sleep ( ConnectionManager2.ALLOWGLOBALAFTERSTARTUP / 3 );
             }
 
             catch ( InterruptedException e )
@@ -2017,80 +2033,12 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n4.enqueue ( updateIdent );
-            n4.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 12L * 1000L );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n4.enqueue ( updateIdent );
-            n4.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 12L * 1000L );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
 
             clist = n4.getIndex().getIdentities();
             assertEquals ( 9, clist.size() );
             clist.close();
 
             //Make sure we DO NOT GET Updates from others yet
-
-            n4.enqueue ( comupdate );
-
-            n4.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10L * 1000L );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n4.enqueue ( comupdate );
-
-            n4.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10L * 1000L );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n4.enqueue ( comupdate );
-
-            n4.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10L * 1000L );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
             comlst = n4.getIndex().getValidCommunities();
             assertEquals ( 0, comlst.size() );
             comlst.close();
@@ -2123,7 +2071,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 40L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -2138,7 +2086,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 40L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -2153,7 +2101,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 40L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -2175,6 +2123,17 @@ public class TestNode
             comlst = n3.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
             assertEquals ( expsize, comlst.size() );
             comlst.close();
+
+            try
+            {
+                Thread.sleep ( 60L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
             comlst = n4.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
             assertEquals ( expsize, comlst.size() );
             comlst.close();
@@ -2185,7 +2144,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 40L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -2242,6 +2201,22 @@ public class TestNode
                 e.printStackTrace();
             }
 
+            CObj setrank = new CObj();
+            setrank.setType ( CObj.USR_SET_RANK );
+            setrank.pushNumber ( CObj.PRV_USER_RANK, 8 );
+            setrank.pushString ( CObj.CREATOR, n0seed.getId() );
+            n3.enqueue ( setrank );
+
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
             CObj post2 = new CObj();
             post2.setType ( CObj.POST );
             post2.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
@@ -2265,69 +2240,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( pupdate );
-            n3.enqueue ( pupdate );
-
-            n0.sendRequestsNow();
-            n3.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            clst = n3.getIndex().getPosts ( pubcom.getDig(), n0seed.getId(), 0, Long.MAX_VALUE );
-            assertEquals ( 1, clst.size() );
-            CObj pstt = clst.get ( 0 );
-            assertEquals ( "This is a post2.", pstt.getString ( CObj.PAYLOAD ) );
-            clst.close();
-
-            //n3 set n0 rank above 5 and rerequests posts.
-            //make sure you get the new one.
-            CObj setrank = new CObj();
-            setrank.setType ( CObj.USR_SET_RANK );
-            setrank.pushNumber ( CObj.PRV_USER_RANK, 8 );
-            setrank.pushString ( CObj.CREATOR, n0seed.getId() );
-            n3.enqueue ( setrank );
-
-            n0.enqueue ( pupdate );
-            n3.enqueue ( pupdate );
-
-            n0.sendRequestsNow();
-            n3.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( pupdate );
-            n3.enqueue ( pupdate );
-
-            n0.sendRequestsNow();
-            n3.sendRequestsNow();
-
-            try
-            {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 30000 );
             }
 
             catch ( InterruptedException e )

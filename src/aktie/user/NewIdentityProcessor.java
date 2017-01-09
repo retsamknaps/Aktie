@@ -158,6 +158,8 @@ public class NewIdentityProcessor extends GenericProcessor
                     long gseq = identManager.getGlobalSequenceNumber ( o.getId() );
                     o.pushPrivateNumber ( CObj.getGlobalSeq ( o.getId() ), gseq );
 
+                    System.out.println ( "IDENTITY CREATED: name: " + o.getString ( CObj.NAME ) + " id: " + o.getId() );
+
                     index.index ( o );
                     index.forceNewSearcher();
                     connectionMan.addDestination ( dt );

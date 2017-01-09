@@ -27,11 +27,9 @@ public class ReqGlobalSeq extends GenericProcessor
         {
             Long last = b.getNumber ( CObj.SEQNUM );
 
-            System.out.println ( "REQUEST GLOBAL SEQ: " + last + " ME: " + conThread.getLocalDestination().getIdentity().getId() );
-
             if ( last != null )
             {
-                long curseq = identManager.getGlobalSequenceNumber (
+                long curseq = identManager.getMyLastGlobalSequenceNumber (
                                   conThread.getLocalDestination().getIdentity().getId() );
 
                 //Get all objects at that sequence number.
@@ -39,7 +37,6 @@ public class ReqGlobalSeq extends GenericProcessor
                                       conThread.getLocalDestination().getIdentity().getId(),
                                       last, curseq );
 
-                System.out.println ( "RETURNING " + seqobj.size() + " DIGESTS." );
                 //Check that the requesting node has access.
                 long seqnum = -1;
                 CObjList rlst = new CObjList();
@@ -51,6 +48,7 @@ public class ReqGlobalSeq extends GenericProcessor
                     {
                         CObj o = seqobj.get ( c );
 
+
                         long gseq = o.getPrivateNumber (
                                         CObj.getGlobalSeq ( conThread.getLocalDestination().getIdentity().getId() ) );
 
@@ -59,7 +57,7 @@ public class ReqGlobalSeq extends GenericProcessor
                             seqnum = gseq;
                         }
 
-                        if ( seqnum != gseq )
+                        if ( seqnum != gseq && rlst.size() != 0 )
                         {
                             seqdone = true;
                         }
@@ -144,9 +142,6 @@ public class ReqGlobalSeq extends GenericProcessor
                     lc.setType ( CObj.SEQCOMP );
                     lc.pushNumber ( CObj.SEQNUM, seqnum );
                     conThread.enqueue ( lc );
-                    System.out.println ( "SENT LAST SEQUENCE! " +
-                                         conThread.getLocalDestination().getIdentity().getId() +
-                                         " SEQ: " + seqnum );
                 }
 
             }
@@ -163,7 +158,6 @@ public class ReqGlobalSeq extends GenericProcessor
         CObj ds = new CObj();
         ds.setType ( CObj.OBJDIG );
         ds.setDig ( dig );
-        System.out.println ( "RETURNING DIG: " + dig );
         lst.add ( ds );
     }
 

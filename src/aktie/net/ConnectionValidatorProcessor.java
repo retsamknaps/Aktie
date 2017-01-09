@@ -127,7 +127,10 @@ public class ConnectionValidatorProcessor extends GenericProcessor
 
                     else
                     {
-                        //First thing to do is always request identities
+                        //First thing to do is always request identities.
+                        //We STILL DO THIS even with global sequences.
+                        //Because global sequences are held off for spam
+                        //exception updates.
                         CObj cr = new CObj();
                         cr.setType ( CObj.CON_REQ_IDENTITIES );
                         con.enqueue ( cr );

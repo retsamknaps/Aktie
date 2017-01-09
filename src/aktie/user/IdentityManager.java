@@ -1610,6 +1610,67 @@ public class IdentityManager
 
             if ( dat != null )
             {
+                sn = dat.getLastGlobalSequence();
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return sn;
+    }
+
+    public long getMyLastGlobalSequenceNumber ( String id )
+    {
+        long sn = 0;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+
+            if ( dat != null )
+            {
                 if ( checkGlobalSequenceNumber ( dat ) )
                 {
                     s.merge ( dat );
@@ -1623,6 +1684,7 @@ public class IdentityManager
 
         catch ( Exception e )
         {
+            e.printStackTrace();
 
             if ( s != null )
             {
@@ -1756,7 +1818,6 @@ public class IdentityManager
 
         }
 
-        System.out.println ( "getGlobalSequenceNumber: " + id + " SN: " + sn );
         return sn;
     }
 

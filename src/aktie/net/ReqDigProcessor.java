@@ -28,7 +28,6 @@ public class ReqDigProcessor extends GenericProcessor
             if ( d != null && rid != null )
             {
                 CObj o = index.getByDig ( d );
-                System.out.println ( "REQUEST DIG: " + d + " ME: " + conThread.getLocalDestination().getIdentity().getId() );
 
                 if ( o != null )
                 {
@@ -51,8 +50,6 @@ public class ReqDigProcessor extends GenericProcessor
                     if ( CObj.SUBSCRIPTION.equals ( o.getType() ) )
                     {
                         String comid = o.getString ( CObj.COMMUNITYID );
-
-                        System.out.println ( "IS SUBSCRIPTION." );
 
                         if ( conThread.getMemberships().contains ( comid ) )
                         {
