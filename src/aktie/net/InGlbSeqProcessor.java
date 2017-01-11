@@ -18,11 +18,13 @@ public class InGlbSeqProcessor extends GenericProcessor
     {
         if ( CObj.SEQCOMP.equals ( b.getType() ) )
         {
-            Long sq = b.getNumber ( CObj.SEQNUM );
+            Long psq = b.getNumber ( CObj.SEQNUM );
+            Long msq = b.getNumber ( CObj.MEMSEQNUM );
+            Long ssq = b.getNumber ( CObj.SUBSEQNUM );
 
-            if ( sq != null )
+            if ( psq != null && msq != null && ssq != null )
             {
-                conThread.setLastSeq ( sq );
+                conThread.setLastSeq ( psq, msq, ssq );
             }
 
             return true;

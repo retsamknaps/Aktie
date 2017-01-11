@@ -146,6 +146,8 @@ public class CObj
     public static String COMMUNITY_NAME = "community_name";
     public static String CREATEDON = "createdon";
     public static String SEQNUM = "seqnum";
+    public static String MEMSEQNUM = "seqnum";
+    public static String SUBSEQNUM = "seqnum";
     public static String COMMUNITYID = "comid";
     public static String MEMBERID = "memid";
     public static String ENCKEY = "enckey";

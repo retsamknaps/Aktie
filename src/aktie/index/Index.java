@@ -208,7 +208,51 @@ public class Index implements Runnable
 
     }
 
-    public CObjList getAllMissingSeqNumbers ( String ident, int max )
+    public CObjList getMemMissingSeqNumbers ( String ident, int max )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          0L, Long.MAX_VALUE, true, true );
+
+        builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
+            SortField.Type.LONG );
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), max, sort );
+    }
+
+    public CObjList getSubMissingSeqNumbers ( String ident, int max )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term     typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          0L, Long.MAX_VALUE, true, true );
+
+        builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
+            SortField.Type.LONG );
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), max, sort );
+    }
+
+    public CObjList getPubMissingSeqNumbers ( String ident, int max )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
@@ -216,13 +260,7 @@ public class Index implements Runnable
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
-        typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
-        typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
-        typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.MEMBERSHIP );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
@@ -236,12 +274,76 @@ public class Index implements Runnable
                                           0L, Long.MAX_VALUE, true, true );
         builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
 
-        return search ( builder.build(), max );
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
+            SortField.Type.LONG );
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), max, sort );
     }
 
-    public CObjList getGlobalSeqNumbers ( String ident, long lastseq, long curseq )
+    public CObjList getGlobalMemSeqNumbers ( String ident, long lastseq, long curseq )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          lastseq, curseq, false, true );
+
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+            SortField.Type.LONG );
+
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
+    }
+
+    public CObjList getGlobalSubSeqNumbers ( String ident, long lastseq, long curseq )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term     typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          lastseq, curseq, false, true );
+
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+            SortField.Type.LONG );
+
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
+    }
+
+    public CObjList getGlobalPubSeqNumbers ( String ident, long lastseq, long curseq )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.MEMBERSHIP );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
                                           CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),

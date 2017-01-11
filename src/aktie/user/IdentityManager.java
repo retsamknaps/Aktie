@@ -1538,7 +1538,7 @@ public class IdentityManager
     }
 
 
-    public void updateGlobalSequenceNumber ( String id, long seq )
+    public void updateGlobalSequenceNumber ( String id, long ps, long ms, long ss )
     {
         Session s = null;
 
@@ -1550,7 +1550,9 @@ public class IdentityManager
 
             if ( dat != null )
             {
-                dat.setLastGlobalSequence ( seq );
+                dat.setLastPubGlobalSequence ( ps );
+                dat.setLastMemGlobalSequence ( ms );
+                dat.setLastSubGlobalSequence ( ss );
             }
 
             s.getTransaction().commit();
@@ -1597,22 +1599,16 @@ public class IdentityManager
 
     }
 
-    public long getLastGlobalSequenceNumber ( String id )
+    public IdentityData getLastGlobalSequenceNumber ( String id )
     {
-        long sn = 0;
+        IdentityData dat = null;
         Session s = null;
 
         try
         {
             s = session.getSession();
             s.getTransaction().begin();
-            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
-
-            if ( dat != null )
-            {
-                sn = dat.getLastGlobalSequence();
-            }
-
+            dat = ( IdentityData ) s.get ( IdentityData.class, id );
             s.getTransaction().commit();
         }
 
@@ -1655,7 +1651,7 @@ public class IdentityManager
 
         }
 
-        return sn;
+        return dat;
     }
 
     public long getMyLastGlobalSequenceNumber ( String id )
@@ -1676,7 +1672,7 @@ public class IdentityManager
                     s.merge ( dat );
                 }
 
-                sn = dat.getLastGlobalSequence();
+                sn = dat.getLastPubGlobalSequence();
             }
 
             s.getTransaction().commit();
@@ -1729,9 +1725,9 @@ public class IdentityManager
     {
         boolean update = false;
 
-        if ( dat.getLastGlobalSequence() == 0 )
+        if ( dat.getLastPubGlobalSequence() == 0 )
         {
-            dat.setLastGlobalSequence ( 1 + Utils.Random.nextInt ( 10000 ) );
+            dat.setLastPubGlobalSequence ( 1 + Utils.Random.nextInt ( 10000 ) );
             update = true;
         }
 
@@ -1742,7 +1738,7 @@ public class IdentityManager
 
         if ( update )
         {
-            dat.setLastGlobalSequence ( dat.getLastGlobalSequence() + 1 );
+            dat.setLastPubGlobalSequence ( dat.getLastPubGlobalSequence() + 1 );
             dat.setNextGlobalSequenceUpdateTime ( System.currentTimeMillis() +
                                                   ( long ) Utils.Random.nextInt ( ( int ) IdentityData.MAXGLOBALSEQUENCETIME ) );
             dat.setCountForLastGlobalSequence (
@@ -1772,7 +1768,7 @@ public class IdentityManager
 
                 s.merge ( dat );
 
-                sn = dat.getLastGlobalSequence() + 1;
+                sn = dat.getLastPubGlobalSequence() + 1;
             }
 
             s.getTransaction().commit();

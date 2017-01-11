@@ -44,7 +44,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public static int MAXQUEUESIZE = 1000; //Long lists should be in CObjList each one could have open indexreader!
     public static long GUIUPDATEPERIOD = 10L * 1000L; // 10 seconds
-    public static long MINGLOBALSEQDELAY = 10L * 60L * 60L * 1000L; //1 minute.
+    public static long MINGLOBALSEQDELAY = 1L * 60L * 1000L; //1 minute.
 
     private boolean stop;
     private boolean fileOnly;
@@ -54,7 +54,9 @@ public class ConnectionThread implements Runnable, GuiCallback
     private ConcurrentLinkedQueue<CObj> inQueue;
     private ConcurrentLinkedQueue<Object> outqueue;
     private Set<String> reqdigs;
-    private long nextSeqNum;
+    private long nextPubSeqNum;
+    private long nextMemSeqNum;
+    private long nextSubSeqNum;
     private GetSendData2 conMan;
     private OutputProcessor outproc;
     private CObj endDestination;
@@ -191,15 +193,17 @@ public class ConnectionThread implements Runnable, GuiCallback
         reqdigs.add ( d );
     }
 
-    public void setLastSeq ( long s )
+    public void setLastSeq ( long ps, long ms, long ss )
     {
-        nextSeqNum = s;
+        nextPubSeqNum = ps;
+        nextMemSeqNum = ms;
+        nextSubSeqNum = ss;
         CObjList rlst = new CObjList();
 
         if ( reqdigs.size() == 0 )
         {
             IdentManager.updateGlobalSequenceNumber (
-                getEndDestination().getId(), s );
+                getEndDestination().getId(), ps, ms, ss );
         }
 
         for ( String n : reqdigs )
@@ -218,9 +222,19 @@ public class ConnectionThread implements Runnable, GuiCallback
         return reqdigs;
     }
 
-    public long getLastSeq()
+    public long getLastPubSeq()
     {
-        return nextSeqNum;
+        return nextPubSeqNum;
+    }
+
+    public long getLastMemSeq()
+    {
+        return nextMemSeqNum;
+    }
+
+    public long getLastSubSeq()
+    {
+        return nextSubSeqNum;
     }
 
     private void updateMemberships()
@@ -421,7 +435,6 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void stop()
     {
-        Thread.dumpStack();
         boolean wasstopped = stop;
         stop = true;
         outproc.go();

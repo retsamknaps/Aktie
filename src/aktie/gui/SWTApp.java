@@ -1891,6 +1891,10 @@ public class SWTApp implements UpdateInterface
         saveVersionFile();
         startNetUpdateStatusTimer();
 
+        CObj u = new CObj();
+        u.setType ( CObj.USR_SPAMEX_UPDATE );
+        getNode().enqueue ( u );
+
     }
 
     private void failedToStart()

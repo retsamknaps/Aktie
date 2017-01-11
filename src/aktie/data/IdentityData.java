@@ -81,12 +81,16 @@ public class IdentityData
     private int subUpdatePriority;
 
     @Column ( columnDefinition = "BIGINT(19) default 0" )
-    private long lastGlobalSequence;
-    @Column ( columnDefinition = "BIGINT(19) default 0" )
     private long countForLastGlobalSequence;
     @Column ( columnDefinition = "BIGINT(19) default 0" )
     private long nextGlobalSequenceUpdateTime;
 
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastPubGlobalSequence;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastMemGlobalSequence;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastSubGlobalSequence;
 
     @Column ( columnDefinition = "BIGINT(19) default 0" )
     private long lastDataTime;
@@ -473,16 +477,6 @@ public class IdentityData
         this.subUpdatePriority = subUpdatePriority;
     }
 
-    public long getLastGlobalSequence()
-    {
-        return lastGlobalSequence;
-    }
-
-    public void setLastGlobalSequence ( long lastGlobalSequence )
-    {
-        this.lastGlobalSequence = lastGlobalSequence;
-    }
-
     public long getCountForLastGlobalSequence()
     {
         return countForLastGlobalSequence;
@@ -511,6 +505,36 @@ public class IdentityData
     public void setNextGlobalSequenceUpdateTime ( long nextGlobalSequenceUpdateTime )
     {
         this.nextGlobalSequenceUpdateTime = nextGlobalSequenceUpdateTime;
+    }
+
+    public long getLastMemGlobalSequence()
+    {
+        return lastMemGlobalSequence;
+    }
+
+    public void setLastMemGlobalSequence ( long lastMemGlobalSequence )
+    {
+        this.lastMemGlobalSequence = lastMemGlobalSequence;
+    }
+
+    public long getLastSubGlobalSequence()
+    {
+        return lastSubGlobalSequence;
+    }
+
+    public void setLastSubGlobalSequence ( long lastSubGlobalSequence )
+    {
+        this.lastSubGlobalSequence = lastSubGlobalSequence;
+    }
+
+    public long getLastPubGlobalSequence()
+    {
+        return lastPubGlobalSequence;
+    }
+
+    public void setLastPubGlobalSequence ( long lastPubGlobalSequence )
+    {
+        this.lastPubGlobalSequence = lastPubGlobalSequence;
     }
 
 }

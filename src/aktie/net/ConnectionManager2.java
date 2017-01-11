@@ -23,6 +23,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
+import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.RequestFile;
@@ -1084,10 +1085,12 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     private Object nextGlobalReq ( String localdest, String remotedest )
     {
-        long gr = identityManager.getLastGlobalSequenceNumber ( remotedest );
+        IdentityData id = identityManager.getLastGlobalSequenceNumber ( remotedest );
         CObj r = new CObj();
         r.setType ( CObj.CON_REQ_GLOBAL );
-        r.pushNumber ( CObj.SEQNUM, gr );
+        r.pushNumber ( CObj.SEQNUM, id.getLastPubGlobalSequence() );
+        r.pushNumber ( CObj.MEMSEQNUM, id.getLastMemGlobalSequence() );
+        r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
         return r;
     }
 
@@ -1127,6 +1130,24 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         if ( n == null && getNextGlobal && AllowGlobalReuqests )
         {
             n = nextGlobalReq ( localdest, remotedest );
+        }
+
+        if ( n == null )
+        {
+            List<DeveloperIdentity> cl = identityManager.claimSpamExUpdate ( 1 );
+            Iterator<DeveloperIdentity> il = cl.iterator();
+
+            if ( il.hasNext() )
+            {
+                DeveloperIdentity id = il.next();
+                CObj cr = new CObj();
+                cr.setType ( CObj.CON_REQ_SPAMEX );
+                cr.pushString ( CObj.CREATOR, id.getId() );
+                cr.pushNumber ( CObj.FIRSTNUM, id.getLastSpamExNumber() + 1 );
+                cr.pushNumber ( CObj.LASTNUM, Long.MAX_VALUE );
+                n = cr;
+            }
+
         }
 
         return n;
@@ -1359,6 +1380,22 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
+    private boolean updateSeqNumber ( String id, CObjList misslst ) throws IOException
+    {
+        boolean donext = ( misslst.size() == 0 );
+
+        for ( int c0 = 0; c0 < misslst.size(); c0++ )
+        {
+            CObj ob = misslst.get ( c0 );
+            long sn = identityManager.getGlobalSequenceNumber ( id );
+            ob.pushPrivateNumber ( CObj.getGlobalSeq ( id ), sn );
+            index.index ( ob );
+        }
+
+        misslst.close();
+        return donext;
+    }
+
     private void checkGlobalSequences()
     {
         CObjList ilst = index.getMyIdentities();
@@ -1367,19 +1404,29 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         {
             try
             {
+
                 CObj id = ilst.get ( c );
-                CObjList misslst = index.getAllMissingSeqNumbers
+                CObjList misslst = index.getPubMissingSeqNumbers
                                    ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
 
-                for ( int c0 = 0; c0 < misslst.size(); c0++ )
+                boolean donext = updateSeqNumber ( id.getId(), misslst );
+
+                if ( donext )
                 {
-                    CObj ob = misslst.get ( c0 );
-                    long sn = identityManager.getGlobalSequenceNumber ( id.getId() );
-                    ob.pushPrivateNumber ( CObj.getGlobalSeq ( id.getId() ), sn );
-                    index.index ( ob );
+                    misslst = index.getMemMissingSeqNumbers
+                              ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
+
+                    donext = updateSeqNumber ( id.getId(), misslst );
                 }
 
-                misslst.close();
+                if ( donext )
+                {
+                    misslst = index.getSubMissingSeqNumbers
+                              ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
+
+                    donext = updateSeqNumber ( id.getId(), misslst );
+                }
+
             }
 
             catch ( Exception e )

@@ -55,7 +55,9 @@ public class InCheckDigProcessor extends GenericProcessor
                             {
                                 String id = rid.getId();
                                 identManager.updateGlobalSequenceNumber ( id,
-                                        conThread.getLastSeq() );
+                                        conThread.getLastPubSeq(),
+                                        conThread.getLastMemSeq(),
+                                        conThread.getLastSubSeq() );
                             }
 
                         }

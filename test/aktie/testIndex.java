@@ -99,7 +99,7 @@ public class testIndex
 
             i.forceNewSearcher();
 
-            CObjList cl = i.getAllMissingSeqNumbers ( "blah", 1000 );
+            CObjList cl = i.getSubMissingSeqNumbers ( "blah", 1000 );
             assertEquals ( 3, cl.size() );
 
             for ( int c = 0; c < cl.size(); c++ )
@@ -124,7 +124,7 @@ public class testIndex
 
             cl.close();
 
-            cl = i.getAllMissingSeqNumbers ( "blah", 1000 );
+            cl = i.getSubMissingSeqNumbers ( "blah", 1000 );
             assertEquals ( 0, cl.size() );
             cl.close();
 
