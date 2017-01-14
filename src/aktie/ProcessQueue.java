@@ -1,6 +1,7 @@
 package aktie;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.data.CObj;
@@ -37,7 +38,11 @@ public class ProcessQueue implements Runnable
     {
         if ( !stop )
         {
-            log.info ( "process " + name + " : " + queue.size() );
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "process " + name + " : " + queue.size() );
+            }
+
             Object o = queue.poll();
 
             try
@@ -99,7 +104,10 @@ public class ProcessQueue implements Runnable
             return true;
         }
 
-        log.info ( "enqueue rejected. " + name + " size: " + queue.size() );
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "enqueue rejected. " + name + " size: " + queue.size() );
+        }
 
         if ( b instanceof CObjList )
         {

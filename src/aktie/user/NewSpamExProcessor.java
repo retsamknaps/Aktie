@@ -65,8 +65,6 @@ public class NewSpamExProcessor extends GenericProcessor
             long gseq = identManager.getGlobalSequenceNumber ( creator );
             c.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), gseq );
 
-            System.out.println ( "SAVING SPAMEX CREATOR: " + creator + " seq " + gseq + " dig: " + c.getDig() );
-
             index.index ( c );
         }
 

@@ -1,5 +1,8 @@
 package aktie.net;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 
 import aktie.GenericProcessor;
@@ -10,6 +13,7 @@ import aktie.user.IdentityManager;
 
 public class InCheckDigProcessor extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     private Index index;
     private ConnectionThread conThread;
@@ -20,6 +24,20 @@ public class InCheckDigProcessor extends GenericProcessor
         conThread = ct;
         index = i;
         identManager = im;
+    }
+
+    private void log ( String msg )
+    {
+        if ( conThread.getEndDestination() != null )
+        {
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                           " FROM: " + conThread.getEndDestination().getId() + " " + msg );
+            }
+
+        }
+
     }
 
     @Override
@@ -45,19 +63,37 @@ public class InCheckDigProcessor extends GenericProcessor
 
                 if ( b.checkSignatureX ( pubk, 0 ) )
                 {
+                    if ( log.isLoggable ( Level.INFO ) )
+                    {
+                        log ( "CHECK: " + b.getDig() );
+                    }
+
                     if ( conThread.getDigReq().remove ( b.getDig() ) )
                     {
+
+                        if ( log.isLoggable ( Level.INFO ) )
+                        {
+                            log ( "FOUND: " + b.getDig() );
+                        }
+
                         if ( conThread.getDigReq().isEmpty() )
                         {
                             CObj rid = conThread.getEndDestination();
 
                             if ( rid != null )
                             {
+                                if ( log.isLoggable ( Level.INFO ) )
+                                {
+                                    log ( "COMPLETE: PUB" + conThread.getLastPubSeq() + " MEM " +
+                                          conThread.isUpdatemembers() + " " + conThread.getLastMemSeq() +
+                                          " SUB " + conThread.isUpdatesubs() + " " + conThread.getLastSubSeq() );
+                                }
+
                                 String id = rid.getId();
                                 identManager.updateGlobalSequenceNumber ( id,
-                                        conThread.getLastPubSeq(),
-                                        conThread.getLastMemSeq(),
-                                        conThread.getLastSubSeq() );
+                                        true, conThread.getLastPubSeq(),
+                                        conThread.isUpdatemembers(), conThread.getLastMemSeq(),
+                                        conThread.isUpdatesubs(), conThread.getLastSubSeq() );
                             }
 
                         }

@@ -80,6 +80,8 @@ public class ConnectionThread implements Runnable, GuiCallback
     private long startTime;
     private Set<String> memberships;
     private Set<String> subs;
+    private Set<String> chkMemberships;
+    private Set<String> chkSubs;
     private Set<RequestFile> filesHasRequested;
     private long lastFileUpdate = Long.MIN_VALUE;
     private String fileUp;
@@ -100,6 +102,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         reqdigs = new CopyOnWriteArraySet<String>();
         subs = new CopyOnWriteArraySet<String>();
         memberships = new CopyOnWriteArraySet<String>();
+        chkSubs = new CopyOnWriteArraySet<String>();
+        chkMemberships = new CopyOnWriteArraySet<String>();
         filesHasRequested = new CopyOnWriteArraySet<RequestFile>();
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
@@ -121,6 +125,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( ip );
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
         preprocProcessor.addProcessor ( new InDigProcessor ( this, index ) );
+        preprocProcessor.addProcessor ( new InCheckMemSubProcessor ( this ) );
         preprocProcessor.addProcessor ( new InGlbSeqProcessor ( this ) );
         preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, dest.getIdentity(), this, hfc, st ) );
@@ -188,6 +193,33 @@ public class ConnectionThread implements Runnable, GuiCallback
         return dest;
     }
 
+    boolean updatemembers = false;
+    boolean updatesubs = false;
+    public void addChkMem ( String d )
+    {
+        chkMemberships.add ( d );
+    }
+
+    public void addChkSub ( String d )
+    {
+        chkSubs.add ( d );
+    }
+
+    public void checkDone()
+    {
+        updatemembers = ( chkMemberships.containsAll ( memberships ) );
+        updatesubs = updatemembers && ( chkSubs.containsAll ( subs ) );
+
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "CHECK DONE: ME: " + getLocalDestination().getIdentity().getId() +
+                       " FROM: " + getEndDestination().getId() + " " + updatemembers + " " + updatesubs );
+        }
+
+        chkMemberships.clear();
+        chkSubs.clear();
+    }
+
     public void addReqDig ( String d )
     {
         reqdigs.add ( d );
@@ -203,7 +235,10 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( reqdigs.size() == 0 )
         {
             IdentManager.updateGlobalSequenceNumber (
-                getEndDestination().getId(), ps, ms, ss );
+                getEndDestination().getId(),
+                true, ps,
+                updatemembers, ms,
+                updatesubs, ss );
         }
 
         for ( String n : reqdigs )
@@ -237,8 +272,10 @@ public class ConnectionThread implements Runnable, GuiCallback
         return nextSubSeqNum;
     }
 
-    private void updateMemberships()
+    private boolean updateMemberships()
     {
+        boolean sendmems = false;
+
         if ( endDestination != null )
         {
             Set<String> nl0 = new HashSet<String>();
@@ -336,14 +373,22 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             sl.close();
 
+            if ( !memberships.equals ( nl1 ) )
+            {
+                sendmems = true;
+            }
+
             memberships = nl1;
 
         }
 
+        return sendmems;
     }
 
-    private void updateSubs()
+    private boolean updateSubs()
     {
+        boolean sendsubs = false;
+
         if ( endDestination != null )
         {
             Set<String> nl0 = new HashSet<String>();
@@ -396,12 +441,20 @@ public class ConnectionThread implements Runnable, GuiCallback
             }
 
             sl.close();
+
+            if ( !subs.equals ( nl1 ) )
+            {
+                sendsubs = true;
+            }
+
             subs = nl1;
 
         }
 
+        return sendsubs;
     }
 
+    private boolean sendFirstMemSubs = true;
     private void updateSubsAndFiles()
     {
         long nu = conMan.getLastFileUpdate();
@@ -412,8 +465,15 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( endDestination != null && nu > lastFileUpdate )
         {
             lastFileUpdate = nu;
-            updateMemberships();
-            updateSubs();
+            boolean sendm = updateMemberships();
+            boolean sends = updateSubs();
+
+            if ( sendm || sends || sendFirstMemSubs )
+            {
+                sendFirstMemSubs = false;
+                sendMemsAndSubs();
+            }
+
             lastFileUpdate = conMan.getLastFileUpdate();
             appendOutput ( "updateSubsAndFiles: subs: " + subs );
 
@@ -425,6 +485,50 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
+    }
+
+    private void sendCheck ( String t, String d )
+    {
+        CObj s = new CObj();
+        s.setType ( t );
+        s.setDig ( d );
+
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            String chk = "CHECKMEM";
+
+            if ( CObj.CHECKSUB.equals ( t ) )
+            {
+                chk = "CHECKSUB";
+            }
+
+            if ( CObj.CHECKCOMP.equals ( t ) )
+            {
+                chk = "CHECKCOMP";
+            }
+
+            log.info ( "SENDING " + chk + " FROM: " + getLocalDestination().getIdentity().getId() +
+                       " TO: " + this.getEndDestination().getId() + " DIG: " + d );
+        }
+
+        enqueue ( s );
+    }
+
+    private void sendMemsAndSubs()
+    {
+        for ( String d : memberships )
+        {
+            sendCheck ( CObj.CHECKMEM, d );
+        }
+
+        for ( String d : subs )
+        {
+            sendCheck ( CObj.CHECKSUB, d );
+        }
+
+        CObj c = new CObj();
+        c.setType ( CObj.CHECKCOMP );
+        enqueue ( c );
     }
 
     public void setEndDestination ( CObj o )
@@ -553,7 +657,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
-        log.info ( "CONTHREAD: DROPPED! " + o );
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "CONTHREAD: DROPPED! " + o );
+        }
 
         if ( o instanceof CObjList )
         {
@@ -1184,7 +1291,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                         if ( !lff.delete() )
                                         {
-                                            log.info ( "Could not delete file: " + lff.getPath() );
+                                            if ( log.isLoggable ( Level.INFO ) )
+                                            {
+                                                log.info ( "Could not delete file: " + lff.getPath() );
+                                            }
 
                                             try
                                             {
@@ -1208,7 +1318,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                         if ( !rlp.renameTo ( lff ) )
                                         {
-                                            log.info ( "Failed to rename: " + rlp.getPath() + " to " + lff.getPath() );
+                                            if ( log.isLoggable ( Level.INFO ) )
+                                            {
+                                                log.info ( "Failed to rename: " + rlp.getPath() + " to " + lff.getPath() );
+                                            }
 
                                             try
                                             {
@@ -1734,6 +1847,16 @@ public class ConnectionThread implements Runnable, GuiCallback
     public Set<String> getSubs()
     {
         return subs;
+    }
+
+    public boolean isUpdatemembers()
+    {
+        return updatemembers;
+    }
+
+    public boolean isUpdatesubs()
+    {
+        return updatesubs;
     }
 
 }

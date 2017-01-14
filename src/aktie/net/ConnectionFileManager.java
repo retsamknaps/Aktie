@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.data.CObj;
@@ -160,7 +161,11 @@ public class ConnectionFileManager implements Runnable
         ConcurrentMap<RequestFile, Long> nt = new ConcurrentHashMap<RequestFile, Long>();
 
         List<RequestFile> flst = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
-        log.info ( "procFileQueue: " + flst.size() );
+
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "procFileQueue: " + flst.size() );
+        }
 
         for ( RequestFile rf : flst )
         {
@@ -176,7 +181,10 @@ public class ConnectionFileManager implements Runnable
                 fl = new ConcurrentLinkedQueue<CObj>();
             }
 
-            log.info ( "procFileQueue: " + rf.getLocalFile() + " num in queue: " + fl.size() );
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "procFileQueue: " + rf.getLocalFile() + " num in queue: " + fl.size() );
+            }
 
             Long tm = fileTime.get ( rf );
 
@@ -191,13 +199,20 @@ public class ConnectionFileManager implements Runnable
             if ( fl.size() < ConnectionManager2.QUEUE_DEPTH_FILE )
             {
 
-                log.info ( "procFileQueue: state: " + rf.getState() );
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "procFileQueue: state: " + rf.getState() );
+                }
 
                 if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST )
                 {
                     if ( fileHandler.claimFileListClaim ( rf ) )
                     {
-                        log.info ( "procFileQueue: state: request file list: " + rf.getLocalFile() );
+                        if ( log.isLoggable ( Level.INFO ) )
+                        {
+                            log.info ( "procFileQueue: state: request file list: " + rf.getLocalFile() );
+                        }
+
                         CObj cr = new CObj();
                         cr.setType ( CObj.CON_REQ_FRAGLIST );
                         cr.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
@@ -412,20 +427,41 @@ public class ConnectionFileManager implements Runnable
     @Override
     public void run()
     {
-        log.info ( "STARTING CONNECTION FILEMANAGER" );
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "STARTING CONNECTION FILEMANAGER" );
+        }
 
         while ( !stop )
         {
-            log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 0" );
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 0" );
+            }
 
             if ( !stop )
             {
                 removeStale();
-                log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 1" );
+
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 1" );
+                }
+
                 procFileQueue();
-                log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 2" );
+
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 2" );
+                }
+
                 delay();
-                log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 6" );
+
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 6" );
+                }
+
             }
 
         }

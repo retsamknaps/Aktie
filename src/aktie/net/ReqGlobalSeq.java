@@ -1,5 +1,7 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.index.CObjList;
@@ -8,6 +10,7 @@ import aktie.user.IdentityManager;
 
 public class ReqGlobalSeq extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionThread conThread;
     private IdentityManager identManager;
@@ -130,6 +133,16 @@ public class ReqGlobalSeq extends GenericProcessor
         return seqnum;
     }
 
+    private void log ( String msg )
+    {
+        if ( conThread.getEndDestination() != null )
+        {
+            log.info ( "ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                       " FROM: " + conThread.getEndDestination().getId() + " " + msg );
+        }
+
+    }
+
     private void sendDig ( CObjList lst, CObj d )
     {
         String dig = d.getDig();
@@ -137,6 +150,7 @@ public class ReqGlobalSeq extends GenericProcessor
         ds.setType ( CObj.OBJDIG );
         ds.setDig ( dig );
         lst.add ( ds );
+        log ( "SEND: " + dig );
     }
 
     @Override
@@ -154,14 +168,17 @@ public class ReqGlobalSeq extends GenericProcessor
             if ( publast != null && memlast != null && sublast != null )
             {
 
+                log ( " REQ GBL SEQ: " + publast + " " + memlast + " " + sublast );
                 CObjList rlst = new CObjList();
 
                 //Get all objects at that sequence number.
                 CObjList seqobj = index.getGlobalPubSeqNumbers (
                                       conThread.getLocalDestination().getIdentity().getId(),
                                       publast, curseq );
+                log ( " REQ PUBS: " + publast + " sz: " + seqobj.size() );
 
                 long ppub = filterObjects ( seqobj, rlst );
+                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + ppub );
 
                 if ( ppub == -1 )
                 {
@@ -172,8 +189,10 @@ public class ReqGlobalSeq extends GenericProcessor
                 seqobj = index.getGlobalMemSeqNumbers (
                              conThread.getLocalDestination().getIdentity().getId(),
                              memlast, curseq );
+                log ( " REQ MEM: " + memlast + " sz: " + seqobj.size() );
 
                 long mpub = filterObjects ( seqobj, rlst );
+                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + mpub );
 
                 if ( mpub == -1 )
                 {
@@ -184,8 +203,10 @@ public class ReqGlobalSeq extends GenericProcessor
                 seqobj = index.getGlobalSubSeqNumbers (
                              conThread.getLocalDestination().getIdentity().getId(),
                              sublast, curseq );
+                log ( " REQ SUB: " + sublast + " sz: " + seqobj.size() );
 
                 long spub = filterObjects ( seqobj, rlst );
+                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + spub );
 
                 if ( spub == -1 )
                 {

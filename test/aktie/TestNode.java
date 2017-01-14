@@ -491,6 +491,7 @@ public class TestNode
             n0.enqueue ( com0n0 );
             cb0.waitForUpdate();
             CObj co = ( CObj ) cb0.oqueue.poll();
+            System.out.println ( "::: " + co.getString ( CObj.ERROR ) );
             assertNull ( co.getString ( CObj.ERROR ) );
 
             System.out.println ( "UPDATE COMMUNITY.............................." );
@@ -703,7 +704,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 30000 );
             }
 
             catch ( InterruptedException e )

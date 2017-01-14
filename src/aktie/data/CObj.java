@@ -53,6 +53,9 @@ public class CObj
     public static String SPAMEXCEPTION = "spamex";
     public static String OBJDIG = "d";
     public static String SEQCOMP = "seqcomp";
+    public static String CHECKMEM = "chkmem";
+    public static String CHECKSUB = "chksub";
+    public static String CHECKCOMP = "chkcomp";
 
     //Types - no indexed.
     public static String INDEX_QUERY = "index_query";

@@ -1,10 +1,14 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 
 public class InGlbSeqProcessor extends GenericProcessor
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionThread conThread;
 
@@ -21,6 +25,10 @@ public class InGlbSeqProcessor extends GenericProcessor
             Long psq = b.getNumber ( CObj.SEQNUM );
             Long msq = b.getNumber ( CObj.MEMSEQNUM );
             Long ssq = b.getNumber ( CObj.SUBSEQNUM );
+
+            log.info ( "GLB SEQ COMPLETE: ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                       " FROM: " + conThread.getEndDestination().getId() + " SEQ: " +
+                       psq + " " + msq + " " + ssq );
 
             if ( psq != null && msq != null && ssq != null )
             {

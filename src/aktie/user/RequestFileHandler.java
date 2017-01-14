@@ -983,7 +983,6 @@ public class RequestFileHandler
             //is in the share path or else don't do it!
             if ( share != null && lfs != null && shareMan != null )
             {
-                //System.out.println()
                 DirectoryShare s = shareMan.getShare ( comid, creator, share );
 
                 log.info ( "SHARE: " + s );

@@ -1537,8 +1537,7 @@ public class IdentityManager
         return new LinkedList<IdentityData>();
     }
 
-
-    public void updateGlobalSequenceNumber ( String id, long ps, long ms, long ss )
+    public void resetGlobalMemSequence ( String id )
     {
         Session s = null;
 
@@ -1550,9 +1549,136 @@ public class IdentityManager
 
             if ( dat != null )
             {
-                dat.setLastPubGlobalSequence ( ps );
-                dat.setLastMemGlobalSequence ( ms );
-                dat.setLastSubGlobalSequence ( ss );
+                dat.setLastMemGlobalSequence ( 0 );
+                dat.setLastSubGlobalSequence ( 0 );
+                s.merge ( dat );
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    public void resetGlobalSubSequence ( String id )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+
+            if ( dat != null )
+            {
+                dat.setLastSubGlobalSequence ( 0 );
+                s.merge ( dat );
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    public void updateGlobalSequenceNumber ( String id, boolean up, long ps,
+            boolean um, long ms,
+            boolean us, long ss )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+            IdentityData dat = ( IdentityData ) s.get ( IdentityData.class, id );
+
+            if ( dat != null )
+            {
+                if ( up ) { dat.setLastPubGlobalSequence ( ps ); }
+
+                if ( um ) { dat.setLastMemGlobalSequence ( ms ); }
+
+                if ( us ) { dat.setLastSubGlobalSequence ( ss ); }
+
+                s.merge ( dat );
             }
 
             s.getTransaction().commit();

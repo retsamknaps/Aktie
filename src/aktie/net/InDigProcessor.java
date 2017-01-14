@@ -1,11 +1,15 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.index.Index;
 
 public class InDigProcessor extends GenericProcessor
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionThread conThread;
     private Index index;
@@ -22,6 +26,8 @@ public class InDigProcessor extends GenericProcessor
         if ( CObj.OBJDIG.equals ( b.getType() ) )
         {
             String d = b.getDig();
+            log.info ( "RCV DIG LIST: ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                       " FROM: " + conThread.getEndDestination().getId() + " DIG: " + d );
 
             if ( d != null )
             {

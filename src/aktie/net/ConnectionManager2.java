@@ -16,6 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
@@ -479,21 +480,33 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 else
                 {
-                    log.info ( "FAILED: Already connected! " + id.getId() );
+                    if ( log.isLoggable ( Level.INFO ) )
+                    {
+                        log.info ( "FAILED: Already connected! " + id.getId() );
+                    }
+
                 }
 
             }
 
             else
             {
-                log.info ( "FAILED: Already attempted connection. " + id.getId() );
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "FAILED: Already attempted connection. " + id.getId() );
+                }
+
             }
 
         }
 
         else
         {
-            log.info ( "FAILED:  Too many connections or self connection " + id.getId() );
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "FAILED:  Too many connections or self connection " + id.getId() );
+            }
+
         }
 
         return false;
@@ -617,7 +630,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
         {
             RequestFile rf = i.next();
-            log.info ( "ConnectionManager2: attempt connection for file: " + rf.getLocalFile() );
+
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "ConnectionManager2: attempt connection for file: " + rf.getLocalFile() );
+            }
 
             DestinationThread dt = null;
 
@@ -640,7 +657,10 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     CObjList clst = index.
                                     getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
 
-                    log.info ( "ConnectionManager2: other nodes with file: " + clst.size() + " cons " + con );
+                    if ( log.isLoggable ( Level.INFO ) )
+                    {
+                        log.info ( "ConnectionManager2: other nodes with file: " + clst.size() + " cons " + con );
+                    }
 
                     int rl[] = randomList ( clst.size() );
 
@@ -654,7 +674,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             Set<String> subs = getSubs ( id );
 
                             boolean contains = subs.contains ( rf.getCommunityId() );
-                            log.info ( "ConnectionManager2: attempt connetion to: " + id + " subs: " + subs.size() + " contains: " + contains );
+
+                            if ( log.isLoggable ( Level.INFO ) )
+                            {
+                                log.info ( "ConnectionManager2: attempt connetion to: " + id + " subs: " + subs.size() + " contains: " + contains );
+                            }
 
                             if ( contains )
                             {
@@ -1091,6 +1115,15 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         r.pushNumber ( CObj.SEQNUM, id.getLastPubGlobalSequence() );
         r.pushNumber ( CObj.MEMSEQNUM, id.getLastMemGlobalSequence() );
         r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
+
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "REQ GLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
+                       id.getLastPubGlobalSequence() + " " +
+                       id.getLastMemGlobalSequence() + " " +
+                       id.getLastSubGlobalSequence() );
+        }
+
         return r;
     }
 
@@ -1523,6 +1556,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         //Search for all decoded, invalid memberships, and check if valid
         //keep checking until no more validated.
+        Set<String> comstoreset = new HashSet<String>();
         int lastdec = 0;
         CObjList invliddeclist = index.getInvalidMemberships();
 
@@ -1577,6 +1611,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                     }
 
                                     com.pushPrivate ( CObj.MINE, "true" );
+                                    comstoreset.add ( comid );
                                 }
 
                                 index.index ( com );
@@ -1612,6 +1647,38 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         invliddeclist.close();
+
+        //Reset membership and subscription sequence numbers for communities
+        //with new members.  This is in case we missed things from old members
+        //when we are new members.
+        for ( String comid : comstoreset )
+        {
+            CObjList clst = index.getMemberships ( comid, null );
+
+            for ( int c = 0; c < clst.size(); c++ )
+            {
+                try
+                {
+                    CObj m = clst.get ( c );
+                    String memid = m.getPrivate ( CObj.MEMBERID );
+
+                    if ( memid != null )
+                    {
+                        identityManager.updateGlobalSequenceNumber ( memid, false, 0,
+                                true, 0, true, 0 );
+                    }
+
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+            clst.close();
+        }
 
     }
 
@@ -1658,7 +1725,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     public void run()
     {
         resetupLastUpdateToForceDecode();
-        log.info ( "STARTING CONNECTION MANAGER2" );
+
+        if ( log.isLoggable ( Level.INFO ) )
+        {
+            log.info ( "STARTING CONNECTION MANAGER2" );
+        }
 
         while ( !stop )
         {

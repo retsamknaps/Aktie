@@ -447,7 +447,6 @@ public class HasFileCreator
         //See if there is an existing file already for it
         //Make the old one a duplicate
         CObj oldfile = index.getById ( hasfileid );
-        System.out.println ( "OLDFILE: " + oldfile );
 
         if ( oldfile != null )
         {
@@ -534,8 +533,6 @@ public class HasFileCreator
 
         //Sign it.
         spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
-
-        System.out.println ( "CREATE HAS FILE: " + creator + " sq: " + sq + " dig: " + o.getDig() );
 
         try
         {

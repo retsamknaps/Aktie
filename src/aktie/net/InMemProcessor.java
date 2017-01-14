@@ -196,6 +196,7 @@ public class InMemProcessor extends GenericProcessor
 
                             index.index ( b );
                             guicallback.update ( b );
+
                         }
 
                     }

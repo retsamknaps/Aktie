@@ -1,11 +1,14 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.index.Index;
 
 public class ReqDigProcessor extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionThread conThread;
     private Index index;
@@ -14,6 +17,16 @@ public class ReqDigProcessor extends GenericProcessor
     {
         conThread = ct;
         index = i;
+    }
+
+    private void log ( String msg )
+    {
+        if ( conThread.getEndDestination() != null )
+        {
+            log.info ( "ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                       " FROM: " + conThread.getEndDestination().getId() + " " + msg );
+        }
+
     }
 
     @Override
@@ -28,6 +41,7 @@ public class ReqDigProcessor extends GenericProcessor
             if ( d != null && rid != null )
             {
                 CObj o = index.getByDig ( d );
+                log ( "GET DIG: " + d + " obj: " + o );
 
                 if ( o != null )
                 {
@@ -40,6 +54,7 @@ public class ReqDigProcessor extends GenericProcessor
                         {
                             if ( conThread.getSubs().contains ( comid ) )
                             {
+                                log ( "SND PST/HAS: " + d );
                                 conThread.enqueue ( o );
                             }
 
@@ -54,6 +69,7 @@ public class ReqDigProcessor extends GenericProcessor
                         if ( conThread.getMemberships().contains ( comid ) )
                         {
                             //Just send it if they're already members
+                            log ( "SND PRV SUB: " + d );
                             conThread.enqueue ( o );
                         }
 
@@ -67,6 +83,7 @@ public class ReqDigProcessor extends GenericProcessor
 
                                 if ( CObj.SCOPE_PUBLIC.equals ( pp ) )
                                 {
+                                    log ( "SND PUB SUB: " + d );
                                     conThread.enqueue ( o );
                                 }
 
@@ -83,6 +100,7 @@ public class ReqDigProcessor extends GenericProcessor
                             CObj.IDENTITY.equals ( o.getType() ) ||
                             CObj.SPAMEXCEPTION.equals ( o.getType() ) )
                     {
+                        log ( "SND PBLC: " + d );
                         conThread.enqueue ( o );
                     }
 

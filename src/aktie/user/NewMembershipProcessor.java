@@ -265,7 +265,6 @@ public class NewMembershipProcessor extends GenericProcessor
 
             long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
-            System.out.println ( "NEW MEMBERSHIP: ME: " + myid.getId() + " dig: " + o.getDig() + " seq: " + gseq );
 
             try
             {

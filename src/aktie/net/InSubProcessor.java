@@ -1,5 +1,6 @@
 package aktie.net;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
@@ -119,8 +120,16 @@ public class InSubProcessor extends GenericProcessor
                                 long gseq = identManager.getGlobalSequenceNumber ( ConId.getId() );
                                 b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
 
+                                if ( log.isLoggable ( Level.INFO ) )
+                                {
+                                    log.info ( "SUB RECEIVED: ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                                               " FROM: " + conThread.getEndDestination().getId() + " DIG: " +
+                                               b.getDig() + " SQ: " + gseq );
+                                }
+
                                 index.index ( b );
                                 conThread.update ( b );
+
                             }
 
                         }

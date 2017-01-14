@@ -1,5 +1,7 @@
 package aktie.user;
 
+import java.util.logging.Logger;
+
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
@@ -8,12 +10,15 @@ import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
+import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.utils.SubscriptionValidator;
 
 public class NewSubscriptionProcessor extends GenericProcessor
 {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private GuiCallback guicallback;
     private Index index;
@@ -164,7 +169,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
             try
             {
                 //Set the ID, so we always overwrite the last subscription
-                System.out.println ( "SUBSCRIPTION DIG: " + o.getDig() + "CREATOR: " + creator + " SEQ: " + gseq );
+                log.info ( "SUBSCRIPTION DIG: " + o.getDig() + "CREATOR: " + creator + " SEQ: " + gseq );
                 index.index ( o );
                 index.forceNewSearcher();
             }
@@ -175,6 +180,37 @@ public class NewSubscriptionProcessor extends GenericProcessor
                 o.pushString ( CObj.ERROR, "subscription could not be indexed" );
                 guicallback.update ( o );
                 return true;
+            }
+
+            if ( "true".equals ( o.getString ( CObj.SUBSCRIBED ) ) )
+            {
+                CObjList clst = index.getSubscriptions ( comid, null );
+
+                for ( int c = 0; c < clst.size(); c++ )
+                {
+                    try
+                    {
+                        CObj sb = clst.get ( c );
+                        String sc = sb.getString ( CObj.CREATOR );
+
+                        if ( sc != null )
+                        {
+                            identManager.updateGlobalSequenceNumber ( sc,
+                                    false, 0,
+                                    false, 0,
+                                    true, 0 );
+                        }
+
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                clst.close();
             }
 
             guicallback.update ( o );
