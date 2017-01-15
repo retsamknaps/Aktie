@@ -1678,6 +1678,21 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             }
 
             clst.close();
+
+            CObj com = index.getCommunity ( comid );
+
+            if ( com != null )
+            {
+                String creator = com.getString ( CObj.CREATOR );
+
+                if ( creator != null )
+                {
+                    identityManager.updateGlobalSequenceNumber ( creator, false, 0,
+                            true, 0, true, 0 );
+                }
+
+            }
+
         }
 
     }

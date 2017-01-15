@@ -966,6 +966,11 @@ public class Wrapper
 
     public static long getCheckPayment()
     {
+        if ( SWTApp.TESTNODE )
+        {
+            return 0;
+        }
+
         long pm = OLDPAYMENT;
         long today = System.currentTimeMillis();
 
@@ -979,6 +984,11 @@ public class Wrapper
 
     public static long getGenPayment()
     {
+        if ( SWTApp.TESTNODE )
+        {
+            return 0;
+        }
+
         return NEWPAYMENT;
     }
 

@@ -50,7 +50,6 @@ import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
 import aktie.net.Net;
 import aktie.net.RawNet;
-//import aktie.net.RawNet;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareListener;
 import aktie.utils.FUtils;
