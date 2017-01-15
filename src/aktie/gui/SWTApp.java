@@ -48,6 +48,8 @@ import aktie.index.Upgrade0506;
 import aktie.net.ConnectionElement;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
+import aktie.net.Net;
+import aktie.net.RawNet;
 //import aktie.net.RawNet;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareListener;
@@ -121,6 +123,8 @@ import org.eclipse.jface.viewers.ComboViewer;
 
 public class SWTApp implements UpdateInterface
 {
+    public static boolean TESTNODE = false;
+
     Logger log = Logger.getLogger ( "aktie" );
 
     private ConnectionCallback concallback = new ConnectionCallback();
@@ -1679,12 +1683,23 @@ public class SWTApp implements UpdateInterface
         {
             public void run()
             {
-                i2pnet = new I2PNet ( nodeDir, p );
-                i2pnet.waitUntilReady();
+                Net net = null;
+
+                if ( !TESTNODE )
+                {
+                    i2pnet = new I2PNet ( nodeDir, p );
+                    i2pnet.waitUntilReady();
+                    net = i2pnet;
+                }
+
+                else
+                {
+                    net = new RawNet ( new File ( nodeDir ) );
+                }
 
                 try
                 {
-                    node = new Node ( nodeDir, i2pnet, usrcallback,
+                    node = new Node ( nodeDir, net, usrcallback,
                                       netcallback, concallback );
 
                     updateAfterNodeStart();
@@ -1772,6 +1787,41 @@ public class SWTApp implements UpdateInterface
         identModel.setCollaspseState ( identTreeViewer );
     }
 
+    private void loadDefaults()
+    {
+
+        File devid = new File ( nodeDir + File.separator + "developerid.dat" );
+
+        if ( devid.exists() )
+        {
+            loadDeveloperIdentity ( devid );
+        }
+
+        //Load default seed file.
+        File defseedfile = new File ( nodeDir + File.separator + "defseed.dat" );
+
+        if ( defseedfile.exists() )
+        {
+            loadSeed ( defseedfile );
+        }
+
+        File spamex = new File ( nodeDir + File.separator + "spamex.dat" );
+
+        if ( spamex.exists() )
+        {
+            loadSpamEx ( spamex );
+        }
+
+        //Load default communities and subscribe.
+        File defcomfile = new File ( nodeDir + File.separator + "defcom.dat" );
+
+        if ( defcomfile.exists() )
+        {
+            loadDefCommunitySubs ( defcomfile );
+        }
+
+    }
+
     private void startedSuccessfully()
     {
 
@@ -1808,13 +1858,6 @@ public class SWTApp implements UpdateInterface
 
         try
         {
-            File devid = new File ( nodeDir + File.separator + "developerid.dat" );
-
-            if ( devid.exists() )
-            {
-                loadDeveloperIdentity ( devid );
-            }
-
             CObjList mlst = node.getIndex().getMyIdentities();
 
             if ( mlst.size() == 0 )
@@ -1823,29 +1866,11 @@ public class SWTApp implements UpdateInterface
                 co.setType ( CObj.IDENTITY );
                 co.pushString ( CObj.NAME, "anon" );
                 node.enqueue ( co );
-                //Load default seed file.
-                File defseedfile = new File ( nodeDir + File.separator + "defseed.dat" );
 
-                if ( defseedfile.exists() )
+                if ( !TESTNODE )
                 {
-                    loadSeed ( defseedfile );
+                    loadDefaults();
                 }
-
-                File spamex = new File ( nodeDir + File.separator + "spamex.dat" );
-
-                if ( spamex.exists() )
-                {
-                    loadSpamEx ( spamex );
-                }
-
-                //Load default communities and subscribe.
-                File defcomfile = new File ( nodeDir + File.separator + "defcom.dat" );
-
-                if ( defcomfile.exists() )
-                {
-                    loadDefCommunitySubs ( defcomfile );
-                }
-
 
             }
 
