@@ -197,7 +197,7 @@ public class NewPostProcessor extends GenericProcessor
 
             }
 
-            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId(), false );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             //List any new fields that were added by the post

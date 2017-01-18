@@ -155,7 +155,7 @@ public class NewIdentityProcessor extends GenericProcessor
                     dt.setIdentity ( o );
                     o.pushPrivateNumber ( CObj.PRV_USER_RANK, DEF_USER_RANK );
 
-                    long gseq = identManager.getGlobalSequenceNumber ( o.getId() );
+                    long gseq = identManager.getGlobalSequenceNumber ( o.getId(), false );
                     o.pushPrivateNumber ( CObj.getGlobalSeq ( o.getId() ), gseq );
 
                     index.index ( o );

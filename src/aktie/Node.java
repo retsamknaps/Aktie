@@ -91,15 +91,15 @@ public class Node
 
         NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
-        userQueue.addProcessor ( new NewCommunityProcessor ( session, index, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewCommunityProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( nfp );
         userQueue.addProcessor ( new NewIdentityProcessor ( network, conMan, session,
                                  index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
-        userQueue.addProcessor ( new NewMembershipProcessor ( session, index, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewMembershipProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewPostProcessor ( session, index, spamtool, usrCallback ) );
 
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
-        userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, spamtool, usrCallback ) );
+        userQueue.addProcessor ( new NewSubscriptionProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
         userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );

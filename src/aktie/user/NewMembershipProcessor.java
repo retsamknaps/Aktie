@@ -14,6 +14,7 @@ import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.Index;
+import aktie.net.ConnectionManager2;
 import aktie.spam.SpamTool;
 import aktie.utils.MembershipValidator;
 
@@ -26,10 +27,12 @@ public class NewMembershipProcessor extends GenericProcessor
     private HH2Session session;
     private SpamTool spamtool;
     private IdentityManager identManager;
+    private ConnectionManager2 conMan;
 
-    public NewMembershipProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public NewMembershipProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
+        conMan = cm;
         index = i;
         guicallback = cb;
         spamtool = st;
@@ -263,7 +266,7 @@ public class NewMembershipProcessor extends GenericProcessor
 
             }
 
-            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId(), true );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
@@ -277,6 +280,11 @@ public class NewMembershipProcessor extends GenericProcessor
                 o.pushString ( CObj.ERROR, "Community could not be indexed" );
                 guicallback.update ( o );
                 return true;
+            }
+
+            if ( conMan != null )
+            {
+                conMan.sendRequestsNow();
             }
 
             guicallback.update ( o );

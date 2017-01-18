@@ -65,7 +65,7 @@ public class InSpamExProcessor extends GenericProcessor
                         {
                             if ( identManager != null && ConId != null )
                             {
-                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
                                 b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
                             }
 

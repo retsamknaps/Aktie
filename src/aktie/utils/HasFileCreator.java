@@ -528,7 +528,7 @@ public class HasFileCreator
         //Set the created on time
         o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
 
-        long sq = identManager.getGlobalSequenceNumber ( creator );
+        long sq = identManager.getGlobalSequenceNumber ( creator, false );
         o.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), sq );
 
         //Sign it.

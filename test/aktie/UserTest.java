@@ -60,12 +60,12 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
             SpamTool st = new SpamTool ( i );
             RawNet net = new RawNet ( id );
             ProcessQueue q = new ProcessQueue ( "testQueue" );
-            q.addProcessor ( new NewCommunityProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewCommunityProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewFileProcessor ( sf, i, st, this ) );
             q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st ) );
-            q.addProcessor ( new NewMembershipProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewMembershipProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewPostProcessor ( sf, i, st, this ) );
-            q.addProcessor ( new NewSubscriptionProcessor ( sf, i, st, this ) );
+            q.addProcessor ( new NewSubscriptionProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewTemplateProcessor ( sf, i, this ) );
 
             //New identity

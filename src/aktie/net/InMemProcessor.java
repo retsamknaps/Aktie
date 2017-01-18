@@ -191,7 +191,7 @@ public class InMemProcessor extends GenericProcessor
 
                             }
 
-                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId(), true );
                             b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                             index.index ( b );

@@ -112,7 +112,7 @@ public class InPrvMsgProcessor extends GenericProcessor
 
                             }
 
-                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                            long seq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
                             b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                             index.index ( b );

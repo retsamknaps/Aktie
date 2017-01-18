@@ -7,6 +7,7 @@ import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
+import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.SubSequence;
 import aktie.spam.SpamTool;
@@ -27,7 +28,7 @@ public class InSubProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InSubProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
+    public InSubProcessor ( HH2Session s, GetSendData2 cm, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
     {
         session = s;
         conThread = ct;
@@ -117,7 +118,7 @@ public class InSubProcessor extends GenericProcessor
 
                                 }
 
-                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                long gseq = identManager.getGlobalSequenceNumber ( ConId.getId(), true );
                                 b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
 
                                 if ( log.isLoggable ( Level.INFO ) )
@@ -129,6 +130,26 @@ public class InSubProcessor extends GenericProcessor
 
                                 index.index ( b );
                                 conThread.update ( b );
+
+                                if ( "true".equals ( b.getString ( CObj.SUBSCRIBED ) ) )
+                                {
+                                    CObjList clst = index.getSubscriptions ( comid, null );
+
+                                    for ( int c = 0; c < clst.size(); c++ )
+                                    {
+                                        CObj sl = clst.get ( c );
+                                        String creator = sl.getString ( CObj.CREATOR );
+
+                                        if ( creator != null )
+                                        {
+                                            identManager.updateGlobalSequenceNumber ( creator,
+                                                    false, 0, false, 0, true, 0 );
+                                        }
+
+                                    }
+
+                                    clst.close();
+                                }
 
                             }
 

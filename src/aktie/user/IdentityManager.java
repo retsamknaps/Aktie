@@ -1793,7 +1793,7 @@ public class IdentityManager
 
             if ( dat != null )
             {
-                if ( checkGlobalSequenceNumber ( dat ) )
+                if ( checkGlobalSequenceNumber ( dat, false ) )
                 {
                     s.merge ( dat );
                 }
@@ -1847,9 +1847,9 @@ public class IdentityManager
         return sn;
     }
 
-    private boolean checkGlobalSequenceNumber ( IdentityData dat )
+    private boolean checkGlobalSequenceNumber ( IdentityData dat, boolean force )
     {
-        boolean update = false;
+        boolean update = force;
 
         if ( dat.getLastPubGlobalSequence() == 0 )
         {
@@ -1874,7 +1874,7 @@ public class IdentityManager
         return update;
     }
 
-    public long getGlobalSequenceNumber ( String id )
+    public long getGlobalSequenceNumber ( String id, boolean force )
     {
         long sn = 0;
         Session s = null;
@@ -1887,14 +1887,23 @@ public class IdentityManager
 
             if ( dat != null )
             {
-                checkGlobalSequenceNumber ( dat );
+                checkGlobalSequenceNumber ( dat, force );
 
                 dat.setCountForLastGlobalSequence (
                     dat.getCountForLastGlobalSequence() + 1 );
 
                 s.merge ( dat );
 
-                sn = dat.getLastPubGlobalSequence() + 1;
+                if ( !force )
+                {
+                    sn = dat.getLastPubGlobalSequence() + 1;
+                }
+
+                else
+                {
+                    sn = dat.getLastPubGlobalSequence();
+                }
+
             }
 
             s.getTransaction().commit();

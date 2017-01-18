@@ -133,7 +133,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InSubProcessor ( session, index, st, IdentManager, this ) );
+        preprocProcessor.addProcessor ( new InSubProcessor ( session, conMan, index, st, IdentManager, this ) );
         preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, IdentManager, this ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
@@ -462,7 +462,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
         appendOutput ( "updateSubsAndFiles: nu: " + nu + " > " + lastFileUpdate );
 
-        if ( endDestination != null && nu > lastFileUpdate )
+        if ( endDestination != null && ( nu > lastFileUpdate || sendFirstMemSubs ) )
         {
             lastFileUpdate = nu;
             boolean sendm = updateMemberships();
@@ -1638,6 +1638,19 @@ public class ConnectionThread implements Runnable, GuiCallback
     {
         guicallback.update ( o );
         lastMyRequest = System.currentTimeMillis();
+
+        if ( o instanceof CObj )
+        {
+            CObj co = ( CObj ) o;
+
+            if ( CObj.SUBSCRIPTION.equals ( co.getType() ) )
+            {
+                sendFirstMemSubs = true;
+                updateSubsAndFiles();
+            }
+
+        }
+
     }
 
     private PrintWriter outtrace;

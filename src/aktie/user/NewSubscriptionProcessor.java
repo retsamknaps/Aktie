@@ -12,6 +12,7 @@ import aktie.data.IdentityData;
 import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.net.ConnectionManager2;
 import aktie.spam.SpamTool;
 import aktie.utils.SubscriptionValidator;
 
@@ -26,10 +27,12 @@ public class NewSubscriptionProcessor extends GenericProcessor
     private SubscriptionValidator validator;
     private SpamTool spamtool;
     private IdentityManager identManager;
+    private ConnectionManager2 conMan;
 
-    public NewSubscriptionProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public NewSubscriptionProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, GuiCallback cb )
     {
         session = s;
+        conMan = cm;
         index = i;
         guicallback = cb;
         spamtool = st;
@@ -163,7 +166,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
                 o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
             }
 
-            long gseq = identManager.getGlobalSequenceNumber ( myid.getId() );
+            long gseq = identManager.getGlobalSequenceNumber ( myid.getId(), true );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
 
             try
@@ -180,6 +183,12 @@ public class NewSubscriptionProcessor extends GenericProcessor
                 o.pushString ( CObj.ERROR, "subscription could not be indexed" );
                 guicallback.update ( o );
                 return true;
+            }
+
+            //Force update of connections
+            if ( conMan != null )
+            {
+                conMan.sendRequestsNow();
             }
 
             if ( "true".equals ( o.getString ( CObj.SUBSCRIBED ) ) )

@@ -410,6 +410,11 @@ public class ConnectionFileManager implements Runnable
         return gonext;
     }
 
+    public void bumpUpdate()
+    {
+        lastFileUpdate++;
+    }
+
     private synchronized void delay()
     {
         try

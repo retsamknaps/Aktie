@@ -59,12 +59,12 @@ public class TestNode implements GuiCallback, ConnectionListener, DestinationLis
 
             RequestFileHandler fileHandler = new RequestFileHandler ( session, "tndl", null, null );
 
-            userQueue.addProcessor ( new NewCommunityProcessor ( session, index, st, this ) );
+            userQueue.addProcessor ( new NewCommunityProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( nfp );
             userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index, this, this, this, this, fileHandler, st ) );
-            userQueue.addProcessor ( new NewMembershipProcessor ( session, index, st, this ) );
+            userQueue.addProcessor ( new NewMembershipProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( new NewPostProcessor ( session, index, st, this ) );
-            userQueue.addProcessor ( new NewSubscriptionProcessor ( session, index, st, this ) );
+            userQueue.addProcessor ( new NewSubscriptionProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( new NewTemplateProcessor ( session, index, this ) );
             userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, null, st, this ) );
 

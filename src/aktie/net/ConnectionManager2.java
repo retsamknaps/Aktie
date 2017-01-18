@@ -1249,6 +1249,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     public void sendRequestsNow()
     {
+        fileManager.bumpUpdate();
 
         List<DestinationThread> dlst = new LinkedList<DestinationThread>();
 
@@ -1413,14 +1414,14 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
-    private boolean updateSeqNumber ( String id, CObjList misslst ) throws IOException
+    private boolean updateSeqNumber ( String id, CObjList misslst, boolean force ) throws IOException
     {
         boolean donext = ( misslst.size() == 0 );
 
         for ( int c0 = 0; c0 < misslst.size(); c0++ )
         {
             CObj ob = misslst.get ( c0 );
-            long sn = identityManager.getGlobalSequenceNumber ( id );
+            long sn = identityManager.getGlobalSequenceNumber ( id, force );
             ob.pushPrivateNumber ( CObj.getGlobalSeq ( id ), sn );
             index.index ( ob );
         }
@@ -1442,14 +1443,14 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 CObjList misslst = index.getPubMissingSeqNumbers
                                    ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
 
-                boolean donext = updateSeqNumber ( id.getId(), misslst );
+                boolean donext = updateSeqNumber ( id.getId(), misslst, false );
 
                 if ( donext )
                 {
                     misslst = index.getMemMissingSeqNumbers
                               ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
 
-                    donext = updateSeqNumber ( id.getId(), misslst );
+                    donext = updateSeqNumber ( id.getId(), misslst, true );
                 }
 
                 if ( donext )
@@ -1457,7 +1458,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     misslst = index.getSubMissingSeqNumbers
                               ( id.getId(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
 
-                    donext = updateSeqNumber ( id.getId(), misslst );
+                    donext = updateSeqNumber ( id.getId(), misslst, false );
                 }
 
             }
@@ -1611,7 +1612,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                     }
 
                                     com.pushPrivate ( CObj.MINE, "true" );
-                                    comstoreset.add ( comid );
                                 }
 
                                 index.index ( com );
@@ -1620,6 +1620,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             m.pushPrivate ( CObj.VALIDMEMBER, "true" );
                             m.pushPrivate ( CObj.NAME, com.getPrivate ( CObj.NAME ) );
                             m.pushPrivate ( CObj.DESCRIPTION, com.getPrivate ( CObj.DESCRIPTION ) );
+                            comstoreset.add ( comid );
 
                             index.index ( m );
 
@@ -1647,6 +1648,9 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         invliddeclist.close();
+
+        //Force connections to update their memberships and subs
+        sendRequestsNow();
 
         //Reset membership and subscription sequence numbers for communities
         //with new members.  This is in case we missed things from old members

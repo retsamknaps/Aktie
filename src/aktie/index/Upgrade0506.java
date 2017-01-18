@@ -30,6 +30,7 @@ public class Upgrade0506 implements GuiCallback, Runnable
         //HH2Session s, Index i, SpamTool st, GuiCallback cb
         NewSubscriptionProcessor newsub = new NewSubscriptionProcessor (
             node.getSession(),
+            node.getConnectionManager(),
             node.getIndex(),
             node.getSpamTool(),
             this

@@ -86,7 +86,7 @@ public class InPostProcessor extends GenericProcessor
 
                                 }
 
-                                long seq = identManager.getGlobalSequenceNumber ( ConId.getId() );
+                                long seq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
                                 b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
 
                                 b.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 1L );
