@@ -1,6 +1,7 @@
 package aktie.user;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 import org.hibernate.Query;
@@ -19,6 +20,7 @@ import aktie.spam.SpamTool;
 
 public class NewCommunityProcessor extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     private GuiCallback guicallback;
     private ConnectionManager2 conMan;
@@ -234,6 +236,7 @@ public class NewCommunityProcessor extends GenericProcessor
 
             long gseq = identManager.getGlobalSequenceNumber ( myid.getId(), true );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( myid.getId() ), gseq );
+            log.info ( "New COMMUNITY: " + o.getDig() + " sq: " + gseq );
 
             try
             {
@@ -251,7 +254,7 @@ public class NewCommunityProcessor extends GenericProcessor
 
             if ( conMan != null )
             {
-                conMan.sendRequestsNow();
+                conMan.resetAllConnections();
             }
 
             guicallback.update ( o );

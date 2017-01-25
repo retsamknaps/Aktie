@@ -9,7 +9,6 @@ import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.index.Index;
-import aktie.user.IdentityManager;
 
 public class InCheckDigProcessor extends GenericProcessor
 {
@@ -17,13 +16,11 @@ public class InCheckDigProcessor extends GenericProcessor
 
     private Index index;
     private ConnectionThread conThread;
-    private IdentityManager identManager;
 
-    public InCheckDigProcessor ( ConnectionThread ct, Index i, IdentityManager im )
+    public InCheckDigProcessor ( ConnectionThread ct, Index i )
     {
         conThread = ct;
         index = i;
-        identManager = im;
     }
 
     private void log ( String msg )
@@ -68,37 +65,7 @@ public class InCheckDigProcessor extends GenericProcessor
                         log ( "CHECK: " + b.getDig() );
                     }
 
-                    if ( conThread.getDigReq().remove ( b.getDig() ) )
-                    {
-
-                        if ( log.isLoggable ( Level.INFO ) )
-                        {
-                            log ( "FOUND: " + b.getDig() );
-                        }
-
-                        if ( conThread.getDigReq().isEmpty() )
-                        {
-                            CObj rid = conThread.getEndDestination();
-
-                            if ( rid != null )
-                            {
-                                if ( log.isLoggable ( Level.INFO ) )
-                                {
-                                    log ( "COMPLETE: PUB" + conThread.getLastPubSeq() + " MEM " +
-                                          conThread.isUpdatemembers() + " " + conThread.getLastMemSeq() +
-                                          " SUB " + conThread.isUpdatesubs() + " " + conThread.getLastSubSeq() );
-                                }
-
-                                String id = rid.getId();
-                                identManager.updateGlobalSequenceNumber ( id,
-                                        true, conThread.getLastPubSeq(),
-                                        conThread.isUpdatemembers(), conThread.getLastMemSeq(),
-                                        conThread.isUpdatesubs(), conThread.getLastSubSeq() );
-                            }
-
-                        }
-
-                    }
+                    conThread.digestDone ( b.getDig() );
 
                 }
 

@@ -1254,7 +1254,6 @@ public class SWTApp implements UpdateInterface
             u.setType ( CObj.USR_POST_UPDATE );
             u.pushString ( CObj.COMMUNITYID, cm.getDig() );
             getNode().enqueue ( u );
-            getNode().sendRequestsNow();
         }
 
     }
@@ -1310,8 +1309,6 @@ public class SWTApp implements UpdateInterface
         u = new CObj();
         u.setType ( CObj.USR_SPAMEX_UPDATE );
         getNode().enqueue ( u );
-
-        getNode().sendRequestsNow();
     }
 
     class ManualUpdate implements SelectionListener

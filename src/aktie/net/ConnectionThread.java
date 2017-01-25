@@ -11,9 +11,13 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
@@ -53,10 +57,10 @@ public class ConnectionThread implements Runnable, GuiCallback
     private BatchProcessor inProcessor;
     private ConcurrentLinkedQueue<CObj> inQueue;
     private ConcurrentLinkedQueue<Object> outqueue;
-    private Set<String> reqdigs;
-    private long nextPubSeqNum;
-    private long nextMemSeqNum;
-    private long nextSubSeqNum;
+    private Set<String> fillList;
+    private Map<Long, Set<String>> pubReqdigs;
+    private Map<Long, Set<String>> memReqdigs;
+    private Map<Long, Set<String>> subReqdigs;
     private GetSendData2 conMan;
     private OutputProcessor outproc;
     private CObj endDestination;
@@ -99,7 +103,10 @@ public class ConnectionThread implements Runnable, GuiCallback
         index = i;
         session = s;
         fileHandler = rf;
-        reqdigs = new CopyOnWriteArraySet<String>();
+        fillList = new CopyOnWriteArraySet<String>();
+        pubReqdigs = new ConcurrentHashMap<Long, Set<String>>();
+        memReqdigs = new ConcurrentHashMap<Long, Set<String>>();
+        subReqdigs = new ConcurrentHashMap<Long, Set<String>>();
         subs = new CopyOnWriteArraySet<String>();
         memberships = new CopyOnWriteArraySet<String>();
         chkSubs = new CopyOnWriteArraySet<String>();
@@ -120,7 +127,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         //Otherwise the list of fragments will be interate though for preceding processors
         //that don't need to and time will be wasted.
         preprocProcessor.addProcessor ( new InFragProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InCheckDigProcessor ( this, index, IdentManager ) );
+        preprocProcessor.addProcessor ( new InCheckDigProcessor ( this, index ) );
         preprocProcessor.addProcessor ( new InFileModeProcessor ( this ) );
         preprocProcessor.addProcessor ( ip );
         preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
@@ -205,6 +212,78 @@ public class ConnectionThread implements Runnable, GuiCallback
         chkSubs.add ( d );
     }
 
+    public void addReqDig ( String d )
+    {
+        fillList.add ( d );
+    }
+
+    public void digestDone ( String dg )
+    {
+        for ( Iterator<Entry<Long, Set<String>>> i = pubReqdigs.entrySet().iterator(); i.hasNext(); )
+        {
+            Entry<Long, Set<String>> e = i.next();
+            Set<String> ss = e.getValue();
+
+            if ( ss.remove ( dg ) )
+            {
+                if ( ss.size() == 0 )
+                {
+                    IdentManager.updateGlobalSequenceNumber (
+                        getEndDestination().getId(),
+                        true, e.getKey(),
+                        false, 0L,
+                        false, 0L );
+                    i.remove();
+                }
+
+            }
+
+        }
+
+        for ( Iterator<Entry<Long, Set<String>>> i = memReqdigs.entrySet().iterator(); i.hasNext(); )
+        {
+            Entry<Long, Set<String>> e = i.next();
+            Set<String> ss = e.getValue();
+
+            if ( ss.remove ( dg ) )
+            {
+                if ( ss.size() == 0 && updatemembers )
+                {
+                    IdentManager.updateGlobalSequenceNumber (
+                        getEndDestination().getId(),
+                        false, 0L,
+                        true, e.getKey(),
+                        false, 0L );
+                    i.remove();
+                }
+
+            }
+
+        }
+
+        for ( Iterator<Entry<Long, Set<String>>> i = subReqdigs.entrySet().iterator(); i.hasNext(); )
+        {
+            Entry<Long, Set<String>> e = i.next();
+            Set<String> ss = e.getValue();
+
+            if ( ss.remove ( dg ) )
+            {
+                if ( ss.size() == 0 && updatesubs )
+                {
+                    IdentManager.updateGlobalSequenceNumber (
+                        getEndDestination().getId(),
+                        false, 0L,
+                        false, 0L,
+                        true, e.getKey() );
+                    i.remove();
+                }
+
+            }
+
+        }
+
+    }
+
     public void checkDone()
     {
         updatemembers = ( chkMemberships.containsAll ( memberships ) );
@@ -213,35 +292,29 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( log.isLoggable ( Level.INFO ) )
         {
             log.info ( "CHECK DONE: ME: " + getLocalDestination().getIdentity().getId() +
-                       " FROM: " + getEndDestination().getId() + " " + updatemembers + " " + updatesubs );
+                       " FROM: " + getEndDestination().getId() + " " + memberships + " " + subs +
+                       " " + updatemembers + " " + updatesubs );
         }
 
         chkMemberships.clear();
         chkSubs.clear();
     }
 
-    public void addReqDig ( String d )
+    public void setLastSeq ( boolean pb, long ps, boolean mb, long ms, boolean sb, long ss )
     {
-        reqdigs.add ( d );
-    }
-
-    public void setLastSeq ( long ps, long ms, long ss )
-    {
-        nextPubSeqNum = ps;
-        nextMemSeqNum = ms;
-        nextSubSeqNum = ss;
-        CObjList rlst = new CObjList();
-
-        if ( reqdigs.size() == 0 )
+        if ( fillList.size() == 0 )
         {
             IdentManager.updateGlobalSequenceNumber (
                 getEndDestination().getId(),
-                true, ps,
-                updatemembers, ms,
-                updatesubs, ss );
+                pb, ps,
+                updatemembers && mb, ms,
+                updatesubs && sb, ss );
+            return;
         }
 
-        for ( String n : reqdigs )
+        CObjList rlst = new CObjList();
+
+        for ( String n : fillList )
         {
             CObj r = new CObj();
             r.setType ( CObj.CON_REQ_DIG );
@@ -249,27 +322,24 @@ public class ConnectionThread implements Runnable, GuiCallback
             rlst.add ( r );
         }
 
+        if ( pb )
+        {
+            pubReqdigs.put ( ps, fillList );
+        }
+
+        if ( mb )
+        {
+            memReqdigs.put ( ms, fillList );
+        }
+
+        if ( sb )
+        {
+            subReqdigs.put ( ss, fillList );
+        }
+
+        fillList = new CopyOnWriteArraySet<String>();
+
         enqueue ( rlst );
-    }
-
-    public Set<String> getDigReq()
-    {
-        return reqdigs;
-    }
-
-    public long getLastPubSeq()
-    {
-        return nextPubSeqNum;
-    }
-
-    public long getLastMemSeq()
-    {
-        return nextMemSeqNum;
-    }
-
-    public long getLastSubSeq()
-    {
-        return nextSubSeqNum;
     }
 
     private boolean updateMemberships()
@@ -683,6 +753,12 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void poke()
     {
+        updatesubs = false;
+        updatemembers = false;
+        pubReqdigs.clear();
+        memReqdigs.clear();
+        subReqdigs.clear();
+
         if ( outproc != null )
         {
             outproc.go();
@@ -840,14 +916,18 @@ public class ConnectionThread implements Runnable, GuiCallback
                     long curtime = System.currentTimeMillis();
                     curtime -= MINGLOBALSEQDELAY;
 
-                    if ( curtime > lastGlobalReq && reqdigs.isEmpty() )
+                    if ( curtime > lastGlobalReq && fillList.isEmpty() )
                     {
                         lastGlobalReq = System.currentTimeMillis();
                         reqgbl = true;
                     }
 
-                    appendOutput ( "nextNonFile mem: " + memberships + " " +
-                                   memcnt + " subs: " + subs + " " + subcnt + " reqgbl: " + reqgbl + " size: " + reqdigs.size() );
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        appendOutput ( "nextNonFile mem: " + memberships + " " +
+                                       memcnt + " subs: " + subs + " " + subcnt + " reqgbl: " + reqgbl + " size: " + fillList.size() );
+                    }
+
                     Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
                                                     endDestination.getId(),
                                                     memberships, subs, reqgbl );

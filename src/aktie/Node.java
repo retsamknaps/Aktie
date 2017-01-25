@@ -170,9 +170,9 @@ public class Node
 
     }
 
-    public void sendRequestsNow()
+    public void resetAllConnections()
     {
-        conMan.sendRequestsNow();
+        conMan.resetAllConnections();
     }
 
     public void close()

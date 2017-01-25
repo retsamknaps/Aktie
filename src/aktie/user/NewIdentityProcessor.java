@@ -3,6 +3,7 @@ package aktie.user;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
@@ -26,6 +27,7 @@ import aktie.spam.SpamTool;
 
 public class NewIdentityProcessor extends GenericProcessor
 {
+    Logger log = Logger.getLogger ( "aktie" );
 
     public static long DEF_USER_RANK = 4;
 
@@ -157,6 +159,8 @@ public class NewIdentityProcessor extends GenericProcessor
 
                     long gseq = identManager.getGlobalSequenceNumber ( o.getId(), false );
                     o.pushPrivateNumber ( CObj.getGlobalSeq ( o.getId() ), gseq );
+
+                    log.info ( "NEW IDENTITY: " + o.getId() + " name: " + o.getString ( CObj.NAME ) );
 
                     index.index ( o );
                     index.forceNewSearcher();

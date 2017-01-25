@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
 import aktie.data.CObj;
+import aktie.data.IdentityData;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
@@ -23,13 +24,12 @@ public class ReqGlobalSeq extends GenericProcessor
         index = i;
     }
 
-    private long filterObjects ( CObjList seqobj, CObjList rlst )
+    private void filterObjects ( CObjList seqobj, String typ, long rn )
     {
-        //Check that the requesting node has access.
         long seqnum = -1;
-        boolean seqdone = false;
+        CObjList rlst = new CObjList();
 
-        for ( int c = 0; c < seqobj.size() && !seqdone; c++ )
+        for ( int c = 0; c < seqobj.size(); c++ )
         {
             try
             {
@@ -45,78 +45,76 @@ public class ReqGlobalSeq extends GenericProcessor
 
                 if ( seqnum != gseq )
                 {
-                    if ( rlst.size() == 0 )
+                    if ( rlst.size() > 0 )
                     {
-                        seqnum = gseq;
+                        conThread.enqueue ( rlst );
+                        rlst = new CObjList();
                     }
 
-                    else
+                    CObj lc = new CObj();
+                    lc.setType ( CObj.SEQCOMP );
+                    lc.pushNumber ( typ, seqnum );
+                    conThread.enqueue ( lc );
+
+                    seqnum = gseq;
+                }
+
+                //MUST BE SUBSCRIBERS FOR: POST/HASFILE
+                if ( CObj.POST.equals ( o.getType() )  ||
+                        CObj.HASFILE.equals ( o.getType() ) )
+                {
+                    String comid = o.getString ( CObj.COMMUNITYID );
+
+                    if ( comid != null )
                     {
-                        seqdone = true;
+                        if ( conThread.getSubs().contains ( comid ) )
+                        {
+                            sendDig ( rlst, o, rn, seqnum );
+                        }
+
                     }
 
                 }
 
-                if ( !seqdone )
+                if ( CObj.SUBSCRIPTION.equals ( o.getType() ) )
                 {
-                    //MUST BE SUBSCRIBERS FOR: POST/HASFILE
-                    if ( CObj.POST.equals ( o.getType() )  ||
-                            CObj.HASFILE.equals ( o.getType() ) )
-                    {
-                        String comid = o.getString ( CObj.COMMUNITYID );
+                    String comid = o.getString ( CObj.COMMUNITYID );
 
-                        if ( comid != null )
+                    if ( conThread.getMemberships().contains ( comid ) )
+                    {
+                        //Just send it if they're already members
+                        sendDig ( rlst, o, rn, seqnum );
+                    }
+
+                    else
+                    {
+                        CObj com = index.getCommunity ( comid );
+
+                        if ( com != null )
                         {
-                            if ( conThread.getSubs().contains ( comid ) )
+                            String pp = com.getString ( CObj.SCOPE );
+
+                            if ( CObj.SCOPE_PUBLIC.equals ( pp ) )
                             {
-                                sendDig ( rlst, o );
+                                sendDig ( rlst, o, rn, seqnum );
                             }
 
                         }
 
                     }
 
-                    if ( CObj.SUBSCRIPTION.equals ( o.getType() ) )
-                    {
-                        String comid = o.getString ( CObj.COMMUNITYID );
+                }
 
-                        if ( conThread.getMemberships().contains ( comid ) )
-                        {
-                            //Just send it if they're already members
-                            sendDig ( rlst, o );
-                        }
-
-                        else
-                        {
-                            CObj com = index.getCommunity ( comid );
-
-                            if ( com != null )
-                            {
-                                String pp = com.getString ( CObj.SCOPE );
-
-                                if ( CObj.SCOPE_PUBLIC.equals ( pp ) )
-                                {
-                                    sendDig ( rlst, o );
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    if ( CObj.MEMBERSHIP.equals ( o.getType() ) ||
-                            CObj.PRIVIDENTIFIER.equals ( o.getType() ) ||
-                            CObj.PRIVMESSAGE.equals ( o.getType() ) ||
-                            CObj.COMMUNITY.equals ( o.getType() ) ||
-                            CObj.IDENTITY.equals ( o.getType() ) ||
-                            CObj.SPAMEXCEPTION.equals ( o.getType() ) )
-                    {
-                        //ANYONE: MEMBERSHIP, PRIVIDENT,
-                        //        PRIVMESSAGE, COMMUNITY, IDENTITY, SPAMEXCEPTION
-                        sendDig ( rlst, o );
-                    }
-
+                if ( CObj.MEMBERSHIP.equals ( o.getType() ) ||
+                        CObj.PRIVIDENTIFIER.equals ( o.getType() ) ||
+                        CObj.PRIVMESSAGE.equals ( o.getType() ) ||
+                        CObj.COMMUNITY.equals ( o.getType() ) ||
+                        CObj.IDENTITY.equals ( o.getType() ) ||
+                        CObj.SPAMEXCEPTION.equals ( o.getType() ) )
+                {
+                    //ANYONE: MEMBERSHIP, PRIVIDENT,
+                    //        PRIVMESSAGE, COMMUNITY, IDENTITY, SPAMEXCEPTION
+                    sendDig ( rlst, o, rn, seqnum );
                 }
 
             }
@@ -128,9 +126,25 @@ public class ReqGlobalSeq extends GenericProcessor
 
         }
 
-        seqobj.close();
+        //If seqobj.size is greater than MAXGLOBALSEQUENCECOUNT, the sequence
+        //number would change during looping over the list so we would send a seq
+        //number, but the last sequence may not be complete, so do not send
+        //the remaining list.
+        if ( seqnum != -1 && seqobj.size() < IdentityData.MAXGLOBALSEQUENCECOUNT )
+        {
+            if ( rlst.size() > 0 )
+            {
+                conThread.enqueue ( rlst );
+                rlst = new CObjList();
+            }
 
-        return seqnum;
+            CObj lc = new CObj();
+            lc.setType ( CObj.SEQCOMP );
+            lc.pushNumber ( typ, seqnum );
+            conThread.enqueue ( lc );
+        }
+
+        seqobj.close();
     }
 
     private void log ( String msg )
@@ -143,14 +157,14 @@ public class ReqGlobalSeq extends GenericProcessor
 
     }
 
-    private void sendDig ( CObjList lst, CObj d )
+    private void sendDig ( CObjList lst, CObj d, long rn, long sn )
     {
         String dig = d.getDig();
         CObj ds = new CObj();
         ds.setType ( CObj.OBJDIG );
         ds.setDig ( dig );
         lst.add ( ds );
-        log ( "SEND: " + dig );
+        log ( "SEND: rq: " + rn + " sn: " + sn + " : " + dig );
     }
 
     @Override
@@ -169,7 +183,6 @@ public class ReqGlobalSeq extends GenericProcessor
             {
 
                 log ( " REQ GBL SEQ: " + publast + " " + memlast + " " + sublast );
-                CObjList rlst = new CObjList();
 
                 //Get all objects at that sequence number.
                 CObjList seqobj = index.getGlobalPubSeqNumbers (
@@ -177,13 +190,7 @@ public class ReqGlobalSeq extends GenericProcessor
                                       publast, curseq );
                 log ( " REQ PUBS: " + publast + " sz: " + seqobj.size() );
 
-                long ppub = filterObjects ( seqobj, rlst );
-                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + ppub );
-
-                if ( ppub == -1 )
-                {
-                    ppub = publast;
-                }
+                filterObjects ( seqobj, CObj.SEQNUM, publast );
 
                 //Get all objects at that sequence number.
                 seqobj = index.getGlobalMemSeqNumbers (
@@ -191,13 +198,7 @@ public class ReqGlobalSeq extends GenericProcessor
                              memlast, curseq );
                 log ( " REQ MEM: " + memlast + " sz: " + seqobj.size() );
 
-                long mpub = filterObjects ( seqobj, rlst );
-                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + mpub );
-
-                if ( mpub == -1 )
-                {
-                    mpub = memlast;
-                }
+                filterObjects ( seqobj, CObj.MEMSEQNUM, memlast );
 
                 //Get all objects at that sequence number.
                 seqobj = index.getGlobalSubSeqNumbers (
@@ -205,25 +206,7 @@ public class ReqGlobalSeq extends GenericProcessor
                              sublast, curseq );
                 log ( " REQ SUB: " + sublast + " sz: " + seqobj.size() );
 
-                long spub = filterObjects ( seqobj, rlst );
-                log ( " REQ PUBS: filtered send lst: " + rlst.size() + " last seq: " + spub );
-
-                if ( spub == -1 )
-                {
-                    spub = sublast;
-                }
-
-                if ( rlst.size() > 0 )
-                {
-                    conThread.enqueue ( rlst );
-                    CObj lc = new CObj();
-                    lc.setType ( CObj.SEQCOMP );
-                    lc.pushNumber ( CObj.SEQNUM, ppub );
-                    lc.pushNumber ( CObj.MEMSEQNUM, mpub );
-                    lc.pushNumber ( CObj.SUBSEQNUM, spub );
-                    conThread.enqueue ( lc );
-                }
-
+                filterObjects ( seqobj, CObj.SUBSEQNUM, sublast );
             }
 
             return true;

@@ -287,7 +287,7 @@ public class Index implements Runnable
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
                                           CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
@@ -301,17 +301,19 @@ public class Index implements Runnable
 
         Sort sort = new Sort ( field );
 
-        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
+        return search ( builder.build(), ( int ) ( IdentityData.MAXGLOBALSEQUENCECOUNT * 2 ), sort );
     }
 
     public CObjList getGlobalSubSeqNumbers ( String ident, long lastseq, long curseq )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
+        BooleanQuery.Builder sb = new BooleanQuery.Builder();
         Term     typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        builder.add ( sb.build(), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
                                           CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
@@ -325,25 +327,27 @@ public class Index implements Runnable
 
         Sort sort = new Sort ( field );
 
-        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
+        return search ( builder.build(), ( int ) ( IdentityData.MAXGLOBALSEQUENCECOUNT * 2 ), sort );
     }
 
     public CObjList getGlobalPubSeqNumbers ( String ident, long lastseq, long curseq )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
 
+        BooleanQuery.Builder sb = new BooleanQuery.Builder();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVIDENTIFIER );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.PRIVMESSAGE );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.COMMUNITY );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.MEMBERSHIP );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        builder.add ( sb.build(), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
                                           CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
@@ -357,7 +361,7 @@ public class Index implements Runnable
 
         Sort sort = new Sort ( field );
 
-        return search ( builder.build(), ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT + 1, sort );
+        return search ( builder.build(), ( int ) ( IdentityData.MAXGLOBALSEQUENCECOUNT * 2 ), sort );
     }
 
     public CObjList getAllCObj()

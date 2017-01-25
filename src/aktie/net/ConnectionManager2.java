@@ -1247,7 +1247,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
-    public void sendRequestsNow()
+    public void resetAllConnections()
     {
         fileManager.bumpUpdate();
 
@@ -1650,7 +1650,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         invliddeclist.close();
 
         //Force connections to update their memberships and subs
-        sendRequestsNow();
+        resetAllConnections();
 
         //Reset membership and subscription sequence numbers for communities
         //with new members.  This is in case we missed things from old members
