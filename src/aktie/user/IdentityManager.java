@@ -28,6 +28,7 @@ import aktie.sequences.PrivIdentSequence;
 import aktie.sequences.PrivMsgSequence;
 import aktie.sequences.SpamSequence;
 import aktie.sequences.SubSequence;
+import aktie.utils.HasFileCreator;
 
 public class IdentityManager
 {
@@ -1535,6 +1536,135 @@ public class IdentityManager
         }
 
         return new LinkedList<IdentityData>();
+    }
+
+    public long getIdentityCommunitySeqNumber ( String id, String comid )
+    {
+        long sn = 0;
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+
+            String cid = HasFileCreator.getCommunityMemberId ( id, comid );
+            CommunityMember d = ( CommunityMember ) s.get ( CommunityMember.class, cid );
+
+            if ( d != null )
+            {
+                sn = d.getLastGlobalSequence();
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        return sn;
+    }
+
+    public void updateIdentityCommunitySeqNumber ( String id, String comid, long seq )
+    {
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            s.getTransaction().begin();
+
+            String cid = HasFileCreator.getCommunityMemberId ( id, comid );
+            CommunityMember d = ( CommunityMember ) s.get ( CommunityMember.class, cid );
+
+            if ( d != null )
+            {
+                if ( d.getLastGlobalSequence() < seq )
+                {
+                    d.setLastGlobalSequence ( seq );
+                    s.merge ( d );
+                }
+
+            }
+
+            s.getTransaction().commit();
+        }
+
+        catch ( Exception e )
+        {
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+        finally
+        {
+            if ( s != null )
+            {
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
     }
 
     public void updateGlobalSequenceNumber ( String id, boolean up, long ps,

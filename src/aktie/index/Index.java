@@ -282,6 +282,35 @@ public class Index implements Runnable
         return search ( builder.build(), max, sort );
     }
 
+    public CObjList getCommunitySeqNumbers ( String ident, String comid, long lastseq, long curseq )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        BooleanQuery.Builder tb = new BooleanQuery.Builder();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        tb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        Term typterm2 = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        tb.add ( new TermQuery ( typterm2 ), BooleanClause.Occur.SHOULD );
+        Term typterm3 = new Term ( CObj.PARAM_TYPE, CObj.POST );
+        tb.add ( new TermQuery ( typterm3 ), BooleanClause.Occur.SHOULD );
+        builder.add ( tb.build(), BooleanClause.Occur.MUST );
+
+        Term cidterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        builder.add ( new TermQuery ( cidterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+                                          lastseq, curseq, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
+            SortField.Type.LONG );
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), ( int ) ( IdentityData.MAXGLOBALSEQUENCECOUNT * 2 ), sort );
+    }
+
     public CObjList getGlobalMemSeqNumbers ( String ident, long lastseq, long curseq )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();

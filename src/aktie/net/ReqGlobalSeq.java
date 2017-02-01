@@ -1,5 +1,6 @@
 package aktie.net;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
@@ -24,7 +25,7 @@ public class ReqGlobalSeq extends GenericProcessor
         index = i;
     }
 
-    private void filterObjects ( CObjList seqobj, String typ, long rn )
+    private void filterObjects ( CObjList seqobj, String scomid, String typ, long rn )
     {
         long seqnum = -1;
         CObjList rlst = new CObjList();
@@ -54,6 +55,12 @@ public class ReqGlobalSeq extends GenericProcessor
                     CObj lc = new CObj();
                     lc.setType ( CObj.SEQCOMP );
                     lc.pushNumber ( typ, seqnum );
+
+                    if ( scomid != null )
+                    {
+                        lc.pushString ( CObj.COMMUNITYID, scomid );
+                    }
+
                     conThread.enqueue ( lc );
 
                     seqnum = gseq;
@@ -141,6 +148,12 @@ public class ReqGlobalSeq extends GenericProcessor
             CObj lc = new CObj();
             lc.setType ( CObj.SEQCOMP );
             lc.pushNumber ( typ, seqnum );
+
+            if ( scomid != null )
+            {
+                lc.pushString ( CObj.COMMUNITYID, scomid );
+            }
+
             conThread.enqueue ( lc );
         }
 
@@ -164,7 +177,13 @@ public class ReqGlobalSeq extends GenericProcessor
         ds.setType ( CObj.OBJDIG );
         ds.setDig ( dig );
         lst.add ( ds );
-        log ( "SEND: rq: " + rn + " sn: " + sn + " : " + dig );
+
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            log ( "SEND: rq: " + rn + " sn: " + sn + " : " + dig  + " comid: " +
+                  d.getString ( CObj.COMMUNITYID ) );
+        }
+
     }
 
     @Override
@@ -174,39 +193,78 @@ public class ReqGlobalSeq extends GenericProcessor
         {
             Long publast = b.getNumber ( CObj.SEQNUM );
             Long memlast = b.getNumber ( CObj.MEMSEQNUM );
-            Long sublast = b.getNumber ( CObj.SUBSEQNUM );
+            //Long sublast = b.getNumber ( CObj.SUBSEQNUM );
+
+            String comid = b.getString ( CObj.COMMUNITYID );
 
             long curseq = identManager.getMyLastGlobalSequenceNumber (
                               conThread.getLocalDestination().getIdentity().getId() );
 
-            if ( publast != null && memlast != null && sublast != null )
+            if ( comid == null )
             {
+                if ( publast != null && memlast != null )  // && sublast != null )
+                {
 
-                log ( " REQ GBL SEQ: " + publast + " " + memlast + " " + sublast );
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        log ( " REQ GBL SEQ: " + publast + " " + memlast ); //+ " " + sublast );
+                    }
 
-                //Get all objects at that sequence number.
-                CObjList seqobj = index.getGlobalPubSeqNumbers (
-                                      conThread.getLocalDestination().getIdentity().getId(),
-                                      publast, curseq );
-                log ( " REQ PUBS: " + publast + " sz: " + seqobj.size() );
+                    //Get all objects at that sequence number.
+                    CObjList seqobj = index.getGlobalPubSeqNumbers (
+                                          conThread.getLocalDestination().getIdentity().getId(),
+                                          publast, curseq );
 
-                filterObjects ( seqobj, CObj.SEQNUM, publast );
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        log ( " REQ PUBS: " + publast + " sz: " + seqobj.size() );
+                    }
 
-                //Get all objects at that sequence number.
-                seqobj = index.getGlobalMemSeqNumbers (
-                             conThread.getLocalDestination().getIdentity().getId(),
-                             memlast, curseq );
-                log ( " REQ MEM: " + memlast + " sz: " + seqobj.size() );
+                    filterObjects ( seqobj, null, CObj.SEQNUM, publast );
 
-                filterObjects ( seqobj, CObj.MEMSEQNUM, memlast );
+                    //Get all objects at that sequence number.
+                    seqobj = index.getGlobalMemSeqNumbers (
+                                 conThread.getLocalDestination().getIdentity().getId(),
+                                 memlast, curseq );
 
-                //Get all objects at that sequence number.
-                seqobj = index.getGlobalSubSeqNumbers (
-                             conThread.getLocalDestination().getIdentity().getId(),
-                             sublast, curseq );
-                log ( " REQ SUB: " + sublast + " sz: " + seqobj.size() );
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        log ( " REQ MEM: " + memlast + " sz: " + seqobj.size() );
+                    }
 
-                filterObjects ( seqobj, CObj.SUBSEQNUM, sublast );
+                    filterObjects ( seqobj, null, CObj.MEMSEQNUM, memlast );
+
+                    /*
+                        //Get all objects at that sequence number.
+                        seqobj = index.getGlobalSubSeqNumbers (
+                            conThread.getLocalDestination().getIdentity().getId(),
+                            sublast, curseq );
+                        if (Level.INFO.equals(log.getLevel())) {
+                        log ( " REQ SUB: " + sublast + " sz: " + seqobj.size() );
+                        }
+
+                        filterObjects ( seqobj, null, CObj.SUBSEQNUM, sublast );
+                    */
+                }
+
+            }
+
+            else
+            {
+                if ( publast != null )
+                {
+                    CObjList seqobj = index.getCommunitySeqNumbers (
+                                          conThread.getLocalDestination().getIdentity().getId(),
+                                          comid, publast, curseq );
+
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        log ( " REQ COMDATA: " + publast + " sz: " + seqobj.size() + " comid: " + comid );
+                    }
+
+                    filterObjects ( seqobj, comid, CObj.SEQNUM, publast );
+                }
+
             }
 
             return true;

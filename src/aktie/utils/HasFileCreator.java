@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.lucene.search.Sort;
@@ -533,6 +534,12 @@ public class HasFileCreator
 
         //Sign it.
         spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            log.info ( "FILE CREATED: " + creator + " DIG " + o.getDig() + " COMID: " +
+                       o.getString ( CObj.COMMUNITYID ) + " SEQ: " + sq );
+        }
 
         try
         {

@@ -1107,14 +1107,18 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         return n;
     }
 
-    private Object nextGlobalReq ( String localdest, String remotedest )
+    private Object nextGlobalReq ( String localdest, String remotedest, Set<String> subs )
     {
+        CObjList rlst = new CObjList();
+
         IdentityData id = identityManager.getLastGlobalSequenceNumber ( remotedest );
         CObj r = new CObj();
         r.setType ( CObj.CON_REQ_GLOBAL );
         r.pushNumber ( CObj.SEQNUM, id.getLastPubGlobalSequence() );
         r.pushNumber ( CObj.MEMSEQNUM, id.getLastMemGlobalSequence() );
-        r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
+        rlst.add ( r );
+        //This is now done by CommunityMember value
+        //r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
 
         if ( log.isLoggable ( Level.INFO ) )
         {
@@ -1124,7 +1128,24 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                        id.getLastSubGlobalSequence() );
         }
 
-        return r;
+        for ( String comid : subs )
+        {
+            long sq = identityManager.getIdentityCommunitySeqNumber ( remotedest, comid );
+            r = new CObj();
+            r.setType ( CObj.CON_REQ_GLOBAL );
+            r.pushNumber ( CObj.SEQNUM, sq );
+            r.pushString ( CObj.COMMUNITYID, comid );
+            rlst.add ( r );
+
+            if ( log.isLoggable ( Level.INFO ) )
+            {
+                log.info ( "REQ COMGLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
+                           sq + " COM: " + comid );
+            }
+
+        }
+
+        return rlst;
     }
 
     //Do not send global requests for a while until we have had a chance
@@ -1162,7 +1183,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         if ( n == null && getNextGlobal && AllowGlobalReuqests )
         {
-            n = nextGlobalReq ( localdest, remotedest );
+            n = nextGlobalReq ( localdest, remotedest, subs );
         }
 
         if ( n == null )

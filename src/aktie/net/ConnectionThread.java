@@ -61,6 +61,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private Map<Long, Set<String>> pubReqdigs;
     private Map<Long, Set<String>> memReqdigs;
     private Map<Long, Set<String>> subReqdigs;
+    private Map<String, Map<Long, Set<String>>> comReqdigs;
     private GetSendData2 conMan;
     private OutputProcessor outproc;
     private CObj endDestination;
@@ -107,6 +108,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         pubReqdigs = new ConcurrentHashMap<Long, Set<String>>();
         memReqdigs = new ConcurrentHashMap<Long, Set<String>>();
         subReqdigs = new ConcurrentHashMap<Long, Set<String>>();
+        comReqdigs = new ConcurrentHashMap<String, Map<Long, Set<String>>>();
         subs = new CopyOnWriteArraySet<String>();
         memberships = new CopyOnWriteArraySet<String>();
         chkSubs = new CopyOnWriteArraySet<String>();
@@ -219,6 +221,39 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void digestDone ( String dg )
     {
+        for ( Iterator<Entry<String, Map<Long, Set<String>>>> i = comReqdigs.entrySet().iterator(); i.hasNext(); )
+        {
+            Entry<String, Map<Long, Set<String>>> e = i.next();
+            Map<Long, Set<String>> mp = e.getValue();
+            String comid = e.getKey();
+
+            for ( Iterator<Entry<Long, Set<String>>> i2 = mp.entrySet().iterator(); i2.hasNext(); )
+            {
+                Entry<Long, Set<String>> e2 = i2.next();
+                Set<String> ds = e2.getValue();
+                long seqnum = e2.getKey();
+
+                if ( ds.remove ( dg ) )
+                {
+                    if ( ds.size() == 0 )
+                    {
+                        i2.remove();
+                        //Go update the sequence for this id
+                        IdentManager.updateIdentityCommunitySeqNumber (
+                            getEndDestination().getId(), comid, seqnum );
+                    }
+
+                }
+
+            }
+
+            if ( mp.size() == 0 )
+            {
+                i.remove();
+            }
+
+        }
+
         for ( Iterator<Entry<Long, Set<String>>> i = pubReqdigs.entrySet().iterator(); i.hasNext(); )
         {
             Entry<Long, Set<String>> e = i.next();
@@ -298,6 +333,42 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         chkMemberships.clear();
         chkSubs.clear();
+    }
+
+    public void setLastComSeq ( String comid, long ps )
+    {
+        if ( fillList.size() == 0 )
+        {
+            IdentManager.updateIdentityCommunitySeqNumber (
+                getEndDestination().getId(), comid, ps );
+            return;
+        }
+
+        CObjList rlst = new CObjList();
+
+        for ( String n : fillList )
+        {
+            CObj r = new CObj();
+            r.setType ( CObj.CON_REQ_DIG );
+            r.setDig ( n );
+            rlst.add ( r );
+        }
+
+        Set<String> cs = new CopyOnWriteArraySet<String>();
+        cs.addAll ( fillList );
+        Map<Long, Set<String>> comset = comReqdigs.get ( comid );
+
+        if ( comset == null )
+        {
+            comset = new ConcurrentHashMap<Long, Set<String>>();
+            comReqdigs.put ( comid, comset );
+        }
+
+        comset.put ( ps, cs );
+
+        fillList = new CopyOnWriteArraySet<String>();
+
+        enqueue ( rlst );
     }
 
     public void setLastSeq ( boolean pb, long ps, boolean mb, long ms, boolean sb, long ss )

@@ -49,6 +49,8 @@ public class CommunityMember
     private String lastFileUpdateFrom;
     @Column ( columnDefinition = "INTEGER(10) default 0" )
     private int fileUpdateCycle;
+    @Column ( columnDefinition = "BIGINT(19) default 0" )
+    private long lastGlobalSequence;
 
     public CommunityMember()
     {
@@ -331,6 +333,16 @@ public class CommunityMember
     public void setFileUpdateCycle ( int fileUpdateCycle )
     {
         this.fileUpdateCycle = fileUpdateCycle;
+    }
+
+    public long getLastGlobalSequence()
+    {
+        return lastGlobalSequence;
+    }
+
+    public void setLastGlobalSequence ( long lastGlobalSequence )
+    {
+        this.lastGlobalSequence = lastGlobalSequence;
     }
 
 }
