@@ -1785,14 +1785,6 @@ public class SWTApp implements UpdateInterface
 
     private void loadDefaults()
     {
-
-        File devid = new File ( nodeDir + File.separator + "developerid.dat" );
-
-        if ( devid.exists() )
-        {
-            loadDeveloperIdentity ( devid );
-        }
-
         //Load default seed file.
         File defseedfile = new File ( nodeDir + File.separator + "defseed.dat" );
 
@@ -1882,6 +1874,16 @@ public class SWTApp implements UpdateInterface
 
             mlst.close();
 
+            if ( !TESTNODE )
+            {
+                File devid = new File ( nodeDir + File.separator + "developerid.dat" );
+
+                if ( devid.exists() )
+                {
+                    loadDeveloperIdentity ( devid );
+                }
+
+            }
 
             mlst = node.getIndex().getMySubscriptions();
 

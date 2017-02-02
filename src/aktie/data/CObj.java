@@ -34,6 +34,8 @@ import aktie.crypto.Utils;
 public class CObj
 {
 
+    public static int MAXSTRING = 50000;
+
     //Types - indexed
     public static String IDENTITY = "identity";
     public static String COMMUNITY = "community";
@@ -854,6 +856,127 @@ public class CObj
         }
 
         return c;
+    }
+
+    public JSONObject GETPRIVATEJSON()
+    {
+        JSONObject r = getJSON();
+
+        if ( privatedata != null )
+        {
+            if ( privatedata.size() > 0 )
+            {
+                JSONObject so = new JSONObject();
+
+                for ( Entry<String, String> e : privatedata.entrySet() )
+                {
+                    so.put ( e.getKey(), e.getValue() );
+                }
+
+                r.put ( "PRIVATE_STRINGS", so );
+            }
+
+        }
+
+        if ( privatenumbers != null )
+        {
+            if ( privatenumbers.size() > 0 )
+            {
+                JSONObject so = new JSONObject();
+
+                for ( Entry<String, Long> e : privatenumbers.entrySet() )
+                {
+                    so.put ( e.getKey(), e.getValue() );
+                }
+
+                r.put ( "PRIVATE_NUMBERS", so );
+            }
+
+        }
+
+        if ( privatedecimals != null )
+        {
+            if ( privatedecimals.size() > 0 )
+            {
+                JSONObject so = new JSONObject();
+
+                for ( Entry<String, Double> e : privatedecimals.entrySet() )
+                {
+                    so.put ( e.getKey(), e.getValue() );
+                }
+
+                r.put ( "PRIVATE_DECIMALS", so );
+            }
+
+        }
+
+        return r;
+    }
+
+    public void LOADPRIVATEJSON ( JSONObject jo )
+    {
+        loadJSON ( jo );
+
+        if ( jo.has ( "PRIVATE_STRINGS" ) )
+        {
+            JSONObject so = jo.getJSONObject ( "PRIVATE_STRINGS" );
+
+            if ( so.length() > 0 )
+            {
+                privatedata = new HashMap<String, String>();
+                Iterator<String> i = so.keys();
+
+                while ( i.hasNext() )
+                {
+                    String k = i.next();
+                    String v = so.getString ( k );
+                    privatedata.put ( k, v );
+                }
+
+            }
+
+        }
+
+        if ( jo.has ( "PRIVATE_NUMBERS" ) )
+        {
+            JSONObject so = jo.getJSONObject ( "PRIVATE_NUMBERS" );
+
+            if ( so.length() > 0 )
+            {
+                privatenumbers = new HashMap<String, Long>();
+                Iterator<String> i = so.keys();
+
+                while ( i.hasNext() )
+                {
+                    String k = i.next();
+                    long v = so.getLong ( k );
+                    privatenumbers.put ( k, v );
+                }
+
+            }
+
+        }
+
+        if ( jo.has ( "PRIVATE_DECIMALS" ) )
+        {
+            JSONObject so = jo.getJSONObject ( "PRIVATE_DECIMALS" );
+
+            if ( so.length() > 0 )
+            {
+                privatedecimals = new HashMap<String, Double>();
+                Iterator<String> i = so.keys();
+
+                while ( i.hasNext() )
+                {
+                    String k = i.next();
+                    double v = so.getDouble ( k );
+                    privatedecimals.put ( k, v );
+                }
+
+            }
+
+        }
+
     }
 
     public JSONObject getJSON()
@@ -1681,6 +1804,11 @@ public class CObj
                 strings = new HashMap<String, String>();
             }
 
+            if ( v.length() > MAXSTRING )
+            {
+                v = v.substring ( 0, MAXSTRING );
+            }
+
             strings.put ( key, v );
         }
 
@@ -1700,6 +1828,11 @@ public class CObj
             if ( text == null )
             {
                 text = new HashMap<String, String>();
+            }
+
+            if ( v.length() > MAXSTRING )
+            {
+                v = v.substring ( 0, MAXSTRING );
             }
 
             text.put ( key, v );

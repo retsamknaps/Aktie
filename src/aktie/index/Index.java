@@ -397,7 +397,7 @@ public class Index implements Runnable
     {
         MatchAllDocsQuery alld = new MatchAllDocsQuery();
 
-        return search ( alld, ( int ) IdentityData.MAXGLOBALSEQUENCECOUNT );
+        return search ( alld, ( int ) Integer.MAX_VALUE );
     }
 
     public CObjList getAllPrivIdents()
