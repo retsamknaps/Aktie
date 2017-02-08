@@ -1112,35 +1112,40 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         CObjList rlst = new CObjList();
 
         IdentityData id = identityManager.getLastGlobalSequenceNumber ( remotedest );
-        CObj r = new CObj();
-        r.setType ( CObj.CON_REQ_GLOBAL );
-        r.pushNumber ( CObj.SEQNUM, id.getLastPubGlobalSequence() );
-        r.pushNumber ( CObj.MEMSEQNUM, id.getLastMemGlobalSequence() );
-        rlst.add ( r );
-        //This is now done by CommunityMember value
-        //r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
 
-        if ( log.isLoggable ( Level.INFO ) )
+        if ( id != null )
         {
-            log.info ( "REQ GLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
-                       id.getLastPubGlobalSequence() + " " +
-                       id.getLastMemGlobalSequence() + " " +
-                       id.getLastSubGlobalSequence() );
-        }
-
-        for ( String comid : subs )
-        {
-            long sq = identityManager.getIdentityCommunitySeqNumber ( remotedest, comid );
-            r = new CObj();
+            CObj r = new CObj();
             r.setType ( CObj.CON_REQ_GLOBAL );
-            r.pushNumber ( CObj.SEQNUM, sq );
-            r.pushString ( CObj.COMMUNITYID, comid );
+            r.pushNumber ( CObj.SEQNUM, id.getLastPubGlobalSequence() );
+            r.pushNumber ( CObj.MEMSEQNUM, id.getLastMemGlobalSequence() );
             rlst.add ( r );
+            //This is now done by CommunityMember value
+            //r.pushNumber ( CObj.SUBSEQNUM, id.getLastSubGlobalSequence() );
 
             if ( log.isLoggable ( Level.INFO ) )
             {
-                log.info ( "REQ COMGLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
-                           sq + " COM: " + comid );
+                log.info ( "REQ GLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
+                           id.getLastPubGlobalSequence() + " " +
+                           id.getLastMemGlobalSequence() + " " +
+                           id.getLastSubGlobalSequence() );
+            }
+
+            for ( String comid : subs )
+            {
+                long sq = identityManager.getIdentityCommunitySeqNumber ( remotedest, comid );
+                r = new CObj();
+                r.setType ( CObj.CON_REQ_GLOBAL );
+                r.pushNumber ( CObj.SEQNUM, sq );
+                r.pushString ( CObj.COMMUNITYID, comid );
+                rlst.add ( r );
+
+                if ( log.isLoggable ( Level.INFO ) )
+                {
+                    log.info ( "REQ COMGLB SEQ: ME: " + localdest + " FROM: " + remotedest + " SEQ: " +
+                               sq + " COM: " + comid );
+                }
+
             }
 
         }
@@ -1531,6 +1536,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
             //becoming a new member
             List<CommunityMyMember> mycoms = identityManager.getMyMemberships();
 
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "decodeMemberships: my membership: " + mycoms.size() );
+            }
+
             for ( CommunityMyMember c : mycoms )
             {
                 long lastdecode = c.getLastDecode();
@@ -1540,12 +1550,23 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 CObjList unlst = index.getUnDecodedMemberships ( lastdecode -
                                  ( 2 * 5000 ) ) ; //Index.MIN_TIME_BETWEEN_SEARCHERS ) );
 
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    log.info ( "decodeMemberships: getUnDecodedMemberships: " + unlst.size() );
+                }
+
                 for ( int cnt = 0; cnt < unlst.size(); cnt++ )
                 {
                     CObj um = unlst.get ( cnt );
 
                     if ( SymDecoder.decode ( um, kp ) )
                     {
+                        if ( Level.INFO.equals ( log.getLevel() ) )
+                        {
+                            log.info ( "decodeMemberships: DECODED!: " + um.getPrivate ( CObj.COMMUNITYID ) +
+                                       " m: " + um.getPrivate ( CObj.MEMBERID ) );
+                        }
+
                         um.pushPrivate ( CObj.DECODED, "true" );
                         index.index ( um );
                         newdecoded = true;

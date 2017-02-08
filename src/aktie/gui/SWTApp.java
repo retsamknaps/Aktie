@@ -122,7 +122,7 @@ import org.eclipse.jface.viewers.ComboViewer;
 
 public class SWTApp implements UpdateInterface
 {
-    public static boolean TESTNODE = false;
+    public static boolean TESTNODE = true;
 
     Logger log = Logger.getLogger ( "aktie" );
 

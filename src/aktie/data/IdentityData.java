@@ -105,6 +105,8 @@ public class IdentityData
     public void setId ( String id )
     {
         this.id = id;
+        System.out.println ( "SETTING ID setId() " + id );
+        Thread.dumpStack();
     }
 
     public long getFirstSeen()

@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
@@ -25,6 +27,7 @@ import aktie.utils.FUtils;
 
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedNumericSortField;
+import org.json.JSONObject;
 import org.junit.Test;
 
 public class TestNode
@@ -1061,7 +1064,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 30000 );
             }
 
             catch ( InterruptedException e )
@@ -2252,6 +2255,162 @@ public class TestNode
             clst = n3.getIndex().getPosts ( pubcom.getDig(), n0seed.getId(), 0, Long.MAX_VALUE );
             assertEquals ( 2, clst.size() );
 
+
+            //Test backup and restore
+            System.out.println ( "==================== TEST BACKUP RESTORE =================" );
+            List<CObjEq> origlist = new LinkedList<CObjEq>();
+            clst = n0.getIndex().getAllCObj();
+
+            for ( int c = 0; c < clst.size(); c++ )
+            {
+                origlist.add ( new CObjEq ( clst.get ( c ) ) );
+            }
+
+            clst.close();
+
+            n0.close();
+
+            IdentityBackupRestore bres = new IdentityBackupRestore();
+            bres.init ( "testnode0", "testnode0" );
+            bres.saveIdentity ( new File ( "testnode0.backup.dat" ) );
+            bres.close();
+
+            FUtils.deleteDir ( new File ( "testnode0" ) );
+            FUtils.deleteDir ( new File ( "testnode0restore" ) );
+            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0 );
+            clst = n0.getIndex().getAllCObj();
+            assertEquals ( 0, clst.size() );
+            clst.close();
+            n0.close();
+
+            bres = new IdentityBackupRestore();
+            bres.init ( "testnode0restore", "testnode0restore" );
+            bres.loadIdentity ( new File ( "testnode0.backup.dat" ) );
+            bres.close();
+
+            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0 );
+
+            clst = n1.getIndex().getMyIdentities();
+            assertTrue ( clst.size() > 0 );
+            CObj n1seed = clst.get ( 0 );
+            clst.close();
+            n1seed.getPrivatedata().clear();
+            n1seed.getPrivateNumbers().clear();
+            n1seed.setType ( CObj.USR_SEED );
+            n0.enqueue ( n1seed );
+            n0.newDeveloperIdentity ( n0seed.getId() );
+
+            clst = n0.getIndex().getMyIdentities();
+            assertEquals ( 2, clst.size() );
+            CObj strt0 = clst.get ( 0 );
+            CObj strt1 = clst.get ( 1 );
+            clst.close();
+
+            strt0.setType ( CObj.USR_START_DEST );
+            strt0.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
+
+            strt1.setType ( CObj.USR_START_DEST );
+            strt1.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
+
+            n0.enqueue ( strt0 );
+            n0.enqueue ( strt1 );
+
+            try
+            {
+                Thread.sleep ( 240L * 1000L );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            System.out.println ( "DOWNLOAD FILE2 .............. " + n0seed.getId() );
+            nlf = File.createTempFile ( "download", ".dat" );
+            hf0.setType ( CObj.USR_DOWNLOAD_FILE );
+            hf0.pushString ( CObj.CREATOR, n0seed.getId() );
+            hf0.pushPrivate ( CObj.LOCALFILE, nlf.getPath() );
+            n0.enqueue ( hf0 );
+
+            n0.resetAllConnections();
+
+            try
+            {
+                Thread.sleep ( 180000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            System.out.println ( "DLFILE: " + nlf.getPath() + " from file: " + nf.getPath() );
+            assertTrue ( FUtils.diff ( nf, nlf ) );
+
+            CObj newhf = null;
+            clst = n0.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 1, clst.size() );
+            newhf = clst.get ( 0 );
+            clst.close();
+
+            clst = n1.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 0, clst.size() );
+            clst.close();
+
+            clst = n2.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 0, clst.size() );
+            clst.close();
+
+            clst = n3.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 1, clst.size() );
+            CObj chkhf = clst.get ( 0 );
+            clst.close();
+
+            assertEquals ( newhf.getId(), chkhf.getId() );
+            assertEquals ( newhf.getDig(), chkhf.getDig() );
+
+
+            List<CObjEq> newlist = new LinkedList<CObjEq>();
+            clst = n0.getIndex().getAllCObj();
+
+            for ( int c = 0; c < clst.size(); c++ )
+            {
+                newlist.add ( new CObjEq ( clst.get ( c ) ) );
+            }
+
+            clst.close();
+
+            System.out.println ( "====== AAA ORIGLIST SIZE: " + origlist.size() );
+            System.out.println ( "====== AAA NEWLIST SIZE:  " + newlist.size() );
+
+            assertEquals ( origlist.size(), newlist.size() );
+
+            for ( Iterator<CObjEq> i = origlist.iterator(); i.hasNext(); )
+            {
+                CObjEq o0 = i.next();
+
+                if ( newlist.contains ( o0 ) )
+                {
+                    newlist.remove ( o0 );
+                    i.remove();
+                }
+
+            }
+
+            System.out.println ( "====== ORIGLIST SIZE: " + origlist.size() );
+
+            for ( CObjEq o0 : origlist )
+            {
+                o0.print();
+            }
+
+            System.out.println ( "====== NEWLIST SIZE:  " + newlist.size() );
+
+            for ( CObjEq o0 : newlist )
+            {
+                o0.print();
+            }
+
             n0.close();
             n1.close();
             n2.close();
@@ -2264,6 +2423,41 @@ public class TestNode
         {
             fail ( "Exception throw: " + e.getMessage() );
             e.printStackTrace();
+        }
+
+    }
+
+
+    class CObjEq
+    {
+        public CObjEq ( CObj c )
+        {
+            co = c;
+        }
+
+        public CObj co;
+
+        public int hashCode()
+        {
+            return 1;
+        }
+
+        public boolean equals ( Object o )
+        {
+            if ( o == null ) { return false; }
+
+            if ( ! ( o instanceof CObjEq ) ) { return false; }
+
+            CObjEq ce = ( CObjEq ) o;
+            return co.whoopyEquals ( ce.co );
+        }
+
+        public void print()
+        {
+            System.out.println ( "------------------------" );
+            JSONObject jo = co.GETPRIVATEJSON();
+            System.out.println ( jo.toString ( 10 ) );
+
         }
 
     }

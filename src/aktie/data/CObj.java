@@ -1994,35 +1994,174 @@ public class CObj
 
     }
 
+    @SuppressWarnings ( "rawtypes" )
     public boolean mapEq ( Map<?, ?> m, Map<?, ?> n )
     {
-        if ( m == null && n == null ) { return true; }
+        Set<?> k0 = new HashSet();
+        Set<?> k1 = new HashSet();
 
-        if ( m == null || n == null ) { return false; }
+        if ( m != null )
+        {
+            k0 = m.keySet();
+        }
 
-        if ( m.size() != n.size() ) { return false; }
+        if ( n != null )
+        {
+            k1 = n.keySet();
+        }
 
-        Set<?> k0 = m.keySet();
-        Set<?> k1 = n.keySet();
+        Iterator<?> i = k0.iterator();
+
+        while ( i.hasNext() )
+        {
+            Object o = i.next();
+
+            if ( o instanceof String )
+            {
+                String ks = ( String ) o;
+
+                if ( ks.startsWith ( CObj.PRV_GLOBAL_SEQ ) )
+                {
+                    i.remove();
+                }
+
+                else if ( ks.startsWith ( "prv_push" ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.LASTUPDATE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_TEMP_NEWPOSTS.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_SKIP_PAYMENT.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_LOCALFILE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.LOCALFILE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.MINE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.UPGRADEFLAG.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.STATUS.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+            }
+
+        }
+
+        i = k1.iterator();
+
+        while ( i.hasNext() )
+        {
+            Object o = i.next();
+
+            if ( o instanceof String )
+            {
+                String ks = ( String ) o;
+
+                if ( ks.startsWith ( CObj.PRV_GLOBAL_SEQ ) )
+                {
+                    i.remove();
+                }
+
+                else if ( ks.startsWith ( "prv_push" ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.LASTUPDATE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_TEMP_NEWPOSTS.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_SKIP_PAYMENT.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.PRV_LOCALFILE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.LOCALFILE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.MINE.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.UPGRADEFLAG.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+                else if ( CObj.STATUS.equals ( ks ) )
+                {
+                    i.remove();
+                }
+
+            }
+
+        }
+
+        if ( k0.size() != k1.size() ) { return false; }
 
         if ( !k0.containsAll ( k1 ) ) { return false; }
 
         if ( !k1.containsAll ( k0 ) ) { return false; }
 
-        for ( Object k : k0 )
+        if ( k0.size() > 0 )
         {
-            Object o0 = m.get ( k );
-            Object o1 = n.get ( k );
-
-            if ( o0 instanceof byte[] )
+            for ( Object k : k0 )
             {
-                if ( !Arrays.equals ( ( byte[] ) o0, ( byte[] ) o1 ) ) { return false; }
+                Object o0 = m.get ( k );
+                Object o1 = n.get ( k );
 
-            }
+                if ( o0 instanceof byte[] )
+                {
+                    if ( !Arrays.equals ( ( byte[] ) o0, ( byte[] ) o1 ) ) { return false; }
 
-            else
-            {
-                if ( !m.get ( k ).equals ( n.get ( k ) ) ) { return false; }
+                }
+
+                else
+                {
+                    if ( !m.get ( k ).equals ( n.get ( k ) ) ) { return false; }
+
+                }
 
             }
 

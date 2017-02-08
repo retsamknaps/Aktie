@@ -33,9 +33,9 @@ public class Wrapper
     public static String VERSION_0418 = "version 0.4.18";
     public static String VERSION_0505 = "version 0.5.5";
     public static String VERSION_0506 = "version 0.5.6";
-    public static String VERSION_0509 = "version 0.5.9";
+    public static String VERSION_0510 = "version 0.5.10";
 
-    public static String VERSION = VERSION_0509;
+    public static String VERSION = VERSION_0510;
 
     public static String VERSION_FILE = "version.txt";
 
@@ -128,6 +128,8 @@ public class Wrapper
     {
         boolean verbose = false;
         boolean headless = false;
+        boolean backup = false;
+        boolean restore = false;
 
         for ( int ct = 0; ct < args.length; ct++ )
         {
@@ -139,6 +141,16 @@ public class Wrapper
             if ( "-headless".equals ( args[ct] ) )
             {
                 headless = true;
+            }
+
+            if ( "-backup".equals ( args[ct] ) )
+            {
+                backup = true;
+            }
+
+            if ( "-restore".equals ( args[ct] ) )
+            {
+                backup = true;
             }
 
         }
@@ -293,17 +305,42 @@ public class Wrapper
 
         cmd.add ( sb.toString() );
 
-        if ( !headless )
+        if ( headless )
         {
-            cmd.add ( "aktie.gui.SWTApp" );
+            cmd.add ( "aktie.headless.HeadlessMain" );
+
+        }
+
+        else if ( backup )
+        {
+            cmd.add ( "aktie.IdentityBackupRestore" );
+        }
+
+        else if ( restore )
+        {
+            cmd.add ( "aktie.IdentityBackupRestore" );
         }
 
         else
         {
-            cmd.add ( "aktie.headless.HeadlessMain" );
+            cmd.add ( "aktie.gui.SWTApp" );
         }
 
-        cmd.add ( NODEDIR );
+        if ( backup )
+        {
+            System.out.println ( "Writing backup file." );
+        }
+
+        else if ( restore )
+        {
+            System.out.println ( "Reading backup file." );
+            cmd.add ( "restore" );
+        }
+
+        else
+        {
+            cmd.add ( NODEDIR );
+        }
 
         if ( verbose )
         {

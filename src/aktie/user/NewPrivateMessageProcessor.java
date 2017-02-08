@@ -274,7 +274,7 @@ public class NewPrivateMessageProcessor extends GenericProcessor
                                              Utils.CID1, raw );
             b.pushString ( CObj.PAYLOAD2, Utils.toString ( enc ) );
 
-            b.pushString ( CObj.DECODED, "true" );
+            b.pushPrivate ( CObj.DECODED, "true" );
             b.pushPrivate ( CObj.PRV_PUSH_REQ, "true" );
             b.pushPrivateNumber ( CObj.PRV_PUSH_TIME, System.currentTimeMillis() );
             b.pushPrivate ( CObj.PRV_MSG_ID, pid );
