@@ -44,7 +44,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1485354040L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1486587564L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     public static long OLDPAYMENT_V0 = 0x0000004000000000L;
