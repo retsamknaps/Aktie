@@ -150,7 +150,7 @@ public class Wrapper
 
             if ( "-restore".equals ( args[ct] ) )
             {
-                backup = true;
+                restore = true;
             }
 
         }

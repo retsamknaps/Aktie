@@ -86,6 +86,7 @@ public class IdentityBackupRestore
     public void close()
     {
         index.close();
+        session.close();
     }
 
     //nodedir + File.separator + "i2p"
@@ -647,8 +648,18 @@ public class IdentityBackupRestore
             so.write ( fw );
             CommunityMember cm = getCommunityMember ( sub.getString ( CObj.CREATOR ),
                                  sub.getString ( CObj.COMMUNITYID ) );
-            fw.write ( cm.getLastFileNumber() + "\n" );
-            fw.write ( cm.getLastPostNumber() + "\n" );
+
+            if ( cm != null )
+            {
+                fw.write ( cm.getLastFileNumber() + "\n" );
+                fw.write ( cm.getLastPostNumber() + "\n" );
+            }
+
+            else
+            {
+                fw.write ( "0\n" );
+                fw.write ( "0\n" );
+            }
 
         }
 

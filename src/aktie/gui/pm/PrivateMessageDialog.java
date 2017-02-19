@@ -2,9 +2,12 @@ package aktie.gui.pm;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
@@ -49,9 +52,14 @@ public class PrivateMessageDialog extends Dialog
         container.setLayout ( new GridLayout ( 2, false ) );
 
         Label lblFrom = new Label ( container, SWT.NONE );
+        FontData fontData = lblFrom.getFont().getFontData() [0];
+        Font font = new Font ( Display.getDefault(), new FontData ( fontData.getName(), fontData
+                               .getHeight(), SWT.BOLD ) );
+        lblFrom.setFont ( font );
         lblFrom.setText ( "From" );
 
         lblFrm = new Label ( container, SWT.NONE );
+        lblFrm.setFont ( font );
         lblFrm.setText ( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
 
         Label lblTo = new Label ( container, SWT.NONE );

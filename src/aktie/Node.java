@@ -181,6 +181,7 @@ public class Node
         conMan.stop();
         userQueue.stop();
         index.close();
+        session.close();
     }
 
     public void newDeveloperIdentity ( String id )

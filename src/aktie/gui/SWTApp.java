@@ -2,6 +2,7 @@ package aktie.gui;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import aktie.IdentityBackupRestore;
 import aktie.Node;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
@@ -97,6 +99,7 @@ import org.eclipse.swt.widgets.Table;
 import swing2swt.layout.BorderLayout;
 
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.DND;
@@ -104,12 +107,17 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.GridData;
@@ -1544,6 +1552,7 @@ public class SWTApp implements UpdateInterface
     */
     public static void main ( String[] args )
     {
+
         boolean verbose = false;
 
         try
@@ -1584,6 +1593,22 @@ public class SWTApp implements UpdateInterface
             {
                 window.nodeDir = "aktie_node";
             }
+
+            //Auto save backup file.
+            IdentityBackupRestore ibak = new IdentityBackupRestore();
+            ibak.init ( window.nodeDir, window.nodeDir + File.separator + "i2p" );
+            File autobak = new File ( window.nodeDir + File.separator + "auto_backup.dat" );
+            File autobak2 = new File ( window.nodeDir + File.separator + "auto_backup.dat.bak" );
+
+            if ( autobak.exists() )
+            {
+                autobak2.delete();
+                autobak.renameTo ( autobak2 );
+                autobak.delete();
+            }
+
+            ibak.saveIdentity ( autobak );
+            ibak.close();
 
             if ( verbose )
             {
@@ -3082,24 +3107,61 @@ public class SWTApp implements UpdateInterface
 
     }
 
+    private void addImage ( String s, int offset )
+    {
+        if ( s != null )
+        {
+            File f = new File ( s );
+
+            if ( f.exists() )
+            {
+                try
+                {
+                    ImageLoader loader = new ImageLoader();
+                    loader.load ( new FileInputStream ( f ) );
+                    addImage ( loader, offset );
+                }
+
+                catch ( Exception e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+    }
+
     public static int MAXIMGWIDTH = 400;
     private boolean resize = true;
     private int imagex = 0;
     private int imagey = 0;
 
-    private void addImage ( Image image, int offset )
+    private static int MARGIN = 5;
+    private void addImage ( ImageLoader image, int offset )
     {
         StyleRange style = new StyleRange ();
         style.start = offset;
         style.length = 1;
         style.data = image;
-        Rectangle rect = image.getBounds();
-        int w = rect.width;
-        int h = rect.height;
+
+        int w = image.data[0].width;
+        int h = image.data[0].height;
+
+        int ascent = 2 * h / 3;
+        int descent = h - ascent;
 
         //resize = true;
-        style.metrics = new GlyphMetrics ( h, 0, w );
-        postText.setStyleRange ( style );
+        style.metrics = new GlyphMetrics ( ascent + MARGIN,
+                                           descent + MARGIN, w + 2 * MARGIN );
+        StyledText pt = postText;
+
+        if ( !pt.isDisposed() )
+        {
+            pt.setStyleRange ( style );
+        }
+
     }
 
 
@@ -3267,6 +3329,162 @@ public class SWTApp implements UpdateInterface
         advQuery = q;
         searchText.setText ( "" );
         postSearch();
+    }
+
+    private Animator animator = new Animator();
+    class Animator implements Runnable
+    {
+        //event.gc.setAntialias ( SWT.ON );
+        //event.gc.drawImage ( image, 0, 0,
+        //                     image.getBounds().width, image.getBounds().height,
+        //                     imagex, imagey, sw, sh );
+        public Canvas imageCanvas;
+        public boolean stop;
+        public ImageLoader imgLoader;
+        public int imagex, imagey, sw, sh;
+        public Image image;
+        public int idx = 0;
+        public long nextframe;
+
+        public Animator()
+        {
+            Thread t = new Thread ( this );
+            t.start();
+        }
+
+        public void create()
+        {
+            imageCanvas = new Canvas ( postText, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED );
+            imageCanvas.addPaintListener ( new PaintListener()
+            {
+                @Override
+                public void paintControl ( PaintEvent e )
+                {
+                    Image img = image;
+
+                    if ( img != null && !img.isDisposed() )
+                    {
+
+                        // Set up the offscreen gc
+                        Image tmpimg = new Image ( shell.getDisplay(), imageCanvas.getBounds() );
+                        GC gcImage = new GC ( tmpimg );
+                        // Draw the background
+                        gcImage.setBackground ( e.gc.getBackground() );
+
+                        overlayImage ( tmpimg, gcImage );
+
+                        e.gc.drawImage ( tmpimg, 0, 0 );
+                    }
+
+                }
+
+            } );
+
+        }
+
+        public synchronized void overlayImage ( Image tmp, GC g )
+        {
+            if ( imgLoader != null )
+            {
+                ImageData id = imgLoader.data[idx];
+                g.setAntialias ( SWT.ON );
+                Image img = new Image ( Display.getDefault(), id );
+                g.drawImage ( image, 0, 0 );
+                g.drawImage ( img, 0, 0 );
+                image.dispose();
+                img.dispose();
+                image = tmp;
+            }
+
+        }
+
+        public synchronized void update ( ImageLoader il, int imgx, int imgy )
+        {
+            if ( il != imgLoader )
+            {
+                System.out.println ( "NEW LOADER! " + il );
+                imgLoader = il;
+                idx = 0;
+                ImageData id = imgLoader.data[idx];
+                nextframe = System.currentTimeMillis();
+
+                if ( image != null )
+                {
+                    if ( !image.isDisposed() )
+                    {
+                        image.dispose();
+                    }
+
+                }
+
+                Display display = Display.getDefault();
+                image = new Image ( display, id );
+            }
+
+            imageCanvas.setLocation ( imgx, imgy );
+            imageCanvas.setSize ( image.getBounds().width, image.getBounds().height );
+            imageCanvas.redraw();
+
+        }
+
+        private synchronized void nextFrame()
+        {
+            long ct = System.currentTimeMillis();
+            long delay = 100L;
+
+            if ( imgLoader == null )
+            {
+                delay = 10000L;
+            }
+
+            else
+            {
+                if ( ct >= nextframe && image != null )
+                {
+                    idx++;
+                    idx = idx % imgLoader.data.length;
+                    final ImageData id = imgLoader.data[idx];
+                    int delayTime = Math.max ( 50, 10 * id.delayTime );
+                    //id.
+                    nextframe = nextframe + delayTime;
+
+                    Display display = Display.getDefault();
+                    display.asyncExec ( new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            imageCanvas.redraw();
+                        }
+
+                    } );
+
+                }
+
+                delay = Math.max ( 5, nextframe - ct );
+            }
+
+            try
+            {
+                wait ( delay );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        public void run()
+        {
+            while ( !stop )
+            {
+                nextFrame();
+            }
+
+        }
+
     }
 
     /**
@@ -4698,27 +4916,18 @@ public class SWTApp implements UpdateInterface
 
                                 if ( prvfile != null )
                                 {
-                                    Display defdesp = Display.getDefault();
-                                    Image image = new Image ( defdesp, prvfile.getPath() );
-                                    addImage ( image, msg.length() - 1 );
+                                    addImage ( prvfile.getPath(), msg.length() - 1 );
                                 }
 
                                 else if ( file != null )
                                 {
-                                    Display defdesp = Display.getDefault();
+                                    addImage ( file.getPath(), msg.length() - 1 );
 
-                                    try
-                                    {
-                                        Image image = new Image ( defdesp, file.getPath() );
-                                        addImage ( image, msg.length() - 1 );
-                                    }
+                                }
 
-                                    catch ( Exception ei )
-                                    {
-                                        //do not spam the user.  this could happen a lot if someone
-                                        //is a jerk
-                                    }
-
+                                else
+                                {
+                                    addImage ( ( String ) null, 0 );
                                 }
 
                             }
@@ -5086,7 +5295,9 @@ public class SWTApp implements UpdateInterface
         composite_6 = new Composite ( sashForm_1, SWT.NONE );
         composite_6.setLayout ( new GridLayout() );
 
-        postText = new StyledText ( composite_6, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI );
+        postText = new StyledText ( composite_6, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.MULTI
+                                    | SWT.NO_REDRAW_RESIZE | SWT.NO_BACKGROUND );
+
         postText.setFont ( JFaceResources.getFont ( JFaceResources.TEXT_FONT ) );
 
         postText.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true ) );
@@ -5106,9 +5317,9 @@ public class SWTApp implements UpdateInterface
 
                 if ( style != null )
                 {
-                    Image image = ( Image ) style.data;
+                    //Image image = ( Image ) style.data;
 
-                    if ( image != null ) { image.dispose(); }
+                    //if ( image != null ) { image.dispose(); }
 
                 }
 
@@ -5123,32 +5334,14 @@ public class SWTApp implements UpdateInterface
             public void paintObject ( PaintObjectEvent event )
             {
                 StyleRange style = event.style;
-                Image image = ( Image ) style.data;
+                ImageLoader image = ( ImageLoader ) style.data;
 
-                if ( !image.isDisposed() )
-                {
-                    imagex = event.x;
-                    imagey = event.y + event.ascent - style.metrics.ascent;
-                    int w = image.getBounds().width;
-                    int h = image.getBounds().height;
-                    int sw = w;
-                    int sh = h;
+                int h = image.data[0].height;
 
-                    if ( resize )
-                    {
-                        if ( sw > MAXIMGWIDTH )
-                        {
-                            sh = sh * MAXIMGWIDTH / sw;
-                            sw = MAXIMGWIDTH;
-                        }
+                imagex = event.x + MARGIN;
+                imagey = event.y + event.ascent - 2 * h / 3;
 
-                    }
-
-                    event.gc.setAntialias ( SWT.ON );
-                    event.gc.drawImage ( image, 0, 0,
-                                         image.getBounds().width, image.getBounds().height,
-                                         imagex, imagey, sw, sh );
-                }
+                animator.update ( image, imagex, imagey );
 
             }
 
@@ -5166,9 +5359,9 @@ public class SWTApp implements UpdateInterface
 
                     if ( style.data != null )
                     {
-                        Image image = ( Image ) style.data;
+                        //Image image = ( Image ) style.data;
 
-                        if ( image != null ) { image.dispose(); }
+                        //if ( image != null ) { image.dispose(); }
 
                     }
 
@@ -5200,6 +5393,7 @@ public class SWTApp implements UpdateInterface
 
         } );
 
+        animator.create();
 
         sashForm_1.setWeights ( new int[] {1, 1} );
 
@@ -6254,6 +6448,46 @@ public class SWTApp implements UpdateInterface
                 if ( rf != null )
                 {
                     getUserCallback().update ( rf );
+                }
+
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem whohas = new MenuItem ( menu_4, SWT.NONE );
+        whohas.setText ( "Who has file" );
+        whohas.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) downloadTableViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+                RequestFile rf = null;
+
+                if ( i.hasNext() )
+                {
+                    rf = ( RequestFile ) i.next();
+
+                    if ( rf != null )
+                    {
+                        CObj hfs = new CObj();
+                        hfs.setType ( CObj.HASFILE );
+                        hfs.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
+                        hfs.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
+                        hfs.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
+                        File f = new File ( rf.getLocalFile() );
+                        hfs.pushString ( CObj.NAME, f.getName() );
+                        hasFileDialog.open ( hfs );
+                    }
+
                 }
 
             }

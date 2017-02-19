@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -21,6 +22,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Table;
 
 import aktie.data.CObj;
+import aktie.gui.pm.PrivateMessageDialog;
 import aktie.index.CObjList;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -36,6 +38,7 @@ public class ShowHasFileDialog extends Dialog
     private CObj fileo;
     private Label lblNodesHaveFile;
     private SetUserRankDialog usrRankDialog;
+    private PrivateMessageDialog prvMessageDialog;
 
     /**
         Create the dialog.
@@ -46,6 +49,7 @@ public class ShowHasFileDialog extends Dialog
         super ( parentShell );
         usrRankDialog = d;
         app = g;
+        prvMessageDialog = new PrivateMessageDialog ( app.shell, app );
     }
 
     /**
@@ -106,6 +110,53 @@ public class ShowHasFileDialog extends Dialog
                 }
 
             }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        MenuItem sndPrivate = new MenuItem ( menu, SWT.NONE );
+        sndPrivate.setText ( "Send Private Message" );
+        sndPrivate.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+
+                @SuppressWarnings ( "rawtypes" )
+                Iterator i = sel.iterator();
+
+                if ( i.hasNext() )
+                {
+                    Object selo = i.next();
+
+                    if ( selo instanceof CObjListIdentPubElement )
+                    {
+                        CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
+                        CObj fr = ae.getCObj();
+
+                        if ( app.getSelectedIdentity() == null )
+                        {
+                            MessageDialog.openWarning ( app.shell,
+                                                        "Select an identity.", "Sorry, select an identity in the Communities tab" );
+                        }
+
+                        else if ( fr != null )
+                        {
+                            prvMessageDialog.open ( app.getSelectedIdentity().getId(),
+                                                    fr.getId() );
+                        }
+
+                    }
+
+                }
+
+            }
+
 
             @Override
             public void widgetDefaultSelected ( SelectionEvent e )

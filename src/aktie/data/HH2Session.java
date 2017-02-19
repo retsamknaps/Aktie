@@ -18,6 +18,11 @@ public class HH2Session
 
     private SessionFactory concreteSessionFactory;
 
+    public HH2Session()
+    {
+
+    }
+
     public void init ( String dir )
     {
         try
@@ -70,6 +75,11 @@ public class HH2Session
             throw new ExceptionInInitializerError ( ex );
         }
 
+    }
+
+    public void close()
+    {
+        concreteSessionFactory.close();
     }
 
     public Session getSession() throws HibernateException

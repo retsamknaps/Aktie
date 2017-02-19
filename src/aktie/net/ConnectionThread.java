@@ -777,7 +777,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                          CObj.CHECKSUB.equals ( tt )
                        ) )
                 {
-                    log.severe ( "ERROR: file mode unacceptable type: " + tt );
+                    log.info ( "ERROR: file mode unacceptable type: " + tt );
                     return false;
                 }
 
