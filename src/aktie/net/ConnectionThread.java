@@ -91,6 +91,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private long lastFileUpdate = Long.MIN_VALUE;
     private String fileUp;
     private String fileDown;
+    private File tmpDir;
 
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
     {
@@ -165,6 +166,11 @@ public class ConnectionThread implements Runnable, GuiCallback
         outproc = new OutputProcessor();
         Thread t = new Thread ( this, "Input Connection Process Thread" );
         t.start();
+    }
+
+    public void setTempDir ( File tmp )
+    {
+        tmpDir = tmp;
     }
 
     public void setFileMode ( boolean filemode )
@@ -1236,7 +1242,18 @@ public class ConnectionThread implements Runnable, GuiCallback
             byte buf[] = new byte[1024];
 
             RIPEMD256Digest fdig = new RIPEMD256Digest();
-            File tmpf = File.createTempFile ( "rxfile", ".dat" );
+            File tmpf = null;
+
+            if ( tmpDir == null )
+            {
+                tmpf = File.createTempFile ( "rxfile", ".dat" );
+            }
+
+            else
+            {
+                tmpf = File.createTempFile ( "rxfile", ".dat", tmpDir );
+            }
+
             FileOutputStream fos = new FileOutputStream ( tmpf );
             int rl = 0;
 

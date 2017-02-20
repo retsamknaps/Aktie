@@ -1,5 +1,6 @@
 package aktie.net;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +46,7 @@ public class DestinationThread implements Runnable
     private GetSendData2 conMan;
     private ConnectionListener conListener;
     private RequestFileHandler fileHandler;
+    private File tmpDir;
 
     public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, SpamTool st )
     {
@@ -65,6 +67,11 @@ public class DestinationThread implements Runnable
             threadlist.put ( d.getPublicDestinationInfo(), this );
         }
 
+    }
+
+    public void setTmpDir ( File t )
+    {
+        tmpDir = t;
     }
 
     public void setIdentity ( CObj o )
@@ -345,6 +352,7 @@ public class DestinationThread implements Runnable
         else
         {
             ConnectionThread ct = new ConnectionThread ( this, session, index, c, conMan, callback, conListener, fileHandler, filemode, spamtool );
+            ct.setTempDir ( tmpDir );
             ct.enqueue ( identity );
         }
 

@@ -28,6 +28,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
     private SpamTool spamtool;
+    private File tmpDir;
 
     public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
@@ -41,6 +42,11 @@ public class UsrStartDestinationProcessor extends GenericProcessor
         index = i;
         guicallback = g;
         spamtool = st;
+    }
+
+    public void setTmpDir ( File t )
+    {
+        tmpDir = t;
     }
 
     /**
@@ -87,6 +93,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
                     if ( d != null )
                     {
                         DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
+                        dt.setTmpDir ( tmpDir );
                         dt.setIdentity ( o );
                         connectionMan.addDestination ( dt );
                     }

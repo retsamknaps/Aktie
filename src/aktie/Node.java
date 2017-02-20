@@ -58,7 +58,7 @@ public class Node
     private Settings settings;
     private HasFileCreator hasFileCreator;
     private SpamTool spamtool;
-
+    private File tmpDir;
 
     public Node ( String nodedir, Net net, GuiCallback uc,
                   GuiCallback nc, ConnectionListener cc ) throws IOException
@@ -69,6 +69,8 @@ public class Node
         network = net;
         settings = new Settings ( nodedir );
         File idxdir = new File ( nodedir + File.separator + "index" );
+        tmpDir = new File ( nodedir + File.separator + "tmp" );
+        tmpDir.mkdirs();
         index = new Index();
         index.setIndexdir ( idxdir );
         index.init();
@@ -93,8 +95,10 @@ public class Node
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
         userQueue.addProcessor ( new NewCommunityProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( nfp );
-        userQueue.addProcessor ( new NewIdentityProcessor ( network, conMan, session,
-                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
+        NewIdentityProcessor nip = new NewIdentityProcessor ( network, conMan, session,
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool );
+        nip.setTmpDir ( tmpDir );
+        userQueue.addProcessor ( nip );
         userQueue.addProcessor ( new NewMembershipProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewPostProcessor ( session, index, spamtool, usrCallback ) );
 
@@ -104,8 +108,10 @@ public class Node
         userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
-        userQueue.addProcessor ( new UsrStartDestinationProcessor ( network, conMan, session,
-                                 index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool ) );
+        UsrStartDestinationProcessor usdp = new UsrStartDestinationProcessor ( network, conMan, session,
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool );
+        usdp.setTmpDir ( tmpDir );
+        userQueue.addProcessor ( usdp );
         //userQueue.addProcessor ( new UsrReqComProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqFileProcessor ( requestHandler, usrCallback ) );
         //userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );

@@ -42,6 +42,7 @@ public class NewIdentityProcessor extends GenericProcessor
     private RequestFileHandler fileHandler;
     private SpamTool spamtool;
     private IdentityManager identManager;
+    private File tmpDir;
 
     public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
@@ -56,6 +57,11 @@ public class NewIdentityProcessor extends GenericProcessor
         index = i;
         guicallback = g;
         spamtool = st;
+    }
+
+    public void setTmpDir ( File t )
+    {
+        tmpDir = t;
     }
 
     /**
@@ -91,6 +97,7 @@ public class NewIdentityProcessor extends GenericProcessor
                                    ( RSAKeyParameters ) pair.getPublic() ) );
                 Destination d = net.getNewDestination();
                 DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
+                dt.setTmpDir ( tmpDir );
                 File df = d.savePrivateDestinationInfo();
                 o.pushPrivate ( CObj.DEST, df.getPath() );
                 o.pushString ( CObj.DEST, d.getPublicDestinationInfo() );

@@ -1533,6 +1533,7 @@ public class SWTApp implements UpdateInterface
         postSearch ( );
         filesSearch ( "" );
         postText.setText ( "" );
+        animator.update ( null, 0, 0, 10, 10 );
     }
 
     public void setVerbose()
@@ -2374,6 +2375,7 @@ public class SWTApp implements UpdateInterface
 
         }
 
+        animator.stop();
         this.periodicUpdateThread.stop();
 
         // save the window state upon closing
@@ -3120,6 +3122,7 @@ public class SWTApp implements UpdateInterface
                     ImageLoader loader = new ImageLoader();
                     loader.load ( new FileInputStream ( f ) );
                     addImage ( loader, offset );
+                    return;
                 }
 
                 catch ( Exception e )
@@ -3131,12 +3134,12 @@ public class SWTApp implements UpdateInterface
 
         }
 
+        animator.update ( null, 0, 0, 10, 10 );
+
     }
 
     public static int MAXIMGWIDTH = 400;
     private boolean resize = true;
-    private int imagex = 0;
-    private int imagey = 0;
 
     private static int MARGIN = 5;
     private void addImage ( ImageLoader image, int offset )
@@ -3257,7 +3260,7 @@ public class SWTApp implements UpdateInterface
         File file = null;
 
         if ( comid != null && wdig != null && pdig != null &&
-                fsize != null && fsize < 5L * 1024L * 1024L )
+                fsize != null && fsize < 20L * 1024L * 1024L )
         {
             CObjList clst = node.getIndex().getMyHasFiles ( comid, wdig, pdig );
 
@@ -3341,7 +3344,7 @@ public class SWTApp implements UpdateInterface
         public Canvas imageCanvas;
         public boolean stop;
         public ImageLoader imgLoader;
-        public int imagex, imagey, sw, sh;
+        public int sw, sh;
         public Image image;
         public int idx = 0;
         public long nextframe;
@@ -3362,7 +3365,8 @@ public class SWTApp implements UpdateInterface
                 {
                     Image img = image;
 
-                    if ( img != null && !img.isDisposed() )
+                    if ( imgLoader != null &&
+                            img != null && !img.isDisposed() )
                     {
 
                         // Set up the offscreen gc
@@ -3380,9 +3384,31 @@ public class SWTApp implements UpdateInterface
 
             } );
 
+            imageCanvas.addMouseListener ( new MouseListener()
+            {
+                @Override
+                public void mouseDoubleClick ( MouseEvent e )
+                {
+                    resize = !resize;
+                    postText.redraw();
+                    postText.setSelection ( 0, 0 );
+                }
+
+                @Override
+                public void mouseDown ( MouseEvent e )
+                {
+                }
+
+                @Override
+                public void mouseUp ( MouseEvent e )
+                {
+                }
+
+            } );
+
         }
 
-        public synchronized void overlayImage ( Image tmp, GC g )
+        private synchronized void overlayImage ( Image tmp, GC g )
         {
             if ( imgLoader != null )
             {
@@ -3390,7 +3416,8 @@ public class SWTApp implements UpdateInterface
                 g.setAntialias ( SWT.ON );
                 Image img = new Image ( Display.getDefault(), id );
                 g.drawImage ( image, 0, 0 );
-                g.drawImage ( img, 0, 0 );
+                g.drawImage ( img, 0, 0, img.getBounds().width,
+                              img.getBounds().height, 0, 0, sw, sh );
                 image.dispose();
                 img.dispose();
                 image = tmp;
@@ -3398,15 +3425,45 @@ public class SWTApp implements UpdateInterface
 
         }
 
-        public synchronized void update ( ImageLoader il, int imgx, int imgy )
+        public synchronized void stop()
         {
-            if ( il != imgLoader )
+            stop = true;
+            notifyAll();
+        }
+
+        public synchronized void update ( ImageLoader il, int imgx, int imgy, int w, int h )
+        {
+            if ( il != null )
             {
-                System.out.println ( "NEW LOADER! " + il );
-                imgLoader = il;
-                idx = 0;
-                ImageData id = imgLoader.data[idx];
-                nextframe = System.currentTimeMillis();
+                if ( il != imgLoader || sw != w || sh != h )
+                {
+                    imgLoader = il;
+                    idx = 0;
+                    nextframe = System.currentTimeMillis();
+
+                    if ( image != null )
+                    {
+                        if ( !image.isDisposed() )
+                        {
+                            image.dispose();
+                        }
+
+                    }
+
+                    Display display = Display.getDefault();
+                    image = new Image ( display, w, h );
+                }
+
+                sw = w;
+                sh = h;
+                imageCanvas.setLocation ( imgx, imgy );
+                imageCanvas.setSize ( w, h );
+                imageCanvas.redraw();
+            }
+
+            else
+            {
+                imgLoader = null;
 
                 if ( image != null )
                 {
@@ -3417,14 +3474,16 @@ public class SWTApp implements UpdateInterface
 
                 }
 
-                Display display = Display.getDefault();
-                image = new Image ( display, id );
             }
 
-            imageCanvas.setLocation ( imgx, imgy );
-            imageCanvas.setSize ( image.getBounds().width, image.getBounds().height );
-            imageCanvas.redraw();
+            notifyAll();
 
+        }
+
+        private synchronized void incrIndex()
+        {
+            idx++;
+            idx = idx % imgLoader.data.length;
         }
 
         private synchronized void nextFrame()
@@ -3439,29 +3498,37 @@ public class SWTApp implements UpdateInterface
 
             else
             {
-                if ( ct >= nextframe && image != null )
+                if ( imgLoader.data.length <= 1 || image == null )
                 {
-                    idx++;
-                    idx = idx % imgLoader.data.length;
-                    final ImageData id = imgLoader.data[idx];
-                    int delayTime = Math.max ( 50, 10 * id.delayTime );
-                    //id.
-                    nextframe = nextframe + delayTime;
-
-                    Display display = Display.getDefault();
-                    display.asyncExec ( new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            imageCanvas.redraw();
-                        }
-
-                    } );
-
+                    delay = 10000L;
                 }
 
-                delay = Math.max ( 5, nextframe - ct );
+                else
+                {
+                    if ( ct >= nextframe )
+                    {
+                        final ImageData id = imgLoader.data[idx];
+                        int delayTime = Math.max ( 50, 10 * id.delayTime );
+                        //id.
+                        nextframe = nextframe + delayTime;
+
+                        Display display = Display.getDefault();
+                        display.asyncExec ( new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                imageCanvas.redraw();
+                                incrIndex();
+                            }
+
+                        } );
+
+                    }
+
+                    delay = Math.max ( 5, nextframe - ct );
+                }
+
             }
 
             try
@@ -3740,6 +3807,25 @@ public class SWTApp implements UpdateInterface
             public void widgetSelected ( SelectionEvent e )
             {
                 CObjList.displayAllStillOpen();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
+        //zeroDialog
+        MenuItem mntmExit = new MenuItem ( menu_1, SWT.NONE );
+        mntmExit.setText ( "Exit" );
+        mntmExit.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                shell.dispose();
+
             }
 
             @Override
@@ -4897,6 +4983,7 @@ public class SWTApp implements UpdateInterface
                                 msgdisp = NewPostDialog.formatDisplay ( msgdisp, false );
                                 String lines = "\n==========================\n=";
                                 String msg = msgdisp + lines;
+                                animator.update ( null, 0, 0, 10, 10 );
                                 postText.setText ( msg );
 
                                 //String comid, String wdig, String pdig
@@ -5336,12 +5423,26 @@ public class SWTApp implements UpdateInterface
                 StyleRange style = event.style;
                 ImageLoader image = ( ImageLoader ) style.data;
 
+                int w = image.data[0].width;
                 int h = image.data[0].height;
 
-                imagex = event.x + MARGIN;
-                imagey = event.y + event.ascent - 2 * h / 3;
+                int x = event.x; // + MARGIN;
+                int y = event.y; // + event.ascent - 2 * h / 3;
 
-                animator.update ( image, imagex, imagey );
+                int sw = w;
+                int sh = h;
+
+                if ( resize )
+                {
+                    if ( sw > MAXIMGWIDTH )
+                    {
+                        sh = sh * MAXIMGWIDTH / sw;
+                        sw = MAXIMGWIDTH;
+                    }
+
+                }
+
+                animator.update ( image, x, y, sw, sh );
 
             }
 
@@ -5367,28 +5468,6 @@ public class SWTApp implements UpdateInterface
 
                 }
 
-            }
-
-        } );
-
-        postText.addMouseListener ( new MouseListener()
-        {
-            @Override
-            public void mouseDoubleClick ( MouseEvent e )
-            {
-                resize = !resize;
-                postText.redraw();
-                postText.setSelection ( 0, 0 );
-            }
-
-            @Override
-            public void mouseDown ( MouseEvent e )
-            {
-            }
-
-            @Override
-            public void mouseUp ( MouseEvent e )
-            {
             }
 
         } );
