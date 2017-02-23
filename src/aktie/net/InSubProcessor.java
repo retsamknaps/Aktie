@@ -39,6 +39,12 @@ public class InSubProcessor extends GenericProcessor
         subvalidator = new SubscriptionValidator ( index );
     }
 
+    private void logIt ( String msg )
+    {
+        log.info ( "InSubProcessor ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                   " FROM: " + conThread.getEndDestination().getId() + " :: " + msg );
+    }
+
     @Override
     public boolean process ( CObj b )
     {
@@ -46,12 +52,22 @@ public class InSubProcessor extends GenericProcessor
 
         if ( CObj.SUBSCRIPTION.equals ( type ) )
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                logIt ( "REC: " + b.getDig() );
+            }
+
             //Check if it's valid and new
             if ( validator.valid ( b ) )
             {
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 String comid = b.getString ( CObj.COMMUNITYID );
+
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid );
+                }
 
                 if ( seqnum != null && creatorid != null && comid != null )
                 {
@@ -68,6 +84,11 @@ public class InSubProcessor extends GenericProcessor
                         //decided to do the merged id thing, just go with it.
                         CObj co = index.getSubscription ( comid, creatorid );
 
+                        if ( Level.INFO.equals ( log.getLevel() ) )
+                        {
+                            logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " co: " + co );
+                        }
+
                         //Note, if we already have a subscription object, then the
                         //identity must be ok to subscribe to the community and
                         //we can just check the new sequence number is greater
@@ -77,8 +98,21 @@ public class InSubProcessor extends GenericProcessor
                             //discard.
                             if ( seqnum > co.getNumber ( CObj.SEQNUM ) )
                             {
-                                log.info ( "Newer version found!" );
+                                if ( Level.INFO.equals ( log.getLevel() ) )
+                                {
+                                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " NEW VERSION" );
+                                }
+
                                 update = true;
+                            }
+
+                            else
+                            {
+                                if ( Level.INFO.equals ( log.getLevel() ) )
+                                {
+                                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " OLD VERSION" );
+                                }
+
                             }
 
                         }
@@ -88,8 +122,21 @@ public class InSubProcessor extends GenericProcessor
                             //We need to see if this user can subscribe.
                             if ( subvalidator.canSubscribe ( comid, creatorid ) )
                             {
-                                log.info ( "New subscription, can subscribe." );
+                                if ( Level.INFO.equals ( log.getLevel() ) )
+                                {
+                                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " CAN SUBSCRIBE " );
+                                }
+
                                 update = true;
+                            }
+
+                            else
+                            {
+                                if ( Level.INFO.equals ( log.getLevel() ) )
+                                {
+                                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " CANNOT SUBSCRIBE " );
+                                }
+
                             }
 
                         }

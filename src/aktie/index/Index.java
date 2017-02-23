@@ -607,6 +607,16 @@ public class Index implements Runnable
         return getCreatorObjs ( CObj.PRIVIDENTIFIER, creator, first, last );
     }
 
+    public CObjList getAllSpamEx()
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getSpamEx ( String creator, long first, long last )
     {
         int maxvals = ( int ) ( last - first );

@@ -166,6 +166,7 @@ public class NewSpamExProcessor extends GenericProcessor
                     {
                         nex.pushNumber ( CObj.COMMUNITY, dat.getLastCommunityNumber() );
                         nex.pushNumber ( CObj.MEMBERSHIP, dat.getLastMembershipNumber() );
+                        nex.pushNumber ( CObj.SUBSCRIPTION, dat.getLastSubNumber() );
                     }
 
                     PrivateMsgIdentity pdat = identManager.getPrvMsgIdentityData ( ident.getId() );

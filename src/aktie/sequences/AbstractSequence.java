@@ -151,28 +151,29 @@ public abstract class AbstractSequence<T>
                         */
                         if ( seqnum > getLastNumber() )
                         {
-                            if ( getNextClosestNumber() > seqnum ||
-                                    getNextClosestNumber() <= getLastNumber() )
-                            {
-                                setNextClosestNumber ( seqnum );
-                                setUpdateCycle ( 0 );
-                                setNumClosestNumber ( 1 );
-                                s.merge ( Obj );
-                            }
+                            //if ( getNextClosestNumber() > seqnum ||
+                            //        getNextClosestNumber() <= getLastNumber() )
+                            //{
+                            //    setNextClosestNumber ( seqnum );
+                            //    setUpdateCycle ( 0 );
+                            //    setNumClosestNumber ( 1 );
+                            //    s.merge ( Obj );
+                            //}
 
-                            else if ( getNextClosestNumber() == seqnum )
-                            {
-                                setNumClosestNumber (
-                                    getNumClosestNumber() + 1 );
-                                s.merge ( Obj );
-                            }
+                            //
+                            //else if ( getNextClosestNumber() == seqnum )
+                            //{
+                            //    setNumClosestNumber (
+                            //        getNumClosestNumber() + 1 );
+                            //    s.merge ( Obj );
+                            //}
 
-                            else if ( getUpdateCycle() >= IdentityManager.MAX_UPDATE_CYCLE )
-                            {
-                                setUpdateCycle ( 0 );
-                                setLastNumber ( seqnum );
-                                s.merge ( Obj );
-                            }
+                            //else if ( getUpdateCycle() >= IdentityManager.MAX_UPDATE_CYCLE )
+                            //{
+                            setUpdateCycle ( 0 );
+                            setLastNumber ( seqnum );
+                            s.merge ( Obj );
+                            //}
 
                         }
 

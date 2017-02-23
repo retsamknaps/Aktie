@@ -80,7 +80,7 @@ public class SpamTool
             String comid = c.getString ( CObj.COMMUNITYID );
             String id = ident.getId();
 
-            if ( comid != null )
+            if ( comid != null && !CObj.SUBSCRIPTION.equals ( c.getType() ) )
             {
                 id = HasFileCreator.getCommunityMemberId ( id, comid );
             }
@@ -110,13 +110,16 @@ public class SpamTool
 
             if ( target == Wrapper.OLDPAYMENT_V0 )
             {
-                return c.checkSignatureX_V0 ( key, target );
+                boolean chkv = c.checkSignatureX_V0 ( key, target );
+                return chkv;
             }
 
-            return c.checkSignatureX ( key, target );
+            boolean chkv = c.checkSignatureX ( key, target );
+            return chkv;
         }
 
-        return c.checkSignatureX ( key, 0 );
+        boolean chkv = c.checkSignatureX ( key, 0 );
+        return chkv;
     }
 
 }

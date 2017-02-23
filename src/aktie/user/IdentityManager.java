@@ -34,7 +34,9 @@ public class IdentityManager
 {
 
     public static int MAX_LAST_NUMBER = 10;
-    public static int MAX_UPDATE_CYCLE = 15;
+    //Now that we have global sequences always
+    //take the next greatest object sequence number
+    public static int MAX_UPDATE_CYCLE = 2;
 
     private HH2Session session;
     private Index index;
@@ -1612,6 +1614,14 @@ public class IdentityManager
 
             String cid = HasFileCreator.getCommunityMemberId ( id, comid );
             CommunityMember d = ( CommunityMember ) s.get ( CommunityMember.class, cid );
+
+            if ( d == null )
+            {
+                d = new CommunityMember();
+                d.setCommunityId ( comid );
+                d.setMemberId ( id );
+                d.setId ( cid );
+            }
 
             if ( d != null )
             {

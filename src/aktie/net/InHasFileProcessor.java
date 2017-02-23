@@ -1,9 +1,11 @@
 package aktie.net;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.sequences.FileSequence;
 import aktie.spam.SpamTool;
@@ -15,27 +17,33 @@ import aktie.utils.SubscriptionValidator;
 public class InHasFileProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
+    Logger log = Logger.getLogger ( "aktie" );
+
+    private ConnectionThread conThread;
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
     private SubscriptionValidator subvalid;
     private CObj destIdent;
     private HasFileCreator hfc;
-    private CObj ConId;
     private IdentityManager identManager;
 
-    public InHasFileProcessor ( CObj id, HH2Session s, Index i, IdentityManager im, CObj mid, GuiCallback cb, HasFileCreator h, SpamTool st )
+    public InHasFileProcessor ( CObj id, HH2Session s, Index i, IdentityManager im, ConnectionThread cb, HasFileCreator h, SpamTool st )
     {
         hfc = h;
         destIdent = id;
         index = i;
         session = s;
-        guicallback = cb;
-        ConId = mid;
+        conThread = cb;
         identManager = im;
         validator = new DigestValidator ( index, st );
         subvalid = new SubscriptionValidator ( index );
+    }
+
+    private void logIt ( String msg )
+    {
+        log.info ( "InHasFileProcessor ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                   " FROM: " + conThread.getEndDestination().getId() + " :: " + msg );
     }
 
     @Override
@@ -45,6 +53,11 @@ public class InHasFileProcessor extends GenericProcessor
 
         if ( CObj.HASFILE.equals ( type ) )
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                logIt ( "New HasFile: " + b.getDig() );
+            }
+
             if ( validator.valid ( b ) )
             {
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );
@@ -54,6 +67,12 @@ public class InHasFileProcessor extends GenericProcessor
                 String comid = b.getString ( CObj.COMMUNITYID );
                 String wdig = b.getString ( CObj.FILEDIGEST );
                 String ddig = b.getString ( CObj.FRAGDIGEST );
+
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    logIt ( "IS VALID: isnew: " + isnew + " creator: " +
+                            creatorid + " comid: " + comid + " wdig: " + wdig + " seq: " + seqnum );
+                }
 
                 if ( comid != null && creatorid != null && wdig != null && ddig != null && seqnum != null )
                 {
@@ -73,6 +92,12 @@ public class InHasFileProcessor extends GenericProcessor
 
                     CObj mysubid = subvalid.isMyUserSubscribed ( comid, destIdent.getId() );
                     CObj sid = subvalid.isUserSubscribed ( comid, creatorid );
+
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        logIt ( "Mysub: " + mysubid + " sid: " + sid + " isnew: " + isnew + " creator: " +
+                                creatorid + " comid: " + comid + " wdig: " + wdig + " seq: " + seqnum );
+                    }
 
                     if ( mysubid != null && sid != null )
                     {
@@ -100,12 +125,12 @@ public class InHasFileProcessor extends GenericProcessor
 
                                 }
 
-                                long seq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
-                                b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), seq );
+                                long seq = identManager.getGlobalSequenceNumber ( destIdent.getId(), false );
+                                b.pushPrivateNumber ( CObj.getGlobalSeq ( destIdent.getId() ), seq );
 
                                 index.index ( b );
                                 hfc.updateFileInfo ( b );
-                                guicallback.update ( b );
+                                conThread.update ( b );
                             }
 
                         }

@@ -22,6 +22,8 @@ import aktie.user.RequestFileHandler;
 
 public class ConnectionFileManager implements Runnable
 {
+    public static long REREQUESTLISTAFTER = 60L * 60L * 1000L;
+    public static long REREQUESTFRAGSAFTER = 2L * 60L * 60L * 1000L;
 
     Logger log = Logger.getLogger ( "aktie" );
 
@@ -84,6 +86,11 @@ public class ConnectionFileManager implements Runnable
     //  Communityid ->  File digest -> Requests
     public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
     {
+
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            //log.info("nextFile: " + );
+        }
 
         if ( hasfiles == null )
         {
@@ -225,7 +232,7 @@ public class ConnectionFileManager implements Runnable
                 }
 
                 if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
-                        rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
+                        rf.getLastRequest() <= ( System.currentTimeMillis() - REREQUESTLISTAFTER ) )
                 {
                     log.info ( "procFileQueue: re-request file list " + rf.getLocalFile() );
                     //Check if the fragment request is still in the queue
@@ -278,7 +285,7 @@ public class ConnectionFileManager implements Runnable
                                                          rf.getWholeDigest(), rf.getFragmentDigest() );
 
                         long backtime = System.currentTimeMillis() -
-                                        ( 2L * 60L * 60L * 1000L );
+                                        ( REREQUESTFRAGSAFTER );
 
                         log.info ( "procFileQueue: re-request fragments " + cl.size() );
 

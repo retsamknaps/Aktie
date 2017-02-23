@@ -1186,6 +1186,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                   > FirstConnection;
         }
 
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            log.info ( "nextNonFile: n: " + n + " " + getNextGlobal + " " + AllowGlobalReuqests );
+        }
+
         if ( n == null && getNextGlobal && AllowGlobalReuqests )
         {
             n = nextGlobalReq ( localdest, remotedest, subs );
@@ -1710,6 +1715,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     if ( memid != null )
                     {
+                        if ( Level.INFO.equals ( log.getLevel() ) )
+                        {
+                            log.info ( "New valid membership resetting comid: " + comid + " mem: " + memid );
+                        }
+
                         identityManager.updateGlobalSequenceNumber ( memid, false, 0,
                                 true, 0, true, 0 );
                     }

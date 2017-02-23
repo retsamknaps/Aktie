@@ -138,7 +138,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InCheckMemSubProcessor ( this ) );
         preprocProcessor.addProcessor ( new InGlbSeqProcessor ( this ) );
         preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, dest.getIdentity(), this, hfc, st ) );
+        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, this, hfc, st ) );
         preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
@@ -227,6 +227,8 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void digestDone ( String dg )
     {
+        appendInput ( "digestDone: " + dg );
+
         for ( Iterator<Entry<String, Map<Long, Set<String>>>> i = comReqdigs.entrySet().iterator(); i.hasNext(); )
         {
             Entry<String, Map<Long, Set<String>>> e = i.next();
@@ -241,8 +243,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 if ( ds.remove ( dg ) )
                 {
+                    appendInput ( "Removing from community list for seqnum: " + seqnum + " comid: " + comid + " ds: " + ds.size() );
+
                     if ( ds.size() == 0 )
                     {
+                        appendInput ( "Community sequence number complete: " + seqnum + " comid: " + comid );
                         i2.remove();
                         //Go update the sequence for this id
                         IdentManager.updateIdentityCommunitySeqNumber (
@@ -267,8 +272,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( ss.remove ( dg ) )
             {
+                appendInput ( "Removing from global list for seqnum: " + e.getKey() );
+
                 if ( ss.size() == 0 )
                 {
+                    appendInput ( "Global sequence number complete: " + e.getKey() );
                     IdentManager.updateGlobalSequenceNumber (
                         getEndDestination().getId(),
                         true, e.getKey(),
@@ -429,6 +437,13 @@ public class ConnectionThread implements Runnable, GuiCallback
             Set<String> nl1 = new CopyOnWriteArraySet<String>();
             CObjList sl = index.getIdentityMemberships ( endDestination.getId() );
 
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "getIdentityMemberships: ME: " + getLocalDestination().getIdentity().getId() +
+                           " FOR: (" +
+                           endDestination.getId() + ") number: " + sl.size() );
+            }
+
             for ( int c = 0; c < sl.size(); c++ )
             {
                 try
@@ -454,6 +469,13 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             sl = index.getIdentityPrivateCommunities ( endDestination.getId() );
 
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "getIdentityPrivateCommunities: ME: " + getLocalDestination().getIdentity().getId() +
+                           " FOR: (" +
+                           endDestination.getId() + ") number: " + sl.size() );
+            }
+
             for ( int c = 0; c < sl.size(); c++ )
             {
                 try
@@ -472,6 +494,13 @@ public class ConnectionThread implements Runnable, GuiCallback
             sl.close();
 
             sl = index.getIdentityMemberships ( getLocalDestination().getIdentity().getId() );
+
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "getIdentityMemberships: ME: (" + getLocalDestination().getIdentity().getId() +
+                           ") FOR: " +
+                           endDestination.getId() + " number: " + sl.size() );
+            }
 
             for ( int c = 0; c < sl.size(); c++ )
             {
@@ -497,6 +526,13 @@ public class ConnectionThread implements Runnable, GuiCallback
             sl.close();
 
             sl = index.getIdentityPrivateCommunities ( getLocalDestination().getIdentity().getId() );
+
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "getIdentityPrivateCommunities: ME: (" + getLocalDestination().getIdentity().getId() +
+                           ") FOR: " +
+                           endDestination.getId() + " number: " + sl.size() );
+            }
 
             for ( int c = 0; c < sl.size(); c++ )
             {
@@ -526,6 +562,14 @@ public class ConnectionThread implements Runnable, GuiCallback
             }
 
             memberships = nl1;
+
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "memberships: " + memberships + " send: " + sendmems +
+                           " ME: " + getLocalDestination().getIdentity().getId() +
+                           " FOR: " +
+                           endDestination.getId() + " number: " + sl.size() );
+            }
 
         }
 
@@ -941,7 +985,8 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         private Object getLocalRequests()
         {
-            appendOutput ( "getLocalRequests: START" );
+            appendOutput ( "getLocalRequests: START pending: " + pendingFileRequests +
+                           " dest: " + dest + " endDest: " + endDestination );
 
             if (
                 dest != null && endDestination != null &&
@@ -1185,6 +1230,13 @@ public class ConnectionThread implements Runnable, GuiCallback
                         {
                             CObjList cl = ( CObjList ) o;
                             int len = cl.size();
+
+                            if ( log.getLevel() == Level.INFO || logit )
+                            {
+                                appendOutput ( CObj.CON_LIST + "=============" );
+                                appendOutput ( "size:    " + len );
+                            }
+
                             CObj lo = new CObj();
                             lo.setType ( CObj.CON_LIST );
                             lo.pushNumber ( CObj.COUNT, len );
@@ -1192,7 +1244,21 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                             for ( int c = 0; c < len; c++ )
                             {
-                                sendCObjNoFlush ( cl.get ( c ) );
+                                CObj sco = cl.get ( c );
+
+                                if ( log.getLevel() == Level.INFO || logit )
+                                {
+                                    appendOutput ( sco.getType() + "=============" );
+                                    appendOutput ( "comid:   " + sco.getString ( CObj.COMMUNITYID ) );
+                                    appendOutput ( "creator: " + sco.getString ( CObj.CREATOR ) );
+                                    appendOutput ( "memid:   " + sco.getString ( CObj.MEMBERID ) );
+                                    appendOutput ( "seqnum:  " + sco.getNumber ( CObj.SEQNUM ) );
+                                    appendOutput ( "first:   " + sco.getNumber ( CObj.FIRSTNUM ) );
+                                    appendOutput ( "wdig:    " + sco.getString ( CObj.FILEDIGEST ) );
+                                    appendOutput ( "offset:  " + sco.getNumber ( CObj.FRAGOFFSET ) );
+                                }
+
+                                sendCObjNoFlush ( sco );
                             }
 
                             cl.close();
