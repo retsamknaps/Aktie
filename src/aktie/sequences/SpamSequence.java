@@ -1,8 +1,11 @@
 package aktie.sequences;
 
+import org.hibernate.Session;
+
 import aktie.data.CObj;
 import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
+import aktie.user.IdentityManager;
 
 public class SpamSequence extends AbstractSequence<DeveloperIdentity>
 {
@@ -195,5 +198,133 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
     {
         return null;
     }
+    
+    public void updateSequence ( CObj c ) throws Exception
+    {
+        Long seqnum = c.getNumber ( CObj.SEQNUM );
+
+        if ( seqnum != null )
+        {
+            Session s = null;
+
+            try
+            {
+                s = getSession().getSession();
+                s.getTransaction().begin();
+                Obj = ( DeveloperIdentity )
+                      s.get ( DeveloperIdentity.class, getId() );
+
+                if ( Obj == null )
+                {
+                    Obj = createNewObj ( c );
+
+                    if ( Obj != null )
+                    {
+                        s.persist ( Obj );
+                    }
+
+                }
+
+                if ( Obj != null )
+                {
+                    if ( getLastNumber() + 1 == ( long ) seqnum )
+                    {
+                        setLastNumber ( seqnum );
+                        setNextClosestNumber ( seqnum );
+                        setUpdateCycle ( 0 );
+                        setNumClosestNumber ( 1 );
+                        s.merge ( Obj );
+                    }
+
+                    else
+                    {
+                        /*
+                                if there is a permanent gap in a sequence number
+                                count how many times we see the next number, so
+                                if we see it too many times we just use it for last
+                                number instead
+                        */
+                        if ( seqnum > getLastNumber() )
+                        {
+                            if ( getNextClosestNumber() > seqnum ||
+                                    getNextClosestNumber() <= getLastNumber() )
+                            {
+                                setNextClosestNumber ( seqnum );
+                                setUpdateCycle ( 0 );
+                                setNumClosestNumber ( 1 );
+                                s.merge ( Obj );
+                            }
+
+                            
+                            else if ( getNextClosestNumber() == seqnum )
+                            {
+                                setNumClosestNumber (
+                                    getNumClosestNumber() + 1 );
+                                s.merge ( Obj );
+                            }
+
+                            else if ( getUpdateCycle() >= IdentityManager.MAX_UPDATE_CYCLE )
+                            {
+                            	setUpdateCycle ( 0 );
+                            	setLastNumber ( seqnum );
+                            	s.merge ( Obj );
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                s.getTransaction().commit();
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+
+                if ( s != null )
+                {
+                    try
+                    {
+                        if ( s.getTransaction().isActive() )
+                        {
+                            s.getTransaction().rollback();
+                        }
+
+                    }
+
+                    catch ( Exception e2 )
+                    {
+                    }
+
+                }
+
+                throw new Exception ( "Transaction failure.", e );
+
+            }
+
+            finally
+            {
+                if ( s != null )
+                {
+                    try
+                    {
+                        s.close();
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
+        }
+
+    }    
 
 }
