@@ -227,7 +227,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void digestDone ( String dg )
     {
-        appendInput ( "digestDone: " + dg );
+        if ( doLog() )
+        {
+            appendInput ( "digestDone: " + dg );
+        }
 
         for ( Iterator<Entry<String, Map<Long, Set<String>>>> i = comReqdigs.entrySet().iterator(); i.hasNext(); )
         {
@@ -243,11 +246,18 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 if ( ds.remove ( dg ) )
                 {
-                    appendInput ( "Removing from community list for seqnum: " + seqnum + " comid: " + comid + " ds: " + ds.size() );
+                    if ( doLog() )
+                    {
+                        appendInput ( "Removing from community list for seqnum: " + seqnum + " comid: " + comid + " ds: " + ds.size() );
+                    }
 
                     if ( ds.size() == 0 )
                     {
-                        appendInput ( "Community sequence number complete: " + seqnum + " comid: " + comid );
+                        if ( doLog() )
+                        {
+                            appendInput ( "Community sequence number complete: " + seqnum + " comid: " + comid );
+                        }
+
                         i2.remove();
                         //Go update the sequence for this id
                         IdentManager.updateIdentityCommunitySeqNumber (
@@ -272,11 +282,18 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( ss.remove ( dg ) )
             {
-                appendInput ( "Removing from global list for seqnum: " + e.getKey() );
+                if ( doLog() )
+                {
+                    appendInput ( "Removing from global list for seqnum: " + e.getKey() );
+                }
 
                 if ( ss.size() == 0 )
                 {
-                    appendInput ( "Global sequence number complete: " + e.getKey() );
+                    if ( doLog() )
+                    {
+                        appendInput ( "Global sequence number complete: " + e.getKey() );
+                    }
+
                     IdentManager.updateGlobalSequenceNumber (
                         getEndDestination().getId(),
                         true, e.getKey(),
@@ -338,7 +355,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         updatemembers = ( chkMemberships.containsAll ( memberships ) );
         updatesubs = updatemembers && ( chkSubs.containsAll ( subs ) );
 
-        if ( log.isLoggable ( Level.INFO ) )
+        if ( doLog() )
         {
             log.info ( "CHECK DONE: ME: " + getLocalDestination().getIdentity().getId() +
                        " FROM: " + getEndDestination().getId() + " " + memberships + " " + subs +
@@ -437,7 +454,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             Set<String> nl1 = new CopyOnWriteArraySet<String>();
             CObjList sl = index.getIdentityMemberships ( endDestination.getId() );
 
-            if ( Level.INFO.equals ( log.getLevel() ) )
+            if ( doLog() )
             {
                 log.info ( "getIdentityMemberships: ME: " + getLocalDestination().getIdentity().getId() +
                            " FOR: (" +
@@ -469,7 +486,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             sl = index.getIdentityPrivateCommunities ( endDestination.getId() );
 
-            if ( Level.INFO.equals ( log.getLevel() ) )
+            if ( doLog() )
             {
                 log.info ( "getIdentityPrivateCommunities: ME: " + getLocalDestination().getIdentity().getId() +
                            " FOR: (" +
@@ -495,7 +512,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             sl = index.getIdentityMemberships ( getLocalDestination().getIdentity().getId() );
 
-            if ( Level.INFO.equals ( log.getLevel() ) )
+            if ( doLog() )
             {
                 log.info ( "getIdentityMemberships: ME: (" + getLocalDestination().getIdentity().getId() +
                            ") FOR: " +
@@ -527,7 +544,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             sl = index.getIdentityPrivateCommunities ( getLocalDestination().getIdentity().getId() );
 
-            if ( Level.INFO.equals ( log.getLevel() ) )
+            if ( doLog() )
             {
                 log.info ( "getIdentityPrivateCommunities: ME: (" + getLocalDestination().getIdentity().getId() +
                            ") FOR: " +
@@ -563,7 +580,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             memberships = nl1;
 
-            if ( Level.INFO.equals ( log.getLevel() ) )
+            if ( doLog() )
             {
                 log.info ( "memberships: " + memberships + " send: " + sendmems +
                            " ME: " + getLocalDestination().getIdentity().getId() +
@@ -651,7 +668,10 @@ public class ConnectionThread implements Runnable, GuiCallback
         long nu = conMan.getLastFileUpdate();
 
         //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
-        appendOutput ( "updateSubsAndFiles: nu: " + nu + " > " + lastFileUpdate );
+        if ( doLog() )
+        {
+            appendOutput ( "updateSubsAndFiles: nu: " + nu + " > " + lastFileUpdate );
+        }
 
         if ( endDestination != null && ( nu > lastFileUpdate || sendFirstMemSubs ) )
         {
@@ -666,12 +686,21 @@ public class ConnectionThread implements Runnable, GuiCallback
             }
 
             lastFileUpdate = conMan.getLastFileUpdate();
-            appendOutput ( "updateSubsAndFiles: subs: " + subs );
+
+            if ( doLog() )
+            {
+                appendOutput ( "updateSubsAndFiles: subs: " + subs );
+            }
 
             if ( fileOnly && endDestination != null )
             {
                 filesHasRequested = conMan.getHasFileForConnection ( endDestination.getId(), subs );
-                appendOutput ( "updateSubsAndFiles: filesHasRequested: " + filesHasRequested );
+
+                if ( doLog() )
+                {
+                    appendOutput ( "updateSubsAndFiles: filesHasRequested: " + filesHasRequested );
+                }
+
             }
 
         }
@@ -684,7 +713,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         s.setType ( t );
         s.setDig ( d );
 
-        if ( log.isLoggable ( Level.INFO ) )
+        if ( doLog() )
         {
             String chk = "CHECKMEM";
 
@@ -852,7 +881,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
-        if ( log.isLoggable ( Level.INFO ) )
+        if ( doLog() )
         {
             log.info ( "CONTHREAD: DROPPED! " + o );
         }
@@ -985,8 +1014,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         private Object getLocalRequests()
         {
-            appendOutput ( "getLocalRequests: START pending: " + pendingFileRequests +
-                           " dest: " + dest + " endDest: " + endDestination );
+            if ( doLog() )
+            {
+                appendOutput ( "getLocalRequests: START pending: " + pendingFileRequests +
+                               " dest: " + dest + " endDest: " + endDestination );
+            }
 
             if (
                 dest != null && endDestination != null &&
@@ -994,14 +1026,20 @@ public class ConnectionThread implements Runnable, GuiCallback
                 )
             )
             {
-                appendOutput ( "getLocalRequests: fileOnly? " + fileOnly + " filesHasRequested? " + filesHasRequested );
+                if ( doLog() )
+                {
+                    appendOutput ( "getLocalRequests: fileOnly? " + fileOnly + " filesHasRequested? " + filesHasRequested );
+                }
 
                 if ( fileOnly && filesHasRequested != null )
                 {
                     Object r = conMan.nextFile ( dest.getIdentity().getId(),
                                                  endDestination.getId(), filesHasRequested );
 
-                    appendOutput ( "getLocalRequests: nextFile? " + fileOnly + " filesHasRequested? " + filesHasRequested + " R: " + r );
+                    if ( doLog() )
+                    {
+                        appendOutput ( "getLocalRequests: nextFile? " + fileOnly + " filesHasRequested? " + filesHasRequested + " R: " + r );
+                    }
 
                     if ( r != null )
                     {
@@ -1048,7 +1086,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                         reqgbl = true;
                     }
 
-                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    if ( doLog() )
                     {
                         appendOutput ( "nextNonFile mem: " + memberships + " " +
                                        memcnt + " subs: " + subs + " " + subcnt + " reqgbl: " + reqgbl + " size: " + fillList.size() );
@@ -1057,7 +1095,12 @@ public class ConnectionThread implements Runnable, GuiCallback
                     Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
                                                     endDestination.getId(),
                                                     memberships, subs, reqgbl );
-                    appendOutput ( "nextNonFile " + r );
+
+                    if ( doLog() )
+                    {
+                        appendOutput ( "nextNonFile " + r );
+                    }
+
                     return r;
                 }
 
@@ -1154,7 +1197,12 @@ public class ConnectionThread implements Runnable, GuiCallback
                     seeIfUseless();
 
                     Object o = getData();
-                    appendOutput ( "WAIT FOR DATA.. " + o );
+
+                    if ( doLog() )
+                    {
+                        appendOutput ( "WAIT FOR DATA.. " + o );
+                    }
+
                     updateSubsAndFiles();
 
                     if ( o == null )
@@ -1171,7 +1219,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                         {
                             CObj c = ( CObj ) o;
 
-                            if ( log.getLevel() == Level.INFO || logit )
+                            if ( doLog() )
                             {
                                 appendOutput ( c.getType() + "=============" );
                                 appendOutput ( "comid:   " + c.getString ( CObj.COMMUNITYID ) );
@@ -1231,7 +1279,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                             CObjList cl = ( CObjList ) o;
                             int len = cl.size();
 
-                            if ( log.getLevel() == Level.INFO || logit )
+                            if ( doLog() )
                             {
                                 appendOutput ( CObj.CON_LIST + "=============" );
                                 appendOutput ( "size:    " + len );
@@ -1246,7 +1294,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                             {
                                 CObj sco = cl.get ( c );
 
-                                if ( log.getLevel() == Level.INFO || logit )
+                                if ( doLog() )
                                 {
                                     appendOutput ( sco.getType() + "=============" );
                                     appendOutput ( "comid:   " + sco.getString ( CObj.COMMUNITYID ) );
@@ -1276,7 +1324,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                 catch ( Exception e )
                 {
-                    if ( log.getLevel() == Level.INFO || logit )
+                    if ( doLog() )
                     {
                         e.printStackTrace();
                     }
@@ -1304,7 +1352,11 @@ public class ConnectionThread implements Runnable, GuiCallback
     {
         if ( loadFile )
         {
-            appendInput ( "Start reading file" );
+            if ( doLog() )
+            {
+                appendInput ( "Start reading file" );
+            }
+
             byte buf[] = new byte[1024];
 
             RIPEMD256Digest fdig = new RIPEMD256Digest();
@@ -1353,10 +1405,19 @@ public class ConnectionThread implements Runnable, GuiCallback
             outproc.decrFileRequests();
             loadFile = false;
             lastMyRequest = System.currentTimeMillis();
-            appendInput ( "OUTPUT THREAD GO! " + pendingFileRequests );
+
+            if ( doLog() )
+            {
+                appendInput ( "OUTPUT THREAD GO! " + pendingFileRequests );
+            }
+
             outproc.go(); //it holds off on local requests until the file is read.
 
-            appendInput ( "File read " + dstr );
+            if ( doLog() )
+            {
+                appendInput ( "File read " + dstr );
+            }
+
             processFragment ( dstr, tmpf );
             tmpf.delete();
             //now we have it, tell outproc to go again.
@@ -1369,7 +1430,11 @@ public class ConnectionThread implements Runnable, GuiCallback
     {
         byte buf[] = new byte[1024];
         CObjList flist = index.getFragments ( dig );
-        appendInput ( "matching frags: " + flist.size() );
+
+        if ( doLog() )
+        {
+            appendInput ( "matching frags: " + flist.size() );
+        }
 
         for ( int c = 0; c < flist.size(); c++ )
         {
@@ -1384,8 +1449,11 @@ public class ConnectionThread implements Runnable, GuiCallback
             Long flen = fg.getNumber ( CObj.FRAGSIZE );
             String cplt = fg.getString ( CObj.COMPLETE );
 
-            appendInput ( " offset: " + fidx + " wdig: " + wdig +
-                          " fdig: " + fdig + " flen: " + flen + " state: " + cplt );
+            if ( doLog() )
+            {
+                appendInput ( " offset: " + fidx + " wdig: " + wdig +
+                              " fdig: " + fdig + " flen: " + flen + " state: " + cplt );
+            }
 
             if ( wdig != null && fdig != null && fidx != null &&
                     flen != null && ( !"true".equals ( cplt ) ) )
@@ -1401,7 +1469,10 @@ public class ConnectionThread implements Runnable, GuiCallback
                     List<RequestFile> lrf = q.list();
                     String lf = null;
 
-                    appendInput ( "matches RequestFiles found: " + lrf.size() );
+                    if ( doLog() )
+                    {
+                        appendInput ( "matches RequestFiles found: " + lrf.size() );
+                    }
 
                     for ( RequestFile rf : lrf )
                     {
@@ -1412,12 +1483,20 @@ public class ConnectionThread implements Runnable, GuiCallback
                         boolean exists = false;
                         lf = rf.getLocalFile();
 
-                        appendInput ( "lf: " + lf );
+                        if ( doLog() )
+                        {
+                            appendInput ( "lf: " + lf );
+                        }
 
                         if ( lf != null )
                         {
                             File f = new File ( lf + RequestFileHandler.AKTIEPART );
-                            appendInput ( "Check part file: " + f.getPath() + " exists " + f.exists() );
+
+                            if ( doLog() )
+                            {
+                                appendInput ( "Check part file: " + f.getPath() + " exists " + f.exists() );
+                            }
+
                             exists = f.exists();
                         }
 
@@ -1436,7 +1515,12 @@ public class ConnectionThread implements Runnable, GuiCallback
                             rf = ( RequestFile ) s.get ( RequestFile.class, rf.getId() );
                             rf.setFragsComplete ( rf.getFragsComplete() + 1 );
                             s.merge ( rf );
-                            appendInput ( "Frags complete: " + rf.getFragsComplete()  );
+
+                            if ( doLog() )
+                            {
+                                appendInput ( "Frags complete: " + rf.getFragsComplete()  );
+                            }
+
                             //Copy the fragment to the whole file.
                             raf = new RandomAccessFile ( rf.getLocalFile() + RequestFileHandler.AKTIEPART, "rw" );
                             fis = new FileInputStream ( fpart );
@@ -1488,7 +1572,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     //Commit the transaction
                     //Ok now count how many fragments of each is done.
-                    appendInput ( "Pending files: " + lrf.size()  );
+                    if ( doLog() )
+                    {
+                        appendInput ( "Pending files: " + lrf.size()  );
+                    }
 
                     for ( RequestFile rf : lrf )
                     {
@@ -1504,19 +1591,31 @@ public class ConnectionThread implements Runnable, GuiCallback
                             rf.setFragsComplete ( numdone );
                             s.merge ( rf );
                             s.getTransaction().commit();
-                            appendInput ( "Fragments complete in index: " + numdone + " <> " + rf.getFragsTotal() );
+
+                            if ( doLog() )
+                            {
+                                appendInput ( "Fragments complete in index: " + numdone + " <> " + rf.getFragsTotal() );
+                            }
 
 
                             if ( rf.getFragsComplete() >= rf.getFragsTotal() )
                             {
                                 if ( !fileHandler.claimFileComplete ( rf ) )
                                 {
-                                    appendInput ( "Failed to claim complete.." );
+                                    if ( doLog() )
+                                    {
+                                        appendInput ( "Failed to claim complete.." );
+                                    }
+
                                 }
 
                                 else
                                 {
-                                    appendInput ( "CLAIM FILE COMPLETE!!!!!!" );
+                                    if ( doLog() )
+                                    {
+                                        appendInput ( "CLAIM FILE COMPLETE!!!!!!" );
+                                    }
+
                                     //rename the aktiepart file to the real file name
                                     File lff = new File ( rf.getLocalFile() );
                                     File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
@@ -1529,7 +1628,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                         if ( !lff.delete() )
                                         {
-                                            if ( log.isLoggable ( Level.INFO ) )
+                                            if ( doLog() )
                                             {
                                                 log.info ( "Could not delete file: " + lff.getPath() );
                                             }
@@ -1556,7 +1655,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                         if ( !rlp.renameTo ( lff ) )
                                         {
-                                            if ( log.isLoggable ( Level.INFO ) )
+                                            if ( doLog() )
                                             {
                                                 log.info ( "Failed to rename: " + rlp.getPath() + " to " + lff.getPath() );
                                             }
@@ -1664,7 +1763,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             }
 
-            appendInput ( "DONE PROCESSING FRAGMENT " );
+            if ( doLog() )
+            {
+                appendInput ( "DONE PROCESSING FRAGMENT " );
+            }
 
         }
 
@@ -1727,7 +1829,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 lastRead = r.getType();
                 lastReadTime = System.currentTimeMillis();
 
-                if ( log.getLevel() == Level.INFO || logit )
+                if ( doLog() )
                 {
                     appendInput ( r.getType() + "=============" );
                     appendInput ( "dig:     " + r.getDig() );
@@ -1749,7 +1851,12 @@ public class ConnectionThread implements Runnable, GuiCallback
                         if ( lc > LONGESTLIST ) { stop(); }
 
                         listCount = ( int ) lc;
-                        appendInput ( Integer.toString ( listCount ) );
+
+                        if ( doLog() )
+                        {
+                            appendInput ( Integer.toString ( listCount ) );
+                        }
+
                     }
 
                     else
@@ -1774,7 +1881,12 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                             currentList.add ( r );
                             listCount--;
-                            appendInput ( Integer.toString ( listCount ) );
+
+                            if ( doLog() )
+                            {
+                                appendInput ( Integer.toString ( listCount ) );
+                            }
+
                         }
 
                         else
@@ -1838,7 +1950,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         catch ( Exception e )
         {
-            if ( log.getLevel() == Level.INFO || logit )
+            if ( doLog() )
             {
                 e.printStackTrace();
             }
@@ -1951,6 +2063,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     }
 
+    private boolean doLog()
+    {
+        return logit || Level.INFO.equals ( log.getLevel() );
+    }
+
     public boolean getLogging()
     {
         return logit;
@@ -1958,7 +2075,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     private void appendOutput ( String msg )
     {
-        if ( log.getLevel() == Level.INFO || logit )
+        if ( doLog() )
         {
             if ( endDestination != null )
             {
@@ -2005,7 +2122,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     private void appendInput ( String msg )
     {
-        if ( log.getLevel() == Level.INFO || logit )
+        if ( doLog() )
         {
             if ( endDestination != null )
             {
