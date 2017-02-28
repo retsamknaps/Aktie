@@ -39,7 +39,7 @@ import aktie.utils.SymDecoder;
 
 public class ConnectionManager2 implements GetSendData2, DestinationListener, PushInterface, Runnable
 {
-
+//338MB  840MB
     Logger log = Logger.getLogger ( "aktie" );
 
     public static int MAX_TOTAL_DEST_CONNECTIONS = 100;
@@ -809,7 +809,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         //======================================================
-        //Attempt connections to cover subscribed communities
+        //Attempt connections to cover membership communities
+        con -= (ATTEMPT_CONNECTIONS / 2);
         if ( con < ATTEMPT_CONNECTIONS )
         {
             CObjList clt = index.getMyValidMemberships ( null );
@@ -870,11 +871,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                 con < ATTEMPT_CONNECTIONS; c0++ )
                         {
                             CObj suber = othersubs.get ( ori[c0] );
-                            String creator = suber.getString ( CObj.CREATOR );
+                            String memid = suber.getString ( CObj.MEMBERID );
 
-                            if ( creator != null )
+                            if ( memid != null )
                             {
-                                CObj identity = getIdentity ( creator );
+                                CObj identity = getIdentity ( memid );
                                 boolean done = false;
                                 Iterator<DestinationThread> dti = dtl.iterator();
 
@@ -896,6 +897,33 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         }
 
                         othersubs.close();
+                        
+                        //Make sure we try the creator too
+                        CObj com = index.getCommunity(comid);
+                        if (com != null) {
+                        	String creator = com.getString(CObj.CREATOR);
+                            if ( creator != null )
+                            {
+                                CObj identity = getIdentity ( creator );
+                                boolean done = false;
+                                Iterator<DestinationThread> dti = dtl.iterator();
+
+                                while ( !done && dti.hasNext() && identity != null )
+                                {
+                                    DestinationThread dt = dti.next();
+
+                                    if ( attemptConnection ( dt, identity, false, myids ) )
+                                    {
+                                        con++;
+                                        done = true;
+                                    }
+
+                                }
+
+                            }
+                        	
+                        }
+                        
                     }
 
                 }

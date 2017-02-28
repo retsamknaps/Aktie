@@ -26,6 +26,7 @@ public class AddFolderDialog extends Dialog
     public AddFolderDialog ( Shell parentShell, SWTApp a )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
     }
 

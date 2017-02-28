@@ -3255,12 +3255,14 @@ public class SWTApp implements UpdateInterface
 
     }
 
+    public static long MAXPREVIEWFILE = 80L * 1024L * 1024L;
+    
     private File getPreviewHasFile ( String comid, String wdig, String pdig, Long fsize )
     {
         File file = null;
 
         if ( comid != null && wdig != null && pdig != null &&
-                fsize != null && fsize < 20L * 1024L * 1024L )
+                fsize != null && fsize < MAXPREVIEWFILE )
         {
             CObjList clst = node.getIndex().getMyHasFiles ( comid, wdig, pdig );
 
@@ -3363,23 +3365,7 @@ public class SWTApp implements UpdateInterface
                 @Override
                 public void paintControl ( PaintEvent e )
                 {
-                    Image img = image;
-
-                    if ( imgLoader != null &&
-                            img != null && !img.isDisposed() )
-                    {
-
-                        // Set up the offscreen gc
-                        Image tmpimg = new Image ( shell.getDisplay(), imageCanvas.getBounds() );
-                        GC gcImage = new GC ( tmpimg );
-                        // Draw the background
-                        gcImage.setBackground ( e.gc.getBackground() );
-
-                        overlayImage ( tmpimg, gcImage );
-
-                        e.gc.drawImage ( tmpimg, 0, 0 );
-                    }
-
+                	paintImage(e.gc);
                 }
 
             } );
@@ -3407,23 +3393,53 @@ public class SWTApp implements UpdateInterface
             } );
 
         }
+        
+        private synchronized void paintImage(GC gc) {
+            Image img = image;
 
-        private synchronized void overlayImage ( Image tmp, GC g )
-        {
-            if ( imgLoader != null )
+            if ( imgLoader != null &&
+                    img != null && !img.isDisposed() )
             {
-                ImageData id = imgLoader.data[idx];
-                g.setAntialias ( SWT.ON );
-                Image img = new Image ( Display.getDefault(), id );
-                g.drawImage ( image, 0, 0 );
-                g.drawImage ( img, 0, 0, img.getBounds().width,
-                              img.getBounds().height, 0, 0, sw, sh );
-                image.dispose();
-                img.dispose();
-                image = tmp;
-            }
 
+                // Set up the offscreen gc
+                Image tmpimg = new Image ( shell.getDisplay(), imageCanvas.getBounds() );
+                GC gcImage = new GC ( tmpimg );
+
+                ImageData id = imgLoader.data[idx];
+                gcImage.setAntialias ( SWT.ON );
+                Image frame = new Image ( Display.getDefault(), id );
+                gcImage.drawImage ( img, 0, 0 );
+                gcImage.drawImage ( frame, 0, 0, frame.getBounds().width,
+                		frame.getBounds().height, 0, 0, imageCanvas.getBounds().width,
+                		imageCanvas.getBounds().height );
+                
+                image = tmpimg;
+                img.dispose();
+                frame.dispose();
+
+                gc.drawImage ( tmpimg, 0, 0 );
+                gcImage.dispose();
+            }
         }
+
+//        private synchronized void overlayImage ( Image tmp, GC g )
+//        {
+//        	
+//            if ( imgLoader != null )
+//            {
+//            	Image bkimg = image;
+//                ImageData id = imgLoader.data[idx];
+//                g.setAntialias ( SWT.ON );
+//                Image img = new Image ( Display.getDefault(), id );
+//                g.drawImage ( bkimg, 0, 0 );
+//                g.drawImage ( img, 0, 0, img.getBounds().width,
+//                              img.getBounds().height, 0, 0, sw, sh );
+//                image = tmp;
+//                img.dispose();
+//                bkimg.dispose();
+//            }
+//
+//        }
 
         public synchronized void stop()
         {
@@ -3473,6 +3489,8 @@ public class SWTApp implements UpdateInterface
                     }
 
                 }
+                imageCanvas.setSize(0, 0);
+                postText.redraw();
 
             }
 
@@ -3482,12 +3500,19 @@ public class SWTApp implements UpdateInterface
 
         private synchronized void incrIndex()
         {
-            idx++;
-            idx = idx % imgLoader.data.length;
+        	if (imgLoader != null) {
+        		idx++;
+        		idx = idx % imgLoader.data.length;
+        	}
         }
 
         private synchronized void nextFrame()
         {
+        	if (shell != null && shell.isDisposed()) {
+        		stop = true;
+        		return;
+        	}
+        	
             long ct = System.currentTimeMillis();
             long delay = 100L;
 

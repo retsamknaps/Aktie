@@ -30,6 +30,7 @@ public class NewFieldDecimalDialog extends Dialog
     public NewFieldDecimalDialog ( Shell parentShell, NewPostDialog p )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         postDialog = p;
     }
 

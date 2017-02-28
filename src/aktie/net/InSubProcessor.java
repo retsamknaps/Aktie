@@ -7,7 +7,6 @@ import aktie.GenericProcessor;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.SubSequence;
 import aktie.spam.SpamTool;
@@ -180,22 +179,7 @@ public class InSubProcessor extends GenericProcessor
 
                                 if ( "true".equals ( b.getString ( CObj.SUBSCRIBED ) ) )
                                 {
-                                    CObjList clst = index.getSubscriptions ( comid, null );
-
-                                    for ( int c = 0; c < clst.size(); c++ )
-                                    {
-                                        CObj sl = clst.get ( c );
-                                        String creator = sl.getString ( CObj.CREATOR );
-
-                                        if ( creator != null )
-                                        {
-                                            identManager.updateGlobalSequenceNumber ( creator,
-                                                    false, 0, false, 0, true, 0 );
-                                        }
-
-                                    }
-
-                                    clst.close();
+                                	identManager.updateIdentityCommunitySeqNumber(creatorid, comid, 0, true);
                                 }
 
                             }

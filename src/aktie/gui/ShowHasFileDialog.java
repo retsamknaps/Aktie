@@ -47,6 +47,7 @@ public class ShowHasFileDialog extends Dialog
     public ShowHasFileDialog ( Shell parentShell, SetUserRankDialog d, SWTApp g )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         usrRankDialog = d;
         app = g;
         prvMessageDialog = new PrivateMessageDialog ( app.shell, app );

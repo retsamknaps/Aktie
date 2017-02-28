@@ -204,10 +204,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
 
                         if ( sc != null )
                         {
-                            identManager.updateGlobalSequenceNumber ( sc,
-                                    false, 0,
-                                    false, 0,
-                                    true, 0 );
+                            identManager.updateIdentityCommunitySeqNumber(sc, comid, 0, true);
                         }
 
                     }

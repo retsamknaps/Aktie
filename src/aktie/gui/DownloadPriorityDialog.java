@@ -34,6 +34,7 @@ public class DownloadPriorityDialog extends Dialog
     public DownloadPriorityDialog ( Shell parentShell, SWTApp a )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
     }
 

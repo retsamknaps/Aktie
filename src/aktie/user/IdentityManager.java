@@ -1603,7 +1603,7 @@ public class IdentityManager
         return sn;
     }
 
-    public void updateIdentityCommunitySeqNumber ( String id, String comid, long seq )
+    public void updateIdentityCommunitySeqNumber ( String id, String comid, long seq, boolean force )
     {
         Session s = null;
 
@@ -1625,7 +1625,7 @@ public class IdentityManager
 
             if ( d != null )
             {
-                if ( d.getLastGlobalSequence() < seq )
+                if ( d.getLastGlobalSequence() < seq || force)
                 {
                     d.setLastGlobalSequence ( seq );
                     s.merge ( d );

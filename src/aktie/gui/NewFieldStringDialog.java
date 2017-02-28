@@ -27,6 +27,7 @@ public class NewFieldStringDialog extends Dialog
     public NewFieldStringDialog ( Shell parentShell, NewPostDialog p )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         postDialog = p;
     }
 

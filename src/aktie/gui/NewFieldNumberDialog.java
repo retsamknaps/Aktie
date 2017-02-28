@@ -30,6 +30,7 @@ public class NewFieldNumberDialog extends Dialog
     public NewFieldNumberDialog ( Shell parentShell, NewPostDialog p )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         postDialog = p;
     }
 

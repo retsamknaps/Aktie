@@ -28,6 +28,7 @@ public class NewFieldBooleanDialog extends Dialog
     public NewFieldBooleanDialog ( Shell parentShell, NewPostDialog nd )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         postDialog = nd;
     }
 

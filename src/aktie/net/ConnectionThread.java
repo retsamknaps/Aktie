@@ -261,7 +261,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                         i2.remove();
                         //Go update the sequence for this id
                         IdentManager.updateIdentityCommunitySeqNumber (
-                            getEndDestination().getId(), comid, seqnum );
+                            getEndDestination().getId(), comid, seqnum, false );
                     }
 
                 }
@@ -371,7 +371,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( fillList.size() == 0 )
         {
             IdentManager.updateIdentityCommunitySeqNumber (
-                getEndDestination().getId(), comid, ps );
+                getEndDestination().getId(), comid, ps, false );
             return;
         }
 

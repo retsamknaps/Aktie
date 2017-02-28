@@ -31,6 +31,7 @@ public class SetUserRankDialog extends Dialog
     public SetUserRankDialog ( Shell parentShell, SWTApp a )
     {
         super ( parentShell );
+        setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = a;
     }
 
