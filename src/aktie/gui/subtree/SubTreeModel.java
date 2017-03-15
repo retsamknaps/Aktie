@@ -317,6 +317,9 @@ public class SubTreeModel implements ITreeContentProvider
                             se.setParent ( prt.getId() );
                             db.saveEntity ( se );
                         }
+                        
+                        System.out.println("CREATOR: " + cid + " prt: " + prt);
+                        System.out.println("COMMUNITY: " + comid + " se: " + se);
 
                         fullObj.put ( se.getId(), com );
                         addSubTreeElement ( se );

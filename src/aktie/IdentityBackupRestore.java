@@ -141,7 +141,7 @@ public class IdentityBackupRestore
 
             s.getTransaction().commit();
             i.pushPrivate ( CObj.DEST, tf.getPath() );
-            index.index ( i, true );
+            index.index ( i );
         }
 
         catch ( Exception e )
@@ -327,7 +327,7 @@ public class IdentityBackupRestore
                 JSONObject ot = new JSONObject ( pt );
                 CObj mem = new CObj();
                 mem.LOADPRIVATEJSON ( ot );
-                index.index ( mem, true );
+                index.index ( mem );
             }
 
         }
@@ -384,8 +384,8 @@ public class IdentityBackupRestore
             CObj sub = new CObj();
             sub.LOADPRIVATEJSON ( ot );
 
-            index.index ( com, true );
-            index.index ( sub, true );
+            index.index ( com );
+            index.index ( sub );
 
             lstr = br.readLine();
             long lastfile = Long.valueOf ( lstr );
@@ -404,7 +404,7 @@ public class IdentityBackupRestore
             JSONObject ot = new JSONObject ( pt );
             CObj pm = new CObj();
             pm.LOADPRIVATEJSON ( ot );
-            index.index ( pm, true );
+            index.index ( pm );
         }
 
         br.close();

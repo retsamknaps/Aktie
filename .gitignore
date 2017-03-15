@@ -1,3 +1,4 @@
+/logs
 /sharedir0
 /testh2
 /testindex1
@@ -27,3 +28,4 @@ aktie.jar*
 /h2dbtest
 /bin
 /i2ptest
+test/aktie/TestSessionConfig.java

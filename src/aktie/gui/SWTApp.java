@@ -1741,12 +1741,12 @@ public class SWTApp implements UpdateInterface
                                 {
                                     if ( running )
                                     {
-                                        lblNotRunning.setText ( "The share manager is RUNNING" );
+                                        lblNotRunning.setText ( "The share manager is running" );
                                     }
 
                                     else
                                     {
-                                        lblNotRunning.setText ( "The share manager is not running" );
+                                        lblNotRunning.setText ( "" );
                                     }
 
                                 }
