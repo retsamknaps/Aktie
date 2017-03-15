@@ -50,10 +50,11 @@ public abstract class AbstractSequence<T>
     public abstract T createNewObj ( CObj c );
     public abstract T createNewObj ( String... c );
 
-    public HH2Session getSession() {
-    	return session;
+    public HH2Session getSession()
+    {
+        return session;
     }
-    
+
     public T getObj()
     {
         return Obj;

@@ -39,7 +39,7 @@ import aktie.utils.SymDecoder;
 
 public class ConnectionManager2 implements GetSendData2, DestinationListener, PushInterface, Runnable
 {
-//338MB  840MB
+    //338MB  840MB
     Logger log = Logger.getLogger ( "aktie" );
 
     public static int MAX_TOTAL_DEST_CONNECTIONS = 100;
@@ -810,7 +810,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         //======================================================
         //Attempt connections to cover membership communities
-        con -= (ATTEMPT_CONNECTIONS / 2);
+        con -= ( ATTEMPT_CONNECTIONS / 2 );
+
         if ( con < ATTEMPT_CONNECTIONS )
         {
             CObjList clt = index.getMyValidMemberships ( null );
@@ -897,11 +898,14 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                         }
 
                         othersubs.close();
-                        
+
                         //Make sure we try the creator too
-                        CObj com = index.getCommunity(comid);
-                        if (com != null) {
-                        	String creator = com.getString(CObj.CREATOR);
+                        CObj com = index.getCommunity ( comid );
+
+                        if ( com != null )
+                        {
+                            String creator = com.getString ( CObj.CREATOR );
+
                             if ( creator != null )
                             {
                                 CObj identity = getIdentity ( creator );
@@ -921,9 +925,9 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                 }
 
                             }
-                        	
+
                         }
-                        
+
                     }
 
                 }

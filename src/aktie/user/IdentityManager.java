@@ -1625,7 +1625,7 @@ public class IdentityManager
 
             if ( d != null )
             {
-                if ( d.getLastGlobalSequence() < seq || force)
+                if ( d.getLastGlobalSequence() < seq || force )
                 {
                     d.setLastGlobalSequence ( seq );
                     s.merge ( d );

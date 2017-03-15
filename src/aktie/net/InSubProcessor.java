@@ -179,7 +179,7 @@ public class InSubProcessor extends GenericProcessor
 
                                 if ( "true".equals ( b.getString ( CObj.SUBSCRIBED ) ) )
                                 {
-                                	identManager.updateIdentityCommunitySeqNumber(creatorid, comid, 0, true);
+                                    identManager.updateIdentityCommunitySeqNumber ( creatorid, comid, 0, true );
                                 }
 
                             }

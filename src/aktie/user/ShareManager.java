@@ -1226,7 +1226,7 @@ public class ShareManager implements Runnable
 
     public synchronized void stop()
     {
-    	enabled = false;
+        enabled = false;
         stop = true;
         notifyAll();
     }

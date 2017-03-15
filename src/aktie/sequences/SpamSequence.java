@@ -198,7 +198,7 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
     {
         return null;
     }
-    
+
     public void updateSequence ( CObj c ) throws Exception
     {
         Long seqnum = c.getNumber ( CObj.SEQNUM );
@@ -255,7 +255,7 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
                                 s.merge ( Obj );
                             }
 
-                            
+
                             else if ( getNextClosestNumber() == seqnum )
                             {
                                 setNumClosestNumber (
@@ -265,9 +265,9 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
 
                             else if ( getUpdateCycle() >= IdentityManager.MAX_UPDATE_CYCLE )
                             {
-                            	setUpdateCycle ( 0 );
-                            	setLastNumber ( seqnum );
-                            	s.merge ( Obj );
+                                setUpdateCycle ( 0 );
+                                setLastNumber ( seqnum );
+                                s.merge ( Obj );
                             }
 
                         }
@@ -325,6 +325,6 @@ public class SpamSequence extends AbstractSequence<DeveloperIdentity>
 
         }
 
-    }    
+    }
 
 }

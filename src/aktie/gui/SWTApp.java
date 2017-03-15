@@ -1741,12 +1741,12 @@ public class SWTApp implements UpdateInterface
                                 {
                                     if ( running )
                                     {
-                                        lblNotRunning.setText ( "The share manager is running" );
+                                        lblNotRunning.setText ( "Share Manager is running" );
                                     }
 
                                     else
                                     {
-                                        lblNotRunning.setText ( "" );
+                                        lblNotRunning.setText ( "Share Manager" );
                                     }
 
                                 }
@@ -3256,7 +3256,7 @@ public class SWTApp implements UpdateInterface
     }
 
     public static long MAXPREVIEWFILE = 80L * 1024L * 1024L;
-    
+
     private File getPreviewHasFile ( String comid, String wdig, String pdig, Long fsize )
     {
         File file = null;
@@ -3365,7 +3365,7 @@ public class SWTApp implements UpdateInterface
                 @Override
                 public void paintControl ( PaintEvent e )
                 {
-                	paintImage(e.gc);
+                    paintImage ( e.gc );
                 }
 
             } );
@@ -3393,8 +3393,9 @@ public class SWTApp implements UpdateInterface
             } );
 
         }
-        
-        private synchronized void paintImage(GC gc) {
+
+        private synchronized void paintImage ( GC gc )
+        {
             Image img = image;
 
             if ( imgLoader != null &&
@@ -3410,9 +3411,9 @@ public class SWTApp implements UpdateInterface
                 Image frame = new Image ( Display.getDefault(), id );
                 gcImage.drawImage ( img, 0, 0 );
                 gcImage.drawImage ( frame, 0, 0, frame.getBounds().width,
-                		frame.getBounds().height, 0, 0, imageCanvas.getBounds().width,
-                		imageCanvas.getBounds().height );
-                
+                                    frame.getBounds().height, 0, 0, imageCanvas.getBounds().width,
+                                    imageCanvas.getBounds().height );
+
                 image = tmpimg;
                 img.dispose();
                 frame.dispose();
@@ -3420,26 +3421,28 @@ public class SWTApp implements UpdateInterface
                 gc.drawImage ( tmpimg, 0, 0 );
                 gcImage.dispose();
             }
+
         }
 
-//        private synchronized void overlayImage ( Image tmp, GC g )
-//        {
-//        	
-//            if ( imgLoader != null )
-//            {
-//            	Image bkimg = image;
-//                ImageData id = imgLoader.data[idx];
-//                g.setAntialias ( SWT.ON );
-//                Image img = new Image ( Display.getDefault(), id );
-//                g.drawImage ( bkimg, 0, 0 );
-//                g.drawImage ( img, 0, 0, img.getBounds().width,
-//                              img.getBounds().height, 0, 0, sw, sh );
-//                image = tmp;
-//                img.dispose();
-//                bkimg.dispose();
-//            }
-//
-//        }
+        //        private synchronized void overlayImage ( Image tmp, GC g )
+        //        {
+        //
+        //            if ( imgLoader != null )
+        //            {
+        //              Image bkimg = image;
+        //                ImageData id = imgLoader.data[idx];
+        //                g.setAntialias ( SWT.ON );
+        //                Image img = new Image ( Display.getDefault(), id );
+        //                g.drawImage ( bkimg, 0, 0 );
+        //                g.drawImage ( img, 0, 0, img.getBounds().width,
+        //                              img.getBounds().height, 0, 0, sw, sh );
+        //                image = tmp;
+        //                img.dispose();
+        //                bkimg.dispose();
+        //            }
+
+        //
+        //        }
 
         public synchronized void stop()
         {
@@ -3489,7 +3492,8 @@ public class SWTApp implements UpdateInterface
                     }
 
                 }
-                imageCanvas.setSize(0, 0);
+
+                imageCanvas.setSize ( 0, 0 );
                 postText.redraw();
 
             }
@@ -3500,19 +3504,22 @@ public class SWTApp implements UpdateInterface
 
         private synchronized void incrIndex()
         {
-        	if (imgLoader != null) {
-        		idx++;
-        		idx = idx % imgLoader.data.length;
-        	}
+            if ( imgLoader != null )
+            {
+                idx++;
+                idx = idx % imgLoader.data.length;
+            }
+
         }
 
         private synchronized void nextFrame()
         {
-        	if (shell != null && shell.isDisposed()) {
-        		stop = true;
-        		return;
-        	}
-        	
+            if ( shell != null && shell.isDisposed() )
+            {
+                stop = true;
+                return;
+            }
+
             long ct = System.currentTimeMillis();
             long delay = 100L;
 
@@ -3958,7 +3965,7 @@ public class SWTApp implements UpdateInterface
         lblError.setText ( "" );
 
         lblNotRunning = new Label ( composite_header, SWT.NONE );
-        lblNotRunning.setText ( "The share manager is not running" );
+        lblNotRunning.setText ( "Share Manager" );
 
         btnEnableShareManager = new Button ( composite_header, SWT.CHECK );
         btnEnableShareManager.setText ( "Enabled" );
