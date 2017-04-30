@@ -192,15 +192,24 @@ public class CObjList implements Closeable, AutoCloseable
 
     public synchronized void close()
     {
+        synchronized ( alllists )
+        {
+            alllists.remove ( this );
+        }
+
+        //System.out.println ( "CObjList.close()" );
+    }
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        // Why not have the garbage collector close the searcher?
+        // This should be fool proof and works well.
+        //System.out.println ( "CObjList.finalize()" );
         if ( searcher != null )
         {
             searcher.closeSearch();
             searcher = null;
-        }
-
-        synchronized ( alllists )
-        {
-            alllists.remove ( this );
         }
 
     }

@@ -2,43 +2,32 @@ package aktie.gui.launchers;
 
 import java.util.List;
 
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.Viewer;
-
 import aktie.data.Launcher;
+import aktie.gui.table.AktieTableContentProvider;
 
-public class LauncherContentProvider implements IStructuredContentProvider
+public class LauncherContentProvider extends AktieTableContentProvider<List<Launcher>, Launcher>
 {
-
-    public LauncherContentProvider()
-    {
-    }
-
     @Override
-    public void dispose()
+    public Launcher[] getElements ( Object a )
     {
-    }
-
-    @Override
-    public void inputChanged ( Viewer arg0, Object arg1, Object arg2 )
-    {
-    }
-
-    @Override
-    public Object[] getElements ( Object a )
-    {
-        @SuppressWarnings ( "unchecked" )
-        List<Launcher> l = ( List<Launcher> ) a;
-        Object o[] = new Object[l.size()];
-        int r = 0;
-
-        for ( Launcher c : l )
+        if ( a != null && a instanceof List )
         {
-            o[r] = c;
-            r++;
+            @SuppressWarnings ( "unchecked" )
+            List<Launcher> list = ( List<Launcher> ) a;
+            Launcher launchers[] = new Launcher[list.size()];
+            int i = 0;
+
+            for ( Launcher launcher : list )
+            {
+                launchers[i] = launcher;
+                i++;
+            }
+
+            return launchers;
         }
 
-        return o;
+        return new Launcher[] {};
+
     }
 
 }

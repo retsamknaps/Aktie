@@ -5,20 +5,25 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Composite;
 
-public class AktieTable<T>
+public class AktieTable<L, E>
 {
 
     // Table needs to be wrapped because it cannot be subclassed
     private Table table;
-    private AktieTableViewer<T> tableViewer;
+    private AktieTableViewer<L, E> tableViewer;
 
     public AktieTable ( Composite parent, int style )
     {
-        this.table = new Table ( parent, style );
-        this.table.setHeaderVisible ( true );
-        this.table.setLinesVisible ( true );
-        this.tableViewer = new AktieTableViewer<T> ( this );
-        this.tableViewer.setSorter ( new AktieTableViewerSorter<T>() );
+        table = new Table ( parent, style );
+        table.setHeaderVisible ( true );
+        table.setLinesVisible ( true );
+        tableViewer = new AktieTableViewer<L, E> ( this );
+        tableViewer.setSorter ( new AktieTableViewerSorter<L, E>() );
+    }
+
+    public void setLayoutData ( Object layoutData )
+    {
+        this.table.setLayoutData ( layoutData );
     }
 
     /**
@@ -40,9 +45,9 @@ public class AktieTable<T>
         return menu;
     }
 
-    public AktieTableViewer<T> getTableViewer()
+    public AktieTableViewer<L, E> getTableViewer()
     {
-        return this.tableViewer;
+        return tableViewer;
     }
 
     /**
@@ -55,7 +60,17 @@ public class AktieTable<T>
         return this.table;
     }
 
-    public void setContentProvider ( AktieTableContentProvider<T> contentProvider )
+    public boolean isDisposed()
+    {
+        return this.table.isDisposed();
+    }
+
+    public int[] getSelectionIndices()
+    {
+        return this.table.getSelectionIndices();
+    }
+
+    public void setContentProvider ( AktieTableContentProvider<L, E> contentProvider )
     {
         this.tableViewer.setContentProvider ( contentProvider );
     }
@@ -70,10 +85,11 @@ public class AktieTable<T>
         @param name The name of the column displayed in the table header
         @param width The width of the column
         @param p The cell label provider that knows what content to set for the table column's cells.
+        @return The AktieTableViewerColumn<T> created by this add operation.
     */
-    public void addColumn ( String name, int width, AktieTableCellLabelProvider<T> p )
+    public AktieTableViewerColumn<L, E> addColumn ( String name, int width, AktieTableCellLabelProvider<E> p )
     {
-        this.addColumn ( name, width, SWT.LEFT, p );
+        return this.addColumn ( name, width, SWT.LEFT, p );
     }
 
     /**
@@ -82,14 +98,15 @@ public class AktieTable<T>
         @param width The width of the column
         @param alignment The alignment of the content in the column's cells.  The argument should be one of SWT.LEFT, SWT.RIGHT or SWT.CENTER.
         @param labelProvider The cell label provider that knows what content to set for the table column's cells.
+        @return The AktieTableViewerColumn<T> created by this add operation.
     */
-    public void addColumn ( String name, int width, int alignment, AktieTableCellLabelProvider<T> labelProvider )
+    public AktieTableViewerColumn<L, E> addColumn ( String name, int width, int alignment, AktieTableCellLabelProvider<E> labelProvider )
     {
-        AktieTableColumn<T> tableColumn = new AktieTableColumn<T> ( this, SWT.NONE );
+        AktieTableColumn<L, E> tableColumn = new AktieTableColumn<L, E> ( this, SWT.NONE );
         tableColumn.setText ( name );
         tableColumn.setWidth ( width );
         tableColumn.setAlignment ( alignment );
-        new AktieTableViewerColumn<T> ( this.tableViewer, tableColumn, labelProvider );
+        return new AktieTableViewerColumn<L, E> ( this.tableViewer, tableColumn, labelProvider );
     }
 
 }

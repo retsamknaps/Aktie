@@ -3,11 +3,15 @@ package aktie.gui;
 import java.io.IOException;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableInputProvider;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
+import aktie.gui.table.CObjListTableContentProviderTypeArrayElement;
 import aktie.index.CObjList;
 
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.events.SelectionEvent;
@@ -25,15 +29,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class SubscriptionDialog extends Dialog
 {
     private Text text;
-    private TableViewer tableViewer;
-    private Table table;
+    private SubscriptionTable table;
     private SWTApp app;
     private Button btnShowPublic;
     private Button btnShowPrivate;
@@ -43,11 +43,11 @@ public class SubscriptionDialog extends Dialog
         Create the dialog.
         @param parentShell
     */
-    public SubscriptionDialog ( Shell parentShell, SWTApp a )
+    public SubscriptionDialog ( Shell parentShell, SWTApp app )
     {
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
-        app = a;
+        this.app = app;
     }
 
 
@@ -79,46 +79,15 @@ public class SubscriptionDialog extends Dialog
         shell.setText ( "Subscription" );
     }
 
-    private String sortPostField1;
-    private boolean sortPostReverse;
-    private SortField.Type sortPostType1;
-
-    private void doSearch ( String ss, boolean prv, boolean pub )
+    private void doSearch ( String searchString, boolean searchPrivate, boolean searchPublic )
     {
-        Sort s = new Sort();
-
-        if ( sortPostField1 != null )
-        {
-            s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
-
-        }
-
-        else
-        {
-            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
-        }
-
-        CObjList oldl = ( CObjList ) tableViewer.getInput();
-        CObjList l = app.getNode().getIndex().searchSubscribable ( ss,
-                     selectedid, prv, pub, s );
-
-        if ( tableViewer != null )
-        {
-            tableViewer.setInput ( l );
-        }
-
-        if ( oldl != null )
-        {
-            oldl.close();
-        }
-
-        tableViewer.refresh();
-
+        table.setSearch ( searchString, selectedid, searchPrivate, searchPublic );
+        table.searchAndSort();
     }
 
     private void defaultSearch()
     {
-        if ( app != null && tableViewer != null && !table.isDisposed() )
+        if ( table != null && !table.isDisposed() )
         {
 
             doSearch ( "", true, true );
@@ -195,117 +164,8 @@ public class SubscriptionDialog extends Dialog
         btnShowPrivate.setText ( "Show private" );
         new Label ( container, SWT.NONE );
 
-        tableViewer = new TableViewer ( container, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        table = tableViewer.getTable();
-        table.setLinesVisible ( true );
-        table.setHeaderVisible ( true );
+        table = new SubscriptionTable ( container, this );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        new Label ( container, SWT.NONE );
-
-        CObjListContentProvider cont = new CObjListContentProvider();
-        tableViewer.setContentProvider ( cont );
-        //https://bugs.eclipse.org/bugs/show_bug.cgi?id=446534
-
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Community" );
-        col0.getColumn().setWidth ( 150 );
-        col0.setLabelProvider ( new CObjListPrivDispNameColumnLabelProvider() );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col2 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Description" );
-        col2.getColumn().setWidth ( 300 );
-        col2.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.DESCRIPTION ) );
-        col2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.DESCRIPTION );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-
-        TableViewerColumn col1 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Scope" );
-        col1.getColumn().setWidth ( 50 );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.SCOPE ) );
-        col1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.SCOPE );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
 
         defaultSearch();
 
@@ -337,7 +197,7 @@ public class SubscriptionDialog extends Dialog
     @Override
     protected void cancelPressed()
     {
-        CObjList clst = ( CObjList ) tableViewer.getInput();
+        CObjList clst = ( CObjList ) table.getTableViewer().getInput();
 
         if ( clst != null )
         {
@@ -350,7 +210,7 @@ public class SubscriptionDialog extends Dialog
     @Override
     protected void okPressed()
     {
-        CObjList clst = ( CObjList ) tableViewer.getInput();
+        CObjList clst = ( CObjList ) table.getTableViewer().getInput();
 
         if ( selectedid != null )
         {
@@ -419,6 +279,93 @@ public class SubscriptionDialog extends Dialog
     public Label getLblNewSubscriptionFor()
     {
         return lblNewSubscriptionFor;
+    }
+
+    private SWTApp getSWTApp()
+    {
+        return app;
+    }
+
+    private class SubscriptionTable extends CObjListTable<CObjListArrayElement>
+    {
+        public SubscriptionTable ( Composite composite, SubscriptionDialog dialog )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
+
+            setContentProvider ( new CObjListTableContentProviderTypeArrayElement() );
+
+            setInputProvider ( new SubscriptionTableInputProvider ( dialog ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Community", 150, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            getTableViewer().setSortColumn ( column, false );
+
+            addColumn ( "Description", 300, new CObjListTableCellLabelProviderTypeString ( CObj.DESCRIPTION, true, null ) );
+
+            addColumn ( "Scope", 50, new CObjListTableCellLabelProviderTypeString ( CObj.SCOPE, false, null ) );
+
+            // This attribute seems not to exist.
+            //addColumn ( "Date Created", 100, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
+
+        }
+
+        @Override
+        public SubscriptionTableInputProvider getInputProvider()
+        {
+            return ( SubscriptionTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSearch ( String searchString, String selectedIdentity, boolean searchPrivate, boolean searchPublic )
+        {
+            getInputProvider().setSearchString ( searchString );
+            getInputProvider().setSelectedIdentity ( selectedIdentity );
+            getInputProvider().setSearchPrivate ( searchPrivate );
+            getInputProvider().setSearchPublic ( searchPublic );
+        }
+
+    }
+
+    private class SubscriptionTableInputProvider extends CObjListTableInputProvider
+    {
+        private SubscriptionDialog dialog;
+
+        private String searchString = "";
+        private String selectedIdentity = "";
+        private boolean searchPrivate = true;
+        private boolean searchPublic = true;
+
+        public SubscriptionTableInputProvider ( SubscriptionDialog dialog )
+        {
+            this.dialog = dialog;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            return dialog.getSWTApp().getNode().getIndex().searchSubscribable ( searchString, selectedIdentity, searchPrivate, searchPublic, sort );
+        }
+
+        public void setSearchString ( String s )
+        {
+            searchString = s;
+        }
+
+        public void setSelectedIdentity ( String id )
+        {
+            selectedIdentity = id;
+        }
+
+        public void setSearchPrivate ( boolean b )
+        {
+            searchPrivate = b;
+        }
+
+        public void setSearchPublic ( boolean b )
+        {
+            searchPublic = b;
+        }
+
     }
 
 }

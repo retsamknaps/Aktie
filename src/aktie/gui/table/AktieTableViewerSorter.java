@@ -3,46 +3,52 @@ package aktie.gui.table;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 
-public class AktieTableViewerSorter<T> extends ViewerSorter
+public class AktieTableViewerSorter<L, E> extends ViewerSorter
 {
 
-    private AktieTableViewerColumn<T> sortColumn = null;
+    protected AktieTableViewerColumn<L, E> sortColumn = null;
 
-    private boolean reverse = false;
-
-    public boolean isReverse()
+    public AktieTableViewerColumn<L, E> getSortColumn()
     {
-        return this.reverse;
+        return sortColumn;
     }
 
-    public void sort ( AktieTableViewerColumn<T> p )
+    public void setSortColumn ( AktieTableViewerColumn<L, E> c )
     {
-        if ( this.sortColumn == null )
+        sortColumn = c;
+    }
+
+    public void sort ( AktieTableViewerColumn<L, E> p )
+    {
+        if ( sortColumn == null )
         {
-            this.sortColumn = p;
-            this.reverse = false;
+            sortColumn = p;
             return;
         }
 
-        if ( this.sortColumn.equals ( p ) )
+        if ( sortColumn.equals ( p ) )
         {
-            this.reverse = !this.reverse;
+            sortColumn.toogleSortReverse();
             return;
         }
 
-        this.sortColumn = p;
-        reverse = false;
+        sortColumn = p;
     }
 
     @Override
     public int compare ( Viewer viewer, Object o1, Object o2 )
     {
-        if ( this.sortColumn == null || !this.sortColumn.isSortable() )
+        //System.out.println ( "AktieTableViewerSorter.compare()" );
+
+        if ( sortColumn == null || !sortColumn.isSortable() )
         {
+            //System.out.println ( "AktieTableViewerSorter.compare(): sort column is null or not sortable" );
             return 0;
         }
 
-        return this.sortColumn.compare ( o1, o2, this.reverse );
+        //System.out.println ( "AktieTableViewerSorter.compare(): sort column not null, comparing" );
+
+        return sortColumn.compare ( o1, o2, sortColumn.isSortedReverse() );
     }
 
 }

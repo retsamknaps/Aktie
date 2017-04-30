@@ -1,11 +1,8 @@
 package aktie.gui;
 
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -13,18 +10,20 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.layout.GridData;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableContentProviderTypeIdentityElement;
+import aktie.gui.table.CObjListTableInputProvider;
 import aktie.index.CObjList;
 
 public class ShowMembersDialog extends Dialog
 {
-    private Table memberTable;
-    private TableViewer memberTableViewer;
+    private ShowMembersMemberTable memberTable;
+    private ShowMembersSubscriptionTable subscriptionTable;
     private Label lblMembersOfCommunity;
     private SWTApp app;
 
@@ -53,77 +52,17 @@ public class ShowMembersDialog extends Dialog
         lblMembersOfCommunity.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         lblMembersOfCommunity.setText ( "Members of Community: " );
 
-        memberTableViewer = new TableViewer ( container, SWT.BORDER |
-                                              SWT.FULL_SELECTION | SWT.V_SCROLL | SWT.H_SCROLL );
-        memberTableViewer.setContentProvider ( new CObjListIdentPrivContentProvider (
-                app.getNode().getIndex(), CObj.MEMBERID ) );
-        memberTable = memberTableViewer.getTable();
+        memberTable = new ShowMembersMemberTable ( container, app, lblMembersOfCommunity );
         memberTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        memberTable.setHeaderVisible ( true );
-        memberTable.setLinesVisible ( true );
-
-        TableViewerColumn col0 = new TableViewerColumn ( memberTableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Identity" );
-        col0.getColumn().setWidth ( 300 );
-        col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                memberReverseSort = !memberReverseSort;
-                doMemSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
 
         lblSubscribers = new Label ( container, SWT.NONE );
         lblSubscribers.setText ( "Subscribers" );
 
-        subTableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION |
-                                           SWT.H_SCROLL | SWT.V_SCROLL );
-
-        subTableViewer.setContentProvider ( new CObjListIdentPubContentProvider (
-                                                app.getNode().getIndex(), CObj.CREATOR ) );
-
-        subTable = subTableViewer.getTable();
-        subTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        subTable.setHeaderVisible ( true );
-        subTable.setLinesVisible ( true );
-
-        TableViewerColumn scol0 = new TableViewerColumn ( subTableViewer, SWT.NONE );
-        scol0.getColumn().setText ( "Identity" );
-        scol0.getColumn().setWidth ( 300 );
-        scol0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-        scol0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                subReverseSort = !subReverseSort;
-                doSubSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        setCommunity ( selectedCommunity );
+        subscriptionTable = new ShowMembersSubscriptionTable ( container, app );
+        subscriptionTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
 
         return container;
     }
-
-    private boolean memberReverseSort = false;
-    private boolean subReverseSort = false;
 
     /**
         Create contents of the button bar.
@@ -138,9 +77,6 @@ public class ShowMembersDialog extends Dialog
                        IDialogConstants.CANCEL_LABEL, false );
     }
 
-    private CObj selectedCommunity;
-    private Table subTable;
-    private TableViewer subTableViewer;
     private Label lblSubscribers;
 
     public void open ( CObj comid )
@@ -149,74 +85,24 @@ public class ShowMembersDialog extends Dialog
         super.open();
     }
 
-    public void setCommunity ( CObj com )
+    public void setCommunity ( CObj community )
     {
-        selectedCommunity = com;
+        memberTable.setSelectedCommunity ( community );
+        subscriptionTable.setSelectedCommunity ( community );
 
-        if ( selectedCommunity != null && !memberTable.isDisposed() &&
-                !subTable.isDisposed() && !lblMembersOfCommunity.isDisposed() )
-        {
-            doMemSearch();
+        doMemberSearch();
 
-            doSubSearch();
-
-        }
-
+        doSubscriptionSearch();
     }
 
-    private void doSubSearch()
+    private void doSubscriptionSearch()
     {
-        Sort s = new Sort();
-
-        s.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, subReverseSort ) );
-
-        CObjList ol = ( CObjList ) subTableViewer.getInput();
-        CObjList sublst =
-            app.getNode().getIndex().getSubscriptions ( selectedCommunity.getDig(), s );
-        subTableViewer.setInput ( sublst );
-
-        if ( ol != null )
-        {
-            ol.close();
-        }
-
+        subscriptionTable.searchAndSort();
     }
 
-    private void doMemSearch()
+    private void doMemberSearch()
     {
-        String name = selectedCommunity.getPrivate ( CObj.NAME );
-        String lablestr = "Members of Community: " + name;
-
-        CObjList ol = ( CObjList ) memberTableViewer.getInput();
-
-        if ( CObj.SCOPE_PUBLIC.equals ( selectedCommunity.getString ( CObj.SCOPE ) ) )
-        {
-            lablestr = lablestr + " (PUBLIC)";
-            CObjList tl = new CObjList();
-            memberTableViewer.setInput ( tl );
-        }
-
-        else
-        {
-            Sort s = new Sort();
-
-            s.setSort ( new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, memberReverseSort ) );
-
-            CObjList memlst =
-                app.getNode().getIndex().getMemberships ( selectedCommunity.getDig(), s );
-            CObj ownerref = new CObj();
-            ownerref.pushPrivate ( CObj.MEMBERID, selectedCommunity.getString ( CObj.CREATOR ) );
-            memlst.add ( ownerref );
-            memberTableViewer.setInput ( memlst );
-        }
-
-        lblMembersOfCommunity.setText ( lablestr );
-
-        if ( ol != null )
-        {
-            ol.close();
-        }
-
+        memberTable.searchAndSort();
     }
 
     /**
@@ -228,29 +114,151 @@ public class ShowMembersDialog extends Dialog
         return new Point ( 450, 402 );
     }
 
-    public Table getMemberTable()
-    {
-        return memberTable;
-    }
-
-    public TableViewer getMemberTableViewer()
-    {
-        return memberTableViewer;
-    }
-
     public Label getLblMembersOfCommunity()
     {
         return lblMembersOfCommunity;
     }
 
-    public Table getSubTable()
+    private class ShowMembersMemberTable extends CObjListTable<CObjListIdentityElement>
     {
-        return subTable;
+        public ShowMembersMemberTable ( Composite composite, SWTApp app, Label labelMembersOfCommunity )
+        {
+            super ( composite, SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL | SWT.H_SCROLL );
+
+            setContentProvider ( new CObjListTableContentProviderTypeIdentityElement ( app.getNode().getIndex(), CObj.MEMBERID, true ) );
+
+            setInputProvider ( new ShowMembersMemberTableInputProvider ( app, labelMembersOfCommunity ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addNonIndexSortedColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            getTableViewer().setSortColumn ( column, false );
+        }
+
+        @Override
+        public ShowMembersMemberTableInputProvider getInputProvider()
+        {
+            return ( ShowMembersMemberTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSelectedCommunity ( CObj co )
+        {
+            getInputProvider().setSelectedCommunity ( co );
+        }
+
     }
 
-    public TableViewer getSubTableViewer()
+    private class ShowMembersMemberTableInputProvider extends CObjListTableInputProvider
     {
-        return subTableViewer;
+        private SWTApp app;
+        private Label labelMembersOfCommunity;
+        private CObj selectedCommunity = null;
+
+        public ShowMembersMemberTableInputProvider ( SWTApp app, Label labelMembersOfCommunity )
+        {
+            this.app = app;
+            this.labelMembersOfCommunity = labelMembersOfCommunity;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            if ( selectedCommunity == null )
+            {
+                return null;
+            }
+
+            CObjList memberList;
+
+            String name = selectedCommunity.getPrivate ( CObj.NAME );
+            String labelText = "Members of Community: " + name;
+
+            if ( CObj.SCOPE_PUBLIC.equals ( selectedCommunity.getString ( CObj.SCOPE ) ) )
+            {
+                labelText = labelText + " (PUBLIC)";
+                memberList = new CObjList();
+            }
+
+            else
+            {
+
+                memberList = app.getNode().getIndex().getMemberships ( selectedCommunity.getDig(), sort );
+                CObj ownerReference = new CObj();
+                ownerReference.pushPrivate ( CObj.MEMBERID, selectedCommunity.getString ( CObj.CREATOR ) );
+                memberList.add ( ownerReference );
+            }
+
+            if ( !labelMembersOfCommunity.isDisposed() )
+            {
+                labelMembersOfCommunity.setText ( labelText );
+            }
+
+            return memberList;
+        }
+
+        public void setSelectedCommunity ( CObj co )
+        {
+            selectedCommunity = co;
+        }
+
+    }
+
+    private class ShowMembersSubscriptionTable extends CObjListTable<CObjListIdentityElement>
+    {
+        public ShowMembersSubscriptionTable ( Composite composite, SWTApp app )
+        {
+            super ( composite, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
+
+            setContentProvider ( new CObjListTableContentProviderTypeIdentityElement ( app.getNode().getIndex(), CObj.CREATOR, false ) );
+
+            setInputProvider ( new ShowMembersSubscriptionTableInputProvider ( app ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addNonIndexSortedColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
+            getTableViewer().setSortColumn ( column, false );
+        }
+
+        @Override
+        public ShowMembersSubscriptionTableInputProvider getInputProvider()
+        {
+            return ( ShowMembersSubscriptionTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSelectedCommunity ( CObj co )
+        {
+            getInputProvider().setSelectedCommunity ( co );
+        }
+
+    }
+
+    private class ShowMembersSubscriptionTableInputProvider extends CObjListTableInputProvider
+    {
+        private SWTApp app;
+        private CObj selectedCommunity = null;
+
+        public ShowMembersSubscriptionTableInputProvider ( SWTApp app )
+        {
+            this.app = app;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            if ( selectedCommunity == null )
+            {
+                return null;
+            }
+
+            return app.getNode().getIndex().getSubscriptions ( selectedCommunity.getDig(), sort );
+
+        }
+
+        public void setSelectedCommunity ( CObj co )
+        {
+            selectedCommunity = co;
+        }
+
     }
 
 }

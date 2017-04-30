@@ -18,11 +18,13 @@ public class CObjElement implements CObjListGetter
         return o;
     }
 
+    @Override
     public int hashCode()
     {
         return o.hashCode();
     }
 
+    @Override
     public boolean equals ( Object c )
     {
         if ( c == null ) { return false; }

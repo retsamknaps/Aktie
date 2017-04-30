@@ -29,7 +29,6 @@ public class NewDirectoryShareDialog extends Dialog
 
     private CObj memId;
     private CObj comId;
-    private NewDirectoryShareDialog This;
     private Button btnDefaultDownloadLocation;
     private Button btnDoNotGenerate;
 
@@ -42,7 +41,6 @@ public class NewDirectoryShareDialog extends Dialog
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         app = p;
-        This = this;
     }
 
     public void setIdAndCom ( CObj memid, CObj comid )
@@ -134,7 +132,7 @@ public class NewDirectoryShareDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                DirectoryDialog dialog = new DirectoryDialog ( This.getShell() );
+                DirectoryDialog dialog = new DirectoryDialog ( NewDirectoryShareDialog.this.getShell() );
                 String sharedir = dialog.open();
 
                 if ( sharedir != null )

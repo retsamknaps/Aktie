@@ -3,7 +3,7 @@ package aktie.gui.table;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-public class AktieTableContentProvider<T> implements IStructuredContentProvider
+public abstract class AktieTableContentProvider<L, E> implements IStructuredContentProvider
 {
 
     @Override
@@ -13,9 +13,6 @@ public class AktieTableContentProvider<T> implements IStructuredContentProvider
     public void inputChanged ( Viewer arg0, Object arg1, Object arg2 ) {}
 
     @Override
-    public T[] getElements ( Object a )
-    {
-        return null;
-    }
+    public abstract E[] getElements ( Object a );
 
 }

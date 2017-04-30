@@ -9,6 +9,10 @@ import java.util.regex.Pattern;
 
 import aktie.crypto.Utils;
 import aktie.data.CObj;
+import aktie.gui.table.AktieTable;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeAdvSearchFieldDescription;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -32,9 +36,9 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Table;
+//import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+//import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -65,15 +69,14 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     private NewFieldDecimalDialog newDecimalDialog;
     private NewFieldStringDialog newStringDialog;
     private NewFieldBooleanDialog newBooleanDialog;
-    private TableViewer fieldTableViewer;
+    private NewPostFieldTable table;
     private CObjContentProvider fieldProvider;
-    private NewPostFieldEditorSupport fieldEditor;
     private AddFieldDialog addFieldDialog;
     private Shell shell;
 
     public TableViewer getFieldTable()
     {
-        return fieldTableViewer;
+        return table.getTableViewer();
     }
 
     public CObjContentProvider getFieldProvider()
@@ -279,7 +282,8 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                 }
 
                 dlst.close();
-                fieldTableViewer.setInput ( lf );
+                //fieldTableViewer.setInput ( lf );
+                table.getTableViewer().setInput ( lf );
 
                 lblPostingToCommunity.setText ( "Posting to community: " + community.getPrivateDisplayName() );
                 lblNewLabel.setText ( "Posting as: " + postIdentity.getDisplayName() );
@@ -447,7 +451,7 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) fieldTableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
@@ -460,7 +464,7 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                     {
                         CObjElement em = ( CObjElement ) selo;
                         fieldProvider.removeElement ( em );
-                        fieldTableViewer.setInput ( em );
+                        table.getTableViewer().setInput ( em );
                     }
 
                 }
@@ -587,35 +591,13 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
         Label lblFields = new Label ( container, SWT.NONE );
         lblFields.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
         lblFields.setText ( "Fields" );
-        fieldTableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
+
         fieldProvider = new CObjContentProvider();
-        fieldTableViewer.setContentProvider ( fieldProvider );
-        table = fieldTableViewer.getTable();
-        GridData gd_table = new GridData ( SWT.FILL, SWT.FILL, true, false, 1, 1 );
-        gd_table.heightHint = 100;
-        table.setLayoutData ( gd_table );
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
 
-        TableViewerColumn col0 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Field" );
-        col0.getColumn().setWidth ( 100 );
-        col0.getColumn().setMoveable ( false );
-        col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_NAME ) );
-
-        TableViewerColumn col1 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 450 );
-        col1.getColumn().setMoveable ( false );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_DESC ) );
-
-        TableViewerColumn col2 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Value" );
-        col2.getColumn().setWidth ( 100 );
-        col2.getColumn().setMoveable ( false );
-        col2.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_VAL ) );
-        fieldEditor = new NewPostFieldEditorSupport ( fieldTableViewer );
-        col2.setEditingSupport ( fieldEditor );
+        table = new NewPostFieldTable ( container, app, fieldProvider );
+        GridData tableLayout = new GridData ( SWT.FILL, SWT.FILL, true, false, 1, 1 );
+        tableLayout.heightHint = 100;
+        table.setLayoutData ( tableLayout );
 
         new Label ( container, SWT.NONE );
         new Label ( container, SWT.NONE );
@@ -768,7 +750,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
 
     private File newAttachment;
     private File newPreview;
-    private Table table;
     private Button btnSkipAntispam;
 
     @Override
@@ -1034,12 +1015,38 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     @Override
     public TableViewer getTableViewer()
     {
-        return fieldTableViewer;
+        return table.getTableViewer();
     }
 
     public Button getBtnSkipAntispam()
     {
         return btnSkipAntispam;
+    }
+
+    private class NewPostFieldTable extends AktieTable<CObjList, CObjListGetter>
+    {
+        public NewPostFieldTable ( Composite composite, SWTApp app, CObjContentProvider fieldProvider  )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
+
+            setContentProvider ( fieldProvider );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Field", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_NAME, false, null ) );
+            column.setMoveable ( false );
+            getTableViewer().setSortColumn ( column, false );
+
+            column = addColumn ( "Description", 450, new CObjListTableCellLabelProviderTypeAdvSearchFieldDescription() );
+            column.setMoveable ( false );
+            column.setSortable ( false );
+
+            column = addColumn ( "Value", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_VAL, true, null ) );
+            column.setMoveable ( false );
+            column.setSortable ( false );
+            column.setEditingSupport ( new NewPostFieldEditorSupport ( getTableViewer() ) );
+        }
+
     }
 
 }

@@ -1,29 +1,46 @@
 package aktie.gui.table;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 
-public class AktieTableViewer<T> extends TableViewer
+public class AktieTableViewer<L, E> extends TableViewer
 {
 
-    private AktieTable<T> aktieTable;
+    private AktieTable<L, E> aktieTable;
 
-    public AktieTableViewer ( AktieTable<T> table )
+    public AktieTableViewer ( AktieTable<L, E> table )
     {
         super ( table.getTable() );
         this.aktieTable = table;
     }
 
-    public AktieTable<T> getAktieTable()
+    public AktieTable<L, E> getAktieTable()
     {
-        return this.aktieTable;
+        return aktieTable;
+    }
+
+    public AktieTableViewerColumn<L, E> getSortColumn()
+    {
+        return aktieTable.getTableViewer().getSorter().getSortColumn();
+    }
+
+    public void setSortColumn ( AktieTableViewerColumn<L, E> c, boolean reverse )
+    {
+        if ( c.isSortable() )
+        {
+            c.setSortReverse ( reverse );
+            aktieTable.getTableViewer().getSorter().setSortColumn ( c );
+        }
+
     }
 
     @SuppressWarnings ( "unchecked" )
-    public AktieTableViewerSorter<T> getSorter()
+    @Override
+    public AktieTableViewerSorter<L, E> getSorter()
     {
         try
         {
-            return ( AktieTableViewerSorter<T> ) super.getSorter();
+            return ( AktieTableViewerSorter<L, E> ) super.getSorter();
         }
 
         catch ( ClassCastException e )
@@ -33,9 +50,15 @@ public class AktieTableViewer<T> extends TableViewer
 
     }
 
-    public void setSorter ( AktieTableViewerSorter<T> sorter )
+    public void setSorter ( AktieTableViewerSorter<L, E> sorter )
     {
         super.setSorter ( sorter );
+    }
+
+    @Override
+    public IStructuredSelection getSelection()
+    {
+        return ( IStructuredSelection ) super.getSelection();
     }
 
 }

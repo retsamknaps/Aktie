@@ -4,12 +4,18 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-import org.eclipse.jface.viewers.IStructuredContentProvider;
+//import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableContentProvider;
+import aktie.index.CObjList;
 
-public class CObjContentProvider implements IStructuredContentProvider
+/**
+    Extend AktieTableContentProvider<CObjList, CObjListGetter> for the sake of compatibility
+    with AktieTable<CObjList, CObjListGetter>.
+*/
+public class CObjContentProvider extends AktieTableContentProvider<CObjList, CObjListGetter>
 {
 
     private List<CObjElement> rowList;
@@ -64,9 +70,9 @@ public class CObjContentProvider implements IStructuredContentProvider
     }
 
     @Override
-    public Object[] getElements ( Object a )
+    public CObjListGetter[] getElements ( Object a )
     {
-        return rowList.toArray();
+        return rowList.toArray ( new CObjListGetter[rowList.size()] );
     }
 
 }

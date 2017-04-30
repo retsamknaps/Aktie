@@ -1,48 +1,34 @@
 package aktie.gui.pm;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
-
-import swing2swt.layout.BorderLayout;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Table;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
+import swing2swt.layout.BorderLayout;
+
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.TreeViewerColumn;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Tree;
 
 import aktie.data.CObj;
-import aktie.gui.CObjListArrayElement;
-import aktie.gui.CObjListContentProvider;
-import aktie.gui.CObjListDateColumnLabelProvider;
-import aktie.gui.CObjListPrivDispNameColumnLabelProvider;
-import aktie.gui.CObjListPrivateColumnLabelProvider;
 import aktie.gui.IdentitySelectedInterface;
-import aktie.gui.NewPostDialog;
 import aktie.gui.SWTApp;
 import aktie.gui.SelectIdentityDialog;
 import aktie.gui.subtree.SubTreeDragListener;
@@ -55,35 +41,23 @@ import aktie.gui.subtree.SubTreeModel;
 import aktie.gui.subtree.SubTreeSorter;
 import aktie.index.CObjList;
 
-import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.jface.viewers.TreeViewerColumn;
-
 public class PMTab extends Composite
 {
 
-    private Table table;
+    private PMTable table;
     private Tree tree;
     private TreeViewer treeViewer;
-    private TableViewer tableViewer;
     private StyledText styledText;
     private SWTApp app;
     private PrivateMessageDialog msgDialog;
-    private CObjListContentProvider provider;
     private SelectIdentityDialog selectDialog;
-    private SimpleDateFormat dateformat;
 
     private SubTreeModel identModel;
     private CObj currentMsgId;
 
-    private String sortPostField;
-    private boolean sortPostReverse;
-    private SortField.Type sortPostType;
-
     public PMTab ( Composite parent, int style, SWTApp a )
     {
         super ( parent, style );
-
-        dateformat = new SimpleDateFormat ( "d MMM yyyy HH:mm z" );
 
         app = a;
         setLayout ( new BorderLayout ( 0, 0 ) );
@@ -212,98 +186,7 @@ public class PMTab extends Composite
         } );
 
         SashForm sashForm_1 = new SashForm ( sashForm, SWT.VERTICAL );
-
-        tableViewer = new TableViewer ( sashForm_1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        provider = new CObjListContentProvider();
-        tableViewer.setContentProvider ( provider );
-        table = tableViewer.getTable();
-        table.setLinesVisible ( true );
-        table.setHeaderVisible ( true );
-        tableViewer.addSelectionChangedListener ( new ISelectionChangedListener()
-        {
-            @SuppressWarnings ( "rawtypes" )
-            @Override
-            public void selectionChanged ( SelectionChangedEvent s )
-            {
-                IStructuredSelection sel = ( IStructuredSelection ) s.getSelection();
-                Iterator i = sel.iterator();
-
-                if ( i.hasNext() )
-                {
-                    Object selo = i.next();
-
-                    if ( selo instanceof CObjListArrayElement )
-                    {
-                        CObjListArrayElement selm = ( CObjListArrayElement ) selo;
-                        CObj msg = selm.getCObj();
-
-                        if ( msg != null )
-                        {
-                            identModel.clearBlueMessages ( msg );
-                            treeViewer.refresh ( true );
-                            Long np = msg.getPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS );
-
-                            if ( np != null && !np.equals ( 0L ) )
-                            {
-                                msg.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 0L );
-
-                                try
-                                {
-                                    app.getNode().getIndex().index ( msg );
-                                }
-
-                                catch ( IOException e1 )
-                                {
-                                    e1.printStackTrace();
-                                }
-
-                            }
-
-                            String pfrom = msg.getString ( CObj.CREATOR );
-                            String pto = msg.getPrivate ( CObj.PRV_RECIPIENT );
-
-                            if ( pfrom != null && pto != null )
-                            {
-                                StringBuilder sb = new StringBuilder();
-                                sb.append ( "FROM: " );
-                                sb.append ( app.getIdCache().getName ( pfrom ) );
-                                sb.append ( "\n" );
-                                sb.append ( "TO:   " );
-                                sb.append ( app.getIdCache().getName ( pto ) );
-                                sb.append ( "\n" );
-                                sb.append ( "DATE: " );
-                                Long co = msg.getPrivateNumber ( CObj.CREATEDON );
-
-                                if ( co != null )
-                                {
-                                    sb.append ( dateformat.format ( new Date ( co ) ) );
-                                }
-
-                                sb.append ( "\n" );
-                                sb.append ( "SUBJ: " );
-                                sb.append ( msg.getPrivate ( CObj.SUBJECT ) );
-                                sb.append ( "\n======================================\n" );
-
-                                String bdy = msg.getPrivate ( CObj.BODY );
-
-                                if ( bdy != null )
-                                {
-                                    sb.append ( bdy );
-                                }
-
-                                String prttxt = NewPostDialog.formatDisplay ( sb.toString(), false );
-                                styledText.setText ( prttxt );
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        } );
+        table = new PMTable ( sashForm_1, this );
 
         Menu menu = new Menu ( tree );
         table.setMenu ( menu );
@@ -328,109 +211,6 @@ public class PMTab extends Composite
             }
 
         } );
-
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Sender" );
-        col0.getColumn().setWidth ( 100 );
-        col0.setLabelProvider ( new CObjListPrivDispNameColumnLabelProvider ( ) );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.NAME );
-
-                if ( ns.equals ( sortPostField ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField = ns;
-                    sortPostReverse = true;
-                    sortPostType = SortedNumericSortField.Type.STRING;
-                }
-
-                updateMessageTable();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col2 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Date" );
-        col2.getColumn().setWidth ( 100 );
-        col2.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.CREATEDON, true ) );
-        col2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivateNumber ( CObj.CREATEDON );
-
-                if ( ns.equals ( sortPostField ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField = ns;
-                    sortPostReverse = true;
-                    sortPostType = SortedNumericSortField.Type.LONG;
-                }
-
-                updateMessageTable();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col1 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Subject" );
-        col1.getColumn().setWidth ( 300 );
-        col1.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.SUBJECT ) );
-        col1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.SUBJECT );
-
-                if ( ns.equals ( sortPostField ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField = ns;
-                    sortPostReverse = true;
-                    sortPostType = SortedNumericSortField.Type.STRING;
-                }
-
-                updateMessageTable();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
 
         Composite composite = new Composite ( sashForm_1, SWT.NONE );
         composite.setLayout ( new BorderLayout ( 0, 0 ) );
@@ -547,46 +327,7 @@ public class PMTab extends Composite
 
     private void updateMessageTable()
     {
-        if ( currentMsgId != null )
-        {
-            Sort s = new Sort();
-
-            if ( sortPostField != null && sortPostType != null )
-            {
-                if ( SortedNumericSortField.Type.LONG.equals ( sortPostType ) )
-                {
-                    s.setSort ( new SortedNumericSortField ( sortPostField, sortPostType, sortPostReverse ) );
-                }
-
-                else
-                {
-                    s.setSort ( new SortField ( sortPostField, sortPostType, sortPostReverse ) );
-                }
-
-            }
-
-            else
-            {
-                s.setSort ( new SortedNumericSortField ( CObj.docPrivateNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
-            }
-
-            String pid = currentMsgId.getPrivate ( CObj.PRV_MSG_ID );
-
-            if ( pid != null )
-            {
-                CObjList oldlst = ( CObjList ) tableViewer.getInput();
-                CObjList nlst = app.getNode().getIndex().getDecodedPrvMessages ( pid, s );
-                tableViewer.setInput ( nlst );
-
-                if ( oldlst != null )
-                {
-                    oldlst.close();
-                }
-
-            }
-
-        }
-
+        table.searchAndSort();
     }
 
     public void updateMessages()
@@ -698,14 +439,19 @@ public class PMTab extends Composite
         return treeViewer;
     }
 
-    public Table getTable()
+    public SubTreeModel getIdentityModel()
     {
-        return table;
+        return identModel;
     }
 
-    public TableViewer getTableViewer()
+    public SWTApp getSWTApp()
     {
-        return tableViewer;
+        return app;
+    }
+
+    public CObj getCurrentMessage()
+    {
+        return currentMsgId;
     }
 
     public StyledText getStyledText()

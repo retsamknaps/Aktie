@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.lucene.search.Sort;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
@@ -16,48 +17,41 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import swing2swt.layout.BorderLayout;
-import org.eclipse.swt.widgets.Table;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableContentProviderTypeArrayElement;
+import aktie.gui.table.CObjListTableInputProvider;
 import aktie.index.CObjList;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class ZeroIdentityDialog extends Dialog
 {
 
     private SWTApp app;
-    private Table table;
-    private TableViewer tableViewer;
+    private ZeroIdentityTable table;
     private SetUserRankDialog usrRankDialog;
 
     /**
         Create the dialog.
         @param parentShell
     */
-    public ZeroIdentityDialog ( Shell parentShell, SetUserRankDialog ur, SWTApp a )
+    public ZeroIdentityDialog ( Shell parentShell, SetUserRankDialog ur, SWTApp app )
     {
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         usrRankDialog = ur;
-        app = a;
+        this.app = app;
     }
 
     private void updateTable()
     {
-        if ( table != null && tableViewer != null && !table.isDisposed() )
+        if ( table != null && !table.isDisposed() )
         {
-            CObjList oldcl = ( CObjList ) tableViewer.getInput();
-            CObjList nlst = app.getNode().getIndex().getZeroIdentities();
-            tableViewer.setInput ( nlst );
-
-            if ( oldcl != null )
-            {
-                oldcl.close();
-            }
-
+            table.searchAndSort();
         }
 
     }
@@ -78,15 +72,10 @@ public class ZeroIdentityDialog extends Dialog
         Composite container = ( Composite ) super.createDialogArea ( parent );
         container.setLayout ( new BorderLayout ( 0, 0 ) );
 
-        tableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER |
-                                        SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        tableViewer.setContentProvider ( new CObjListContentProvider() );
-        table = tableViewer.getTable();
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
+        table = new ZeroIdentityTable ( container, app );
         table.setLayoutData ( BorderLayout.CENTER );
 
-        Menu menu = new Menu ( table );
+        Menu menu = new Menu ( table.getTable() );
         table.setMenu ( menu );
 
         MenuItem mntmSetRank = new MenuItem ( menu, SWT.NONE );
@@ -96,7 +85,7 @@ public class ZeroIdentityDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
@@ -131,11 +120,6 @@ public class ZeroIdentityDialog extends Dialog
 
         } );
 
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Identity" );
-        col0.getColumn().setWidth ( 300 );
-        col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-
         updateTable();
 
         return container;
@@ -161,14 +145,40 @@ public class ZeroIdentityDialog extends Dialog
         return new Point ( 450, 300 );
     }
 
-    public Table getTable()
+    private class ZeroIdentityTable extends CObjListTable<CObjListArrayElement>
     {
-        return table;
+        public ZeroIdentityTable ( Composite composite, SWTApp app )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
+
+            setContentProvider ( new CObjListTableContentProviderTypeArrayElement() );
+
+            setInputProvider ( new ZeroIdentityTableInputProvider ( app ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+
+            getTableViewer().setSortColumn ( column, false );
+        }
+
     }
 
-    public TableViewer getTableViewer()
+    private class ZeroIdentityTableInputProvider extends CObjListTableInputProvider
     {
-        return tableViewer;
+        private SWTApp app;
+
+        public ZeroIdentityTableInputProvider ( SWTApp app )
+        {
+            this.app = app;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            return app.getNode().getIndex().getZeroIdentities();
+        }
+
     }
 
 }

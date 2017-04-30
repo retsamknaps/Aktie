@@ -3,13 +3,9 @@ package aktie.gui;
 import java.util.Iterator;
 
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -20,21 +16,24 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
+import aktie.gui.table.CObjListTableContentProviderTypeArrayElement;
+import aktie.gui.table.CObjListTableInputProvider;
 import aktie.index.CObjList;
 
 public class SelectIdentityDialog extends Dialog
 {
-    private Table table;
+    private SelectIdentityTable table;
     private Text searchText;
     private Button btnSearch;
-    private TableViewer tableViewer;
     private SWTApp app;
     private IdentitySelectedInterface selector;
 
@@ -102,91 +101,13 @@ public class SelectIdentityDialog extends Dialog
 
         } );
 
-        tableViewer = new TableViewer ( container, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION );
-        table = tableViewer.getTable();
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
+        table = new SelectIdentityTable ( container, app );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-
-        CObjListContentProvider cont = new CObjListContentProvider();
-        tableViewer.setContentProvider ( cont );
-
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Name" );
-        col0.getColumn().setWidth ( 150 );
-        col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                //String ns = CObj.docString ( CObj.NAME );
-                String ns = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col1 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 150 );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.DESCRIPTION ) );
-        new Label ( container, SWT.NONE );
-        col1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.DESCRIPTION );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
 
         defaultSearch();
 
         return container;
     }
-
-    private String sortPostField1;
-    private boolean sortPostReverse;
-    private SortField.Type sortPostType1;
 
     private void doSearch()
     {
@@ -196,40 +117,15 @@ public class SelectIdentityDialog extends Dialog
 
     private void doSearch ( String str )
     {
-        Sort s = new Sort();
-
-        if ( sortPostField1 != null )
-        {
-            s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
-
-        }
-
-        else
-        {
-            s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
-        }
-
-        CObjList oldl = ( CObjList ) tableViewer.getInput();
-
-        CObjList l = app.getNode().getIndex().searchIdenties ( str, s );
-
-        if ( tableViewer != null )
-        {
-            tableViewer.setInput ( l );
-        }
-
-        if ( oldl != null )
-        {
-            oldl.close();
-        }
-
+        table.setSearchString ( str );
+        table.searchAndSort();
     }
 
     private void defaultSearch()
     {
         if ( app != null )
         {
-            if ( tableViewer != null && !table.isDisposed() )
+            if ( table != null && !table.isDisposed() )
             {
                 doSearch ( "" );
             }
@@ -262,7 +158,7 @@ public class SelectIdentityDialog extends Dialog
     @Override
     protected void okPressed()
     {
-        IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+        IStructuredSelection sel = table.getTableViewer().getSelection();
         @SuppressWarnings ( "rawtypes" )
         Iterator i = sel.iterator();
 
@@ -290,13 +186,9 @@ public class SelectIdentityDialog extends Dialog
 
     public void closeCObjList()
     {
-        CObjList lst = ( CObjList ) tableViewer.getInput();
-
-        if ( lst != null )
-        {
-            tableViewer.setInput ( null );
-            lst.close();
-        }
+        // Table viewer will close the currently open list,
+        // when we set a 'new' one.
+        table.getTableViewer().setInput ( null );
 
     }
 
@@ -319,14 +211,60 @@ public class SelectIdentityDialog extends Dialog
         return btnSearch;
     }
 
-    public Table getTable()
+    private class SelectIdentityTable extends CObjListTable<CObjListArrayElement>
     {
-        return table;
+        public SelectIdentityTable ( Composite composite, SWTApp app )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION );
+
+            setContentProvider ( new CObjListTableContentProviderTypeArrayElement() );
+
+            setInputProvider ( new SelectIdentityTableInputProvider ( app ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            // FIXME: How to sort by lucene?
+            column = addColumn ( "Name", 150, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            getTableViewer().setSortColumn ( column, false );
+            addColumn ( "Description", 150, new CObjListTableCellLabelProviderTypeString ( CObj.DESCRIPTION, false, null ) );
+            // FIXME: Seems to be empty.
+            //addColumn ( "Date Created", 150, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
+        }
+
+        @Override
+        public SelectIdentityTableInputProvider getInputProvider()
+        {
+            return ( SelectIdentityTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSearchString ( String s )
+        {
+            getInputProvider().setSearchString ( s );
+        }
+
     }
 
-    public TableViewer getTableViewer()
+    private class SelectIdentityTableInputProvider extends CObjListTableInputProvider
     {
-        return tableViewer;
+        private SWTApp app;
+        private String searchString = "";
+
+        public SelectIdentityTableInputProvider ( SWTApp app )
+        {
+            this.app = app;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            return app.getNode().getIndex().searchIdentities ( searchString, sort );
+        }
+
+        public void setSearchString ( String s )
+        {
+            searchString = s;
+        }
+
     }
 
 }

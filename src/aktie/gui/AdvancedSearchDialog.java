@@ -32,12 +32,14 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Text;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTable;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeAdvSearchFieldDescription;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
 {
@@ -46,17 +48,14 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     private CDateTime earliest;
     private CDateTime latest;
     private Text searchText;
-    private Table table;
+    private AdvancedSearchTable table;
     private ComboViewer comboViewer;
     private SWTApp app;
     private CObj community;
     private CObj identity;
     private AddFieldDialog addFieldDialog;
     private Shell shell;
-    private TableViewer fieldTableViewer;
     private CObjContentProvider fieldProvider;
-    private NewPostFieldEditorSupport fieldEditor;
-    private AdvSearchMaxEditorSupport fieldMaxEditor;
     private CObjListContentProvider queryProvider;
     private Button btnAutodownload;
     private CObj lastQuery;
@@ -108,7 +107,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
             }
 
             dlst.close();
-            fieldTableViewer.setInput ( lf );
+            table.getTableViewer().setInput ( lf );
         }
 
     }
@@ -487,7 +486,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) fieldTableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
@@ -500,7 +499,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                     {
                         CObjElement em = ( CObjElement ) selo;
                         fieldProvider.removeElement ( em );
-                        fieldTableViewer.setInput ( em );
+                        table.getTableViewer().setInput ( em );
                     }
 
                 }
@@ -526,42 +525,10 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
         maxFileSize = new Text ( composite_5, SWT.BORDER );
         maxFileSize.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
 
-
         fieldProvider = new CObjContentProvider();
-        fieldTableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
-        fieldTableViewer.setContentProvider ( fieldProvider );
-        table = fieldTableViewer.getTable();
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
+
+        table = new AdvancedSearchTable ( container, app, fieldProvider );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-
-        TableViewerColumn col0 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Field" );
-        col0.getColumn().setWidth ( 100 );
-        col0.getColumn().setMoveable ( false );
-        col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_NAME ) );
-
-        TableViewerColumn col1 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 450 );
-        col1.getColumn().setMoveable ( false );
-        col1.setLabelProvider ( new AdvSearchFieldDescriptionLabelProvider() );
-
-        TableViewerColumn col2 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Value/Minimum" );
-        col2.getColumn().setWidth ( 100 );
-        col2.getColumn().setMoveable ( false );
-        col2.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_VAL ) );
-        fieldEditor = new NewPostFieldEditorSupport ( fieldTableViewer );
-        col2.setEditingSupport ( fieldEditor );
-
-        TableViewerColumn col3 = new TableViewerColumn ( fieldTableViewer, SWT.NONE );
-        col3.getColumn().setText ( "Maximum" );
-        col3.getColumn().setWidth ( 100 );
-        col3.getColumn().setMoveable ( false );
-        col3.setLabelProvider ( new CObjListPrivateColumnLabelProvider ( CObj.FLD_MAX ) );
-        fieldMaxEditor = new AdvSearchMaxEditorSupport ( fieldTableViewer );
-        col3.setEditingSupport ( fieldMaxEditor );
 
         setCommunity ( community );
 
@@ -775,8 +742,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                         lt = ct;
                     }
 
-                    fieldTableViewer.setInput ( lt );
-
+                    table.getTableViewer().setInput ( lt );
                 }
 
             }
@@ -1122,7 +1088,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     @Override
     public TableViewer getTableViewer()
     {
-        return fieldTableViewer;
+        return table.getTableViewer();
     }
 
     public Button getBtnEarliest()
@@ -1158,6 +1124,41 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     public Text getDaysNew()
     {
         return daysNew;
+    }
+
+    /**
+        Since the advanced search table is editable, we use the standard AktieTable instead of CObjListTable
+        which does not a Lucene search upon each update of the table content.
+        Otherwise, the editing in the table would be lost upon update of the table.
+        However, to our best, we make use of CObjListTable related classes.
+
+    */
+    private class AdvancedSearchTable extends AktieTable<CObjList, CObjListGetter>
+    {
+        public AdvancedSearchTable ( Composite composite, SWTApp app, CObjContentProvider fieldProvider  )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
+
+            setContentProvider ( fieldProvider );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Field", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_NAME, false, null ) );
+            column.setMoveable ( false );
+            getTableViewer().setSortColumn ( column, false );
+
+            column = addColumn ( "Description", 450, new CObjListTableCellLabelProviderTypeAdvSearchFieldDescription() );
+            column.setMoveable ( false );
+
+            column = addColumn ( "Value/Minimum", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_VAL, true, null ) );
+            column.setMoveable ( false );
+            column.setEditingSupport ( new NewPostFieldEditorSupport ( getTableViewer() ) );
+
+            column = addColumn ( "Maximum", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_MAX, true, null ) );
+            column.setMoveable ( false );
+            column.setEditingSupport (  new AdvSearchMaxEditorSupport ( getTableViewer() ) );
+        }
+
     }
 
 }

@@ -1,25 +1,20 @@
-package aktie.gui;
+package aktie.gui.table;
 
-import org.eclipse.jface.viewers.StyledCellLabelProvider;
-import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
+import org.apache.lucene.search.SortField;
 
 import aktie.data.CObj;
 
-public class AdvSearchFieldDescriptionLabelProvider extends  StyledCellLabelProvider
+public class CObjListTableCellLabelProviderTypeAdvSearchFieldDescription extends CObjListTableCellLabelProvider
 {
 
-    public AdvSearchFieldDescriptionLabelProvider ( )
+    public CObjListTableCellLabelProviderTypeAdvSearchFieldDescription()
     {
+        super ( "", false, SortField.Type.STRING, "" );
     }
 
     @Override
-    public void update ( ViewerCell cell )
+    public String getFormattedAttribute ( CObj co )
     {
-        CObjListGetter o = ( CObjListGetter ) cell.getElement();
-        CObj co = o.getCObj();
-
         if ( co != null )
         {
             StringBuilder sb = new StringBuilder();
@@ -80,29 +75,10 @@ public class AdvSearchFieldDescriptionLabelProvider extends  StyledCellLabelProv
 
             }
 
-            String r = sb.toString();
-
-            cell.setText ( r );
-
-            Long nv = co.getPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS );
-
-            if ( nv != null && 1L == nv )
-            {
-                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_BLUE ) );
-            }
-
-            else
-            {
-                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_WIDGET_FOREGROUND ) );
-            }
-
+            return sb.toString();
         }
 
-        else
-        {
-            cell.setText ( "" );
-        }
-
+        return "";
     }
 
 }

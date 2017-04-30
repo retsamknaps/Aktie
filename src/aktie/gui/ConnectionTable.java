@@ -3,7 +3,6 @@ package aktie.gui;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -12,39 +11,43 @@ import aktie.gui.SWTApp.ConnectionCallback;
 import aktie.gui.table.AktieTable;
 import aktie.gui.table.AktieTableCellLabelProvider;
 import aktie.gui.table.AktieTableContentProvider;
+import aktie.gui.table.AktieTableViewerColumn;
 import aktie.net.ConnectionElement;
 
-public class ConnectionTable extends AktieTable<ConnectionElement>
+public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionElement>
 {
 
     private SWTApp app;
 
-    public ConnectionTable ( Composite composite, SWTApp a )
+    public ConnectionTable ( Composite composite, SWTApp app )
     {
         super ( composite, SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        this.app = a;
+        this.app = app;
 
-        this.setContentProvider ( new ConnectionContentProvider() );
+        setContentProvider ( new ConnectionContentProvider() );
 
-        this.addColumn ( "Local", 200, new ConnectionColumnLocalDest() );
-        this.addColumn ( "Remote", 200, new ConnectionColumnRemoteDest() );
-        this.addColumn ( "Upload (B)", 100, new ConnectionColumnUpload() );
-        this.addColumn ( "Download (B)", 100, new ConnectionColumnDownload() );
-        this.addColumn ( "Time (s)", 90, new ConnectionColumnTime() );
-        this.addColumn ( "Last sent", 100, new ConnectionColumnLastSent() );
-        this.addColumn ( "Last read", 100, new ConnectionColumnLastRead() );
-        this.addColumn ( "Pending", 100, new ConnectionColumnPending() );
-        this.addColumn ( "Mode", 100, new ConnectionColumnMode() );
-        this.addColumn ( "Down file", 200, SWT.RIGHT, new ConnectionColumnFileDown() );
-        this.addColumn ( "Up file", 200, SWT.RIGHT, new ConnectionColumnFileUp() );
+        AktieTableViewerColumn<ConnectionCallback, ConnectionElement> sortColumn;
 
-        final TableViewer conViewer = this.getTableViewer();
-        conViewer.addSelectionChangedListener ( new ISelectionChangedListener()
+        sortColumn = addColumn ( "Local", 200, new ConnectionColumnLocalDest() );
+        addColumn ( "Remote", 200, new ConnectionColumnRemoteDest() );
+        addColumn ( "Upload (B)", 100, new ConnectionColumnUpload() );
+        addColumn ( "Download (B)", 100, new ConnectionColumnDownload() );
+        addColumn ( "Time (s)", 90, new ConnectionColumnTime() );
+        addColumn ( "Last sent", 100, new ConnectionColumnLastSent() );
+        addColumn ( "Last read", 100, new ConnectionColumnLastRead() );
+        addColumn ( "Pending", 100, new ConnectionColumnPending() );
+        addColumn ( "Mode", 100, new ConnectionColumnMode() );
+        addColumn ( "Down file", 200, SWT.RIGHT, new ConnectionColumnFileDown() );
+        addColumn ( "Up file", 200, SWT.RIGHT, new ConnectionColumnFileUp() );
+
+        getTableViewer().setSortColumn ( sortColumn, false );
+
+        getTableViewer().addSelectionChangedListener ( new ISelectionChangedListener()
         {
             @Override
             public void selectionChanged ( SelectionChangedEvent event )
             {
-                IStructuredSelection selection = conViewer.getStructuredSelection();
+                IStructuredSelection selection = ConnectionTable.this.getTableViewer().getStructuredSelection();
                 Object firstElement = selection.getFirstElement();
 
                 if ( firstElement != null )
@@ -53,7 +56,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
                     if ( ct.fulllocalid != null && ct.fullremoteid != null )
                     {
-                        app.getConnectionDialog().open ( ct.fulllocalid, ct.fullremoteid );
+                        ConnectionTable.this.app.getConnectionDialog().open ( ct.fulllocalid, ct.fullremoteid );
                     }
 
                 }
@@ -65,7 +68,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
     }
 
 
-    class ConnectionColumnFileUp extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnFileUp extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -116,7 +119,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnFileDown extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnFileDown extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -167,7 +170,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnRemoteDest extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnRemoteDest extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -218,7 +221,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnLocalDest extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnLocalDest extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -269,7 +272,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnLastSent extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnLastSent extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -319,7 +322,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnLastRead extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnLastRead extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -369,7 +372,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnMode extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnMode extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -419,7 +422,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnPending extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnPending extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -469,7 +472,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnDownload extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnDownload extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -519,7 +522,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnTime extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnTime extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -569,7 +572,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionColumnUpload extends AktieTableCellLabelProvider<ConnectionElement>
+    private class ConnectionColumnUpload extends AktieTableCellLabelProvider<ConnectionElement>
     {
         @Override
         public void update ( ViewerCell cell )
@@ -619,7 +622,7 @@ public class ConnectionTable extends AktieTable<ConnectionElement>
 
     }
 
-    class ConnectionContentProvider extends AktieTableContentProvider<ConnectionElement>
+    private class ConnectionContentProvider extends AktieTableContentProvider<ConnectionCallback, ConnectionElement>
     {
         @Override
         public ConnectionElement[] getElements ( Object a )

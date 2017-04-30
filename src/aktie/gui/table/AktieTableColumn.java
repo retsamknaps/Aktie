@@ -2,13 +2,13 @@ package aktie.gui.table;
 
 import org.eclipse.swt.widgets.TableColumn;
 
-public class AktieTableColumn<T>
+public class AktieTableColumn<L, E>
 {
 
     // This class may not be subclassed, so it has to be wrapped
     private TableColumn tableColumn;
 
-    public AktieTableColumn ( AktieTable<T> parent, int style )
+    public AktieTableColumn ( AktieTable<L, E> parent, int style )
     {
         this.tableColumn = new TableColumn ( parent.getTable(), style );
     }
@@ -18,14 +18,10 @@ public class AktieTableColumn<T>
         return this.tableColumn;
     }
 
-    protected void addSelectionListener ( AktieTableColumnSelectionListener<T> s )
+    protected void addSelectionListener ( AktieTableColumnSelectionListener<L, E> s )
     {
         this.tableColumn.addSelectionListener ( s );
     }
-
-    /*  public String getText() {
-        return this.tableColumn.getText();
-        }*/
 
     public void setAlignment ( int alignment )
     {

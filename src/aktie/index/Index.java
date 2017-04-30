@@ -876,7 +876,7 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList searchIdenties ( String squery, Sort s )
+    public CObjList searchIdentities ( String squery, Sort s )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery idq = new BooleanQuery();

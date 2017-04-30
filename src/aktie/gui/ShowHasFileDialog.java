@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.lucene.search.Sort;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -19,22 +20,23 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Table;
 
 import aktie.data.CObj;
 import aktie.gui.pm.PrivateMessageDialog;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableContentProviderTypeIdentityElement;
+import aktie.gui.table.CObjListTableInputProvider;
 import aktie.index.CObjList;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class ShowHasFileDialog extends Dialog
 {
 
     private SWTApp app;
-    private TableViewer tableViewer;
-    private Table table;
+    private ShowHasFileTable table;
     private CObj fileo;
     private Label lblNodesHaveFile;
     private SetUserRankDialog usrRankDialog;
@@ -44,13 +46,13 @@ public class ShowHasFileDialog extends Dialog
         Create the dialog.
         @param parentShell
     */
-    public ShowHasFileDialog ( Shell parentShell, SetUserRankDialog d, SWTApp g )
+    public ShowHasFileDialog ( Shell parentShell, SetUserRankDialog d, SWTApp app )
     {
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
         usrRankDialog = d;
-        app = g;
-        prvMessageDialog = new PrivateMessageDialog ( app.shell, app );
+        this.app = app;
+        prvMessageDialog = new PrivateMessageDialog ( app );
     }
 
     /**
@@ -67,15 +69,10 @@ public class ShowHasFileDialog extends Dialog
         lblNodesHaveFile.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         lblNodesHaveFile.setText ( "Nodes have file: <file>" );
 
-        tableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
-        tableViewer.setContentProvider ( new CObjListIdentPubContentProvider (
-                                             app.getNode().getIndex(), CObj.CREATOR ) );
-        table = tableViewer.getTable();
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
+        table = new ShowHasFileTable ( container, app, lblNodesHaveFile );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
 
-        Menu menu = new Menu ( table );
+        Menu menu = new Menu ( table.getTable() );
         table.setMenu ( menu );
 
         MenuItem mntmSetRank = new MenuItem ( menu, SWT.NONE );
@@ -85,7 +82,7 @@ public class ShowHasFileDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
@@ -96,11 +93,10 @@ public class ShowHasFileDialog extends Dialog
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof CObjListIdentPubElement )
+                    if ( selo instanceof CObjListIdentityElement )
                     {
-                        CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
-                        CObj fr = ae.getCObj();
-                        users.add ( fr );
+                        CObjListIdentityElement element = ( CObjListIdentityElement ) selo;
+                        users.add ( element.getCObj() );
                     }
 
                 }
@@ -126,7 +122,7 @@ public class ShowHasFileDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
 
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
@@ -135,21 +131,20 @@ public class ShowHasFileDialog extends Dialog
                 {
                     Object selo = i.next();
 
-                    if ( selo instanceof CObjListIdentPubElement )
+                    if ( selo instanceof CObjListIdentityElement )
                     {
-                        CObjListIdentPubElement ae = ( CObjListIdentPubElement ) selo;
-                        CObj fr = ae.getCObj();
+                        CObjListIdentityElement element = ( CObjListIdentityElement ) selo;
+                        CObj fr = element.getCObj();
 
                         if ( app.getSelectedIdentity() == null )
                         {
-                            MessageDialog.openWarning ( app.shell,
+                            MessageDialog.openWarning ( app.getShell(),
                                                         "Select an identity.", "Sorry, select an identity in the Communities tab" );
                         }
 
                         else if ( fr != null )
                         {
-                            prvMessageDialog.open ( app.getSelectedIdentity().getId(),
-                                                    fr.getId() );
+                            prvMessageDialog.open ( app.getSelectedIdentity().getId(), fr.getId() );
                         }
 
                     }
@@ -166,24 +161,6 @@ public class ShowHasFileDialog extends Dialog
 
         } );
 
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Identity" );
-        col0.getColumn().setWidth ( 300 );
-        col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
         doHasFileSearch ( fileo );
 
         return container;
@@ -191,51 +168,19 @@ public class ShowHasFileDialog extends Dialog
 
     public void open ( CObj f )
     {
-        if ( doHasFileSearch ( f ) )
+        doHasFileSearch ( f );
+
+        if ( table.getTableViewer().getInput() != null )
         {
             super.open();
         }
 
     }
 
-    private boolean doHasFileSearch ( CObj f )
+    private void doHasFileSearch ( CObj f )
     {
-        fileo = f;
-
-        boolean showsf = false;
-
-        if ( fileo != null )
-        {
-            String hdig = fileo.getString ( CObj.FILEDIGEST );
-            String fdig = fileo.getString ( CObj.FRAGDIGEST );
-            String comid = fileo.getString ( CObj.COMMUNITYID );
-
-            showsf = ( hdig != null && fdig != null && comid != null );
-
-            if ( !table.isDisposed() && !lblNodesHaveFile.isDisposed() && showsf )
-            {
-                String fname = fileo.getString ( CObj.NAME );
-                lblNodesHaveFile.setText ( "Nodes have file: " + fname );
-
-                CObjList ol = ( CObjList ) tableViewer.getInput();
-
-
-                CObjList hlist =
-                    app.getNode().getIndex().getHasFiles ( comid, hdig, fdig );
-                tableViewer.setInput ( hlist );
-
-                if ( ol != null )
-                {
-                    ol.close();
-                }
-
-            }
-
-        }
-
-
-        return showsf;
-
+        table.setHasFile ( f );
+        table.searchAndSort();
     }
 
     /**
@@ -256,6 +201,83 @@ public class ShowHasFileDialog extends Dialog
     protected Point getInitialSize()
     {
         return new Point ( 450, 300 );
+    }
+
+    private class ShowHasFileTable extends CObjListTable<CObjListIdentityElement>
+    {
+        public ShowHasFileTable ( Composite composite, SWTApp app, Label lblNodesHaveFile )
+        {
+            super ( composite,  SWT.BORDER | SWT.FULL_SELECTION );
+
+            setContentProvider ( new CObjListTableContentProviderTypeIdentityElement ( app.getNode().getIndex(), CObj.CREATOR, false ) );
+
+            setInputProvider ( new ShowHasFileTableInputProvider ( app, lblNodesHaveFile ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
+            getTableViewer().setSortColumn ( column, false );
+            /// Seems to be empty
+            //addColumn ( "Date Created", 150, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
+        }
+
+        @Override
+        public ShowHasFileTableInputProvider getInputProvider()
+        {
+            return ( ShowHasFileTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setHasFile ( CObj co )
+        {
+            getInputProvider().setHasFile ( co );
+        }
+
+    }
+
+    private class ShowHasFileTableInputProvider extends CObjListTableInputProvider
+    {
+        private SWTApp app;
+        private Label lblNodesHaveFile;
+        private CObj hasFile = null;
+
+        public ShowHasFileTableInputProvider ( SWTApp app, Label lblNodesHaveFile  )
+        {
+            this.app = app;
+            this.lblNodesHaveFile = lblNodesHaveFile;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            if ( hasFile != null )
+            {
+                String fileDigest = hasFile.getString ( CObj.FILEDIGEST );
+                String fragDigest = hasFile.getString ( CObj.FRAGDIGEST );
+                String communityID = hasFile.getString ( CObj.COMMUNITYID );
+
+                if ( fileDigest != null && fragDigest != null && communityID != null )
+                {
+
+                    String fname = hasFile.getString ( CObj.NAME );
+
+                    if ( !lblNodesHaveFile.isDisposed() )
+                    {
+                        lblNodesHaveFile.setText ( "Identities have file: " + fname );
+                    }
+
+                    return app.getNode().getIndex().getHasFiles ( communityID, fileDigest, fragDigest );
+                }
+
+            }
+
+            return null;
+        }
+
+        public void setHasFile ( CObj co )
+        {
+            hasFile = co;
+        }
+
     }
 
 }

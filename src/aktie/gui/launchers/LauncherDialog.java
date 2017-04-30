@@ -1,6 +1,7 @@
 package aktie.gui.launchers;
 
 import java.util.Iterator;
+//import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -15,14 +16,14 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Table;
+//import org.eclipse.swt.widgets.Table;
 
 import aktie.data.Launcher;
 import aktie.gui.SWTApp;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+//import org.eclipse.jface.viewers.TableViewer;
+//import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
@@ -31,10 +32,8 @@ import org.eclipse.swt.layout.GridData;
 
 public class LauncherDialog extends Dialog
 {
-    private TableViewer tableViewer;
-    private Table table;
+    private LauncherTable table;
     private LauncherContentModel model;
-    private LauncherContentProvider labelProvider;
     private SWTApp app;
     private Shell shell;
     private Text extensions;
@@ -118,8 +117,8 @@ public class LauncherDialog extends Dialog
             public void widgetSelected ( SelectionEvent e )
             {
                 model.addLauncher ( program.getText(), extensions.getText() );
-                tableViewer.setInput ( model.getLaunchers() );
-                tableViewer.refresh();
+                table.getTableViewer().setInput ( model.getLaunchers() );
+                table.getTableViewer().refresh();
             }
 
             @Override
@@ -130,16 +129,12 @@ public class LauncherDialog extends Dialog
 
         } );
 
-        tableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI );
-        table = tableViewer.getTable();
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
+        table = new LauncherTable ( container, app );
         table.setLayoutData ( BorderLayout.CENTER );
-        model = new LauncherContentModel ( app.getNode().getSession() );
-        labelProvider = new LauncherContentProvider();
-        tableViewer.setContentProvider ( labelProvider );
 
-        Menu menu_2 = new Menu ( table );
+        model = new LauncherContentModel ( app.getNode().getSession() );
+
+        Menu menu_2 = new Menu ( table.getTable() );
         table.setMenu ( menu_2 );
 
         MenuItem remove = new MenuItem ( menu_2, SWT.NONE );
@@ -149,7 +144,7 @@ public class LauncherDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+                IStructuredSelection sel = table.getTableViewer().getSelection();
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
 
@@ -159,8 +154,8 @@ public class LauncherDialog extends Dialog
                     model.removeLauncher ( l.getExtension() );
                 }
 
-                tableViewer.setInput ( model.getLaunchers() );
-                tableViewer.refresh();
+                table.getTableViewer().setInput ( model.getLaunchers() );
+                table.getTableViewer().refresh();
 
             }
 
@@ -171,21 +166,7 @@ public class LauncherDialog extends Dialog
 
         } );
 
-
-
-        TableViewerColumn dlcol1 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        dlcol1.getColumn().setText ( "Extension" );
-        dlcol1.getColumn().setWidth ( 100 );
-        dlcol1.getColumn().setAlignment ( SWT.RIGHT );
-        dlcol1.setLabelProvider ( new ExtensionColumnLabelProvider() );
-
-        TableViewerColumn dlcol0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        dlcol0.getColumn().setText ( "Launcher" );
-        dlcol0.getColumn().setWidth ( 300 );
-        dlcol0.getColumn().setAlignment ( SWT.RIGHT );
-        dlcol0.setLabelProvider ( new ProgramColumnLabelProvider() );
-
-        tableViewer.setInput ( model.getLaunchers() );
+        table.getTableViewer().setInput ( model.getLaunchers() );
 
         return container;
     }

@@ -3,7 +3,7 @@ package aktie.gui;
 import java.util.Iterator;
 
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
+//import org.apache.lucene.search.SortField;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.events.SelectionEvent;
@@ -22,28 +22,33 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Table;
+//import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
+//import org.eclipse.jface.viewers.TableViewer;
+//import org.eclipse.jface.viewers.TableViewerColumn;
 
 import aktie.data.CObj;
 import aktie.gui.pm.PrivateMessageDialog;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeDisplayName;
+import aktie.gui.table.CObjListTableInputProvider;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
+import aktie.gui.table.CObjListTableContentProviderTypeArrayElement;
 import aktie.index.CObjList;
 
-public class ShowPrivComDialog extends Dialog
+public class ShowPrivateCommunityDialog extends Dialog
 {
     private Text searchTxt;
-    private Table communityTable;
+    private ShowPrivComTable table;
     private SWTApp app;
-    private TableViewer communityTableViewer;
     private PrivateMessageDialog msgDialog;
 
     /**
         Create the dialog.
         @param parentShell
     */
-    public ShowPrivComDialog ( Shell parentShell, SWTApp a )
+    public ShowPrivateCommunityDialog ( Shell parentShell, SWTApp a )
     {
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );
@@ -113,16 +118,13 @@ public class ShowPrivComDialog extends Dialog
 
         } );
 
-        communityTableViewer = new TableViewer ( container, SWT.BORDER | SWT.FULL_SELECTION );
-        communityTable = communityTableViewer.getTable();
-        communityTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        communityTable.setHeaderVisible ( true );
-        communityTable.setLinesVisible ( true );
-        new Label ( container, SWT.NONE );
-        communityTableViewer.setContentProvider ( new CObjListContentProvider() );
+        table = new ShowPrivComTable ( container, app );
+        table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
 
-        Menu menu_5 = new Menu ( communityTable );
-        communityTable.setMenu ( menu_5 );
+        new Label ( container, SWT.NONE );
+
+        Menu menu_5 = new Menu ( table.getTable() );
+        table.setMenu ( menu_5 );
 
         MenuItem newmsg = new MenuItem ( menu_5, SWT.NONE );
         newmsg.setText ( "Send Message" );
@@ -137,7 +139,7 @@ public class ShowPrivComDialog extends Dialog
 
                     if ( selid != null )
                     {
-                        IStructuredSelection sel = ( IStructuredSelection ) communityTableViewer.getSelection();
+                        IStructuredSelection sel = table.getTableViewer().getSelection();
                         @SuppressWarnings ( "rawtypes" )
                         Iterator i = sel.iterator();
 
@@ -172,76 +174,6 @@ public class ShowPrivComDialog extends Dialog
 
         } );
 
-
-        TableViewerColumn col0 = new TableViewerColumn ( communityTableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Community" );
-        col0.getColumn().setWidth ( 150 );
-        col0.setLabelProvider ( new CObjListDisplayNameColumnLabelProvider() );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col1 = new TableViewerColumn ( communityTableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Creator" );
-        col1.getColumn().setWidth ( 150 );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.CREATOR_NAME ) );
-        col1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.CREATOR_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                }
-
-                doSearch();
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
         fillData();
 
         return container;
@@ -253,10 +185,6 @@ public class ShowPrivComDialog extends Dialog
         return super.open();
     }
 
-    private String sortPostField1;
-    private boolean sortPostReverse;
-    private SortField.Type sortPostType1;
-
     private void doSearch ()
     {
         String str = searchTxt.getText();
@@ -265,34 +193,13 @@ public class ShowPrivComDialog extends Dialog
 
     private void doSearch ( String str )
     {
-        CObjList clst = ( CObjList ) communityTableViewer.getInput();
-        Sort s = new Sort();
-
-        if ( sortPostField1 != null )
-        {
-            SortField sf = new SortField ( sortPostField1, sortPostType1, sortPostReverse );
-            s.setSort ( sf );
-        }
-
-        else
-        {
-            SortField sf = new SortField ( CObj.docPrivate ( CObj.PRV_DISPLAY_NAME ), SortField.Type.STRING, false );
-            s.setSort ( sf );
-        }
-
-        CObjList nlst = app.getNode().getIndex().searchSemiPrivateCommunities ( str, s );
-        communityTableViewer.setInput ( nlst );
-
-        if ( clst != null )
-        {
-            clst.close();
-        }
-
+        table.setSearchString ( str );
+        table.searchAndSort();
     }
 
     public void fillData()
     {
-        if ( communityTableViewer != null && communityTable != null && !communityTable.isDisposed() )
+        if ( table != null && !table.isDisposed() )
         {
             doSearch ( null );
         }
@@ -326,14 +233,59 @@ public class ShowPrivComDialog extends Dialog
         return searchTxt;
     }
 
-    public Table getCommunityTable()
+    private class ShowPrivComTable extends CObjListTable<CObjListArrayElement>
     {
-        return communityTable;
+        public ShowPrivComTable ( Composite composite, SWTApp app )
+        {
+            super ( composite, SWT.BORDER | SWT.FULL_SELECTION );
+
+            setContentProvider ( new CObjListTableContentProviderTypeArrayElement() );
+
+            setInputProvider ( new ShowPrivComTableInputProvider ( app ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Community", 150, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            getTableViewer().setSortColumn ( column, false );
+
+            addColumn ( "Creator", 150, new CObjListTableCellLabelProviderTypeString ( CObj.CREATOR_NAME, false, null ) );
+        }
+
+        @Override
+        public ShowPrivComTableInputProvider getInputProvider()
+        {
+            return ( ShowPrivComTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSearchString ( String s )
+        {
+            getInputProvider().setSearchString ( s );
+        }
+
     }
 
-    public TableViewer getCommunityTableViewer()
+    private class ShowPrivComTableInputProvider extends CObjListTableInputProvider
     {
-        return communityTableViewer;
+        private SWTApp app;
+
+        private String searchString = "";
+
+        public ShowPrivComTableInputProvider ( SWTApp app )
+        {
+            this.app = app;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            return app.getNode().getIndex().searchSemiPrivateCommunities ( searchString, sort );
+        }
+
+        public void setSearchString ( String s )
+        {
+            searchString = s;
+        }
+
     }
 
 }

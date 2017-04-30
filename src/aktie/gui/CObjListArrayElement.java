@@ -19,6 +19,7 @@ public class CObjListArrayElement implements CObjListGetter
         list = l;
     }
 
+    @Override
     public CObj getCObj()
     {
         CObj r = null;
@@ -46,6 +47,7 @@ public class CObjListArrayElement implements CObjListGetter
         return r;
     }
 
+    @Override
     public boolean equals ( Object o )
     {
         if ( o instanceof CObjListArrayElement )
@@ -63,6 +65,7 @@ public class CObjListArrayElement implements CObjListGetter
         return false;
     }
 
+    @Override
     public int hashCode()
     {
         CObj co = getCObj();

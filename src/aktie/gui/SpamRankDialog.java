@@ -12,7 +12,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.layout.GridData;
 
-public class AktiSpamRankDialog extends Dialog
+public class SpamRankDialog extends Dialog
 {
     private Text newRank;
     private Text text_1;
@@ -21,7 +21,7 @@ public class AktiSpamRankDialog extends Dialog
         Create the dialog.
         @param parentShell
     */
-    public AktiSpamRankDialog ( Shell parentShell )
+    public SpamRankDialog ( Shell parentShell )
     {
         super ( parentShell );
         setShellStyle ( getShellStyle() | SWT.RESIZE );

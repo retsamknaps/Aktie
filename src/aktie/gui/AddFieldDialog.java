@@ -2,6 +2,7 @@ package aktie.gui;
 
 import java.util.Iterator;
 
+import org.apache.lucene.search.Sort;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.graphics.Point;
@@ -16,25 +17,27 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import aktie.data.CObj;
+import aktie.gui.table.AktieTableViewerColumn;
+import aktie.gui.table.CObjListTable;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeAdvSearchFieldDescription;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeIdentityName;
+import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
+import aktie.gui.table.CObjListTableContentProviderTypeArrayElement;
+import aktie.gui.table.CObjListTableInputProvider;
 import aktie.index.CObjList;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TableViewerColumn;
 
 public class AddFieldDialog extends Dialog
 {
     private Text text;
 
-    //private NewPostDialog postDialog;
     private AddFieldInterface fieldAdder;
-    private Table table;
-    private TableViewer tableViewer;
+    private AddFieldTable table;
 
     /**
         Create the dialog.
@@ -49,23 +52,10 @@ public class AddFieldDialog extends Dialog
 
     private void doSearch()
     {
-        if ( text != null && tableViewer != null &&
-                fieldAdder.getCommunity() != null &&
-                !text.isDisposed() && !tableViewer.getTable().isDisposed() )
+        if ( text != null && !text.isDisposed() && table != null && !table.isDisposed() )
         {
-            Object inp = tableViewer.getInput();
-
-            String ss = text.getText();
-            CObjList sl = fieldAdder.getIndex().searchFields (
-                              fieldAdder.getCommunity().getDig(), ss, null );
-            tableViewer.setInput ( sl );
-
-            if ( inp != null && inp instanceof CObjList )
-            {
-                CObjList ls = ( CObjList ) inp;
-                ls.close();
-            }
-
+            table.setSearchString ( text.getText() );
+            table.searchAndSort();
         }
 
     }
@@ -119,31 +109,8 @@ public class AddFieldDialog extends Dialog
 
         btnNewButton.setText ( "Search" );
 
-        tableViewer = new TableViewer ( container, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION );
-        tableViewer.setContentProvider ( new CObjListContentProvider() );
-        table = tableViewer.getTable();
+        table = new AddFieldTable ( container, fieldAdder );
         table.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        table.setHeaderVisible ( true );
-        table.setLinesVisible ( true );
-
-        TableViewerColumn col0 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Field" );
-        col0.getColumn().setWidth ( 100 );
-        col0.getColumn().setMoveable ( false );
-        col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.FLD_NAME ) );
-
-        TableViewerColumn col1 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Description" );
-        col1.getColumn().setWidth ( 200 );
-        col1.getColumn().setMoveable ( false );
-        col1.setLabelProvider ( new AdvSearchFieldDescriptionLabelProvider() );
-
-        TableViewerColumn col2 = new TableViewerColumn ( tableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Creator" );
-        col2.getColumn().setWidth ( 100 );
-        col2.getColumn().setMoveable ( false );
-        col2.setLabelProvider ( new CObjListCachePrivateIdentityLableProvider (
-                                    fieldAdder.getIdCache(), CObj.CREATOR ) );
 
         doSearch();
 
@@ -153,7 +120,7 @@ public class AddFieldDialog extends Dialog
     @Override
     protected void okPressed()
     {
-        IStructuredSelection sel = ( IStructuredSelection ) tableViewer.getSelection();
+        IStructuredSelection sel = table.getTableViewer().getSelection();
 
         @SuppressWarnings ( "rawtypes" )
         Iterator i = sel.iterator();
@@ -168,8 +135,7 @@ public class AddFieldDialog extends Dialog
             {
                 CObjListArrayElement ce = ( CObjListArrayElement ) selo;
                 lt = ce.getCObj();
-                CObjContentProvider prv = ( CObjContentProvider ) fieldAdder.
-                                          getTableViewer().getContentProvider();
+                CObjContentProvider prv = ( CObjContentProvider ) fieldAdder.getTableViewer().getContentProvider();
                 prv.addCObj ( lt );
             }
 
@@ -207,9 +173,71 @@ public class AddFieldDialog extends Dialog
         return text;
     }
 
-    public TableViewer getTableViewer()
+    private class AddFieldTable extends CObjListTable<CObjListArrayElement>
     {
-        return tableViewer;
+        public AddFieldTable ( Composite composite, AddFieldInterface fv )
+        {
+            super ( composite, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
+
+            setContentProvider ( new CObjListTableContentProviderTypeArrayElement() );
+
+            setInputProvider ( new AddFieldTableInputProvider ( fv ) );
+
+            AktieTableViewerColumn<CObjList, CObjListGetter> column;
+
+            column = addColumn ( "Field", 100, new CObjListTableCellLabelProviderTypeString ( CObj.FLD_NAME, false, null ) );
+            column.setMoveable ( false );
+            getTableViewer().setSortColumn ( column, false );
+
+            column = addColumn ( "Description", 200, new CObjListTableCellLabelProviderTypeAdvSearchFieldDescription() );
+            column.setMoveable ( false );
+            column.setSortable ( false );
+
+            column = addColumn ( "Creator", 100, new CObjListTableCellLabelProviderTypeIdentityName ( CObj.CREATOR, true, null, fieldAdder.getIdCache() ) );
+            column.setMoveable ( false );
+        }
+
+        @Override
+        public AddFieldTableInputProvider getInputProvider()
+        {
+            return ( AddFieldTableInputProvider ) super.getInputProvider();
+        }
+
+        public void setSearchString ( String s )
+        {
+            getInputProvider().setSearchString ( s );
+        }
+
+    }
+
+    private class AddFieldTableInputProvider extends CObjListTableInputProvider
+    {
+        private AddFieldInterface fieldAdder;
+        private String searchString = "";
+
+        public AddFieldTableInputProvider ( AddFieldInterface fv )
+        {
+            fieldAdder = fv;
+        }
+
+        @Override
+        public CObjList provideInput ( Sort sort )
+        {
+            CObj community = fieldAdder.getCommunity();
+
+            if ( community != null )
+            {
+                return fieldAdder.getIndex().searchFields ( community.getDig(), searchString, null );
+            }
+
+            return null;
+        }
+
+        public void setSearchString ( String s )
+        {
+            searchString = s;
+        }
+
     }
 
 }

@@ -2,13 +2,11 @@ package aktie.gui;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,8 +30,6 @@ import aktie.data.RequestFile;
 import aktie.gui.launchers.LauncherDialog;
 import aktie.gui.pm.PMTab;
 import aktie.gui.pm.PrivateMessageDialog;
-//import aktie.gui.IdentitySubTreeProvider.TreeIdentity;
-//import aktie.gui.IdentitySubTreeProvider.TreeSubscription;
 import aktie.gui.subtree.SubTreeDragListener;
 import aktie.gui.subtree.SubTreeDropListener;
 import aktie.gui.subtree.SubTreeEntity;
@@ -52,13 +48,9 @@ import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
 import aktie.net.Net;
 import aktie.net.RawNet;
-import aktie.user.RequestFileHandler;
 import aktie.user.ShareListener;
 import aktie.utils.FUtils;
 
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.layout.FillLayout;
@@ -79,44 +71,28 @@ import org.eclipse.swt.widgets.Tree;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.StyledCellLabelProvider;
-import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.jface.viewers.ViewerSorter;
-import org.eclipse.swt.widgets.Table;
 
 import swing2swt.layout.BorderLayout;
 
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.GlyphMetrics;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridLayout;
@@ -124,7 +100,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Label;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.jface.viewers.ComboViewer;
 
@@ -139,295 +114,6 @@ public class SWTApp implements UpdateInterface
     interface ConnectionColumnGetText
     {
         public String getText ( Object element );
-    }
-
-    class DownloadContentProvider implements IStructuredContentProvider
-    {
-        @Override
-        public void dispose()
-        {
-        }
-
-        @Override
-        public void inputChanged ( Viewer arg0, Object arg1, Object arg2 )
-        {
-        }
-
-        @Override
-        public Object[] getElements ( Object a )
-        {
-            if ( a instanceof RequestFileHandler )
-            {
-                RequestFileHandler cc = ( RequestFileHandler ) a;
-                List<RequestFile> rfl = cc.listRequestFilesAll ( RequestFile.COMPLETE, Integer.MAX_VALUE );
-                Object r[] = new Object[rfl.size()];
-                Iterator<RequestFile> i = rfl.iterator();
-                int idx = 0;
-
-                while ( i.hasNext() && idx < r.length )
-                {
-                    r[idx] = i.next();
-                    idx++;
-                }
-
-                return r;
-            }
-
-            return null;
-        }
-
-    }
-
-    /*
-        class DownloadsColumnFileName extends ColumnLabelProvider
-        {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            return rf.getLocalFile();
-        }
-
-        }
-
-    */
-
-    class DownloadsColumnFileName extends StyledCellLabelProvider
-    {
-        @Override
-        public void update ( ViewerCell cell )
-        {
-            RequestFile rf = ( RequestFile ) cell.getElement();
-            cell.setText ( rf.getLocalFile() );
-        }
-
-    }
-
-
-    class DownloadsColumnDummy extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            return "";
-        }
-
-    }
-
-    class DownloadsColumnPriority extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            return Integer.toString ( rf.getPriority() );
-        }
-
-    }
-
-    class DownloadsColumnDownloaded extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            return Long.toString ( rf.getFragsComplete() );
-        }
-
-    }
-
-    class DownloadsColumnTotalFragments extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            return Long.toString ( rf.getFragsTotal() );
-        }
-
-    }
-
-    class DownloadsColumnFileSize extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            return Long.toString ( rf.getFileSize() );
-        }
-
-    }
-
-    class DownloadsColumnState extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-
-            if ( rf.getState() == RequestFile.INIT )
-            {
-                return "init";
-            }
-
-            if ( rf.getState() == RequestFile.REQUEST_FRAG )
-            {
-                return "download parts";
-            }
-
-            if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST )
-            {
-                return "requesting list";
-            }
-
-            if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT )
-            {
-                return "waiting on list";
-            }
-
-            return rf.getState() + "?";
-        }
-
-    }
-
-    private Map<String, String> idMap = new HashMap<String, String>();
-    class DownloadsColumnId extends ColumnLabelProvider
-    {
-        @Override
-        public String getText ( Object element )
-        {
-            RequestFile rf = ( RequestFile ) element;
-            String rid = rf.getRequestId();
-            String dn = idMap.get ( rid );
-
-            if ( dn == null )
-            {
-                dn = "";
-
-                if ( rid != null )
-                {
-                    CObj myid = getNode().getIndex().getMyIdentity ( rid );
-
-                    if ( myid != null )
-                    {
-                        dn = myid.getDisplayName();
-                    }
-
-                    idMap.put ( rid, dn );
-                }
-
-            }
-
-            return dn;
-        }
-
-    }
-
-    class DownloadsSorter extends ViewerSorter
-    {
-        private int column;
-
-        private boolean reverse;
-
-        public void doSort ( int column )
-        {
-            if ( column == this.column )
-            {
-                reverse = !reverse;
-            }
-
-            else
-            {
-                this.column = column;
-                reverse = false;
-            }
-
-        }
-
-        @SuppressWarnings ( { "rawtypes", "unchecked" } )
-
-        public int compare ( Viewer viewer, Object e1, Object e2 )
-        {
-            if ( e1 instanceof RequestFile &&
-                    e2 instanceof RequestFile )
-            {
-                RequestFile ct1 = ( RequestFile ) e1;
-                RequestFile ct2 = ( RequestFile ) e2;
-                ColumnLabelProvider labprov = null;
-
-                String s0 = null;
-                String s1 = null;
-
-                if ( column == 0 )
-                {
-                    s0 = ct1.getLocalFile();
-                    s1 = ct2.getLocalFile();
-                }
-
-                else
-                {
-                    if ( column == 1 )
-                    {
-                        labprov = new DownloadsColumnPriority();
-                    }
-
-                    if ( column == 2 )
-                    {
-                        labprov = new DownloadsColumnDownloaded();
-                    }
-
-                    if ( column == 3 )
-                    {
-                        labprov = new DownloadsColumnTotalFragments();
-                    }
-
-                    if ( column == 4 )
-                    {
-                        labprov = new DownloadsColumnFileSize();
-                    }
-
-                    if ( column == 5 )
-                    {
-                        labprov = new DownloadsColumnState();
-                    }
-
-                    if ( column == 6 )
-                    {
-                        labprov = new DownloadsColumnId();
-                    }
-
-                    if ( labprov != null )
-                    {
-                        s0 = labprov.getText ( ct1 );
-                        s1 = labprov.getText ( ct2 );
-                    }
-
-                }
-
-                if ( s0 != null && s1 != null )
-                {
-                    Comparable dn0 = s0;
-                    Comparable dn1 = s1;
-
-                    if ( column > 0 && column < 5 )
-                    {
-                        dn0 = Long.valueOf ( s0 );
-                        dn1 = Long.valueOf ( s1 );
-                    }
-
-                    if ( !reverse )
-                    {
-                        return dn0.compareTo ( dn1 );
-                    }
-
-                    return dn1.compareTo ( dn0 );
-                }
-
-            }
-
-            return 0;
-        }
-
     }
 
     public static long UPDATE_INTERVAL = 1000;
@@ -445,7 +131,6 @@ public class SWTApp implements UpdateInterface
         private Object outByteLock = new Object();
 
         @Override
-
         public void bytesReceived ( long bytes )
         {
             synchronized ( inByteLock )
@@ -456,7 +141,6 @@ public class SWTApp implements UpdateInterface
         }
 
         @Override
-
         public void bytesSent ( long bytes )
         {
             synchronized ( outByteLock )
@@ -737,14 +421,15 @@ public class SWTApp implements UpdateInterface
         {
             if ( o instanceof RequestFile )
             {
-                if ( downloadTableViewer != null )
+                if ( downloadsTable != null )
                 {
                     Display.getDefault().asyncExec ( new Runnable()
                     {
                         @Override
                         public void run()
                         {
-                            downloadTableViewer.setInput ( getNode().getFileHandler() );
+                            //downloadTableViewer.setInput ( getNode().getFileHandler() );
+                            downloadsTable.getTableViewer().setInput ( SWTApp.this.node.getFileHandler() );
                         }
 
                     } );
@@ -888,14 +573,14 @@ public class SWTApp implements UpdateInterface
         {
             if ( o instanceof RequestFile )
             {
-                if ( downloadTableViewer != null )
+                if ( downloadsTable != null )
                 {
                     Display.getDefault().asyncExec ( new Runnable()
                     {
                         @Override
                         public void run()
                         {
-                            downloadTableViewer.setInput ( getNode().getFileHandler() );
+                            downloadsTable.getTableViewer().setInput ( SWTApp.this.node.getFileHandler() );
                         }
 
                     } );
@@ -1089,6 +774,7 @@ public class SWTApp implements UpdateInterface
 
     class SaveSeeds implements SelectionListener
     {
+        @Override
         public void widgetSelected ( SelectionEvent event )
         {
             FileDialog fd = new FileDialog ( shell, SWT.SAVE );
@@ -1127,6 +813,7 @@ public class SWTApp implements UpdateInterface
 
         }
 
+        @Override
         public void widgetDefaultSelected ( SelectionEvent event )
         {
         }
@@ -1135,6 +822,7 @@ public class SWTApp implements UpdateInterface
 
     class LoadSeeds implements SelectionListener
     {
+        @Override
         public void widgetSelected ( SelectionEvent event )
         {
             FileDialog fd = new FileDialog ( shell, SWT.OPEN );
@@ -1152,6 +840,7 @@ public class SWTApp implements UpdateInterface
 
         }
 
+        @Override
         public void widgetDefaultSelected ( SelectionEvent event )
         {
         }
@@ -1338,8 +1027,8 @@ public class SWTApp implements UpdateInterface
     private Label lblVersion;
     private Label lblSpeed;
     private boolean doUpgrade = true;
-    protected Shell shell;
-    private Text searchText;
+    private Shell shell;
+    private Text postsSearchText;
     private Tree identTree;
     private TreeViewer identTreeViewer;
     private NewCommunityDialog newCommunityDialog;
@@ -1349,7 +1038,7 @@ public class SWTApp implements UpdateInterface
     private NewMemberDialog newMemberDialog;
     private NewPostDialog newPostDialog;
     private DownloadPriorityDialog downloadPriorityDialog;
-    private ShowPrivComDialog privComDialog;
+    private ShowPrivateCommunityDialog privComDialog;
     private ShowMembersDialog membersDialog;
     private NewDirectoryShareDialog shareDialog;
     private DownloadToShareDialog downloadToShareDialog;
@@ -1358,7 +1047,7 @@ public class SWTApp implements UpdateInterface
     private AdvancedSearchDialog advancedDialog;
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
-    private AktiSpamRankDialog spamDialog;
+    private SpamRankDialog spamDialog;
     private PrivateMessageDialog prvMsgDialog;
     private LauncherDialog launcherDialog;
     private ConnectionDialog connectionDialog;
@@ -1374,19 +1063,12 @@ public class SWTApp implements UpdateInterface
     private CObj selectedIdentity;
     private CObj selectedCommunity;
     private Label lblIdentCommunity;
-    private Table postTable;
-    private TableViewer postTableViewer;
-    private CObjListContentProvider postContentProvider;
-    private CObjListContentProvider fileContentProvider;
-    private CObj displayedPost;
+    private PostsTable postsTable;
     private StyledText postText;
     private ConnectionTable connectionTable;
-    //private AktieTableViewer<ConnectionElement> connectionTableViewer;
-    private Text fileSearch;
-    private Table fileTable;
-    private TableViewer fileTableViewer;
-    private Table downloadTable;
-    private TableViewer downloadTableViewer;
+    private Text filesSearchText;
+    private FilesTable filesTable;
+    private DownloadsTable downloadsTable;
     private String exportCommunitiesFile;
     private CObj developerIdentity;
     private Map<String, List<CObj>> pendingPosts = new HashMap<String, List<CObj>>();
@@ -1527,11 +1209,11 @@ public class SWTApp implements UpdateInterface
 
         setShares ( comid.getDig(), id.getId() );
 
-        searchText.setText ( "" );
-        fileSearch.setText ( "" );
+        postsSearchText.setText ( "" );
+        filesSearchText.setText ( "" );
         advQuery = null;
         postSearch ( );
-        filesSearch ( "" );
+        filesSearch();
         postText.setText ( "" );
         animator.update ( null, 0, 0, 10, 10 );
     }
@@ -1703,6 +1385,7 @@ public class SWTApp implements UpdateInterface
     {
         Thread t = new Thread ( new Runnable()
         {
+            @Override
             public void run()
             {
                 Net net = null;
@@ -1762,6 +1445,7 @@ public class SWTApp implements UpdateInterface
 
                     Display.getDefault().asyncExec ( new Runnable()
                     {
+                        @Override
                         public void run()
                         {
                             startedSuccessfully();
@@ -2147,6 +1831,7 @@ public class SWTApp implements UpdateInterface
 
     }
 
+    @Override
     public void updateStatus ( String st )
     {
         if ( splash != null )
@@ -2338,6 +2023,7 @@ public class SWTApp implements UpdateInterface
         shell.setMaximized ( windowMaximized );
         shell.addListener ( SWT.Resize,  new Listener ( )
         {
+            @Override
             public void handleEvent ( Event e )
             {
                 if ( shell.isDisposed() )
@@ -2403,99 +2089,20 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    private String sortPostField1;
-    private String sortPostField2;
-    private boolean sortPostReverse;
-    private SortField.Type sortPostType1;
-    private SortField.Type sortPostType2;
-
-    private void postSearch ( )
+    /**
+        Method invoked by PostsTable
+    */
+    public void postSearch ( )
     {
-        String srch = searchText.getText();
-
-        if ( selectedCommunity != null )
-        {
-            CObjList oldlst = ( CObjList ) postTableViewer.getInput();
-            Sort s = new Sort();
-
-            if ( sortPostField1 != null )
-            {
-                if ( sortPostField2 == null )
-                {
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType1 ) )
-                    {
-                        s.setSort ( new SortedNumericSortField ( sortPostField1, sortPostType1, sortPostReverse ) );
-                    }
-
-                    else
-                    {
-                        s.setSort ( new SortField ( sortPostField1, sortPostType1, sortPostReverse ) );
-                    }
-
-                }
-
-                else
-                {
-                    SortField sf1 = null;
-                    SortField sf2 = null;
-
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType1 ) )
-                    {
-                        sf1 = new SortedNumericSortField ( sortPostField1, sortPostType1, sortPostReverse );
-                    }
-
-                    else
-                    {
-                        sf1 = new SortField ( sortPostField1, sortPostType1, sortPostReverse );
-                    }
-
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortPostType2 ) )
-                    {
-                        sf2 = new SortedNumericSortField ( sortPostField2, sortPostType2, sortPostReverse );
-                    }
-
-                    else
-                    {
-                        sf2 = new SortField ( sortPostField2, sortPostType2, sortPostReverse );
-                    }
-
-                    s.setSort ( sf1, sf2 );
-                }
-
-            }
-
-            else
-            {
-                s.setSort ( new SortedNumericSortField ( CObj.docNumber ( CObj.CREATEDON ), SortedNumericSortField.Type.LONG, true ) );
-            }
-
-            if ( advQuery == null )
-            {
-                CObjList clst = getNode().getIndex().searchPosts ( selectedCommunity.getDig(), srch, s );
-                postTableViewer.setInput ( clst );
-            }
-
-            else
-            {
-                List<CObj> ql = new LinkedList<CObj>();
-                ql.add ( advQuery );
-                CObjList clst = getNode().getIndex().searchPostsQuery ( ql, s );
-                postTableViewer.setInput ( clst );
-            }
-
-            if ( oldlst != null )
-            {
-                oldlst.close();
-            }
-
-        }
-
+        postsTable.searchAndSort();
     }
 
+    /**
+        Method invoked by FilesTable
+    */
     private void filesSearch()
     {
-        String srch = fileSearch.getText();
-        filesSearch ( srch );
+        filesTable.searchAndSort();
     }
 
     private void setShares ( String comid, String memid )
@@ -2517,7 +2124,7 @@ public class SWTApp implements UpdateInterface
         btnDefaultDownloadLocation.setSelection ( false );
         btnDoNotGenerate.setSelection ( false );
         selectedShare = null;
-        selectedShareFiles = null;
+        selectedDirectoryShare = null;
         ISelection isel = shareComboViewer.getSelection();
         ISelection isel2 = comboShareNameViewer.getSelection();
 
@@ -2536,8 +2143,8 @@ public class SWTApp implements UpdateInterface
         {
             if ( plst.size() > 0 )
             {
-                selectedShareFiles = plst.get ( 0 );
-                StructuredSelection ss = new StructuredSelection ( selectedShareFiles );
+                selectedDirectoryShare = plst.get ( 0 );
+                StructuredSelection ss = new StructuredSelection ( selectedDirectoryShare );
                 comboShareNameViewer.setSelection ( ss );
             }
 
@@ -2561,245 +2168,16 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    private String sortFileField1;
-    private String sortFileField2;
-    private boolean sortFileReverse;
-    private SortField.Type sortFileType1;
-    private SortField.Type sortFileType2;
     private Text bannerText;
 
-    private void filesSearch ( String srch )
+    public DirectoryShare getSelecedDirectoryShare()
     {
-        if ( selectedCommunity != null )
-        {
-            CObjList oldlst = ( CObjList ) fileTableViewer.getInput();
-            Sort s = new Sort();
-
-            if ( sortFileField1 != null )
-            {
-                if ( sortFileField2 == null )
-                {
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType1 ) )
-                    {
-                        s.setSort ( new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse ) );
-                    }
-
-                    else
-                    {
-                        s.setSort ( new SortField ( sortFileField1, sortFileType1, sortFileReverse ) );
-                    }
-
-                }
-
-                else
-                {
-                    SortField sf1 = null;
-                    SortField sf2 = null;
-
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType1 ) )
-                    {
-                        sf1 = new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse );
-                    }
-
-                    else
-                    {
-                        sf1 = new SortField ( sortFileField1, sortFileType1, sortFileReverse );
-                    }
-
-                    if ( SortedNumericSortField.Type.LONG.equals ( sortFileType2 ) )
-                    {
-                        sf2 = new SortedNumericSortField ( sortFileField2, sortFileType2, sortFileReverse );
-                    }
-
-                    else
-                    {
-                        sf2 = new SortField ( sortFileField2, sortFileType2, sortFileReverse );
-                    }
-
-                    s.setSort ( sf1, sf2 );
-                }
-
-            }
-
-            else
-            {
-
-                sortFileField1 = CObj.docNumber ( CObj.CREATEDON );
-                sortFileReverse = true;
-                sortFileType1 = SortedNumericSortField.Type.LONG;
-                sortFileField2 = null;
-                sortFileType2 = null;
-                s.setSort ( new SortedNumericSortField ( sortFileField1, sortFileType1, sortFileReverse ) );
-            }
-
-            String fshare = null;
-
-            if ( selectedShareFiles != null && selectedShareFiles.getId() != -1 )
-            {
-                fshare = selectedShareFiles.getShareName();
-            }
-
-            CObjList clst = getNode().getIndex().searchFiles ( selectedCommunity.getDig(), fshare, srch, s );
-            fileTableViewer.setInput ( clst );
-
-            if ( oldlst != null )
-            {
-                oldlst.close();
-            }
-
-        }
-
+        return selectedDirectoryShare;
     }
-
-    private SortField.Type membershipSortType = SortField.Type.STRING;
-    private String membershipSortField = CObj.docPrivate ( CObj.PRV_DISPLAY_NAME );
-    private boolean membershipSortReverse = false;
 
     private void updateMembership()
     {
-        CObjList oldlst = ( CObjList ) membershipTableViewer.getInput();
-        Sort s = new Sort();
-        s.setSort ( new SortField ( membershipSortField, membershipSortType, membershipSortReverse ) );
-        CObjList newlst = getNode().getIndex().getMyValidMemberships ( s );
-        membershipTableViewer.setInput ( newlst );
-
-        if ( oldlst != null )
-        {
-            oldlst.close();
-        }
-
-    }
-
-    private String getPostString ( CObj pst )
-    {
-        StringBuilder msg = new StringBuilder();
-
-        if ( pst != null )
-        {
-            String subj = pst.getString ( CObj.SUBJECT );
-            String body = pst.getText ( CObj.BODY );
-            String auth = pst.getString ( CObj.CREATOR_NAME );
-            Long seq = pst.getNumber ( CObj.SEQNUM );
-            Long ts = pst.getNumber ( CObj.CREATEDON );
-
-            msg.append ( "FROM: " );
-
-            if ( auth != null )
-            {
-                msg.append ( auth );
-            }
-
-            msg.append ( "\n" );
-
-            msg.append ( "ON: " );
-
-            if ( ts != null )
-            {
-                msg.append ( ( new Date ( ts ) ).toString() );
-            }
-
-            msg.append ( "\n" );
-
-            msg.append ( "SUBJ: " );
-
-            if ( subj != null )
-            {
-                msg.append ( subj );
-            }
-
-            msg.append ( "\n" );
-
-            msg.append ( "SEQN: " );
-
-            if ( seq != null )
-            {
-                msg.append ( seq );
-            }
-
-            msg.append ( "\n" );
-
-            msg.append ( "--------------------------------------------\n" );
-
-            Set<String> fld = pst.listFields();
-
-            for ( String fid : fld )
-            {
-                CObj f = getNode().getIndex().getByDig ( fid );
-
-                if ( f != null )
-                {
-                    String nm = f.getString ( CObj.FLD_NAME );
-                    String tp = f.getString ( CObj.FLD_TYPE );
-                    String dsc = f.getString ( CObj.FLD_DESC );
-                    String vs = null;
-
-                    if ( CObj.FLD_TYPE_BOOL.equals ( tp ) )
-                    {
-                        Boolean bv = pst.getFieldBoolean ( fid );
-
-                        if ( bv != null )
-                        {
-                            vs = bv.toString();
-                        }
-
-                    }
-
-                    if ( CObj.FLD_TYPE_DECIMAL.equals ( tp ) )
-                    {
-                        Double db = pst.getFieldDecimal ( fid );
-
-                        if ( db != null )
-                        {
-                            vs = db.toString();
-                        }
-
-                    }
-
-                    if ( CObj.FLD_TYPE_NUMBER.equals ( tp ) )
-                    {
-                        Long lv = pst.getFieldNumber ( fid );
-
-                        if ( lv != null )
-                        {
-                            vs = lv.toString();
-                        }
-
-                    }
-
-                    if ( CObj.FLD_TYPE_STRING.equals ( tp ) )
-                    {
-                        vs = pst.getFieldString ( fid );
-                    }
-
-                    if ( vs != null )
-                    {
-                        vs.replace ( "\n", " " );
-                        vs.replace ( "\r", "" );
-                        dsc.replace ( "\n", " " );
-                        dsc.replace ( "\r", "" );
-                        String fldline = String.format ( "%15s:%-20s | %20s | %s",
-                                                         nm, vs,
-                                                         idCache.getName ( pst.getString ( CObj.CREATOR ) ),
-                                                         dsc );
-                        fldline = fldline.substring ( 0, Math.min ( fldline.length(), 79 ) );
-                        msg.append ( fldline );
-                        msg.append ( "\n" );
-                    }
-
-                }
-
-            }
-
-            msg.append ( "--------------------------------------------\n" );
-
-            if ( body != null )
-            {
-                msg.append ( body );
-            }
-
-        }
-
-        return msg.toString();
+        membershipsTable.searchAndSort();
     }
 
     private void loadSeed ( File f )
@@ -3045,10 +2423,10 @@ public class SWTApp implements UpdateInterface
         newPostDialog.create();
         downloadPriorityDialog = new DownloadPriorityDialog ( shell, this );
         downloadPriorityDialog.create();
-        downloadTableViewer.setInput ( getNode().getFileHandler() );
+        downloadsTable.getTableViewer().setInput ( node.getFileHandler() );
         membersDialog = new ShowMembersDialog ( shell, this );
         membersDialog.create();
-        privComDialog = new ShowPrivComDialog ( shell, this );
+        privComDialog = new ShowPrivateCommunityDialog ( shell, this );
         privComDialog.create();
         shareDialog = new NewDirectoryShareDialog ( shell, this );
         shareDialog.create();
@@ -3064,9 +2442,9 @@ public class SWTApp implements UpdateInterface
         hasFileDialog.create();
         zeroDialog = new ZeroIdentityDialog ( shell, userRankDialog, this );
         zeroDialog.create();
-        spamDialog = new AktiSpamRankDialog ( shell );
+        spamDialog = new SpamRankDialog ( shell );
         spamDialog.create();
-        prvMsgDialog = new PrivateMessageDialog ( shell, this );
+        prvMsgDialog = new PrivateMessageDialog ( this );
         prvMsgDialog.create();
         pmTab.setMessageDialog ( prvMsgDialog );
         privComDialog.setMessageDialog ( prvMsgDialog );
@@ -3074,7 +2452,6 @@ public class SWTApp implements UpdateInterface
         launcherDialog.create();
         connectionDialog = new ConnectionDialog ( shell, this );
         connectionDialog.create();
-        localFileColumnProvider.setIndex ( node.getIndex() );
         updateMembership();
     }
 
@@ -3109,70 +2486,12 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    private void addImage ( String s, int offset )
-    {
-        if ( s != null )
-        {
-            File f = new File ( s );
-
-            if ( f.exists() )
-            {
-                try
-                {
-                    ImageLoader loader = new ImageLoader();
-                    loader.load ( new FileInputStream ( f ) );
-                    addImage ( loader, offset );
-                    return;
-                }
-
-                catch ( Exception e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-        }
-
-        animator.update ( null, 0, 0, 10, 10 );
-
-    }
-
     public static int MAXIMGWIDTH = 400;
-    private boolean resize = true;
-
-    private static int MARGIN = 5;
-    private void addImage ( ImageLoader image, int offset )
-    {
-        StyleRange style = new StyleRange ();
-        style.start = offset;
-        style.length = 1;
-        style.data = image;
-
-        int w = image.data[0].width;
-        int h = image.data[0].height;
-
-        int ascent = 2 * h / 3;
-        int descent = h - ascent;
-
-        //resize = true;
-        style.metrics = new GlyphMetrics ( ascent + MARGIN,
-                                           descent + MARGIN, w + 2 * MARGIN );
-        StyledText pt = postText;
-
-        if ( !pt.isDisposed() )
-        {
-            pt.setStyleRange ( style );
-        }
-
-    }
+    private boolean previewResize = true;
 
 
     private Composite composite_6;
-    private LocalFileColumnLabelProvider localFileColumnProvider;
-    private Table membershipTable;
-    private TableViewer membershipTableViewer;
-    private CObjListContentProvider membershipProvider;
+    private MembershipsTable membershipsTable;
     private Composite composite_header;
     private Label lblError;
     private Text textShareName;
@@ -3182,7 +2501,7 @@ public class SWTApp implements UpdateInterface
     private Combo shareCombo;
     private ComboViewer shareComboViewer;
     private DirectoryShare selectedShare;
-    private DirectoryShare selectedShareFiles;
+    private DirectoryShare selectedDirectoryShare;
     private Combo comboShareName;
     private ComboViewer comboShareNameViewer;
     private Button btnDefaultDownloadLocation;
@@ -3255,335 +2574,27 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    public static long MAXPREVIEWFILE = 80L * 1024L * 1024L;
-
-    private File getPreviewHasFile ( String comid, String wdig, String pdig, Long fsize )
-    {
-        File file = null;
-
-        if ( comid != null && wdig != null && pdig != null &&
-                fsize != null && fsize < MAXPREVIEWFILE )
-        {
-            CObjList clst = node.getIndex().getMyHasFiles ( comid, wdig, pdig );
-
-            if ( clst != null )
-            {
-                if ( clst.size() > 0 )
-                {
-                    try
-                    {
-                        CObj pc = clst.get ( 0 );
-                        String lfs = pc.getPrivate ( CObj.LOCALFILE );
-
-                        if ( lfs != null )
-                        {
-                            File tf = new File ( lfs );
-
-                            if ( tf.exists() )
-                            {
-                                file = tf;
-                            }
-
-                        }
-
-                    }
-
-                    catch ( Exception e2 )
-                    {
-                        e2.printStackTrace();
-                    }
-
-                }
-
-                clst.close();
-            }
-
-        }
-
-        File rf = null;
-
-        if ( file != null )
-        {
-            String fname = file.getPath();
-            String imgtypes[] = new String[] {".jpg",
-                                              ".jpeg", ".gif", ".png", ".bmp", ".tiff",
-                                              ".JPG",
-                                              ".JPEG", ".GIF", ".PNG", ".BMP", ".TIFF"
-                                             };
-
-            for ( int c = 0; c < imgtypes.length && rf == null; c++ )
-            {
-                if ( fname.endsWith ( imgtypes[c] ) )
-                {
-                    rf = file;
-                }
-
-            }
-
-        }
-
-        return rf;
-    }
-
     public static ImageRegistry imgReg;
     private Button btnEnableShareManager;
     private Label lblNotRunning;
 
+    public CObj getAdvancedPostsQuery()
+    {
+        return advQuery;
+    }
+
     public void setAdvancedQuery ( CObj q )
     {
         advQuery = q;
-        searchText.setText ( "" );
+        postsSearchText.setText ( "" );
         postSearch();
     }
 
-    private Animator animator = new Animator();
-    class Animator implements Runnable
+    private ImageAnimator animator = new ImageAnimator ( this );
+
+    public ImageAnimator getAnimator()
     {
-        //event.gc.setAntialias ( SWT.ON );
-        //event.gc.drawImage ( image, 0, 0,
-        //                     image.getBounds().width, image.getBounds().height,
-        //                     imagex, imagey, sw, sh );
-        public Canvas imageCanvas;
-        public boolean stop;
-        public ImageLoader imgLoader;
-        public int sw, sh;
-        public Image image;
-        public int idx = 0;
-        public long nextframe;
-
-        public Animator()
-        {
-            Thread t = new Thread ( this );
-            t.start();
-        }
-
-        public void create()
-        {
-            imageCanvas = new Canvas ( postText, SWT.NO_BACKGROUND | SWT.DOUBLE_BUFFERED );
-            imageCanvas.addPaintListener ( new PaintListener()
-            {
-                @Override
-                public void paintControl ( PaintEvent e )
-                {
-                    paintImage ( e.gc );
-                }
-
-            } );
-
-            imageCanvas.addMouseListener ( new MouseListener()
-            {
-                @Override
-                public void mouseDoubleClick ( MouseEvent e )
-                {
-                    resize = !resize;
-                    postText.redraw();
-                    postText.setSelection ( 0, 0 );
-                }
-
-                @Override
-                public void mouseDown ( MouseEvent e )
-                {
-                }
-
-                @Override
-                public void mouseUp ( MouseEvent e )
-                {
-                }
-
-            } );
-
-        }
-
-        private synchronized void paintImage ( GC gc )
-        {
-            Image img = image;
-
-            if ( imgLoader != null &&
-                    img != null && !img.isDisposed() )
-            {
-
-                // Set up the offscreen gc
-                Image tmpimg = new Image ( shell.getDisplay(), imageCanvas.getBounds() );
-                GC gcImage = new GC ( tmpimg );
-
-                ImageData id = imgLoader.data[idx];
-                gcImage.setAntialias ( SWT.ON );
-                Image frame = new Image ( Display.getDefault(), id );
-                gcImage.drawImage ( img, 0, 0 );
-                gcImage.drawImage ( frame, 0, 0, frame.getBounds().width,
-                                    frame.getBounds().height, 0, 0, imageCanvas.getBounds().width,
-                                    imageCanvas.getBounds().height );
-
-                image = tmpimg;
-                img.dispose();
-                frame.dispose();
-
-                gc.drawImage ( tmpimg, 0, 0 );
-                gcImage.dispose();
-            }
-
-        }
-
-        //        private synchronized void overlayImage ( Image tmp, GC g )
-        //        {
-        //
-        //            if ( imgLoader != null )
-        //            {
-        //              Image bkimg = image;
-        //                ImageData id = imgLoader.data[idx];
-        //                g.setAntialias ( SWT.ON );
-        //                Image img = new Image ( Display.getDefault(), id );
-        //                g.drawImage ( bkimg, 0, 0 );
-        //                g.drawImage ( img, 0, 0, img.getBounds().width,
-        //                              img.getBounds().height, 0, 0, sw, sh );
-        //                image = tmp;
-        //                img.dispose();
-        //                bkimg.dispose();
-        //            }
-
-        //
-        //        }
-
-        public synchronized void stop()
-        {
-            stop = true;
-            notifyAll();
-        }
-
-        public synchronized void update ( ImageLoader il, int imgx, int imgy, int w, int h )
-        {
-            if ( il != null )
-            {
-                if ( il != imgLoader || sw != w || sh != h )
-                {
-                    imgLoader = il;
-                    idx = 0;
-                    nextframe = System.currentTimeMillis();
-
-                    if ( image != null )
-                    {
-                        if ( !image.isDisposed() )
-                        {
-                            image.dispose();
-                        }
-
-                    }
-
-                    Display display = Display.getDefault();
-                    image = new Image ( display, w, h );
-                }
-
-                sw = w;
-                sh = h;
-                imageCanvas.setLocation ( imgx, imgy );
-                imageCanvas.setSize ( w, h );
-                imageCanvas.redraw();
-            }
-
-            else
-            {
-                imgLoader = null;
-
-                if ( image != null )
-                {
-                    if ( !image.isDisposed() )
-                    {
-                        image.dispose();
-                    }
-
-                }
-
-                imageCanvas.setSize ( 0, 0 );
-                postText.redraw();
-
-            }
-
-            notifyAll();
-
-        }
-
-        private synchronized void incrIndex()
-        {
-            if ( imgLoader != null )
-            {
-                idx++;
-                idx = idx % imgLoader.data.length;
-            }
-
-        }
-
-        private synchronized void nextFrame()
-        {
-            if ( shell != null && shell.isDisposed() )
-            {
-                stop = true;
-                return;
-            }
-
-            long ct = System.currentTimeMillis();
-            long delay = 100L;
-
-            if ( imgLoader == null )
-            {
-                delay = 10000L;
-            }
-
-            else
-            {
-                if ( imgLoader.data.length <= 1 || image == null )
-                {
-                    delay = 10000L;
-                }
-
-                else
-                {
-                    if ( ct >= nextframe )
-                    {
-                        final ImageData id = imgLoader.data[idx];
-                        int delayTime = Math.max ( 50, 10 * id.delayTime );
-                        //id.
-                        nextframe = nextframe + delayTime;
-
-                        Display display = Display.getDefault();
-                        display.asyncExec ( new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                imageCanvas.redraw();
-                                incrIndex();
-                            }
-
-                        } );
-
-                    }
-
-                    delay = Math.max ( 5, nextframe - ct );
-                }
-
-            }
-
-            try
-            {
-                wait ( delay );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        public void run()
-        {
-            while ( !stop )
-            {
-                nextFrame();
-            }
-
-        }
-
+        return animator;
     }
 
     /**
@@ -4424,36 +3435,10 @@ public class SWTApp implements UpdateInterface
 
         } );
 
+        membershipsTable = new MembershipsTable ( sashForm2, this );
 
-        membershipTableViewer = new TableViewer ( sashForm2, SWT.BORDER | SWT.FULL_SELECTION );
-        membershipTable = membershipTableViewer.getTable();
-        membershipTable.setHeaderVisible ( true );
-        membershipProvider = new CObjListContentProvider();
-        membershipTableViewer.setContentProvider ( membershipProvider );
-
-        TableViewerColumn mcol0 = new TableViewerColumn ( membershipTableViewer, SWT.NONE );
-        mcol0.getColumn().setText ( "Memberships" );
-        mcol0.getColumn().setWidth ( 170 );
-        mcol0.setLabelProvider ( new CObjListPrivDispNameColumnLabelProvider ( ) );
-        mcol0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                membershipSortReverse = !membershipSortReverse;
-                updateMembership();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        Menu menu_6 = new Menu ( membershipTable );
-        membershipTable.setMenu ( menu_6 );
+        Menu menu_6 = new Menu ( membershipsTable.getTable() );
+        membershipsTable.setMenu ( menu_6 );
 
         MenuItem mntmSubscribe = new MenuItem ( menu_6, SWT.NONE );
         mntmSubscribe.setText ( "Subscribe" );
@@ -4463,7 +3448,7 @@ public class SWTApp implements UpdateInterface
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                IStructuredSelection sel = ( IStructuredSelection ) membershipTableViewer.getSelection();
+                IStructuredSelection sel = membershipsTable.getTableViewer().getSelection();
                 @SuppressWarnings ( "rawtypes" )
                 Iterator i = sel.iterator();
 
@@ -4639,9 +3624,9 @@ public class SWTApp implements UpdateInterface
         gd_label.heightHint = 25;
         label.setLayoutData ( gd_label );
 
-        searchText = new Text ( composite_7, SWT.BORDER );
-        searchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
-        searchText.addListener ( SWT.Traverse, new Listener()
+        postsSearchText = new Text ( composite_7, SWT.BORDER );
+        postsSearchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        postsSearchText.addListener ( SWT.Traverse, new Listener()
         {
             @Override
             public void handleEvent ( Event event )
@@ -4681,7 +3666,7 @@ public class SWTApp implements UpdateInterface
                 else
                 {
 
-                    String st = searchText.getText();
+                    String st = postsSearchText.getText();
                     Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( st );
 
                     if ( m.find() )
@@ -4749,320 +3734,11 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        postTableViewer = new TableViewer ( composite_5, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        postTable = postTableViewer.getTable();
-        postTable.setLayoutData ( BorderLayout.CENTER );
-        postTable.setHeaderVisible ( true );
-        postTable.setLinesVisible ( true );
-        postContentProvider = new CObjListContentProvider();
-        postTableViewer.setContentProvider ( postContentProvider );
+        postsTable = new PostsTable ( composite_5, this );
+        postsTable.setLayoutData ( BorderLayout.CENTER );
 
-        TableViewerColumn col0 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col0.getColumn().setText ( "Identity" );
-        col0.getColumn().setWidth ( 100 );
-        col0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.CREATOR_NAME ) );
-        col0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.CREATOR_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col05 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col05.getColumn().setText ( "Rank" );
-        col05.getColumn().setWidth ( 20 );
-        col05.setLabelProvider ( new CObjListPrivateNumColumnLabelProvider ( CObj.PRV_USER_RANK ) );
-
-        TableViewerColumn col1 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col1.getColumn().setText ( "Subject" );
-        col1.getColumn().setWidth ( 300 );
-        col1.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.SUBJECT ) );
-        col1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.SUBJECT );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col2 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col2.getColumn().setText ( "Date" );
-        col2.getColumn().setWidth ( 100 );
-        col2.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.CREATEDON ) );
-        col2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docNumber ( CObj.CREATEDON );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = true;
-                    sortPostType1 = SortedNumericSortField.Type.LONG;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col3 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col3.getColumn().setText ( "File" );
-        col3.getColumn().setWidth ( 100 );
-        col3.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.NAME ) );
-        col3.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn col3b = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col3b.getColumn().setText ( "Preview" );
-        col3b.getColumn().setWidth ( 100 );
-        col3b.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.PRV_NAME ) );
-        col3b.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.PRV_NAME );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        localFileColumnProvider = new LocalFileColumnLabelProvider();
-
-        TableViewerColumn col4 = new TableViewerColumn ( postTableViewer, SWT.NONE );
-        col4.getColumn().setText ( "Local File" );
-        col4.getColumn().setWidth ( 100 );
-        col4.getColumn().setAlignment ( SWT.RIGHT );
-        col4.setLabelProvider ( localFileColumnProvider );
-        col4.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docPrivate ( CObj.LOCALFILE );
-
-                if ( ns.equals ( sortPostField1 ) )
-                {
-                    sortPostReverse = !sortPostReverse;
-                }
-
-                else
-                {
-                    sortPostField1 = ns;
-                    sortPostReverse = false;
-                    sortPostType1 = SortField.Type.STRING;
-                    sortPostField2 = null;
-                    sortPostType2 = null;
-                }
-
-                postSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        postTableViewer.addSelectionChangedListener ( new ISelectionChangedListener()
-        {
-            @Override
-            public void selectionChanged ( SelectionChangedEvent e )
-            {
-                ISelection selection = e.getSelection();
-
-                if ( selection != null && selection instanceof IStructuredSelection )
-                {
-                    IStructuredSelection ssel = ( IStructuredSelection ) selection;
-
-                    if ( ssel.size() > 0 )
-                    {
-                        Object selo = ssel.getFirstElement();
-
-                        if ( selo instanceof CObjListArrayElement )
-                        {
-                            CObjListArrayElement selm = ( CObjListArrayElement ) selo;
-                            displayedPost = selm.getCObj();
-
-                            if ( displayedPost != null )
-                            {
-                                displayedPost.pushPrivateNumber ( CObj.PRV_TEMP_NEWPOSTS, 0L );
-
-                                try
-                                {
-                                    node.getIndex().index ( displayedPost );
-                                }
-
-                                catch ( IOException e1 )
-                                {
-                                    e1.printStackTrace();
-                                }
-
-                                postSearch();
-
-                                String msgdisp = getPostString ( displayedPost );
-                                msgdisp = NewPostDialog.formatDisplay ( msgdisp, false );
-                                String lines = "\n==========================\n=";
-                                String msg = msgdisp + lines;
-                                animator.update ( null, 0, 0, 10, 10 );
-                                postText.setText ( msg );
-
-                                //String comid, String wdig, String pdig
-                                String comid = displayedPost.getString ( CObj.COMMUNITYID );
-
-                                String pwdig = displayedPost.getString ( CObj.PRV_FILEDIGEST );
-                                String ppdig = displayedPost.getString ( CObj.PRV_FRAGDIGEST );
-                                Long pfsize = displayedPost.getNumber ( CObj.PRV_FILESIZE );
-
-                                File prvfile = getPreviewHasFile ( comid, pwdig, ppdig, pfsize );
-
-                                String wdig = displayedPost.getString ( CObj.FILEDIGEST );
-                                String pdig = displayedPost.getString ( CObj.FRAGDIGEST );
-                                Long fsize = displayedPost.getNumber ( CObj.FILESIZE );
-
-                                File file = getPreviewHasFile ( comid, wdig, pdig, fsize );
-
-                                if ( prvfile != null )
-                                {
-                                    addImage ( prvfile.getPath(), msg.length() - 1 );
-                                }
-
-                                else if ( file != null )
-                                {
-                                    addImage ( file.getPath(), msg.length() - 1 );
-
-                                }
-
-                                else
-                                {
-                                    addImage ( ( String ) null, 0 );
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        } );
-
-        Menu menu_5 = new Menu ( postTable );
-        postTable.setMenu ( menu_5 );
+        Menu menu_5 = new Menu ( postsTable.getTable() );
+        postsTable.setMenu ( menu_5 );
 
         MenuItem mntmOpen = new MenuItem ( menu_5, SWT.NONE );
         mntmOpen.setText ( "Open" );
@@ -5073,7 +3749,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5117,7 +3793,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5155,7 +3831,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5193,7 +3869,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     downloadToShareDialog.open ( sel, false );
                 }
@@ -5216,7 +3892,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     downloadToShareDialog.open ( sel, true );
                 }
@@ -5239,7 +3915,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5277,7 +3953,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5336,7 +4012,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5375,7 +4051,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) postTableViewer.getSelection();
+                    IStructuredSelection sel = postsTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5464,7 +4140,7 @@ public class SWTApp implements UpdateInterface
                 int sw = w;
                 int sh = h;
 
-                if ( resize )
+                if ( previewResize )
                 {
                     if ( sw > MAXIMGWIDTH )
                     {
@@ -5545,7 +4221,7 @@ public class SWTApp implements UpdateInterface
                 if ( i.hasNext() )
                 {
                     DirectoryShare sh = ( DirectoryShare ) i.next();
-                    selectedShareFiles = sh;
+                    selectedDirectoryShare = sh;
                     filesSearch();
                 }
 
@@ -5558,9 +4234,9 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        fileSearch = new Text ( composite_9, SWT.BORDER );
-        fileSearch.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
-        fileSearch.addListener ( SWT.Traverse, new Listener()
+        filesSearchText = new Text ( composite_9, SWT.BORDER );
+        filesSearchText.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
+        filesSearchText.addListener ( SWT.Traverse, new Listener()
         {
             @Override
             public void handleEvent ( Event event )
@@ -5627,300 +4303,13 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        fileContentProvider = new CObjListContentProvider();
-        fileTableViewer = new TableViewer ( composite_4, SWT.BORDER | SWT.FULL_SELECTION |
-                                            SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI );
-        fileTableViewer.setContentProvider ( fileContentProvider );
-        fileTable = fileTableViewer.getTable();
-        fileTable.setHeaderVisible ( true );
-        fileTable.setLinesVisible ( true );
-        fileTable.setLayoutData ( BorderLayout.CENTER );
         sashForm.setWeights ( new int[] {1, 4} );
 
-        TableViewerColumn fcol0 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol0.getColumn().setText ( "File" );
-        fcol0.getColumn().setWidth ( 200 );
-        fcol0.getColumn().setAlignment ( SWT.RIGHT );
-        fcol0.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.NAME ) );
-        fcol0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.NAME );
+        filesTable = new FilesTable ( composite_4, this );
+        filesTable.setLayoutData ( BorderLayout.CENTER );
 
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortField.Type.STRING;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol1 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol1.getColumn().setText ( "Size" );
-        fcol1.getColumn().setWidth ( 100 );
-        fcol1.setLabelProvider ( new CObjListLongColumnLabelProvider ( CObj.FILESIZE ) );
-        fcol1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docNumber ( CObj.FILESIZE );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortedNumericSortField.Type.LONG;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol2 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol2.getColumn().setText ( "Sha256" );
-        fcol2.getColumn().setWidth ( 100 );
-        fcol2.setLabelProvider ( new CObjListHexColumnLabelProvider ( CObj.FILEDIGEST ) );
-        fcol2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.FILEDIGEST );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortField.Type.STRING;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol2a = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol2a.getColumn().setText ( "Status" );
-        fcol2a.getColumn().setWidth ( 70 );
-        fcol2a.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.STATUS ) );
-        fcol2a.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.STATUS );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortField.Type.STRING;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol3 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol3.getColumn().setText ( "Local File" );
-        fcol3.getColumn().setWidth ( 100 );
-        fcol3.getColumn().setAlignment ( SWT.RIGHT );
-        fcol3.setLabelProvider ( new CObjListStringColumnLabelProvider ( CObj.LOCALFILE ) );
-        fcol3.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docString ( CObj.LOCALFILE );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortField.Type.STRING;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol4 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol4.getColumn().setText ( "Number Has" );
-        fcol4.getColumn().setWidth ( 50 );
-        fcol4.setLabelProvider ( new CObjListLongColumnLabelProvider ( CObj.NUMBER_HAS ) );
-        fcol4.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docNumber ( CObj.NUMBER_HAS );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortedNumericSortField.Type.LONG;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol5 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol5.getColumn().setText ( "First Seen" );
-        fcol5.getColumn().setWidth ( 120 );
-        fcol5.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.CREATEDON ) );
-        fcol5.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docNumber ( CObj.CREATEDON );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortedNumericSortField.Type.LONG;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn fcol6 = new TableViewerColumn ( fileTableViewer, SWT.NONE );
-        fcol6.getColumn().setText ( "Last Seen" );
-        fcol6.getColumn().setWidth ( 120 );
-        fcol6.setLabelProvider ( new CObjListDateColumnLabelProvider ( CObj.LASTUPDATE ) );
-        fcol6.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                String ns = CObj.docNumber ( CObj.LASTUPDATE );
-
-                if ( ns.equals ( sortFileField1 ) )
-                {
-                    sortFileReverse = !sortFileReverse;
-                }
-
-                else
-                {
-                    sortFileField1 = ns;
-                    sortFileReverse = false;
-                    sortFileType1 = SortedNumericSortField.Type.LONG;
-                    sortFileField2 = null;
-                    sortFileType2 = null;
-                }
-
-                filesSearch();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        Menu menu_3 = new Menu ( fileTable );
-        fileTable.setMenu ( menu_3 );
+        Menu menu_3 = new Menu ( filesTable.getTable() );
+        filesTable.setMenu ( menu_3 );
 
         MenuItem mntmFileOpen = new MenuItem ( menu_3, SWT.NONE );
         mntmFileOpen.setText ( "Open" );
@@ -5931,7 +4320,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+                    IStructuredSelection sel = filesTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -5975,7 +4364,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+                    IStructuredSelection sel = filesTable.getTableViewer().getSelection();
 
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
@@ -6015,7 +4404,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedIdentity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+                    IStructuredSelection sel = filesTable.getTableViewer().getSelection();
 
                     downloadToShareDialog.open ( sel, true );
                 }
@@ -6040,7 +4429,7 @@ public class SWTApp implements UpdateInterface
                 {
                     CObj f1 = null;
                     CObj f2 = null;
-                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+                    IStructuredSelection sel = filesTable.getTableViewer().getSelection();
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
 
@@ -6105,7 +4494,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedCommunity != null )
                 {
-                    IStructuredSelection sel = ( IStructuredSelection ) fileTableViewer.getSelection();
+                    IStructuredSelection sel = filesTable.getTableViewer().getSelection();
                     @SuppressWarnings ( "rawtypes" )
                     Iterator i = sel.iterator();
 
@@ -6347,268 +4736,11 @@ public class SWTApp implements UpdateInterface
 
         Composite composite_10 = new Composite ( tabFolder, SWT.NONE );
         tbtmDownloadds.setControl ( composite_10 );
-        //composite_10.setLayout ( new GridLayout ( 1, false ) );
         composite_10.setLayout ( new BorderLayout ( 0, 0 ) );
 
-        downloadTableViewer = new TableViewer ( composite_10, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL );
-        downloadTable = downloadTableViewer.getTable();
-        //downloadTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
-        downloadTable.setLayoutData ( BorderLayout.CENTER );
-        downloadTable.setHeaderVisible ( true );
-        downloadTable.setLinesVisible ( true );
-        downloadTableViewer.setSorter ( new DownloadsSorter() );
-        downloadTableViewer.setContentProvider ( new DownloadContentProvider() );
 
-        TableViewerColumn dlcoll = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcoll.getColumn().setText ( "" );
-        dlcoll.getColumn().setWidth ( 2 );
-        dlcoll.setLabelProvider ( new DownloadsColumnDummy() );
-
-        TableViewerColumn dlcol0 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol0.getColumn().setText ( "File" );
-        dlcol0.getColumn().setWidth ( 200 );
-        dlcol0.getColumn().setAlignment ( SWT.RIGHT );
-        dlcol0.setLabelProvider ( new DownloadsColumnFileName() );
-        dlcol0.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 0 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol1 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol1.getColumn().setText ( "Priority" );
-        dlcol1.getColumn().setWidth ( 50 );
-        dlcol1.setLabelProvider ( new DownloadsColumnPriority() );
-        dlcol1.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 1 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol2 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol2.getColumn().setText ( "Downloaded Parts" );
-        dlcol2.getColumn().setWidth ( 150 );
-        dlcol2.setLabelProvider ( new DownloadsColumnDownloaded() );
-        dlcol2.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 2 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol3 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol3.getColumn().setText ( "Total Parts" );
-        dlcol3.getColumn().setWidth ( 100 );
-        dlcol3.setLabelProvider ( new DownloadsColumnTotalFragments() );
-        dlcol3.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 3 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol4 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol4.getColumn().setText ( "File Size" );
-        dlcol4.getColumn().setWidth ( 100 );
-        dlcol4.setLabelProvider ( new DownloadsColumnFileSize() );
-        dlcol4.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 4 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol5 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol5.getColumn().setText ( "State" );
-        dlcol5.getColumn().setWidth ( 200 );
-        dlcol5.setLabelProvider ( new DownloadsColumnState() );
-        dlcol5.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 5 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        TableViewerColumn dlcol6 = new TableViewerColumn ( downloadTableViewer, SWT.NONE );
-        dlcol6.getColumn().setText ( "Requested by" );
-        dlcol6.getColumn().setWidth ( 200 );
-        dlcol6.setLabelProvider ( new DownloadsColumnId() );
-        dlcol6.getColumn().addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                DownloadsSorter srt = ( DownloadsSorter ) downloadTableViewer.getSorter();
-                srt.doSort ( 6 );
-                downloadTableViewer.refresh();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        Menu menu_4 = new Menu ( downloadTable );
-        downloadTable.setMenu ( menu_4 );
-
-        MenuItem changepriority = new MenuItem ( menu_4, SWT.NONE );
-        changepriority.setText ( "Change Priority" );
-        changepriority.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                IStructuredSelection sel = ( IStructuredSelection ) downloadTableViewer.getSelection();
-                downloadPriorityDialog.open ( sel );
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        MenuItem canceldl = new MenuItem ( menu_4, SWT.NONE );
-        canceldl.setText ( "Cancel download" );
-        canceldl.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                IStructuredSelection sel = ( IStructuredSelection ) downloadTableViewer.getSelection();
-
-                @SuppressWarnings ( "rawtypes" )
-                Iterator i = sel.iterator();
-                RequestFile rf = null;
-
-                while ( i.hasNext() )
-                {
-                    rf = ( RequestFile ) i.next();
-
-                    CObj cf = new CObj();
-                    cf.setType ( CObj.USR_CANCEL_DL );
-                    cf.pushString ( CObj.LOCALFILE, rf.getLocalFile() );
-                    getNode().enqueue ( cf );
-                }
-
-                if ( rf != null )
-                {
-                    getUserCallback().update ( rf );
-                }
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        MenuItem whohas = new MenuItem ( menu_4, SWT.NONE );
-        whohas.setText ( "Who has file" );
-        whohas.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                IStructuredSelection sel = ( IStructuredSelection ) downloadTableViewer.getSelection();
-
-                @SuppressWarnings ( "rawtypes" )
-                Iterator i = sel.iterator();
-                RequestFile rf = null;
-
-                if ( i.hasNext() )
-                {
-                    rf = ( RequestFile ) i.next();
-
-                    if ( rf != null )
-                    {
-                        CObj hfs = new CObj();
-                        hfs.setType ( CObj.HASFILE );
-                        hfs.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
-                        hfs.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
-                        hfs.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
-                        File f = new File ( rf.getLocalFile() );
-                        hfs.pushString ( CObj.NAME, f.getName() );
-                        hasFileDialog.open ( hfs );
-                    }
-
-                }
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
+        downloadsTable = new DownloadsTable ( composite_10, this );
+        downloadsTable.setLayoutData ( BorderLayout.CENTER );
 
         TabItem tbtmConnections = new TabItem ( tabFolder, SWT.NONE );
         tbtmConnections.setText ( "Connections" );
@@ -6636,9 +4768,9 @@ public class SWTApp implements UpdateInterface
         return lblIdentCommunity;
     }
 
-    public Text getSearchText()
+    public Text getPostsSearchText()
     {
-        return searchText;
+        return postsSearchText;
     }
 
     public StyledText getPostText()
@@ -6646,39 +4778,14 @@ public class SWTApp implements UpdateInterface
         return postText;
     }
 
-    /*  public Table getConnectionTable()
-        {
-        return connectionTable;
-        }*/
-
     public ConnectionDialog getConnectionDialog()
     {
         return connectionDialog;
     }
 
-    public Table getFileTable()
+    public Text getFilesSearchText()
     {
-        return fileTable;
-    }
-
-    public TableViewer getFileTableViewer()
-    {
-        return fileTableViewer;
-    }
-
-    public Text getFileSearch()
-    {
-        return fileSearch;
-    }
-
-    public Table getDownloadTable()
-    {
-        return downloadTable;
-    }
-
-    public TableViewer getDownloadTableViewer()
-    {
-        return downloadTableViewer;
+        return filesSearchText;
     }
 
     public Text getBannerText()
@@ -6689,16 +4796,6 @@ public class SWTApp implements UpdateInterface
     public Label getLblVersion()
     {
         return lblVersion;
-    }
-
-    public Table getMembershipTable()
-    {
-        return membershipTable;
-    }
-
-    public TableViewer getMembershipTableViewer()
-    {
-        return membershipTableViewer;
     }
 
     public Label getLblError()
@@ -6757,6 +4854,31 @@ public class SWTApp implements UpdateInterface
             connectionTable.getTableViewer().setInput ( concallback );
         }
 
+    }
+
+    public DownloadPriorityDialog getDownloadPriorityDialog()
+    {
+        return downloadPriorityDialog;
+    }
+
+    public ShowHasFileDialog getShowHasFileDialog()
+    {
+        return hasFileDialog;
+    }
+
+    public Shell getShell()
+    {
+        return shell;
+    }
+
+    public void togglePreviewResize()
+    {
+        previewResize = !previewResize;
+    }
+
+    public void setPreviewResize ( boolean b )
+    {
+        previewResize = b;
     }
 
 }

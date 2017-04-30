@@ -13,11 +13,11 @@ import javax.persistence.Id;
 public class RequestFile
 {
 
-    public static int INIT = 0;
-    public static int REQUEST_FRAG_LIST = 1;
-    public static int REQUEST_FRAG_LIST_SNT = 2;
-    public static int REQUEST_FRAG = 3;
-    public static int COMPLETE = 4;
+    public static final int INIT = 0;
+    public static final int REQUEST_FRAG_LIST = 1;
+    public static final int REQUEST_FRAG_LIST_SNT = 2;
+    public static final int REQUEST_FRAG = 3;
+    public static final int COMPLETE = 4;
 
     @Id
     @GeneratedValue
@@ -91,6 +91,42 @@ public class RequestFile
     public void setState ( int state )
     {
         this.state = state;
+    }
+
+    public String getStateText()
+    {
+        String text = "";
+
+        switch ( state )
+        {
+
+        case INIT:
+            text = "init";
+            break;
+
+        case REQUEST_FRAG:
+            text = "download parts";
+            break;
+
+        case REQUEST_FRAG_LIST:
+            text = "requesting list";
+            break;
+
+        case REQUEST_FRAG_LIST_SNT:
+            text = "waiting on list";
+            break;
+
+        case COMPLETE:
+            text = "complete";
+            break;
+
+        default:
+            text = this.state + "?";
+            break;
+
+        }
+
+        return text;
     }
 
     public int getPriority()
