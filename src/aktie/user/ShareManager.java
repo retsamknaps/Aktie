@@ -338,7 +338,7 @@ public class ShareManager implements Runnable
 
             if ( remove )
             {
-                hf.pushString ( CObj.STILLHASFILE, "false" );
+                hf.pushString ( CObj.STILLHASFILE, CObj.FALSE );
                 hfc.createHasFile ( hf );
                 hfc.updateFileInfo ( hf );
             }
@@ -632,6 +632,69 @@ public class ShareManager implements Runnable
 
     }
 
+    private void checkPartFile ( CObj partFile )
+    {
+        String creatorID = partFile.getString ( CObj.CREATOR );
+        Long createdOn = partFile.getNumber ( CObj.CREATEDON );
+        String communityID = partFile.getString ( CObj.COMMUNITYID );
+        String fileDigest = partFile.getString ( CObj.FILEDIGEST );
+        String fragDigest = partFile.getString ( CObj.FRAGDIGEST );
+
+        if ( creatorID == null || createdOn == null || communityID == null || fileDigest == null || fragDigest == null )
+        {
+            // Should this happen, the part file information would be invalid
+            try
+            {
+                index.delete ( partFile );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+            return;
+        }
+
+        // Remove the part file from this index in case that it is too old.
+        long latestAcceptedCreationDate = System.currentTimeMillis() - Index.HAS_PART_MAX_AGE;
+
+        if ( createdOn.longValue() < latestAcceptedCreationDate )
+        {
+            try
+            {
+                index.delete ( partFile );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+            return;
+        }
+
+        // Check whether at least one matching has file is known for this part file
+        // If so, delete the part file.
+        CObjList hasFiles = index.getHasFiles ( communityID, fileDigest, fragDigest );
+
+        if ( hasFiles.size() > 0 )
+        {
+            try
+            {
+                index.delete ( partFile );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        hasFiles.close();
+    }
+
     private void checkAllHasFile()
     {
         if ( enabled )
@@ -686,6 +749,34 @@ public class ShareManager implements Runnable
 
     }
 
+    // HasPart
+    private void checkAllPartFiles()
+    {
+        if ( enabled )
+        {
+            CObjList partFiles = index.getAllPartFiles();
+
+            for ( int i = 0; i < partFiles.size(); i++ )
+            {
+                try
+                {
+                    CObj partFile = partFiles.get ( i );
+                    checkPartFile ( partFile );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                    break;
+                }
+
+            }
+
+            partFiles.close();
+        }
+
+    }
+
     private void saveShare ( Session s, DirectoryShare d )
     {
         try
@@ -732,7 +823,7 @@ public class ShareManager implements Runnable
 
             for ( RequestFile rf : rl )
             {
-                File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
+                File rlp = new File ( rf.getLocalPartFile() );
 
                 if ( rlp.exists() && enabled )
                 {
@@ -805,7 +896,7 @@ public class ShareManager implements Runnable
                                         if ( !cdig.equals ( fdig ) )
                                         {
                                             log.warning ( "FRAGMENT INCORRECT: " + cdig + " != " + fdig );
-                                            fg.pushPrivate ( CObj.COMPLETE, "false" );
+                                            fg.pushPrivate ( CObj.COMPLETE, CObj.FALSE );
                                             index.index ( fg );
                                         }
 
@@ -1266,6 +1357,7 @@ public class ShareManager implements Runnable
 
     }
 
+    @Override
     public void run()
     {
         while ( !stop )
@@ -1296,6 +1388,8 @@ public class ShareManager implements Runnable
                     checkAllHasFile();
                     checkAllDuplicates();
                     checkFragments();
+                    // HasPart
+                    checkAllPartFiles();
                     nextcheckhasfile = curtime + CHECKHASFILE_DELAY;
                     setRunning ( false );
                     updateindex = true;

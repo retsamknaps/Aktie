@@ -115,6 +115,8 @@ public class Node
         //userQueue.addProcessor ( new UsrReqComProcessor ( identManager ) );
         userQueue.addProcessor ( new UsrReqFileProcessor ( requestHandler, usrCallback ) );
         //userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );
+        // HasPart
+        //userQueue.addProcessor ( new UsrReqHasPartProcessor ( identManager ) );
         //userQueue.addProcessor ( new UsrReqIdentityProcessor ( identManager ) );
         //userQueue.addProcessor ( new UsrReqMemProcessor ( identManager ) );
         //userQueue.addProcessor ( new UsrReqPrvMsgProcessor ( session, index ) );

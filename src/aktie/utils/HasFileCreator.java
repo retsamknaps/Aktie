@@ -15,6 +15,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
+import aktie.data.RequestFile;
 import aktie.gui.UpdateInterface;
 import aktie.gui.Wrapper;
 import aktie.index.CObjList;
@@ -26,7 +27,7 @@ public class HasFileCreator
 {
     Logger log = Logger.getLogger ( "aktie" );
 
-    private HH2Session session;
+    private HH2Session hh2Session;
     private Index index;
     private SubscriptionValidator validator;
     private SpamTool spamtool;
@@ -35,7 +36,7 @@ public class HasFileCreator
     public HasFileCreator ( HH2Session s, Index i, SpamTool st )
     {
         index = i;
-        session = s;
+        hh2Session = s;
         spamtool = st;
         identManager = new IdentityManager ( s, i );
         validator = new SubscriptionValidator ( index );
@@ -319,68 +320,68 @@ public class HasFileCreator
 
     }
 
-    public boolean createHasFile ( CObj o )
+    public boolean createHasFile ( CObj hasFile )
     {
         //Set File sequence number for the community/creator
-        String creator = o.getString ( CObj.CREATOR );
-        String comid = o.getString ( CObj.COMMUNITYID );
+        String creatorID = hasFile.getString ( CObj.CREATOR );
+        String communityID = hasFile.getString ( CObj.COMMUNITYID );
 
-        String digofdigs = o.getString ( CObj.FRAGDIGEST );
-        String wholedig = o.getString ( CObj.FILEDIGEST );
+        String fragDigest = hasFile.getString ( CObj.FRAGDIGEST );
+        String fileDigest = hasFile.getString ( CObj.FILEDIGEST );
 
-        CObj myid = validator.isMyUserSubscribed ( comid, creator );
+        CObj myid = validator.isMyUserSubscribed ( communityID, creatorID );
 
         if ( myid == null ) { return false; }
 
-        String id = getCommunityMemberId ( creator, comid );
-        String hasfileid = getHasFileId ( id, digofdigs, wholedig );
+        String id = getCommunityMemberId ( creatorID, communityID );
+        String hasfileid = getHasFileId ( id, fragDigest, fileDigest );
 
-        o.setId ( hasfileid ); //only 1 has file per user per community per file digest
+        hasFile.setId ( hasfileid ); //only 1 has file per user per community per file digest
         //This is an upgrade.  We have to make adjustments for this
         //to be null when validating signatures for old hasfile records
 
-        Session s = null;
-        long lastnum = 0;
+        Session session = null;
+        long lastSeqNumber = 0L;
 
         try
         {
-            s = session.getSession();
-            s.getTransaction().begin();
-            CommunityMember m = ( CommunityMember ) s.get ( CommunityMember.class, id );
+            session = hh2Session.getSession();
+            session.getTransaction().begin();
+            CommunityMember member = ( CommunityMember ) session.get ( CommunityMember.class, id );
 
-            if ( m == null )
+            if ( member == null )
             {
-                m = new CommunityMember();
-                m.setId ( id );
-                m.setCommunityId ( comid );
-                m.setMemberId ( creator );
-                s.persist ( m );
+                member = new CommunityMember();
+                member.setId ( id );
+                member.setCommunityId ( communityID );
+                member.setMemberId ( creatorID );
+                session.persist ( member );
             }
 
-            long num = m.getLastFileNumber();
-            lastnum = num;
-            num++;
-            o.pushNumber ( CObj.SEQNUM, num );
-            o.pushPrivate ( CObj.MINE, "true" );
-            m.setLastFileNumber ( num );
-            s.merge ( m );
-            s.getTransaction().commit();
-            s.close();
+            long seqNumber = member.getLastFileNumber();
+            lastSeqNumber = seqNumber;
+            seqNumber++;
+            hasFile.pushNumber ( CObj.SEQNUM, seqNumber );
+            hasFile.pushPrivate ( CObj.MINE, CObj.TRUE );
+            member.setLastFileNumber ( seqNumber );
+            session.merge ( member );
+            session.getTransaction().commit();
+            session.close();
         }
 
         catch ( Exception e )
         {
             e.printStackTrace();
-            o.pushString ( CObj.ERROR, "Bad error: " + e.getMessage() );
+            hasFile.pushString ( CObj.ERROR, "Bad error: " + e.getMessage() );
             e.printStackTrace();
 
-            if ( s != null )
+            if ( session != null )
             {
                 try
                 {
-                    if ( s.getTransaction().isActive() )
+                    if ( session.getTransaction().isActive() )
                     {
-                        s.getTransaction().rollback();
+                        session.getTransaction().rollback();
                     }
 
                 }
@@ -391,7 +392,7 @@ public class HasFileCreator
 
                 try
                 {
-                    s.close();
+                    session.close();
                 }
 
                 catch ( Exception e2 )
@@ -405,18 +406,18 @@ public class HasFileCreator
 
         //Make the path absolute to help with queries based on the file
         //name later.
-        String lf = o.getPrivate ( CObj.LOCALFILE );
+        String localFile = hasFile.getPrivate ( CObj.LOCALFILE );
 
-        if ( lf != null )
+        if ( localFile != null )
         {
-            File f = new File ( lf );
+            File file = new File ( localFile );
 
-            if ( f.exists() )
+            if ( file.exists() )
             {
                 try
                 {
-                    lf = f.getCanonicalPath();
-                    o.pushPrivate ( CObj.LOCALFILE, lf );
+                    localFile = file.getCanonicalPath();
+                    hasFile.pushPrivate ( CObj.LOCALFILE, localFile );
                 }
 
                 catch ( IOException e )
@@ -429,7 +430,7 @@ public class HasFileCreator
         }
 
         //If the file is a duplicate remove it
-        CObj ed = index.getDuplicate ( hasfileid, lf );
+        CObj ed = index.getDuplicate ( hasfileid, localFile );
 
         if ( ed != null )
         {
@@ -453,7 +454,7 @@ public class HasFileCreator
         {
             String oldlocal = oldfile.getPrivate ( CObj.LOCALFILE );
 
-            if ( oldlocal != null && !oldlocal.equals ( lf ) )
+            if ( oldlocal != null && !oldlocal.equals ( localFile ) )
             {
                 File f = new File ( oldlocal );
 
@@ -463,8 +464,8 @@ public class HasFileCreator
                     dp.setType ( CObj.DUPFILE );
                     dp.pushString ( CObj.HASFILE, hasfileid );
                     dp.pushString ( CObj.LOCALFILE, oldlocal );
-                    dp.pushString ( CObj.COMMUNITYID, comid );
-                    dp.pushString ( CObj.CREATOR, creator );
+                    dp.pushString ( CObj.COMMUNITYID, communityID );
+                    dp.pushString ( CObj.CREATOR, creatorID );
                     dp.simpleDigest();
 
                     try
@@ -487,7 +488,7 @@ public class HasFileCreator
         //Get the time of the last file and make sure our new fuzzy time
         //is after that.
         long lasttime = 0;
-        CObjList ol = index.getHasFiles ( comid, creator, lastnum, lastnum );
+        CObjList ol = index.getHasFiles ( communityID, creatorID, lastSeqNumber, lastSeqNumber );
 
         if ( ol.size() > 0 )
         {
@@ -523,34 +524,216 @@ public class HasFileCreator
 
         if ( rnk != null )
         {
-            o.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
+            hasFile.pushPrivateNumber ( CObj.PRV_USER_RANK, rnk );
         }
 
         //Set the created on time
-        o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
+        hasFile.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
 
-        long sq = identManager.getGlobalSequenceNumber ( creator, false );
-        o.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), sq );
+        long sq = identManager.getGlobalSequenceNumber ( creatorID, false );
+        hasFile.pushPrivateNumber ( CObj.getGlobalSeq ( creatorID ), sq );
 
         //Sign it.
-        spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+        spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), hasFile );
 
         if ( Level.INFO.equals ( log.getLevel() ) )
         {
-            log.info ( "FILE CREATED: " + creator + " DIG " + o.getDig() + " COMID: " +
-                       o.getString ( CObj.COMMUNITYID ) + " SEQ: " + sq );
+            log.info ( "FILE CREATED: " + creatorID + " DIG " + hasFile.getDig() + " COMID: " +
+                       hasFile.getString ( CObj.COMMUNITYID ) + " SEQ: " + sq );
         }
 
         try
         {
-            index.index ( o );
+            index.index ( hasFile );
         }
 
         catch ( Exception e )
         {
             e.printStackTrace();
-            o.pushString ( CObj.ERROR, "File record could not be indexed" );
+            hasFile.pushString ( CObj.ERROR, "File record could not be indexed" );
             return false;
+        }
+
+        return true;
+    }
+
+    public boolean createPartFile ( RequestFile requestFile, String myCreatorID )
+    {
+        String communityID = requestFile.getCommunityId();
+
+        CObj myID = validator.isMyUserSubscribed ( communityID, myCreatorID );
+
+        if ( myID == null )
+        {
+            return false;
+        }
+
+        String partFile = requestFile.getLocalPartFile();
+        String fileDigest = requestFile.getWholeDigest();
+        String fragDigest = requestFile.getFragmentDigest();
+        long totalFragments = requestFile.getFragsTotal();
+
+        long now = System.currentTimeMillis();
+        long lastCreatedOn = 0L;
+        long firstSeen = now;
+        long revision = 1L;
+
+        CObj existingHasPart = index.getPartFile ( myCreatorID, communityID, fileDigest, fragDigest );
+
+        // Should have delivered us a list with a maximum of one object, but who knows for sure.
+        // If there is already a HasPart in the index, find out when it was created.
+        if ( existingHasPart != null )
+        {
+            Long createdOn = existingHasPart.getNumber ( CObj.CREATEDON );
+
+            if ( createdOn != null )
+            {
+                lastCreatedOn = Math.max ( lastCreatedOn, createdOn );
+            }
+
+            Long compareFirstSeen = existingHasPart.getPrivateNumber ( CObj.FIRSTSEEN );
+
+            if ( compareFirstSeen != null )
+            {
+                firstSeen = Math.min ( firstSeen, compareFirstSeen );
+            }
+
+            Long compareRevision = existingHasPart.getPrivateNumber ( CObj.REVISION );
+
+            if ( compareRevision != null )
+            {
+                revision = compareRevision + 1;
+            }
+
+        }
+
+        String id = getCommunityMemberId ( myCreatorID, communityID );
+        // merge us a unique ID for this part file
+        String partFileID = getHasFileId ( id, fragDigest, fileDigest );
+
+        long fileSize = requestFile.getFileSize();
+        CObjList completedFragments = index.getFragmentsComplete ( fileDigest, fragDigest );
+
+        // Create the payload which indicates the indices of the completed fragments.
+        String completedFragmentsPayload = CObjHelper.createHasPartPayload ( completedFragments, fileSize, totalFragments );
+        completedFragments.close();
+
+        CObj hasPart = new CObj();
+        hasPart.setType ( CObj.HASPART );
+        hasPart.setId ( partFileID );
+        hasPart.pushString ( CObj.CREATOR, myCreatorID );
+        hasPart.pushNumber ( CObj.CREATEDON,  Utils.fuzzTime ( lastCreatedOn ) );
+        hasPart.pushString ( CObj.COMMUNITYID, communityID );
+        hasPart.pushString ( CObj.FILEDIGEST, fileDigest );
+        hasPart.pushString ( CObj.FRAGDIGEST,  fragDigest );
+        hasPart.pushNumber ( CObj.FRAGNUMBER, totalFragments );
+        hasPart.pushString ( CObj.PAYLOAD, completedFragmentsPayload );
+        hasPart.pushString ( CObj.STILLHASFILE,  CObj.TRUE );
+
+        hasPart.pushPrivateNumber ( CObj.FIRSTSEEN, firstSeen );
+        hasPart.pushPrivateNumber ( CObj.LASTSEEN, now );
+        hasPart.pushPrivateNumber ( CObj.REVISION, revision );
+        hasPart.pushPrivate ( CObj.MINE, CObj.TRUE );
+        hasPart.pushPrivate ( CObj.PRV_SKIP_PAYMENT, CObj.TRUE );
+
+        Session session = null;
+
+        try
+        {
+            session = hh2Session.getSession();
+            session.getTransaction().begin();
+            CommunityMember communityMember = ( CommunityMember ) session.get ( CommunityMember.class, myCreatorID );
+
+            if ( communityMember == null )
+            {
+                communityMember = new CommunityMember();
+                communityMember.setId ( id );
+                communityMember.setCommunityId ( communityID );
+                communityMember.setMemberId ( myCreatorID );
+                session.persist ( communityMember );
+            }
+
+            long seqNumber = communityMember.getLastPartNumber();
+            seqNumber++;
+            hasPart.pushNumber ( CObj.SEQNUM, seqNumber );
+            communityMember.setLastFileNumber ( seqNumber );
+            session.merge ( communityMember );
+            session.getTransaction().commit();
+            session.close();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+            hasPart.pushString ( CObj.ERROR, "Bad error: " + e.getMessage() );
+            e.printStackTrace();
+
+            if ( session != null )
+            {
+                try
+                {
+                    if ( session.getTransaction().isActive() )
+                    {
+                        session.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    session.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+            return false;
+        }
+
+        // Add the canonical path of the part file.
+        // The filename should include the Aktie part extension.
+        if ( partFile != null )
+        {
+            File file = new File ( partFile );
+
+            if ( file.exists() )
+            {
+                try
+                {
+                    partFile = file.getCanonicalPath();
+                    hasPart.pushPrivate ( CObj.LOCALFILE, partFile );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+        long globalSequence = identManager.getGlobalSequenceNumber ( myCreatorID, false );
+        hasPart.pushPrivateNumber ( CObj.getGlobalSeq ( myCreatorID ), globalSequence );
+
+        //Sign it.
+        spamtool.finalize ( Utils.privateKeyFromString ( myID.getPrivate ( CObj.PRIVATEKEY ) ), hasPart );
+
+        // Put into the local index.
+        try
+        {
+            index.index ( hasPart );
+        }
+
+        catch ( IOException e )
+        {
         }
 
         return true;

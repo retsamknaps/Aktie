@@ -791,4 +791,143 @@ public class Utils
         return new String ( hexChars );
     }
 
+    /**
+        Check whether a specific bit in a byte array is set to 0 or 1.
+        @param bytes The byte array in which to check for the bit.
+        @param position The position (bit index) at which to check whether the bit is set
+        @return true if the bit is set to 1, false if the bit is set to 0.
+    */
+    public static boolean isBitSet ( byte[] bytes, int position )
+    {
+        if ( position >= bytes.length * Byte.SIZE )
+        {
+            throw new ArrayIndexOutOfBoundsException ( "Trying to access bit at position " + position + " beyond length of bits in byte array which is " + bytes.length * Byte.SIZE );
+        }
+
+        int index = position / Byte.SIZE;
+        int bit = position % Byte.SIZE;
+        return ( ( bytes[index] >> bit ) & 1 ) == 1;
+    }
+
+    /**
+        Set specific bit in a byte array to 0 or 1.
+        @param bytes The byte array in which to check for the bit.
+        @param position The position (bit index) at which to set the bit
+        @param set If true, the bit is set to 1. If false, the bit is set to 0.
+    */
+    public static void setBit ( byte[] bytes, int position, boolean set )
+    {
+        if ( position >= bytes.length * Byte.SIZE )
+        {
+            throw new ArrayIndexOutOfBoundsException ( "Trying to access bit at position " + position + " beyond length of bits in byte array which is " + bytes.length * Byte.SIZE );
+        }
+
+        int index = position / Byte.SIZE;
+        int bit = position % Byte.SIZE;
+
+        if  ( set )
+        {
+            bytes[index] |= ( 1 << bit );
+        }
+
+        else
+        {
+            bytes[index] &= ~ ( 1 << bit );
+        }
+
+    }
+
+    /**
+        Creates a byte array with the defined minimum number of bits.
+        There might be up to 7 additional bits in the array since one byte is 8 bits.
+        @param numberOfBits The minimum number of bits in the array.
+        @return A byte array of the required minimum bit size with all bits set to 0.
+    */
+    public static byte[] createAllZeroByteArray ( int numberOfBits )
+    {
+        int length = numberOfBits / Byte.SIZE;
+
+        if ( numberOfBits % Byte.SIZE != 0 )
+        {
+            length += 1;
+        }
+
+        byte[] bytes = new byte[length];
+
+        for ( int i = 0; i < bytes.length; i++ )
+        {
+            bytes[i] = ( byte ) 0;
+        }
+
+        return bytes;
+    }
+
+    public static void main ( String[] args )
+    {
+        int[] frags = { 1, 5, 7, 8, 10, 47 };
+
+        int length = 51;
+
+        byte[] bytes = createAllZeroByteArray ( length );
+
+        System.out.println ( "bytes.length = " + bytes.length );
+
+        for ( int i = 0; i < frags.length; i++ )
+        {
+            setBit ( bytes, frags[i], true );
+        }
+
+        System.out.print ( "Bytes: " );
+        StringBuffer infrags = new StringBuffer();
+
+        for ( int i = 0; i < length; i++ )
+        {
+            if ( isBitSet ( bytes, i ) )
+            {
+                System.out.print ( "1" );
+                infrags.append ( i ).append ( " " );
+            }
+
+            else
+            {
+                System.out.print ( "0" );
+            }
+
+        }
+
+        System.out.println();
+
+        System.out.println ( "Represented frags: " + infrags.toString() );
+
+
+        String base64 = toString ( bytes );
+        System.out.println ( "base64: " + base64 );
+
+        byte[] rebytes = toByteArray ( base64 );
+
+        System.out.println ( "rebytes.length = " + rebytes.length );
+
+        System.out.print ( "Recovered bytes: " );
+        StringBuffer refrags = new StringBuffer();
+
+        for ( int i = 0; i < length; i++ )
+        {
+            if ( isBitSet ( rebytes, i ) )
+            {
+                System.out.print ( "1" );
+                refrags.append ( i ).append ( " " );
+            }
+
+            else
+            {
+                System.out.print ( "0" );
+            }
+
+        }
+
+        System.out.println();
+
+        System.out.println ( "Recovered frags: " + refrags.toString() );
+    }
+
 }

@@ -5,6 +5,7 @@ import aktie.data.CObj;
 
 public class UsrReqHasFileProcessor extends GenericProcessor
 {
+    public static final long DEFAULT_PRIORITY = 5L;
 
     private IdentityManager identManager;
 
@@ -20,7 +21,7 @@ public class UsrReqHasFileProcessor extends GenericProcessor
 
         if ( CObj.USR_HASFILE_UPDATE.equals ( type ) )
         {
-            long priority = 5;
+            long priority = DEFAULT_PRIORITY;
             Long pril = b.getNumber ( CObj.PRIORITY );
 
             if ( pril != null )
@@ -32,7 +33,7 @@ public class UsrReqHasFileProcessor extends GenericProcessor
 
             if ( comid == null )
             {
-                identManager.requestAllHasFile ( ( int ) priority );
+                identManager.requestAllHasFiles ( ( int ) priority );
             }
 
             else

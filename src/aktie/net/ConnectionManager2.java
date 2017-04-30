@@ -130,6 +130,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
+    @Override
     public long getLastFileUpdate()
     {
         return fileManager.getLastFileUpdate();
@@ -245,41 +246,68 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         remote destination - making sure the remote destination
         says it has the files
     */
-    public Set<RequestFile> getHasFileForConnection ( String remotedest, Set<String> subs )
+    @Override
+    public Set<RequestFile> getRequestFilesForConnection ( String remoteDestination, Set<String> subscriptions )
     {
-        Set<RequestFile> r = new HashSet<RequestFile>();
-        List<RequestFile> rl = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+        Set<RequestFile> requestFileSet = new HashSet<RequestFile>();
+        List<RequestFile> filesToRequest = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
-        for ( RequestFile rf : rl )
+        for ( RequestFile requestFile : filesToRequest )
         {
-            if ( subs.contains ( rf.getCommunityId() ) )
+            if ( subscriptions.contains ( requestFile.getCommunityId() ) )
             {
-                CObj co = index.getIdentHasFile ( rf.getCommunityId(),
-                                                  remotedest, rf.getWholeDigest(), rf.getFragmentDigest() );
+                String communityID = requestFile.getCommunityId();
+                String fileDigest = requestFile.getWholeDigest();
+                String fragDigest = requestFile.getFragmentDigest();
 
-                CObj so = index.getSubscription ( rf.getCommunityId(), remotedest );
+                CObj co = index.getIdentHasFile ( communityID, remoteDestination, fileDigest, fragDigest );
+
+                CObj so = index.getSubscription ( requestFile.getCommunityId(), remoteDestination );
 
                 if ( co != null && so != null )
                 {
-                    r.add ( rf );
+                    requestFileSet.add ( requestFile );
+                }
+
+                // HasPart
+                // Check for download sources from part files of other users.
+                // If there is no has file, see if we can download from a part file
+                else
+                {
+                    // Do not care about the community here. We want to get the file, that's it.
+                    CObjList hasParts = index.getPartFiles ( remoteDestination, fileDigest, fragDigest );
+
+                    if ( hasParts.size() > 0 )
+                    {
+                        requestFileSet.add ( requestFile );
+                    }
+
+                    hasParts.close();
                 }
 
             }
 
         }
 
-        return r;
+        return requestFileSet;
     }
 
-    //  Communityid ->  File digest -> Requests
-    public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
+    /**
+        Get the next file to request from a connected remote destination.
+        @param localDestination The local destination that requests the files.
+        @param remoteDestination The remote destination to which the local destination is connected
+        @param remoteRequestFiles The files available at the remote destination from which to select the next file to request.
+        @return The next file to request or null if there is no file of interest is available.
+    */
+    @Override
+    public CObj nextFile ( String localDestination, String remoteDestination, Set<RequestFile> remoteRequestFiles )
     {
         //Connection was successful remove
         //from recent attempts so we know it's a good
         //one to connect to
-        recentAttempts.remove ( remotedest + true );
+        recentAttempts.remove ( remoteDestination + true );
 
-        Object r = fileManager.nextFile ( localdest, remotedest, hasfiles );
+        CObj r = fileManager.nextFile ( localDestination, remoteDestination, remoteRequestFiles );
 
         if ( r == null )
         {
@@ -624,56 +652,56 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         //fileRequests is already in priority order, so just
         //try to connect to as many allowed that has the file!
         //user can change priorities if they don't like it.
-        List<RequestFile> rls = fileManager.getRequestFile();
-        Iterator<RequestFile> i = rls.iterator();
+        List<RequestFile> requestFileList = fileManager.getRequestFiles();
+        Iterator<RequestFile> i = requestFileList.iterator();
 
         while ( i.hasNext() && con < ATTEMPT_CONNECTIONS )
         {
-            RequestFile rf = i.next();
+            RequestFile requestFile = i.next();
 
             if ( log.isLoggable ( Level.INFO ) )
             {
-                log.info ( "ConnectionManager2: attempt connection for file: " + rf.getLocalFile() );
+                log.info ( "ConnectionManager2: attempt connection for file: " + requestFile.getLocalFile() );
             }
 
-            DestinationThread dt = null;
+            DestinationThread destinationThread = null;
 
-            CObj mydest = myids.get ( rf.getRequestId() );
+            CObj mydest = myids.get ( requestFile.getRequestId() );
 
             if ( mydest != null )
             {
                 synchronized ( destinations )
                 {
-                    dt = destinations.get ( mydest.getString ( CObj.DEST ) );
+                    destinationThread = destinations.get ( mydest.getString ( CObj.DEST ) );
                 }
 
             }
 
-            if ( dt != null )
+            if ( destinationThread != null )
             {
-                if ( dt.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS )
+                if ( destinationThread.numberConnection() < MAX_TOTAL_DEST_CONNECTIONS )
                 {
 
-                    CObjList clst = index.
-                                    getHasFiles ( rf.getCommunityId(), rf.getWholeDigest(), rf.getFragmentDigest() );
+                    CObjList hasFiles = index.
+                                        getHasFiles ( requestFile.getCommunityId(), requestFile.getWholeDigest(), requestFile.getFragmentDigest() );
 
                     if ( log.isLoggable ( Level.INFO ) )
                     {
-                        log.info ( "ConnectionManager2: other nodes with file: " + clst.size() + " cons " + con );
+                        log.info ( "ConnectionManager2: other nodes with file: " + hasFiles.size() + " cons " + con );
                     }
 
-                    int rl[] = randomList ( clst.size() );
+                    int rl[] = randomList ( hasFiles.size() );
 
                     for ( int c = 0; c < rl.length && con < ATTEMPT_CONNECTIONS; c++ )
                     {
                         try
                         {
-                            CObj rd = clst.get ( rl[c] );
+                            CObj rd = hasFiles.get ( rl[c] );
                             String id = rd.getString ( CObj.CREATOR );
 
                             Set<String> subs = getSubs ( id );
 
-                            boolean contains = subs.contains ( rf.getCommunityId() );
+                            boolean contains = subs.contains ( requestFile.getCommunityId() );
 
                             if ( log.isLoggable ( Level.INFO ) )
                             {
@@ -684,7 +712,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                             {
                                 CObj identity = getIdentity ( id );
 
-                                if ( attemptConnection ( dt, identity, true, myids ) )
+                                if ( attemptConnection ( destinationThread, identity, true, myids ) )
                                 {
                                     con++;
                                 }
@@ -700,7 +728,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                     }
 
-                    clst.close();
+                    hasFiles.close();
                 }
 
             }

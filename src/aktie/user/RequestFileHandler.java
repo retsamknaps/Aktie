@@ -24,7 +24,7 @@ public class RequestFileHandler
 {
     Logger log = Logger.getLogger ( "aktie" );
 
-    public static String AKTIEPART = ".aktiepart";
+    //public static String AKTIEPART = ".aktiepart";
 
     private HH2Session session;
     private Index index;
@@ -46,7 +46,7 @@ public class RequestFileHandler
 
     }
 
-    public void cancelDownload ( RequestFile f )
+    public void cancelDownload ( RequestFile requestFile )
     {
         Session s = null;
 
@@ -55,7 +55,7 @@ public class RequestFileHandler
             s = session.getSession();
             s.getTransaction().begin();
 
-            RequestFile rf = ( RequestFile ) s.get ( RequestFile.class, f.getId() );
+            RequestFile rf = ( RequestFile ) s.get ( RequestFile.class, requestFile.getId() );
             s.delete ( rf );
 
             s.getTransaction().commit();
@@ -94,25 +94,38 @@ public class RequestFileHandler
 
         }
 
+        String fileDigest = requestFile.getWholeDigest();
+        String fragDigest = requestFile.getFragmentDigest();
+
         //Delete all the fragments
-        CObjList cl = index.getFragments ( f.getWholeDigest(), f.getFragmentDigest() );
+        CObjList fragments = index.getFragments ( fileDigest, fragDigest );
 
-        for ( int c = 0; c < cl.size(); c++ )
+        try
         {
-            try
-            {
-                CObj co = cl.get ( c );
-                index.delete ( co );
-            }
-
-            catch ( Exception e )
-            {
-                //e.printStackTrace();
-            }
-
+            index.delete ( fragments );
         }
 
-        cl.close();
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+        }
+
+        fragments.close();
+
+        // HasPart
+        // We canceled the download. Delete any own associated part files from index as we do not serve this part files anymore.
+        CObjList partFiles = index.getAllMyPartFiles ( fileDigest, fragDigest );
+
+        try
+        {
+            index.delete ( partFiles );
+        }
+
+        catch ( Exception e )
+        {
+        }
+
+        partFiles.close();
 
     }
 
@@ -662,7 +675,7 @@ public class RequestFileHandler
 
     public boolean claimFileComplete ( RequestFile rf )
     {
-        boolean climaed = false;
+        boolean claimed = false;
         Session s = null;
 
         try
@@ -676,7 +689,26 @@ public class RequestFileHandler
                 nf.setState ( RequestFile.COMPLETE );
                 nf.setFragsComplete ( nf.getFragsTotal() );
                 s.merge ( nf );
-                climaed = true;
+
+                // HasPart
+                // Delete all own part file information sources as we now have the complete file
+                // and hence do not serve the part file anymore.
+                CObjList myParts = index.getAllMyPartFiles ( nf.getWholeDigest(), nf.getFragmentDigest() );
+
+                try
+                {
+                    // TODO: Maybe just set STILLHAS to "false" and clean up on other occasion?
+                    index.delete ( myParts );
+                }
+
+                catch ( IOException e )
+                {
+
+                }
+
+                myParts.close();
+
+                claimed = true;
             }
 
             s.getTransaction().commit();
@@ -685,7 +717,7 @@ public class RequestFileHandler
 
         catch ( Exception e )
         {
-            climaed = false;
+            claimed = false;
             //e.printStackTrace();
 
             if ( s != null )
@@ -716,7 +748,7 @@ public class RequestFileHandler
 
         }
 
-        return climaed;
+        return claimed;
     }
 
     private RequestFile createRF ( CObj hasfile, File lf, int state, int comp )
@@ -787,7 +819,7 @@ public class RequestFileHandler
 
                 if ( !lf.exists() )
                 {
-                    lf = new File ( lf.getPath() + AKTIEPART );
+                    lf = new File ( RequestFile.getLocalPartFilePath ( lf.getPath() ) );
                     lf.createNewFile();
                 }
 
@@ -908,12 +940,12 @@ public class RequestFileHandler
 
         log.info ( "File name: " + fname + " ext: " + ext );
 
-        File pf = new File ( lf.getPath() + AKTIEPART );
+        File pf = new File ( RequestFile.getLocalPartFilePath ( lf.getPath() ) );
 
         while ( lf.exists() || pf.exists() )
         {
             lf = new File ( fname + "." + idx + ext );
-            pf = new File ( lf.getPath() + AKTIEPART );
+            pf = new File ( RequestFile.getLocalPartFilePath ( lf.getPath() ) );
             log.info ( "Check file: " + lf );
             idx++;
         }

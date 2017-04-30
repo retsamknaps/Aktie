@@ -13,6 +13,8 @@ import javax.persistence.Id;
 public class RequestFile
 {
 
+    public static final String AKTIEPART = ".aktiepart";
+
     public static int INIT = 0;
     public static int REQUEST_FRAG_LIST = 1;
     public static int REQUEST_FRAG_LIST_SNT = 2;
@@ -61,6 +63,16 @@ public class RequestFile
     public void setLocalFile ( String localFile )
     {
         this.localFile = localFile;
+    }
+
+    public String getLocalPartFile()
+    {
+        return localFile + AKTIEPART;
+    }
+
+    public static String getLocalPartFilePath ( String filePath )
+    {
+        return filePath + AKTIEPART;
     }
 
     public String getWholeDigest()

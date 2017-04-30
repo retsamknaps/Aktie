@@ -44,10 +44,10 @@ public class NewFileProcessor extends GenericProcessor
 
         if ( CObj.HASFILE.equals ( type ) )
         {
-            String comid = o.getString ( CObj.COMMUNITYID );
+            String communityID = o.getString ( CObj.COMMUNITYID );
             String creator = o.getString ( CObj.CREATOR );
 
-            if ( comid == null || creator == null )
+            if ( communityID == null || creator == null )
             {
                 o.pushString ( CObj.ERROR, "No community or creator specified" );
                 guicallback.update ( o );
@@ -64,9 +64,9 @@ public class NewFileProcessor extends GenericProcessor
                 return true;
             }
 
-            File f = new File ( wfs );
+            File file = new File ( wfs );
 
-            if ( !f.exists() || !f.isFile() )
+            if ( !file.exists() || !file.isFile() )
             {
                 o.pushString ( CObj.ERROR, "Local file does not exist: " + wfs );
                 guicallback.update ( o );
@@ -78,82 +78,81 @@ public class NewFileProcessor extends GenericProcessor
 
             if ( name == null )
             {
-                name = f.getName();
+                name = file.getName();
                 o.pushString ( CObj.NAME, name );
             }
 
             //Get the fragment size, set if necessary
-            Long fsize = o.getNumber ( CObj.FRAGSIZE );
+            Long projectedFragmentSize = o.getNumber ( CObj.FRAGSIZE );
 
-            if ( fsize == null )
+            if ( projectedFragmentSize == null )
             {
-                fsize = 512L * 1024L; //500K
-                o.pushNumber ( CObj.FRAGSIZE, fsize );
+                projectedFragmentSize = 512L * 1024L; //500K
+                o.pushNumber ( CObj.FRAGSIZE, projectedFragmentSize );
             }
 
-            if ( fsize > 20L * 1024L * 1024L ) //20MB
+            if ( projectedFragmentSize > 20L * 1024L * 1024L ) //20MB
             {
-                o.pushString ( CObj.ERROR, "Fragment size is too large " + fsize );
+                o.pushString ( CObj.ERROR, "Fragment size is too large " + projectedFragmentSize );
                 guicallback.update ( o );
                 return true;
             }
 
             //Set the file size
-            o.pushNumber ( CObj.FILESIZE, f.length() );
+            o.pushNumber ( CObj.FILESIZE, file.length() );
             //Indicate we (still) have the file
-            o.pushString ( CObj.STILLHASFILE, "true" );
+            o.pushString ( CObj.STILLHASFILE, CObj.TRUE );
 
             //Process file
             try
             {
                 CObj updatemsg = new CObj();
-                updatemsg.pushString ( CObj.ERROR, "Adding new file: " + f.getName() );
+                updatemsg.pushString ( CObj.ERROR, "Adding new file: " + file.getName() );
                 updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
                 guicallback.update ( updatemsg );
 
                 List<byte[]> fragdiglst = new LinkedList<byte[]>();
-                long flvl = fsize;
-                int flv = ( int ) flvl;
-                byte buf[] = new byte[flv];
+                int projectedFragmentSizeInt = ( int ) projectedFragmentSize.longValue();
+                byte buffer[] = new byte[projectedFragmentSizeInt];
                 RIPEMD256Digest digofdig = new RIPEMD256Digest();
-                SHA256Digest fulldig = new SHA256Digest();
-                FileInputStream fis = new FileInputStream ( f );
-                long idx = 0;
+                SHA256Digest fileDigest = new SHA256Digest();
+                FileInputStream fileInputStream = new FileInputStream ( file );
+                long offset = 0L;
 
-                while ( idx < f.length() )
+                while ( offset < file.length() )
                 {
 
-                    long mlenl = Math.min ( flvl, ( f.length() - idx ) );
-                    idx += mlenl;
-                    int mlen = ( int ) mlenl;
-                    int bidx = 0;
+                    long fragmentLength = Math.min ( projectedFragmentSize.longValue(), ( file.length() - offset ) );
+                    offset += fragmentLength;
+                    int mlen = ( int ) fragmentLength;
+                    int bufferIndex = 0;
 
-                    while ( bidx < mlen )
+                    while ( bufferIndex < mlen )
                     {
-                        int rlen = fis.read ( buf, bidx, mlen - bidx );
+                        int readLength = fileInputStream.read ( buffer, bufferIndex, mlen - bufferIndex );
 
-                        if ( rlen > 0 )
+                        if ( readLength > 0 )
                         {
-                            bidx += rlen;
+                            bufferIndex += readLength;
                         }
 
                     }
 
-                    RIPEMD256Digest pdig = new RIPEMD256Digest();
-                    pdig.update ( buf, 0, mlen );
-                    byte fdig[] = new byte[pdig.getDigestSize()];
-                    pdig.doFinal ( fdig, 0 );
+                    RIPEMD256Digest fragmentDigest = new RIPEMD256Digest();
+                    fragmentDigest.update ( buffer, 0, mlen );
+                    byte fdig[] = new byte[fragmentDigest.getDigestSize()];
+                    fragmentDigest.doFinal ( fdig, 0 );
                     fragdiglst.add ( fdig );
                     //Add to the complete digest
-                    fulldig.update ( buf, 0, mlen );
+                    fileDigest.update ( buffer, 0, mlen );
                     //Add to dig of digs
                     digofdig.update ( fdig, 0, fdig.length );
                 }
 
-                fis.close();
+                fileInputStream.close();
                 //Finalize full dig and dig of dig.
-                byte fulldigb[] = new byte[fulldig.getDigestSize()];
-                fulldig.doFinal ( fulldigb, 0 );
+                byte fulldigb[] = new byte[fileDigest.getDigestSize()];
+                fileDigest.doFinal ( fulldigb, 0 );
                 byte digdigb[] = new byte[digofdig.getDigestSize()];
                 digofdig.doFinal ( digdigb, 0 );
                 //Add the full dig and dig of digs to the has file object
@@ -164,25 +163,26 @@ public class NewFileProcessor extends GenericProcessor
                 o.pushNumber ( CObj.FRAGNUMBER, fragdiglst.size() );
 
                 //Create the actual fragment objects
-                idx = 0;
+                offset = 0L;
 
                 for ( byte fd[] : fragdiglst )
                 {
-                    long mlenl = Math.min ( flvl, ( f.length() - idx ) );
+                    long mlenl = Math.min ( projectedFragmentSize.longValue(), ( file.length() - offset ) );
                     //KEEP THESE AS SMALL AS POSSIBLE!
                     CObj fobj = new CObj();
                     fobj.setType ( CObj.FRAGMENT );
-                    fobj.pushString ( CObj.COMMUNITYID, comid );
+                    // TODO: Why add community ID?
+                    fobj.pushString ( CObj.COMMUNITYID, communityID );
                     fobj.pushString ( CObj.FRAGDIG, Utils.toString ( fd ) );
                     fobj.pushString ( CObj.FILEDIGEST, fulldigs );
                     fobj.pushString ( CObj.FRAGDIGEST, digdigs );
-                    fobj.pushNumber ( CObj.FRAGOFFSET, idx );
+                    fobj.pushNumber ( CObj.FRAGOFFSET, offset );
                     fobj.pushNumber ( CObj.FRAGSIZE, mlenl );
-                    fobj.pushPrivate ( CObj.LOCALFILE, f.getPath() );
-                    fobj.pushPrivate ( CObj.COMPLETE, "true" );
+                    fobj.pushPrivate ( CObj.LOCALFILE, file.getPath() );
+                    fobj.pushPrivate ( CObj.COMPLETE, CObj.TRUE );
                     fobj.simpleDigest();
                     index.index ( fobj );
-                    idx += mlenl;
+                    offset += mlenl;
                 }
 
             }

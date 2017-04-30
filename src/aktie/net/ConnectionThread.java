@@ -62,7 +62,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private Map<Long, Set<String>> memReqdigs;
     private Map<Long, Set<String>> subReqdigs;
     private Map<String, Map<Long, Set<String>>> comReqdigs;
-    private GetSendData2 conMan;
+    private GetSendData2 connectionManager;
     private OutputProcessor outproc;
     private CObj endDestination;
     private DestinationThread dest;
@@ -70,7 +70,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private HH2Session session;
     private GuiCallback guicallback;
     private OutputStream outstream;
-    private HasFileCreator hfc;
+    private HasFileCreator hasFileCreator;
     private RequestFileHandler fileHandler;
     private int listCount;
     private Set<String> accumulateTypes; //Types to combine in list before processing
@@ -79,7 +79,6 @@ public class ConnectionThread implements Runnable, GuiCallback
     private long inNonFileBytes;
     private long outBytes;
     private ConnectionListener conListener;
-    private ConnectionThread This;
     private IdentityManager IdentManager;
     private long lastMyRequest;
     private long startTime;
@@ -87,7 +86,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private Set<String> subs;
     private Set<String> chkMemberships;
     private Set<String> chkSubs;
-    private Set<RequestFile> filesHasRequested;
+    private Set<RequestFile> availableFilesOfRemoteDestination;
     private long lastFileUpdate = Long.MIN_VALUE;
     private String fileUp;
     private String fileDown;
@@ -95,11 +94,10 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
     {
-        This = this;
         fileOnly = fo;
         conListener = cl;
         guicallback = cb;
-        conMan = sd;
+        connectionManager = sd;
         con = c;
         dest = d;
         index = i;
@@ -114,11 +112,11 @@ public class ConnectionThread implements Runnable, GuiCallback
         memberships = new CopyOnWriteArraySet<String>();
         chkSubs = new CopyOnWriteArraySet<String>();
         chkMemberships = new CopyOnWriteArraySet<String>();
-        filesHasRequested = new CopyOnWriteArraySet<RequestFile>();
+        availableFilesOfRemoteDestination = new CopyOnWriteArraySet<RequestFile>();
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
-        hfc = new HasFileCreator ( session, index, st );
+        hasFileCreator = new HasFileCreator ( session, index, st );
         outqueue = new ConcurrentLinkedQueue<Object>();
         inQueue = new ConcurrentLinkedQueue<CObj>();
         accumulateTypes = new HashSet<String>();
@@ -138,12 +136,14 @@ public class ConnectionThread implements Runnable, GuiCallback
         preprocProcessor.addProcessor ( new InCheckMemSubProcessor ( this ) );
         preprocProcessor.addProcessor ( new InGlbSeqProcessor ( this ) );
         preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, this, hfc, st ) );
+        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, this, hasFileCreator, st ) );
+        // HasPart
+        preprocProcessor.addProcessor ( new InHasPartProcessor ( dest.getIdentity(), session, index, IdentManager, this, st ) );
         preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InSubProcessor ( session, conMan, index, st, IdentManager, this ) );
+        preprocProcessor.addProcessor ( new InSubProcessor ( session, connectionManager, index, st, IdentManager, this ) );
         preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, IdentManager, this ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
@@ -159,6 +159,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         inProcessor.addProcessor ( new ReqPrvIdentProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqPrvMsgProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqHasFileProcessor ( i, this ) );
+        // HasPart
+        inProcessor.addProcessor ( new ReqPartFileProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqMemProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqPostsProcessor ( i, this ) );
         inProcessor.addProcessor ( new ReqSubProcessor ( i, this ) );
@@ -665,7 +667,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private boolean sendFirstMemSubs = true;
     private void updateSubsAndFiles()
     {
-        long nu = conMan.getLastFileUpdate();
+        long nu = connectionManager.getLastFileUpdate();
 
         //log.info("CON UPDATE SUBS AND FILES " + nu + " > " + lastFileUpdate);
         if ( doLog() )
@@ -685,7 +687,7 @@ public class ConnectionThread implements Runnable, GuiCallback
                 sendMemsAndSubs();
             }
 
-            lastFileUpdate = conMan.getLastFileUpdate();
+            lastFileUpdate = connectionManager.getLastFileUpdate();
 
             if ( doLog() )
             {
@@ -694,11 +696,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( fileOnly && endDestination != null )
             {
-                filesHasRequested = conMan.getHasFileForConnection ( endDestination.getId(), subs );
+                availableFilesOfRemoteDestination = connectionManager.getRequestFilesForConnection ( endDestination.getId(), subs );
 
                 if ( doLog() )
                 {
-                    appendOutput ( "updateSubsAndFiles: filesHasRequested: " + filesHasRequested );
+                    appendOutput ( "updateSubsAndFiles: filesHasRequested: " + availableFilesOfRemoteDestination );
                 }
 
             }
@@ -1028,31 +1030,25 @@ public class ConnectionThread implements Runnable, GuiCallback
             {
                 if ( doLog() )
                 {
-                    appendOutput ( "getLocalRequests: fileOnly? " + fileOnly + " filesHasRequested? " + filesHasRequested );
+                    appendOutput ( "getLocalRequests: fileOnly? " + fileOnly + " filesHasRequested? " + availableFilesOfRemoteDestination );
                 }
 
-                if ( fileOnly && filesHasRequested != null )
+                if ( fileOnly && availableFilesOfRemoteDestination != null )
                 {
-                    Object r = conMan.nextFile ( dest.getIdentity().getId(),
-                                                 endDestination.getId(), filesHasRequested );
+                    CObj r = connectionManager.nextFile ( dest.getIdentity().getId(), endDestination.getId(), availableFilesOfRemoteDestination );
 
                     if ( doLog() )
                     {
-                        appendOutput ( "getLocalRequests: nextFile? " + fileOnly + " filesHasRequested? " + filesHasRequested + " R: " + r );
+                        appendOutput ( "getLocalRequests: nextFile? " + fileOnly + " filesHasRequested? " + availableFilesOfRemoteDestination + " R: " + r );
                     }
 
-                    if ( r != null )
+                    if ( r != null && r instanceof CObj )
                     {
-                        if ( r instanceof CObj )
+                        CObj co = ( CObj ) r;
+
+                        if ( CObj.CON_REQ_FRAG.equals ( co.getType() ) || CObj.CON_REQ_FRAGLIST.equals ( co.getType() ) )
                         {
-                            CObj co = ( CObj ) r;
-
-                            if ( CObj.CON_REQ_FRAG.equals ( co.getType() ) ||
-                                    CObj.CON_REQ_FRAGLIST.equals ( co.getType() ) )
-                            {
-                                incrFileRequests();
-                            }
-
+                            incrFileRequests();
                         }
 
                     }
@@ -1092,9 +1088,9 @@ public class ConnectionThread implements Runnable, GuiCallback
                                        memcnt + " subs: " + subs + " " + subcnt + " reqgbl: " + reqgbl + " size: " + fillList.size() );
                     }
 
-                    Object r = conMan.nextNonFile ( dest.getIdentity().getId(),
-                                                    endDestination.getId(),
-                                                    memberships, subs, reqgbl );
+                    Object r = connectionManager.nextNonFile ( dest.getIdentity().getId(),
+                               endDestination.getId(),
+                               memberships, subs, reqgbl );
 
                     if ( doLog() )
                     {
@@ -1233,24 +1229,25 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                             sendCObjNoFlush ( c );
 
+                            // Upload a fragment for a file requested by the remote destination.
                             if ( CObj.FILEF.equals ( c.getType() ) )
                             {
-                                String lfs = c.getPrivate ( CObj.LOCALFILE );
-                                Long offset = c.getNumber ( CObj.FRAGOFFSET );
-                                Long len = c.getNumber ( CObj.FRAGSIZE );
+                                String localFile = c.getPrivate ( CObj.LOCALFILE );
+                                Long fragOffset = c.getNumber ( CObj.FRAGOFFSET );
+                                Long fragSize = c.getNumber ( CObj.FRAGSIZE );
 
-                                if ( lfs != null && offset != null && len != null )
+                                if ( localFile != null && fragOffset != null && fragSize != null )
                                 {
                                     byte buf[] = new byte[4096];
-                                    File lf = new File ( lfs );
-                                    RandomAccessFile raf = new RandomAccessFile ( lf, "r" );
-                                    raf.seek ( offset );
+                                    File file = new File ( localFile );
+                                    RandomAccessFile raf = new RandomAccessFile ( file, "r" );
+                                    raf.seek ( fragOffset );
                                     long ridx = 0;
 
-                                    while ( ridx < len )
+                                    while ( ridx < fragSize )
                                     {
                                         int l = raf.read ( buf, 0, Math.min ( buf.length,
-                                                                              ( int ) ( len - ridx ) ) );
+                                                                              ( int ) ( fragSize - ridx ) ) );
 
                                         if ( l < 0 )
                                         {
@@ -1360,19 +1357,19 @@ public class ConnectionThread implements Runnable, GuiCallback
             byte buf[] = new byte[1024];
 
             RIPEMD256Digest fdig = new RIPEMD256Digest();
-            File tmpf = null;
+            File fragmentFile = null;
 
             if ( tmpDir == null )
             {
-                tmpf = File.createTempFile ( "rxfile", ".dat" );
+                fragmentFile = File.createTempFile ( "rxfile", ".dat" );
             }
 
             else
             {
-                tmpf = File.createTempFile ( "rxfile", ".dat", tmpDir );
+                fragmentFile = File.createTempFile ( "rxfile", ".dat", tmpDir );
             }
 
-            FileOutputStream fos = new FileOutputStream ( tmpf );
+            FileOutputStream fos = new FileOutputStream ( fragmentFile );
             int rl = 0;
 
             while ( rl < length )
@@ -1400,7 +1397,7 @@ public class ConnectionThread implements Runnable, GuiCallback
             fos.close();
             byte expdig[] = new byte[fdig.getDigestSize()];
             fdig.doFinal ( expdig, 0 );
-            String dstr = Utils.toString ( expdig );
+            String fragDig = Utils.toString ( expdig );
 
             outproc.decrFileRequests();
             loadFile = false;
@@ -1415,192 +1412,207 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( doLog() )
             {
-                appendInput ( "File read " + dstr );
+                appendInput ( "File read " + fragDig );
             }
 
-            processFragment ( dstr, tmpf );
-            tmpf.delete();
+            processFragment ( fragDig, fragmentFile );
+            fragmentFile.delete();
             //now we have it, tell outproc to go again.
         }
 
     }
 
     @SuppressWarnings ( "unchecked" )
-    private void processFragment ( String dig, File fpart ) throws IOException
+    private void processFragment ( String fragDig, File fragmentFile ) throws IOException
     {
-        byte buf[] = new byte[1024];
-        CObjList flist = index.getFragments ( dig );
+        CObjList fragmentList = index.getFragments ( fragDig );
 
         if ( doLog() )
         {
-            appendInput ( "matching frags: " + flist.size() );
+            appendInput ( "matching frags: " + fragmentList.size() );
         }
 
-        for ( int c = 0; c < flist.size(); c++ )
+        for ( int c = 0; c < fragmentList.size(); c++ )
         {
-            RandomAccessFile raf = null;
-            FileInputStream fis = null;
+            RandomAccessFile randomAccessFile = null;
+            FileInputStream fileInputStream = null;
             Session s = null;
-            CObj fg = flist.get ( c );
+            CObj fragment = fragmentList.get ( c );
 
-            String wdig = fg.getString ( CObj.FILEDIGEST );
-            String fdig = fg.getString ( CObj.FRAGDIGEST );
-            Long fidx = fg.getNumber ( CObj.FRAGOFFSET );
-            Long flen = fg.getNumber ( CObj.FRAGSIZE );
-            String cplt = fg.getString ( CObj.COMPLETE );
+            String fileDigest = fragment.getString ( CObj.FILEDIGEST );
+            String fragDigest = fragment.getString ( CObj.FRAGDIGEST );
+            Long fragOffset = fragment.getNumber ( CObj.FRAGOFFSET );
+            Long fragSize = fragment.getNumber ( CObj.FRAGSIZE );
+            String complete = fragment.getString ( CObj.COMPLETE );
 
             if ( doLog() )
             {
-                appendInput ( " offset: " + fidx + " wdig: " + wdig +
-                              " fdig: " + fdig + " flen: " + flen + " state: " + cplt );
+                appendInput ( " offset: " + fragOffset + " wdig: " + fileDigest +
+                              " fdig: " + fragDigest + " flen: " + fragSize + " state: " + complete );
             }
 
-            if ( wdig != null && fdig != null && fidx != null &&
-                    flen != null && ( !"true".equals ( cplt ) ) )
+            if ( fileDigest != null && fragDigest != null && fragOffset != null &&
+                    fragSize != null && ( !CObj.TRUE.equals ( complete ) ) )
             {
                 try
                 {
                     s = session.getSession();
-                    Query q = s.createQuery ( "SELECT x FROM RequestFile x WHERE x.wholeDigest = :wdig "
-                                              + "AND x.fragmentDigest = :fdig AND x.state != :dstate" );
-                    q.setParameter ( "wdig", wdig );
-                    q.setParameter ( "fdig", fdig );
-                    q.setParameter ( "dstate", RequestFile.COMPLETE );
-                    List<RequestFile> lrf = q.list();
-                    String lf = null;
+                    Query query = s.createQuery ( "SELECT x FROM RequestFile x WHERE x.wholeDigest = :wdig "
+                                                  + "AND x.fragmentDigest = :fdig AND x.state != :dstate" );
+                    query.setParameter ( "wdig", fileDigest );
+                    query.setParameter ( "fdig", fragDigest );
+                    query.setParameter ( "dstate", RequestFile.COMPLETE );
+                    List<RequestFile> requestFileList = query.list();
+                    String localFile = null;
+                    String localPartFile = null;
 
                     if ( doLog() )
                     {
-                        appendInput ( "matches RequestFiles found: " + lrf.size() );
+                        appendInput ( "matches RequestFiles found: " + requestFileList.size() );
                     }
 
-                    for ( RequestFile rf : lrf )
+                    for ( RequestFile requestFile : requestFileList )
                     {
                         //This could change for every fragment, but someone
                         //might find it interesting information.
-                        fileDown = rf.getLocalFile();
+                        fileDown = requestFile.getLocalFile();
 
                         boolean exists = false;
-                        lf = rf.getLocalFile();
+                        localFile = requestFile.getLocalFile();
+                        localPartFile = requestFile.getLocalPartFile();
 
                         if ( doLog() )
                         {
-                            appendInput ( "lf: " + lf );
+                            appendInput ( "lf: " + localPartFile );
                         }
 
-                        if ( lf != null )
+                        if ( localPartFile != null )
                         {
-                            File f = new File ( lf + RequestFileHandler.AKTIEPART );
+                            File partFile = new File ( localPartFile );
 
                             if ( doLog() )
                             {
-                                appendInput ( "Check part file: " + f.getPath() + " exists " + f.exists() );
+                                appendInput ( "Check part file: " + partFile.getPath() + " exists " + partFile.exists() );
                             }
 
-                            exists = f.exists();
+                            exists = partFile.exists();
                         }
 
                         if ( !exists )
                         {
-                            lf = null;
+                            localPartFile = null;
                             s.getTransaction().begin();
-                            RequestFile rrf = ( RequestFile ) s.get ( RequestFile.class, rf.getId() );
-                            s.delete ( rrf );
+                            RequestFile removeRequestFile = ( RequestFile ) s.get ( RequestFile.class, requestFile.getId() );
+                            s.delete ( removeRequestFile );
                             s.getTransaction().commit();
                         }
 
                         else
                         {
                             s.getTransaction().begin();
-                            rf = ( RequestFile ) s.get ( RequestFile.class, rf.getId() );
-                            rf.setFragsComplete ( rf.getFragsComplete() + 1 );
-                            s.merge ( rf );
+                            requestFile = ( RequestFile ) s.get ( RequestFile.class, requestFile.getId() );
+                            requestFile.setFragsComplete ( requestFile.getFragsComplete() + 1 );
+                            s.merge ( requestFile );
 
                             if ( doLog() )
                             {
-                                appendInput ( "Frags complete: " + rf.getFragsComplete()  );
+                                appendInput ( "Frags complete: " + requestFile.getFragsComplete()  );
                             }
 
                             //Copy the fragment to the whole file.
-                            raf = new RandomAccessFile ( rf.getLocalFile() + RequestFileHandler.AKTIEPART, "rw" );
-                            fis = new FileInputStream ( fpart );
-                            raf.seek ( fidx );
-                            int ridx = 0;
+                            randomAccessFile = new RandomAccessFile ( requestFile.getLocalPartFile(), "rw" );
+                            fileInputStream = new FileInputStream ( fragmentFile );
+                            randomAccessFile.seek ( fragOffset );
+                            int readIndex = 0;
+                            byte buffer[] = new byte[1024];
 
-                            while ( ridx < flen )
+                            while ( readIndex < fragSize )
                             {
-                                int len = fis.read ( buf, 0, Math.min ( buf.length, ( int ) ( flen - ridx ) ) );
+                                int readLength = fileInputStream.read ( buffer, 0, Math.min ( buffer.length, ( int ) ( fragSize - readIndex ) ) );
 
-                                if ( len < 0 )
+                                if ( readLength < 0 )
                                 {
-                                    fis.close();
-                                    raf.close();
+                                    fileInputStream.close();
+                                    randomAccessFile.close();
                                     throw new IOException ( "Oops." );
                                 }
 
-                                if ( len > 0 )
+                                if ( readLength > 0 )
                                 {
-                                    raf.write ( buf, 0, len );
-                                    ridx += len;
+                                    randomAccessFile.write ( buffer, 0, readLength );
+                                    readIndex += readLength;
                                 }
 
                             }
 
-                            raf.close();
-                            fis.close();
+                            randomAccessFile.close();
+                            fileInputStream.close();
                             s.getTransaction().commit();
                         }
 
-                        //If we're done, then create a new HasFile for us!
+                        // If we're done, then create a new HasFile fragment for us in the index!
                     }
 
-                    if ( lf != null )
+                    if ( localFile != null )
                     {
-                        fg.pushPrivate ( CObj.COMPLETE, "true" );
-                        fg.pushPrivate ( CObj.LOCALFILE, lf );
-                        index.index ( fg );
+                        fragment.pushPrivate ( CObj.COMPLETE, CObj.TRUE );
+                        fragment.pushPrivate ( CObj.LOCALFILE, localFile );
+                        index.index ( fragment );
                         index.forceNewSearcher(); //So we see immediately if we have all frags.
                     }
 
                     //Refresh the list of RequestFiles in case we deleted any.
-                    q = s.createQuery ( "SELECT x FROM RequestFile x WHERE x.wholeDigest = :wdig "
-                                        + "AND x.fragmentDigest = :fdig AND x.state != :dstate" );
-                    q.setParameter ( "wdig", wdig );
-                    q.setParameter ( "fdig", fdig );
-                    q.setParameter ( "dstate", RequestFile.COMPLETE );
-                    lrf = q.list();
+                    query = s.createQuery ( "SELECT x FROM RequestFile x WHERE x.wholeDigest = :wdig "
+                                            + "AND x.fragmentDigest = :fdig AND x.state != :dstate" );
+                    query.setParameter ( "wdig", fileDigest );
+                    query.setParameter ( "fdig", fragDigest );
+                    query.setParameter ( "dstate", RequestFile.COMPLETE );
+                    requestFileList = query.list();
 
                     //Commit the transaction
                     //Ok now count how many fragments of each is done.
                     if ( doLog() )
                     {
-                        appendInput ( "Pending files: " + lrf.size()  );
+                        appendInput ( "Pending files: " + requestFileList.size()  );
                     }
 
-                    for ( RequestFile rf : lrf )
+                    for ( RequestFile requestFile : requestFileList )
                     {
                         s.getTransaction().begin();
-                        rf = ( RequestFile ) s.get ( RequestFile.class, rf.getId() );
+                        requestFile = ( RequestFile ) s.get ( RequestFile.class, requestFile.getId() );
 
-                        if ( rf != null )
+                        if ( requestFile != null )
                         {
-                            CObjList fdone = index.getFragmentsComplete ( rf.getCommunityId(),
-                                             rf.getWholeDigest(), rf.getFragmentDigest() );
+                            CObjList fdone = index.getFragmentsComplete ( requestFile.getCommunityId(),
+                                             requestFile.getWholeDigest(), requestFile.getFragmentDigest() );
                             int numdone = fdone.size();
                             fdone.close();
-                            rf.setFragsComplete ( numdone );
-                            s.merge ( rf );
+                            requestFile.setFragsComplete ( numdone );
+                            s.merge ( requestFile );
                             s.getTransaction().commit();
+
+                            // HasPart
+                            // Create HasPart for own download and index it.
+                            // Save HasPart CObj to index which can be used to tell
+                            // other Aktie users which fragments we have already completed.
+                            String localFilePath = requestFile.getLocalFile();
+
+                            if ( localFilePath != null )
+                            {
+                                String myID = dest.getIdentity().getId();
+
+                                hasFileCreator.createPartFile ( requestFile, myID );
+                            }
 
                             if ( doLog() )
                             {
-                                appendInput ( "Fragments complete in index: " + numdone + " <> " + rf.getFragsTotal() );
+                                appendInput ( "Fragments complete in index: " + numdone + " <> " + requestFile.getFragsTotal() );
                             }
 
 
-                            if ( rf.getFragsComplete() >= rf.getFragsTotal() )
+                            if ( requestFile.getFragsComplete() >= requestFile.getFragsTotal() )
                             {
-                                if ( !fileHandler.claimFileComplete ( rf ) )
+                                if ( !fileHandler.claimFileComplete ( requestFile ) )
                                 {
                                     if ( doLog() )
                                     {
@@ -1617,8 +1629,8 @@ public class ConnectionThread implements Runnable, GuiCallback
                                     }
 
                                     //rename the aktiepart file to the real file name
-                                    File lff = new File ( rf.getLocalFile() );
-                                    File rlp = new File ( rf.getLocalFile() + RequestFileHandler.AKTIEPART );
+                                    File lff = new File ( requestFile.getLocalFile() );
+                                    File rlp = new File ( requestFile.getLocalPartFile() );
 
                                     int lps = 120;
 
@@ -1676,28 +1688,28 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                                     CObj hf = new CObj();
                                     hf.setType ( CObj.HASFILE );
-                                    hf.pushString ( CObj.CREATOR, rf.getRequestId() );
-                                    hf.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
-                                    hf.pushString ( CObj.NAME, ( new File ( rf.getLocalFile() ) ).getName() );
+                                    hf.pushString ( CObj.CREATOR, requestFile.getRequestId() );
+                                    hf.pushString ( CObj.COMMUNITYID, requestFile.getCommunityId() );
+                                    hf.pushString ( CObj.NAME, ( new File ( requestFile.getLocalFile() ) ).getName() );
                                     hf.pushText ( CObj.NAME, hf.getString ( CObj.NAME ) );
-                                    hf.pushNumber ( CObj.FRAGSIZE, rf.getFragSize() );
-                                    hf.pushNumber ( CObj.FILESIZE, rf.getFileSize() );
-                                    hf.pushNumber ( CObj.FRAGNUMBER, rf.getFragsTotal() );
+                                    hf.pushNumber ( CObj.FRAGSIZE, requestFile.getFragSize() );
+                                    hf.pushNumber ( CObj.FILESIZE, requestFile.getFileSize() );
+                                    hf.pushNumber ( CObj.FRAGNUMBER, requestFile.getFragsTotal() );
                                     hf.pushString ( CObj.STILLHASFILE, "true" );
-                                    hf.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
-                                    hf.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
-                                    hf.pushPrivate ( CObj.LOCALFILE, rf.getLocalFile() );
-                                    hf.pushPrivate ( CObj.UPGRADEFLAG, rf.isUpgrade() ? "true" : "false" );
-                                    hf.pushString ( CObj.SHARE_NAME, rf.getShareName() );
-                                    hfc.createHasFile ( hf );
-                                    hfc.updateFileInfo ( hf );
+                                    hf.pushString ( CObj.FILEDIGEST, requestFile.getWholeDigest() );
+                                    hf.pushString ( CObj.FRAGDIGEST, requestFile.getFragmentDigest() );
+                                    hf.pushPrivate ( CObj.LOCALFILE, requestFile.getLocalFile() );
+                                    hf.pushPrivate ( CObj.UPGRADEFLAG, requestFile.isUpgrade() ? "true" : "false" );
+                                    hf.pushString ( CObj.SHARE_NAME, requestFile.getShareName() );
+                                    hasFileCreator.createHasFile ( hf );
+                                    hasFileCreator.updateFileInfo ( hf );
                                     update ( hf );
 
                                 }
 
                             }
 
-                            update ( rf );
+                            update ( requestFile );
                         }
 
                         else
@@ -1733,11 +1745,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     }
 
-                    if ( raf != null )
+                    if ( randomAccessFile != null )
                     {
                         try
                         {
-                            raf.close();
+                            randomAccessFile.close();
                         }
 
                         catch ( Exception e2 )
@@ -1746,11 +1758,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
                     }
 
-                    if ( fis != null )
+                    if ( fileInputStream != null )
                     {
                         try
                         {
-                            fis.close();
+                            fileInputStream.close();
                         }
 
                         catch ( Exception e2 )
@@ -1770,7 +1782,7 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
-        flist.close();
+        fragmentList.close();
     }
 
     public static long LONGESTLIST = 100000000;
@@ -1968,7 +1980,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( t >= nextupdate )
         {
             nextupdate = t + GUIUPDATEPERIOD;
-            conListener.update ( This );
+            conListener.update ( ConnectionThread.this );
         }
 
     }

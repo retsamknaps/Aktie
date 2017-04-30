@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import aktie.data.RequestFile;
 import aktie.utils.FUtils;
 
 public class Wrapper
@@ -97,7 +98,7 @@ public class Wrapper
     private static List<String> doNotShareFileExtensions = null;
     private static List<String> doNotShareFileNames = null;
 
-    public static final String FILE_EXT_AKTIEPART = ".aktiepart";
+    //public static final String FILE_EXT_AKTIEPART = ".aktiepart"; // Replaced by RequestFile.AKTIEPART
     public static final String FILE_EXT_AKTIEBACKUP = ".aktiebackup";
 
     public static final String NO_SHARE_EXTS_FILE = "noshareexts.dat";
@@ -1194,7 +1195,7 @@ public class Wrapper
         {
             doNotShareFileExtensions = loadDoNotShareFileExtensions();
             // add the file extensions used by Aktie which are never shared
-            doNotShareFileExtensions.add ( 0, FILE_EXT_AKTIEPART );
+            doNotShareFileExtensions.add ( 0, RequestFile.AKTIEPART );
             doNotShareFileExtensions.add ( 0, FILE_EXT_AKTIEBACKUP );
         }
 
@@ -1281,7 +1282,7 @@ public class Wrapper
             if ( FUtils.isFileExtension ( str ) )
             {
                 // Omit Aktie specific file extensions
-                if ( str.equals ( FILE_EXT_AKTIEPART ) || str.equals ( FILE_EXT_AKTIEBACKUP ) )
+                if ( str.equals ( RequestFile.AKTIEPART ) || str.equals ( FILE_EXT_AKTIEBACKUP ) )
                 {
                     continue continueHereWithNextCandidExt;
                 }

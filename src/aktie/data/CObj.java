@@ -44,6 +44,10 @@ public class CObj
     public static String POST = "post";
     public static String FILE = "filetype";
     public static String HASFILE = "hasfile";
+    // HasPart
+    // CObj type of HasPart
+    public static final String HASPART = "haspart";
+
     public static String FRAGMENT = "fragment";
     public static String FILEF = "filef";
     public static String FRAGFAILED = "oops";
@@ -86,6 +90,8 @@ public class CObj
     public static String CON_REQ_SUBS = "con_subs";
     public static String CON_REQ_POSTS = "con_posts";
     public static String CON_REQ_HASFILE = "con_has";
+    // HasPart
+    public static final String CON_REQ_HASPART = "con_part";
     public static String CON_REQ_FRAGLIST = "con_flist";
     public static String CON_REQ_FRAG = "con_frag";
     public static String CON_REQ_GLOBAL = "con_glb";
@@ -96,6 +102,8 @@ public class CObj
     //Temporary types - user requests.
     public static String USR_DOWNLOAD_FILE = "usr_downloadfile";
     public static String USR_HASFILE_UPDATE = "usr_hasfileupdate";
+    // HasPart
+    public static final String USR_PARTFILE_UPDATE = "usr_partfileupdate";
     public static String USR_POST_UPDATE = "usr_postupdate";
     public static String USR_SUB_UPDATE = "usr_subupdate";
     public static String USR_IDENTITY_UPDATE = "usr_identupdate";
@@ -186,6 +194,17 @@ public class CObj
     public static String ENABLED = "enabled";
     public static String MSGIDENT = "msgid";
     public static String PAYMENT = "hashpayment";
+    // HasPart
+    // Private number to save first seen and last seen time
+    public static final String FIRSTSEEN = "firstseen";
+    public static final String LASTSEEN = "lastseen";
+    // Private number to save revision of part file
+    public static final String REVISION = "revision";
+
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
+
+    public static final String REQUEST = "req";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.

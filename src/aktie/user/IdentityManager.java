@@ -23,6 +23,7 @@ import aktie.index.Index;
 import aktie.sequences.CommunitySequence;
 import aktie.sequences.FileSequence;
 import aktie.sequences.MemberSequence;
+import aktie.sequences.PartSequence;
 import aktie.sequences.PostSequence;
 import aktie.sequences.PrivIdentSequence;
 import aktie.sequences.PrivMsgSequence;
@@ -2656,7 +2657,7 @@ public class IdentityManager
 
     }
 
-    public void requestAllHasFile ( int priority )
+    public void requestAllHasFiles ( int priority )
     {
         List<String> mysubs = this.getMySubs();
 
@@ -2692,7 +2693,87 @@ public class IdentityManager
                 if ( id != null )
                 {
                     FileSequence fseq = new FileSequence ( session );
-                    fseq.request ( s, id, 5, id, comid, memid );
+                    // TODO: priority should have been filled here instead of literal 5 (?)
+                    fseq.request ( s, id, priority, id, comid, memid );
+                }
+
+            }
+
+            s.close();
+        }
+
+        catch ( Exception e )
+        {
+            //e.printStackTrace();
+
+            if ( s != null )
+            {
+                try
+                {
+                    if ( s.getTransaction().isActive() )
+                    {
+                        s.getTransaction().rollback();
+                    }
+
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+                try
+                {
+                    s.close();
+                }
+
+                catch ( Exception e2 )
+                {
+                }
+
+            }
+
+        }
+
+    }
+
+    // HasPart
+    public void requestAllPartFiles ( int priority )
+    {
+        List<String> mySubcriptions = getMySubs();
+
+        for ( String communityID : mySubcriptions )
+        {
+            requestPartFile ( communityID, priority );
+        }
+
+    }
+
+    // HasPart
+    public void requestPartFile ( String communityID, int priority )
+    {
+        //Get my ids.
+        List<String> myIDs = getMyIds();
+        Session s = null;
+
+        try
+        {
+            s = session.getSession();
+            List<String> memberList = getMembers ( communityID );
+
+            for ( int c = 0; c < memberList.size(); c++ )
+            {
+                String id = null;
+                String memberID = memberList.get ( c );
+
+                if ( memberID != null && !myIDs.contains ( memberID ) )
+                {
+                    id = Utils.mergeIds ( memberID, communityID );
+                }
+
+                if ( id != null )
+                {
+                    PartSequence partSequence = new PartSequence ( session );
+                    partSequence.request ( s, id, priority, id, communityID, memberID );
                 }
 
             }

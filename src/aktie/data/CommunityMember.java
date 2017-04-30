@@ -20,14 +20,20 @@ public class CommunityMember
     private long lastSubscriptionNumber;
     private long lastPostNumber;
     private long lastFileNumber;
+    // HasPart
+    private long lastPartNumber;
 
     private long nextClosestSubscriptionNumber;
     private long nextClosestPostNumber;
     private long nextClosestFileNumber;
+    // HasPart
+    private long nextClosestPartNumber;
 
     private int numClosestSubscriptionNumber;
     private int numClosestPostNumber;
     private int numClosestFileNumber;
+    // HasPart
+    private int numClosestPartNumber;
 
     private long lastSubscriptionUpdate;
     private int subscriptionStatus;
@@ -51,6 +57,13 @@ public class CommunityMember
     private int fileUpdateCycle;
     @Column ( columnDefinition = "BIGINT(19) default 0" )
     private long lastGlobalSequence;
+
+    private long lastPartUpdate;
+    private int partStatus;
+    private int partUpdatePriority;
+    private String partFileUpdateFrom;
+    @Column ( columnDefinition = "INTEGER(10) default 0" )
+    private int partUpdateCycle;
 
     public CommunityMember()
     {
@@ -117,6 +130,18 @@ public class CommunityMember
         this.lastFileNumber = lastFileNumber;
     }
 
+    // HasPart
+    public long getLastPartNumber()
+    {
+        return lastPartNumber;
+    }
+
+    // HasPart
+    public void setLastPartNumber ( long lastPartNumber )
+    {
+        this.lastPartNumber = lastPartNumber;
+    }
+
     //    public long getLastSubscriptionUpdate()
     //    {
     //        return lastSubscriptionUpdate;
@@ -180,6 +205,30 @@ public class CommunityMember
         this.fileStatus = fileStatus;
     }
 
+    // HasPart
+    public long getLastPartUpdate()
+    {
+        return lastFileUpdate;
+    }
+
+    // HasPart
+    public void setLastPartUpdate ( long lastPartUpdate )
+    {
+        this.lastPartUpdate = lastPartUpdate;
+    }
+
+    // HasPart
+    public int getPartStatus()
+    {
+        return partStatus;
+    }
+
+    // HasPart
+    public void setPartStatus ( int partStatus )
+    {
+        this.partStatus = partStatus;
+    }
+
     //    public int getSubscriptionUpdatePriority()
     //    {
     //        return subscriptionUpdatePriority;
@@ -209,6 +258,18 @@ public class CommunityMember
     public void setFileUpdatePriority ( int fileUpdatePriority )
     {
         this.fileUpdatePriority = fileUpdatePriority;
+    }
+
+    // HasPart
+    public int getPartUpdatePriority()
+    {
+        return partUpdatePriority;
+    }
+
+    // HasPart
+    public void setPartUpdatePriority ( int partUpdatePriority )
+    {
+        this.partUpdatePriority = partUpdatePriority;
     }
 
     //    public long getNextClosestSubscriptionNumber()
@@ -242,6 +303,18 @@ public class CommunityMember
         this.nextClosestFileNumber = nextClosestFileNumber;
     }
 
+    // HasPart
+    public long getNextClosestPartNumber()
+    {
+        return nextClosestPartNumber;
+    }
+
+    // HasPart
+    public void setNextClosestPartNumber ( long nextClosestPartNumber )
+    {
+        this.nextClosestPartNumber = nextClosestPartNumber;
+    }
+
     //    public int getNumClosestSubscriptionNumber()
     //    {
     //        return numClosestSubscriptionNumber;
@@ -271,6 +344,18 @@ public class CommunityMember
     public void setNumClosestFileNumber ( int numClosestFileNumber )
     {
         this.numClosestFileNumber = numClosestFileNumber;
+    }
+
+    // HasPart
+    public int getNumClosestPartNumber()
+    {
+        return numClosestPartNumber;
+    }
+
+    // HasPart
+    public void setNumClosestPartNumber ( int numClosestPartNumber )
+    {
+        this.numClosestPartNumber = numClosestPartNumber;
     }
 
     //    public String getLastSubscriptionUpdateFrom()
@@ -333,6 +418,16 @@ public class CommunityMember
     public void setFileUpdateCycle ( int fileUpdateCycle )
     {
         this.fileUpdateCycle = fileUpdateCycle;
+    }
+
+    public int getPartUpdateCycle()
+    {
+        return partUpdateCycle;
+    }
+
+    public void setPartUpdateCycle ( int partUpdateCycle )
+    {
+        this.partUpdateCycle = partUpdateCycle;
     }
 
     public long getLastGlobalSequence()

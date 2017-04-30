@@ -7,6 +7,10 @@ import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.index.Index;
 
+/**
+    Process fragment requests from  a remote destination.
+
+*/
 public class ReqFragProcessor extends GenericProcessor
 {
     Logger log = Logger.getLogger ( "aktie" );
@@ -27,55 +31,54 @@ public class ReqFragProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_FRAG.equals ( type ) )
         {
-            boolean fragfnd = false;
+            boolean fragmentFound = false;
 
-            String comid = b.getString ( CObj.COMMUNITYID );
-            String wdig = b.getString ( CObj.FILEDIGEST );
-            String pdig = b.getString ( CObj.FRAGDIGEST ); //Digest of digests
-            String fdig = b.getString ( CObj.FRAGDIG );
+            String communityID = b.getString ( CObj.COMMUNITYID );
+            String fileDigest = b.getString ( CObj.FILEDIGEST );
+            String fragDigest = b.getString ( CObj.FRAGDIGEST ); //Digest of digests
+            String fragDig = b.getString ( CObj.FRAGDIG );
             String conid = connection.getEndDestination().getId();
 
-            log.info ( "REQFRAG: REQ_FRAG: comid: " + comid + " wdig: " + wdig + " from id: " + conid );
+            log.info ( "REQFRAG: REQ_FRAG: comid: " + communityID + " wdig: " + fileDigest + " from id: " + conid );
 
-            if ( comid != null && wdig != null && pdig != null && conid != null )
+            if ( communityID != null && fileDigest != null && fragDigest != null && conid != null )
             {
-                CObj sub = index.getSubscription ( comid, conid );
+                CObj sub = index.getSubscription ( communityID, conid );
 
                 log.info ( "REQFRAG: sub: " + sub );
 
-                if ( sub != null && "true".equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
+                // TODO: Why check if the identity is subscribed to the community? Why not just deliver the fragment if asked for it?
+                if ( sub != null && CObj.TRUE.equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
                 {
                     //Make sure someone has has the file in the context of the community
                     //We get the HasFile object to make sure we actually have the file.
-                    CObj hf = index.getIdentHasFile ( comid, //Community
-                                                      connection.getLocalDestination().getIdentity().getId(), //My id
-                                                      wdig, pdig );
+                    CObj hasFile = index.getIdentHasFile ( communityID, //Community
+                                                           connection.getLocalDestination().getIdentity().getId(), //My id
+                                                           fileDigest, fragDigest );
 
                     //String wdig, String ddig, String dig
-                    CObj fg = index.getFragment ( comid, wdig, pdig, fdig );
+                    CObj fragment = index.getFragment ( communityID, fileDigest, fragDigest, fragDig );
 
-                    log.info ( "REQFRAG: fg: " + fg + " hf: " + hf );
+                    log.info ( "REQFRAG: fg: " + fragment + " hf: " + hasFile );
 
-                    if ( hf != null && fg != null )
+                    if ( hasFile != null && fragment != null )
                     {
-                        String lfs = fg.getPrivate ( CObj.LOCALFILE );
-                        Long offset = fg.getNumber ( CObj.FRAGOFFSET );
-                        Long len = fg.getNumber ( CObj.FRAGSIZE );
+                        fragmentFound = findFragment ( fragment );
 
-                        if ( lfs != null && offset != null && len != null )
+                    }
+
+                    // HasPart
+                    // Check if our identity can deliver a requested fragment from a part file
+                    if ( !fragmentFound )
+                    {
+                        String myID = connection.getLocalDestination().getIdentity().getId();
+                        CObj partFile = index.getPartFile ( myID, communityID, fileDigest, fragDigest );
+
+                        log.info ( "REQFRAG: fg: " + fragment + " pf: " + partFile );
+
+                        if ( partFile != null && fragment != null )
                         {
-                            File tf = new File ( lfs );
-
-                            if ( tf.exists() && tf.canRead() &&
-                                    tf.length() >= ( offset + len ) )
-                            {
-                                fg.setType ( CObj.FILEF ); //Change the type to indicate we're
-                                //actually sending over the fragment.
-                                connection.enqueue ( fg );
-                                connection.setFileUp ( lfs );
-                                fragfnd = true;
-                            }
-
+                            fragmentFound = findFragment ( fragment );
                         }
 
                     }
@@ -84,7 +87,7 @@ public class ReqFragProcessor extends GenericProcessor
 
             }
 
-            if ( !fragfnd )
+            if ( !fragmentFound )
             {
                 CObj nf = b.clone();
                 nf.setType ( CObj.FRAGFAILED );
@@ -92,6 +95,31 @@ public class ReqFragProcessor extends GenericProcessor
             }
 
             return true;
+        }
+
+        return false;
+    }
+
+    private boolean findFragment ( CObj fragment )
+    {
+        String localFile = fragment.getPrivate ( CObj.LOCALFILE );
+        Long fragOffset = fragment.getNumber ( CObj.FRAGOFFSET );
+        Long fragSize = fragment.getNumber ( CObj.FRAGSIZE );
+
+        if ( localFile != null && fragOffset != null && fragSize != null )
+        {
+            File file = new File ( localFile );
+
+            if ( file.exists() && file.canRead() && file.length() >= ( fragOffset + fragSize ) )
+            {
+                // Change the type to indicate we're actually sending over the fragment.
+                fragment.setType ( CObj.FILEF );
+
+                connection.enqueue ( fragment );
+                connection.setFileUp ( localFile );
+                return true;
+            }
+
         }
 
         return false;

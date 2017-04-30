@@ -1262,6 +1262,12 @@ public class SWTApp implements UpdateInterface
             u.setType ( CObj.USR_POST_UPDATE );
             u.pushString ( CObj.COMMUNITYID, cm.getDig() );
             getNode().enqueue ( u );
+            // HasPart
+            u = new CObj();
+            u.setType ( CObj.USR_PARTFILE_UPDATE );
+            u.pushString ( CObj.COMMUNITYID, cm.getDig() );
+            getNode().enqueue ( u );
+
         }
 
     }

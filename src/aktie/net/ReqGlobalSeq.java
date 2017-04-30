@@ -83,6 +83,13 @@ public class ReqGlobalSeq extends GenericProcessor
 
                 }
 
+                // HasPart
+                // Be less restrictive for part files so these spread more quickly.
+                if ( CObj.HASPART.equals ( o.getType() ) )
+                {
+                    sendDig ( rlst, o, rn, seqnum );
+                }
+
                 if ( CObj.SUBSCRIPTION.equals ( o.getType() ) )
                 {
                     String comid = o.getString ( CObj.COMMUNITYID );

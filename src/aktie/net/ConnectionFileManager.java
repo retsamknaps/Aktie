@@ -19,6 +19,7 @@ import aktie.data.RequestFile;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.RequestFileHandler;
+import aktie.utils.CObjHelper;
 
 public class ConnectionFileManager implements Runnable
 {
@@ -41,8 +42,7 @@ public class ConnectionFileManager implements Runnable
     public ConnectionFileManager ( HH2Session s, Index i, RequestFileHandler r )
     {
         fileTime = new ConcurrentHashMap<RequestFile, Long>();
-        fileRequests =
-            new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
+        fileRequests = new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
         index = i;
         fileHandler = r;
         Thread t = new Thread ( this );
@@ -50,7 +50,7 @@ public class ConnectionFileManager implements Runnable
         t.start();
     }
 
-    public List<RequestFile> getRequestFile()
+    public List<RequestFile> getRequestFiles()
     {
         List<RequestFile> r = new LinkedList<RequestFile>();
 
@@ -83,8 +83,14 @@ public class ConnectionFileManager implements Runnable
 
     }
 
-    //  Communityid ->  File digest -> Requests
-    public Object nextFile ( String localdest, String remotedest, Set<RequestFile> hasfiles )
+    /**
+        Get the next file to request from a connected remote destination.
+        @param localDestination The local destination that requests the files.
+        @param remoteDestination The remote destination to which the local destination is connected
+        @param remoteRequestFiles The files available at the remote destination from which to select the next file to request.
+        @return The next file to request or null if there is no file of interest is available.
+    */
+    public CObj nextFile ( String localDestination, String remoteDestination, Set<RequestFile> remoteRequestFiles )
     {
 
         if ( Level.INFO.equals ( log.getLevel() ) )
@@ -92,50 +98,127 @@ public class ConnectionFileManager implements Runnable
             //log.info("nextFile: " + );
         }
 
-        if ( hasfiles == null )
+        if ( remoteRequestFiles == null )
         {
             return null;
         }
 
-        Object n = null;
+        CObj nextFile = null;
 
-        List<RequestFile> rls = new LinkedList<RequestFile>();
+        // Retrieve the request files of the local destination (identity) from the global list
+        List<RequestFile> requestFilesOfLocalDestination = new LinkedList<RequestFile>();
 
         synchronized ( fileRequests )
         {
-            for ( RequestFile rf : fileRequests.keySet() )
+            for ( RequestFile requestFile : fileRequests.keySet() )
             {
-                if ( rf.getRequestId().equals ( localdest ) )
+                if ( requestFile.getRequestId().equals ( localDestination ) )
                 {
-                    rls.add ( rf );
+                    requestFilesOfLocalDestination.add ( requestFile );
                 }
 
             }
 
         }
 
-        Iterator<RequestFile> i = rls.iterator();
-
-        while ( i.hasNext() && n == null )
+        // Filter out the request files that are available at the remote destination
+        for ( RequestFile requestFile : requestFilesOfLocalDestination )
         {
-            RequestFile r = i.next();
-
-            if ( hasfiles.contains ( r ) )
+            if ( remoteRequestFiles.contains ( requestFile ) )
             {
-                ConcurrentLinkedQueue<CObj> rl = null;
+                ConcurrentLinkedQueue<CObj> remoteFilesOfInterest = null;
 
                 synchronized ( fileRequests )
                 {
-                    rl = fileRequests.get ( r );
+                    remoteFilesOfInterest = fileRequests.get ( requestFile );
                 }
 
-                if ( rl != null )
+                if ( remoteFilesOfInterest != null )
                 {
-                    n = rl.poll();
+                    nextFile = remoteFilesOfInterest.poll();
 
-                    if ( n != null )
+                    if ( nextFile != null )
                     {
-                        fileTime.put ( r, System.currentTimeMillis() );
+                        fileTime.put ( requestFile, System.currentTimeMillis() );
+
+                        // HasPart
+                        // In case that we are requesting a fragment, check if we would to request it
+                        // from a complete file or a part file. In case that we would request from a
+                        // part file, figure out if the desired fragment is actually available at the
+                        // remote destination. If not, proceed with the next item in the queue.
+                        if ( nextFile.getType().equals ( CObj.CON_REQ_FRAG ) )
+                        {
+                            String fileDigest = nextFile.getString ( CObj.FILEDIGEST );
+                            String fragDigest = nextFile.getString ( CObj.FRAGDIGEST );
+                            String fragDig = nextFile.getString ( CObj.FRAGDIG );
+
+                            if ( fileDigest != null && fragDigest != null && fragDig != null )
+                            {
+                                CObjList hasParts = index.getPartFiles ( remoteDestination, fileDigest, fragDigest );
+
+                                // If there is no part file known, the remote destination has a complete file.
+                                // Hence, we should be able to download an arbitrary fragment of this file.
+                                if ( hasParts.size() > 0 )
+                                {
+                                    hasParts.close();
+                                    break;
+                                }
+
+                                String hasPartPayload;
+
+                                try
+                                {
+                                    hasPartPayload = hasParts.get ( 0 ).getString ( CObj.PAYLOAD );
+                                }
+
+                                catch ( IOException e )
+                                {
+                                    hasParts.close();
+                                    continue;
+                                }
+
+                                hasParts.close();
+
+                                if ( hasPartPayload == null )
+                                {
+                                    continue;
+                                }
+
+                                // Otherwise, the remote destination only has some fragments and we need to check
+                                // whether we can get this particular fragment from the remote destination.
+                                CObj fragment = index.getFragment ( fileDigest, fragDigest, fragDig );
+
+                                if ( fragment != null )
+                                {
+                                    Long fragOffset = fragment.getNumber ( CObj.FRAGOFFSET );
+
+                                    if ( fragOffset == null )
+                                    {
+                                        continue;
+                                    }
+
+                                    long fileSize = requestFile.getFileSize();
+                                    long totalFragments = requestFile.getFragsTotal();
+                                    long fragSize = requestFile.getFragSize();
+
+                                    int fragmentIndex = CObjHelper.calculateFragmentIndex ( fileSize, totalFragments, fragOffset, fragSize );
+
+                                    // If the fragment is know to be available, we should be able to get it.
+                                    if ( CObjHelper.hasPartPayloadListsFragment ( hasPartPayload, fragmentIndex ) )
+                                    {
+                                        break;
+                                    }
+
+                                    continue;
+                                }
+
+                            }
+
+                        }
+
+                        // TODO: Correct me if wrong, but we should have breaked here in the code as it was before, shouldn't we?
+                        // Because why should we walk through all the queue, emptying it, if we already found something that is not null?
+                        break;
                     }
 
                 }
@@ -144,7 +227,7 @@ public class ConnectionFileManager implements Runnable
 
         }
 
-        return n;
+        return nextFile;
     }
 
     public long getLastFileUpdate()
@@ -161,82 +244,81 @@ public class ConnectionFileManager implements Runnable
 
     private boolean procFileQueue()
     {
-        boolean gonext = false;
+        boolean goNext = false;
         //Get the prioritized list of files
-        LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> nlst =
-            new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
+        LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>> newFileRequests = new LinkedHashMap<RequestFile, ConcurrentLinkedQueue<CObj>>();
         ConcurrentMap<RequestFile, Long> nt = new ConcurrentHashMap<RequestFile, Long>();
 
-        List<RequestFile> flst = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+        List<RequestFile> requestFileList = fileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
         if ( log.isLoggable ( Level.INFO ) )
         {
-            log.info ( "procFileQueue: " + flst.size() );
+            log.info ( "procFileQueue: " + requestFileList.size() );
         }
 
-        for ( RequestFile rf : flst )
+        for ( RequestFile requestFile : requestFileList )
         {
-            ConcurrentLinkedQueue<CObj> fl = null;
+            ConcurrentLinkedQueue<CObj> requests = null;
 
             synchronized ( fileRequests )
             {
-                fl = fileRequests.get ( rf );
+                requests = fileRequests.get ( requestFile );
             }
 
-            if ( fl == null )
+            if ( requests == null )
             {
-                fl = new ConcurrentLinkedQueue<CObj>();
+                requests = new ConcurrentLinkedQueue<CObj>();
             }
 
             if ( log.isLoggable ( Level.INFO ) )
             {
-                log.info ( "procFileQueue: " + rf.getLocalFile() + " num in queue: " + fl.size() );
+                log.info ( "procFileQueue: " + requestFile.getLocalFile() + " num in queue: " + requests.size() );
             }
 
-            Long tm = fileTime.get ( rf );
+            Long lastRequestTime = fileTime.get ( requestFile );
 
-            if ( tm == null )
+            if ( lastRequestTime == null )
             {
-                tm = System.currentTimeMillis();
+                lastRequestTime = System.currentTimeMillis();
             }
 
-            nlst.put ( rf, fl );
-            nt.put ( rf, tm );
+            newFileRequests.put ( requestFile, requests );
+            nt.put ( requestFile, lastRequestTime );
 
-            if ( fl.size() < ConnectionManager2.QUEUE_DEPTH_FILE )
+            if ( requests.size() < ConnectionManager2.QUEUE_DEPTH_FILE )
             {
 
                 if ( log.isLoggable ( Level.INFO ) )
                 {
-                    log.info ( "procFileQueue: state: " + rf.getState() );
+                    log.info ( "procFileQueue: state: " + requestFile.getState() );
                 }
 
-                if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST )
+                if ( requestFile.getState() == RequestFile.REQUEST_FRAG_LIST )
                 {
-                    if ( fileHandler.claimFileListClaim ( rf ) )
+                    if ( fileHandler.claimFileListClaim ( requestFile ) )
                     {
                         if ( log.isLoggable ( Level.INFO ) )
                         {
-                            log.info ( "procFileQueue: state: request file list: " + rf.getLocalFile() );
+                            log.info ( "procFileQueue: state: request file list: " + requestFile.getLocalFile() );
                         }
 
                         CObj cr = new CObj();
                         cr.setType ( CObj.CON_REQ_FRAGLIST );
-                        cr.pushString ( CObj.COMMUNITYID, rf.getCommunityId() );
-                        cr.pushString ( CObj.FILEDIGEST, rf.getWholeDigest() );
-                        cr.pushString ( CObj.FRAGDIGEST, rf.getFragmentDigest() );
-                        fl.add ( cr );
-                        gonext = true;
+                        cr.pushString ( CObj.COMMUNITYID, requestFile.getCommunityId() );
+                        cr.pushString ( CObj.FILEDIGEST, requestFile.getWholeDigest() );
+                        cr.pushString ( CObj.FRAGDIGEST, requestFile.getFragmentDigest() );
+                        requests.add ( cr );
+                        goNext = true;
                     }
 
                 }
 
-                if ( rf.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
-                        rf.getLastRequest() <= ( System.currentTimeMillis() - REREQUESTLISTAFTER ) )
+                if ( requestFile.getState() == RequestFile.REQUEST_FRAG_LIST_SNT &&
+                        requestFile.getLastRequest() <= ( System.currentTimeMillis() - REREQUESTLISTAFTER ) )
                 {
-                    log.info ( "procFileQueue: re-request file list " + rf.getLocalFile() );
+                    log.info ( "procFileQueue: re-request file list " + requestFile.getLocalFile() );
                     //Check if the fragment request is still in the queue
-                    Iterator<CObj> fi = fl.iterator();
+                    Iterator<CObj> fi = requests.iterator();
                     boolean fnd = false;
 
                     while ( fi.hasNext() && !fnd )
@@ -249,9 +331,9 @@ public class ConnectionFileManager implements Runnable
                             String wdig = c.getString ( CObj.FILEDIGEST );
                             String pdig = c.getString ( CObj.FRAGDIGEST );
 
-                            if ( comid.equals ( rf.getCommunityId() ) &&
-                                    wdig.equals ( rf.getWholeDigest() ) &&
-                                    pdig.equals ( rf.getFragmentDigest() ) )
+                            if ( comid.equals ( requestFile.getCommunityId() ) &&
+                                    wdig.equals ( requestFile.getWholeDigest() ) &&
+                                    pdig.equals ( requestFile.getFragmentDigest() ) )
                             {
                                 fnd = true;
                             }
@@ -262,48 +344,47 @@ public class ConnectionFileManager implements Runnable
 
                     if ( !fnd )
                     {
-                        log.info ( "procFileQueue: really re-request file list " + rf.getLocalFile() );
-                        fileHandler.setReRequestList ( rf );
+                        log.info ( "procFileQueue: really re-request file list " + requestFile.getLocalFile() );
+                        fileHandler.setReRequestList ( requestFile );
                     }
 
                 }
 
-                if ( rf.getState() == RequestFile.REQUEST_FRAG )
+                if ( requestFile.getState() == RequestFile.REQUEST_FRAG )
                 {
 
                     //Find the fragments that haven't been requested yet.
-                    CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                                  rf.getWholeDigest(), rf.getFragmentDigest() );
+                    CObjList fragmentsToRequest = index.getFragmentsToRequest ( requestFile.getCommunityId(),
+                                                  requestFile.getWholeDigest(), requestFile.getFragmentDigest() );
 
-                    log.info ( "procFileQueue: request fragments " + cl.size() );
+                    log.info ( "procFileQueue: request fragments " + fragmentsToRequest.size() );
 
                     //There are none.. reset those requested some time ago.
-                    if ( cl.size() == 0 )
+                    if ( fragmentsToRequest.size() == 0 )
                     {
-                        cl.close();
-                        cl = index.getFragmentsToReset ( rf.getCommunityId(),
-                                                         rf.getWholeDigest(), rf.getFragmentDigest() );
+                        CObjList fragmentsToReset = index.getFragmentsToReset ( requestFile.getCommunityId(),
+                                                    requestFile.getWholeDigest(), requestFile.getFragmentDigest() );
 
                         long backtime = System.currentTimeMillis() -
                                         ( REREQUESTFRAGSAFTER );
 
-                        log.info ( "procFileQueue: re-request fragments " + cl.size() );
+                        log.info ( "procFileQueue: re-request fragments " + fragmentsToReset.size() );
 
-                        for ( int ct = 0; ct < cl.size(); ct++ )
+                        for ( int i = 0; i < fragmentsToReset.size(); i++ )
                         {
                             try
                             {
                                 //Set to false, so that we'll request again.
                                 //Ones already complete won't be reset.
-                                CObj co = cl.get ( ct );
+                                CObj co = fragmentsToReset.get ( i );
                                 Long lt = co.getPrivateNumber ( CObj.LASTUPDATE );
 
                                 //Check lastupdate so we don't request it back to
                                 //back when there's only one fragment for a file.
                                 if ( lt == null || lt < backtime )
                                 {
-                                    Iterator<CObj> fi = fl.iterator();
-                                    boolean fnd = false;
+                                    Iterator<CObj> fi = requests.iterator();
+                                    boolean found = false;
 
                                     String comid = co.getString ( CObj.COMMUNITYID );
                                     String filed = co.getString ( CObj.FILEDIGEST );
@@ -314,7 +395,7 @@ public class ConnectionFileManager implements Runnable
                                             fragd != null )
                                     {
 
-                                        while ( fi.hasNext() && !fnd )
+                                        while ( fi.hasNext() && !found )
                                         {
                                             CObj c = fi.next();
 
@@ -330,16 +411,16 @@ public class ConnectionFileManager implements Runnable
                                                         fragt.equals ( cfragt ) &&
                                                         fragd.equals ( cfragd ) )
                                                 {
-                                                    fnd = true;
+                                                    found = true;
                                                 }
 
                                             }
 
                                         }
 
-                                        if ( !fnd )
+                                        if ( !found )
                                         {
-                                            co.pushPrivate ( CObj.COMPLETE, "false" );
+                                            co.pushPrivate ( CObj.COMPLETE, CObj.FALSE );
                                             index.index ( co );
                                         }
 
@@ -356,39 +437,42 @@ public class ConnectionFileManager implements Runnable
 
                         }
 
-                        cl.close();
+                        fragmentsToReset.close();
+
+                        fragmentsToRequest.close();
+
                         index.forceNewSearcher();
                         //Get the new list of fragments to request after resetting
-                        cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                                                           rf.getWholeDigest(), rf.getFragmentDigest() );
+                        fragmentsToRequest = index.getFragmentsToRequest ( requestFile.getCommunityId(),
+                                             requestFile.getWholeDigest(), requestFile.getFragmentDigest() );
 
                     }
 
                     boolean newsearcher = false;
 
-                    log.info ( "procFileQueue: request fragments: " + cl.size() + " queue size: " + fl.size() );
+                    log.info ( "procFileQueue: request fragments: " + fragmentsToRequest.size() + " queue size: " + requests.size() );
 
-                    for ( int c = 0; c < cl.size() &&
-                            fl.size() < ConnectionManager2.QUEUE_DEPTH_FILE; c++ )
+                    for ( int c = 0; c < fragmentsToRequest.size() &&
+                            requests.size() < ConnectionManager2.QUEUE_DEPTH_FILE; c++ )
                     {
                         try
                         {
 
-                            CObj co = cl.get ( c );
+                            CObj fragment = fragmentsToRequest.get ( c );
                             log.info ( "procFileQueue: request fragment: " + c );
 
-                            co.pushPrivate ( CObj.COMPLETE, "req" );
-                            co.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
-                            index.index ( co );
+                            fragment.pushPrivate ( CObj.COMPLETE, CObj.REQUEST );
+                            fragment.pushPrivateNumber ( CObj.LASTUPDATE, System.currentTimeMillis() );
+                            index.index ( fragment );
                             newsearcher = true;
                             CObj sr = new CObj();
                             sr.setType ( CObj.CON_REQ_FRAG );
-                            sr.pushString ( CObj.COMMUNITYID, co.getString ( CObj.COMMUNITYID ) );
-                            sr.pushString ( CObj.FILEDIGEST, co.getString ( CObj.FILEDIGEST ) );
-                            sr.pushString ( CObj.FRAGDIGEST, co.getString ( CObj.FRAGDIGEST ) );
-                            sr.pushString ( CObj.FRAGDIG, co.getString ( CObj.FRAGDIG ) );
-                            fl.add ( sr );
-                            gonext = true;
+                            sr.pushString ( CObj.COMMUNITYID, fragment.getString ( CObj.COMMUNITYID ) );
+                            sr.pushString ( CObj.FILEDIGEST, fragment.getString ( CObj.FILEDIGEST ) );
+                            sr.pushString ( CObj.FRAGDIGEST, fragment.getString ( CObj.FRAGDIGEST ) );
+                            sr.pushString ( CObj.FRAGDIG, fragment.getString ( CObj.FRAGDIG ) );
+                            requests.add ( sr );
+                            goNext = true;
                         }
 
                         catch ( IOException e )
@@ -398,7 +482,7 @@ public class ConnectionFileManager implements Runnable
 
                     }
 
-                    cl.close();
+                    fragmentsToRequest.close();
 
                     if ( newsearcher )
                     {
@@ -411,10 +495,10 @@ public class ConnectionFileManager implements Runnable
 
         }
 
-        fileRequests = nlst;
+        fileRequests = newFileRequests;
         fileTime = nt;
         lastFileUpdate++;
-        return gonext;
+        return goNext;
     }
 
     public void bumpUpdate()

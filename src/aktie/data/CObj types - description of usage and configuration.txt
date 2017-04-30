@@ -1,0 +1,268 @@
+This document describes how CObj are configured depending on their type and what these are used for.
+
+-------------
+Indexed types
+-------------
+
+
+------------------------
+Type DUPFILE ("dupfile")
+
+Usage: Store information about a duplicate hasfile (old version of a hasfile)
+
+ID: None
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+HASFILE - String - mandatory - ID of the hasfile this duplicate file was created from
+LOCALFILE - String - mandatory - Path of the local hasfile this duplicate file was created from
+COMMUNITYID - String - mandatory - ID of the community where the hasfile this duplicate file was created from is shared
+CREATOR - String - mandatory - ID of the identity that created the hasfile this duplicate file was created from
+
+Private attributes: None
+
+Signing: CObj.simpleDigest()
+
+Hash payment: None
+
+
+
+--------------------------
+Type FRAGMENT ("fragment")
+
+Usage: Store and communicate information about file fragments of hasfiles (file pieces transferred during upload/download of a file)
+
+ID:
+
+Dig:
+
+Public attributes:
+Key - type - mandatory/optional - description
+COMMUNITYID - String - mandatory - ID of the community where the hasfile this fragment belongs to is shared
+FRAGDIG - String - mandatory - RIPEMD256 digest of the fragment, base64 encoded (UTF-8)
+FILEDIGEST - String - mandatory - See HASFILE, copied over
+FRAGDIGEST - String - mandatory - See HASFILE, copied over
+FRAGOFFSET - Number - mandatory - The offset in bytes where the start of the fragment is located in the file
+FRAGSIZE - Number - mandatory - The actual size of the fragment in bytes. All fragments of a file have the same size except the last fragment which might be smaller.
+
+Private attributes:
+Key - type - mandatory/optional - description
+LOCALFILE - String - optional - The canonical path of the local file, if there is one.
+COMPLETE - String - mandatory - "true" if the fragment is complete, "req" if the fragment was requested from a remote identity, "false" if the fragment is not complete
+
+Signing: CObj.simpleDigest()
+
+Hash payment: None
+
+
+
+------------------------
+Type HASFILE ("hasfile")
+
+Usage: Store and communicate information about files shared by local identities and remote identities
+
+ID: ID merged from (1) "id", (2) value of FRAGDIGEST and (3) value of FILEDIGEST
+    where "id" is a value merged from (1) value of CREATOR and (2) value of COMMUNITYID,
+    see aktie.utils.HasFileCreator.createHasFile() and Utils.mergeIds()
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+CREATOR - String - mandatory - ID of the identity that created this hasfile
+COMMUNITYID - String - mandatory - ID of the community this hasfile is shared with
+NAME - String - mandatory - The file name shipped with this hasfile
+FILESIZE - Number - mandatory - The size of the file in bytes
+FILEDIGEST - String - mandatory - SHA256 digest of the whole file, base64 encoded (UTF-8)
+FRAGDIGEST - String - mandatory - RIPEMD256 digest of the digests (FRAGDIG) of the fragments of the file, base64 encoded (UTF-8)
+FRAGNUMER - Number - mandatory - The total number of fragments of this file
+FRAGSIZE - Number - mandatory - The nominal size of the file fragments in bytes (last fragment might be smaller)
+SEQNUM - Number - mandatory - The unique file sequence number of the CommunityMember identified by "id" that created this hasfile
+CREATEDON - Number - mandatory - The fuzzed time this hasfile was created. If there already was an earlier version of the hasfile (see DUPFILE), it has to be made sure that the fuzzed time is after the creation time of the previous version of the hasfile.
+PAYMENT - String - optional - A hash payment required in order that remote identities will accept this hasfile even if they did not set our user rank above the spam limit rank (see spamtool.finalize(), CObj.signX() and CObj.genPayment())
+STILLHASFILE - String - mandatory - Value "true" if the identity still has the file. Value "false" if the identity does not have the file anymore and it needs to be clened up.
+ERROR - String - optional - Error message pushed to the hasfile in case that creation fails for some reasion. Used for feedback to the local user.
+
+Private attributes:
+Key - type - mandatory/optional - description
+MINE - String - optional - Value "true" if this hasfile belongs to a local identity
+LOCALFILE - String - optional - The canonical path of the local file, if there is one.
+PRV_USER_RANK - Number - mandatory - The rank we assigned to the identity (user) that created this hasfile
+PRV_SKIP_PAYMENT - String - If set to "true", the spam tool will not create a hash payment for this hasfile. This will result in remote identities not accepting this hasfile except that they set the user rank of the (local) creating identity above the user rank that defines the spam check limit.
+
+Signing: SpamTool.finalize() will trigger signing
+
+Hash payment: SpamTool.finalize() will trigger creation of a hash payment if PRV_SKIP_PAYMENT is not set or not set to "true"
+
+
+
+------------------------
+Type HASPART ("haspart") - only with aktie-0.5.13_HasPart_2017-03-23.patch applied
+
+Usage: Store information about partially downloaded files (.aktiepart) of local identities and remote identies
+
+ID: Same as for HASFILE
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+CREATOR - String - mandatory - ID of the identity that created this part file
+COMMUNITYID - String - mandatory - ID of the community this part file is shared with
+FILEDIGEST - String - mandatory - SHA256 digest of the whole (complete) file, base64 encoded (UTF-8)
+FRAGDIGEST - String - mandatory - RIPEMD256 digest of the digests (FRAGDIG) of the fragments of the file, base64 encoded (UTF-8)
+FRAGNUMER - Number - mandatory - The total number of fragments of this file
+PAYLOAD - String - mandatory - A byte array indicating the indices of already completed fragments as base64 encoded (UTF-8) string
+STILLHASFILE - String - mandatory - "true" if the issuing identity still has the part file
+SEQNUM - Number - mandatory - The unique file sequence number of the CommunityMember identified by "id" that created this part file
+CREATEDON - Number - mandatory - The fuzzed time this part file was created. If there already was an earlier revision of the part file, it has to be made sure that the fuzzed time is after the creation time of the previous revision.
+
+Private attributes:
+Key - type - mandatory/optional - description
+FIRSTSEEN - Number - mandatory - The first time where the first revision of this part file was seen.
+LASTSEEN - Number - mandatory - The last time where a new revision of this part file was seen.
+REVISION - Number - mandatory - The revision number of this part file. Each time, we see a part file with the same identification as an existing part file and the seen file is newer than the existing part file, the existing part file is exchanged for the new one and the revision is incremented.
+MINE - String - optional - Value "true" if this part file belongs to a local identity
+PRV_SKIP_PAYMENT - String - mandatory - Has to be set to "true" for the spam tool to skip creation of a has payment.
+
+Signing:
+
+Hash payment: None
+
+
+
+
+---------------
+Temporary types
+---------------
+
+
+------------------------------
+Type CON_REQ_FRAG ("con_frag")
+
+Usage: Request download of a fragment from a remote identity
+
+ID: None
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+COMMUNITYID - String - mandatory - The ID of the community the file this fragment belongs to is shared with
+FILEDIGEST - String - mandatory - SHA256 digest of the whole file, base64 encoded (UTF-8)
+FRAGDIGEST - String - mandatory - RIPEMD256 digest of the digests (FRAGDIG) of the fragments of the file, base64 encoded (UTF-8)
+FRAGDIG - String - mandatory - RIPEMD256 digest of the fragment, base64 encoded (UTF-8)
+
+
+Private attributes: None
+
+Signing: None
+
+Hash payment: None
+
+
+
+-----------------------------------
+Type CON_REQ_FRAGLIST ("con_flist")
+
+Usage: Request the fragments of a hasfile from a remote destination
+
+ID: None
+
+Dig: Nonde
+
+Public attributes:
+Key - type - mandatory/optional - description
+COMMUNITYID - String - mandatory - The ID of the community the file this fragment belongs to is shared with
+FILEDIGEST - String - mandatory - SHA256 digest of the whole file, base64 encoded (UTF-8)
+FRAGDIGEST - String - mandatory - RIPEMD256 digest of the digests (FRAGDIG) of the fragments of the file, base64 encoded (UTF-8)
+
+Private attributes: None
+
+Signing: None
+
+Hash payment: None
+
+
+
+--------------------------------
+Type CON_REQ_HASFILE ("con_has")
+
+Usage: Request has file information for a particular identity and community from a remote destination - LEGACY
+
+ID: None
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+COMMUNITYID - String - mandatory - ID of the community the hasfiles are shared with
+CREATOR - String - mandatory - ID of the identity that created the hasfiles
+FIRSTNUM - Number - mandatory - The first sequence number of the hasfiles, the local identity is interested in
+LASTNUM - Number - mandatory - The last sequence number of the hasfiles, the local identity is interested in
+
+Private attributes: None
+
+Signing: None
+
+Hash payment: None
+
+
+
+--------------------
+Type FILEF ("filef")
+
+Usage: Set as type of a CObj of a type fragment and send it back to a remote destination to indicate that the local destination accepts transfer (upload) of the fragment.
+
+see FRAGMENT
+
+
+
+------------------------
+Type FRAGFAILED ("oops")
+
+Usage: Inform a remote destination that has requested transfer of a fragment that we cannot transfer the fragment (because it was not found)
+
+ID: None
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/optional - description
+COMMUNITYID - String - mandatory - The ID of the community the file this fragment belongs to is shared with
+FILEDIGEST - String - mandatory - SHA256 digest of the whole file, base64 encoded (UTF-8)
+FRAGDIGEST - String - mandatory - RIPEMD256 digest of the digests (FRAGDIG) of the fragments of the file, base64 encoded (UTF-8)
+FRAGDIG - String - mandatory - RIPEMD256 digest of the fragment, base64 encoded (UTF-8)
+
+Private attributes: None
+
+Signing: None
+
+Hash payment: None
+
+
+
+------------------------
+Type SEQCOMP ("seqcomp")
+
+Usage:
+
+ID: None
+
+Dig: None
+
+Public attributes:
+Key - type - mandatory/alternative - description
+COMMUNITYID - String - mandatory 
+SEQNUM - Number - alternative - Alternative to MEMSEQNUM and SUBSEQNUM
+MEMSEQNUM - Number - alternative - Alternative to SEQNUM and SUBSEQNUM
+SUBSEQNUM - Number - alternative - Alternative to SEQNUM and MEMSEQNUM
+
+Private attributes: None
+
+Signing:
+
+Hash payment: None
+

@@ -28,22 +28,22 @@ public class ReqHasFileProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_HASFILE.equals ( type ) )
         {
-            String comid = b.getString ( CObj.COMMUNITYID );
-            String creator = b.getString ( CObj.CREATOR );
-            String conid = connection.getEndDestination().getId();
+            String communityID = b.getString ( CObj.COMMUNITYID );
+            String creatorID = b.getString ( CObj.CREATOR );
+            String remoteID = connection.getEndDestination().getId();
 
-            if ( creator != null && comid != null && conid != null )
+            if ( creatorID != null && communityID != null && remoteID != null )
             {
-                CObj sub = index.getSubscription ( comid, conid );
+                CObj sub = index.getSubscription ( communityID, remoteID );
 
-                if ( sub != null && "true".equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
+                if ( sub != null && CObj.TRUE.equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
                 {
                     //Get the member we're requesting posts from
                     long first = b.getNumber ( CObj.FIRSTNUM );
                     long last = b.getNumber ( CObj.LASTNUM );
                     long maxlast = first + 1000;
                     last = Math.min ( last, maxlast );
-                    CObjList cl = index.getHasFiles ( comid, creator, first, last );
+                    CObjList cl = index.getHasFiles ( communityID, creatorID, first, last );
 
                     if ( cl.size() > 0 )
                     {

@@ -27,44 +27,44 @@ public class ReqFragListProcessor extends GenericProcessor
 
         if ( CObj.CON_REQ_FRAGLIST.equals ( type ) )
         {
-            String comid = b.getString ( CObj.COMMUNITYID );
-            String wdig = b.getString ( CObj.FILEDIGEST );
-            String pdig = b.getString ( CObj.FRAGDIGEST ); //Digest of digests
-            String conid = connection.getEndDestination().getId();
+            String communityID = b.getString ( CObj.COMMUNITYID );
+            String fileDigest = b.getString ( CObj.FILEDIGEST );
+            String fragDigest = b.getString ( CObj.FRAGDIGEST ); //Digest of digests
+            String memberID = connection.getEndDestination().getId();
 
             log.info ( "Requesting file fragment list. comid: " +
-                       comid + " wdig " + wdig + " pdig " + pdig + " conid: " + conid );
+                       communityID + " wdig " + fileDigest + " pdig " + fragDigest + " conid: " + memberID );
 
-            if ( comid != null && wdig != null && pdig != null && conid != null )
+            if ( communityID != null && fileDigest != null && fragDigest != null && memberID != null )
             {
-                CObj sub = index.getSubscription ( comid, conid );
+                CObj subscription = index.getSubscription ( communityID, memberID );
 
-                log.info ( "Subscribed? " + sub );
+                log.info ( "Subscribed? " + subscription );
 
-                if ( sub != null && "true".equals ( sub.getString ( CObj.SUBSCRIBED ) ) )
+                if ( subscription != null && CObj.TRUE.equals ( subscription.getString ( CObj.SUBSCRIBED ) ) )
                 {
                     //Make sure someone has has the file in the context of the community
                     //We get the HasFile object to make sure we actually have the file.
-                    CObj hf = index.getIdentHasFile ( comid, //Community
-                                                      connection.getLocalDestination().getIdentity().getId(), //My id
-                                                      wdig, pdig );
+                    CObj hasFile = index.getIdentHasFile ( communityID, //Community
+                                                           connection.getLocalDestination().getIdentity().getId(), //My id
+                                                           fileDigest, fragDigest );
 
-                    if ( hf != null )
+                    if ( hasFile != null )
                     {
                         log.info ( "Yes, you have the file" );
 
-                        CObjList frags = index.getFragments ( wdig, pdig );
+                        CObjList frags = index.getFragments ( fileDigest, fragDigest );
 
                         log.info ( "Enqueue fragment list: " + frags.size() );
 
                         if ( frags.size() > 0 )
                         {
                             connection.enqueue ( frags );
-                            String lf = hf.getPrivate ( CObj.LOCALFILE );
+                            String localFile = hasFile.getPrivate ( CObj.LOCALFILE );
 
-                            if ( lf != null )
+                            if ( localFile != null )
                             {
-                                connection.setFileUp ( lf );
+                                connection.setFileUp ( localFile );
                             }
 
                         }
