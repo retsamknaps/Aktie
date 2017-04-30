@@ -85,7 +85,7 @@ public class Node
         userQueue = new ProcessQueue ( "userQueue" );
 
 
-        hasFileCreator = new HasFileCreator ( session, index, spamtool );
+        hasFileCreator = new HasFileCreator ( session, index, spamtool, uc );
         //HH2Session s, Index i, HasFileCreator h, ProcessQueue pq
 
         shareManager = new ShareManager ( session, requestHandler, index,

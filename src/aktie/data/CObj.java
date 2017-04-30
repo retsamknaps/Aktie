@@ -34,158 +34,165 @@ import aktie.crypto.Utils;
 public class CObj
 {
 
-    public static int MAXSTRING = 50000;
+    public static final int MAXSTRING = 50000;
 
     //Types - indexed
-    public static String IDENTITY = "identity";
-    public static String COMMUNITY = "community";
-    public static String MEMBERSHIP = "membership";
-    public static String SUBSCRIPTION = "subscription";
-    public static String POST = "post";
-    public static String FILE = "filetype";
-    public static String HASFILE = "hasfile";
-    public static String FRAGMENT = "fragment";
-    public static String FILEF = "filef";
-    public static String FRAGFAILED = "oops";
-    public static String PRIVIDENTIFIER = "privident";
-    public static String PRIVMESSAGE = "privmsg";
-    public static String QUERY = "query";
-    public static String FIELD = "field";
-    public static String DUPFILE = "dupfile";
-    public static String SPAMEXCEPTION = "spamex";
-    public static String OBJDIG = "d";
-    public static String SEQCOMP = "seqcomp";
-    public static String CHECKMEM = "chkmem";
-    public static String CHECKSUB = "chksub";
-    public static String CHECKCOMP = "chkcomp";
+    public static final String IDENTITY = "identity";
+    public static final String COMMUNITY = "community";
+    public static final String MEMBERSHIP = "membership";
+    public static final String SUBSCRIPTION = "subscription";
+    public static final String POST = "post";
+    public static final String FILE = "filetype";
+    public static final String HASFILE = "hasfile";
+    public static final String FRAGMENT = "fragment";
+    public static final String FILEF = "filef";
+    public static final String FRAGFAILED = "oops";
+    public static final String PRIVIDENTIFIER = "privident";
+    public static final String PRIVMESSAGE = "privmsg";
+    public static final String QUERY = "query";
+    public static final String FIELD = "field";
+    public static final String DUPFILE = "dupfile";
+    public static final String SPAMEXCEPTION = "spamex";
+    public static final String OBJDIG = "d";
+    public static final String SEQCOMP = "seqcomp";
+    public static final String CHECKMEM = "chkmem";
+    public static final String CHECKSUB = "chksub";
+    public static final String CHECKCOMP = "chkcomp";
 
     //Types - no indexed.
-    public static String INDEX_QUERY = "index_query";
-    public static String NODE_CMD = "node_cmd";
+    public static final String INDEX_QUERY = "index_query";
+    public static final String NODE_CMD = "node_cmd";
 
     //Node command types
-    public static String NODE_CMD_TYPE = "node_cmd_type";
-    public static String NODE_CMD_SHUTDOWN = "node_cmd_stop";
+    public static final String NODE_CMD_TYPE = "node_cmd_type";
+    public static final String NODE_CMD_SHUTDOWN = "node_cmd_stop";
 
     //Index query types
-    public static String INDEX_Q_TYPE = "index_q_type";
-    public static String INDEX_Q_PUBCOM = "index_q_pubcom";
-    public static String INDEX_Q_SUBS = "index_q_subs";
-    public static String INDEX_Q_MEMS = "index_q_mems";
-    public static String INDEX_Q_IDENT = "index_q_ident";
+    public static final String INDEX_Q_TYPE = "index_q_type";
+    public static final String INDEX_Q_PUBCOM = "index_q_pubcom";
+    public static final String INDEX_Q_SUBS = "index_q_subs";
+    public static final String INDEX_Q_MEMS = "index_q_mems";
+    public static final String INDEX_Q_IDENT = "index_q_ident";
 
     //Temporary types - requests to other nodes.
-    public static String CON_CHALLENGE = "con_challenge";
-    public static String CON_REPLY = "con_reply";
-    public static String CON_REQ_IDENTITIES = "con_ident";
-    public static String CON_REQ_PRVIDENT = "con_prv_ident";
-    public static String CON_REQ_PRVMSG = "con_prv_msg";
-    public static String CON_REQ_SPAMEX = "con_spamex";
-    public static String CON_REQ_COMMUNITIES = "con_com";
-    public static String CON_REQ_MEMBERSHIPS = "con_mem";
-    public static String CON_REQ_SUBS = "con_subs";
-    public static String CON_REQ_POSTS = "con_posts";
-    public static String CON_REQ_HASFILE = "con_has";
-    public static String CON_REQ_FRAGLIST = "con_flist";
-    public static String CON_REQ_FRAG = "con_frag";
-    public static String CON_REQ_GLOBAL = "con_glb";
-    public static String CON_REQ_DIG = "con_dig";
-    public static String CON_LIST = "lsttype";
-    public static String CON_FILEMODE = "filemode";
+    public static final String CON_CHALLENGE = "con_challenge";
+    public static final String CON_REPLY = "con_reply";
+    public static final String CON_REQ_IDENTITIES = "con_ident";
+    public static final String CON_REQ_PRVIDENT = "con_prv_ident";
+    public static final String CON_REQ_PRVMSG = "con_prv_msg";
+    public static final String CON_REQ_SPAMEX = "con_spamex";
+    public static final String CON_REQ_COMMUNITIES = "con_com";
+    public static final String CON_REQ_MEMBERSHIPS = "con_mem";
+    public static final String CON_REQ_SUBS = "con_subs";
+    public static final String CON_REQ_POSTS = "con_posts";
+    public static final String CON_REQ_HASFILE = "con_has";
+    public static final String CON_REQ_FRAGLIST = "con_flist";
+    public static final String CON_REQ_FRAG = "con_frag";
+    public static final String CON_REQ_GLOBAL = "con_glb";
+    public static final String CON_REQ_DIG = "con_dig";
+    public static final String CON_LIST = "lsttype";
+    public static final String CON_FILEMODE = "filemode";
 
     //Temporary types - user requests.
-    public static String USR_DOWNLOAD_FILE = "usr_downloadfile";
-    public static String USR_HASFILE_UPDATE = "usr_hasfileupdate";
-    public static String USR_POST_UPDATE = "usr_postupdate";
-    public static String USR_SUB_UPDATE = "usr_subupdate";
-    public static String USR_IDENTITY_UPDATE = "usr_identupdate";
-    public static String USR_COMMUNITY_UPDATE = "usr_comupdate";
-    public static String USR_MEMBER_UPDATE = "usr_memupdate";
-    public static String USR_PRVMSG_UPDATE = "usr_prvmsgupdate";
-    public static String USR_SPAMEX_UPDATE = "usr_spamexupdate";
-    public static String USR_SEED = "usr_seed";
-    public static String USR_SPAMEX = "usr_spamex";
-    public static String USR_COMMUNITY = "usr_com";
-    public static String USR_START_DEST = "start_dest";
-    public static String USR_SET_RANK = "set_rank";
-    public static String USR_SHARE_MGR = "share_mgr";
-    public static String USR_CANCEL_DL = "cancel_dl";
-    public static String USR_FORCE_SEARCHER = "usr_force_searcher";
+    public static final String USR_DOWNLOAD_FILE = "usr_downloadfile";
+    public static final String USR_HASFILE_UPDATE = "usr_hasfileupdate";
+    public static final String USR_POST_UPDATE = "usr_postupdate";
+    public static final String USR_SUB_UPDATE = "usr_subupdate";
+    public static final String USR_IDENTITY_UPDATE = "usr_identupdate";
+    public static final String USR_COMMUNITY_UPDATE = "usr_comupdate";
+    public static final String USR_MEMBER_UPDATE = "usr_memupdate";
+    public static final String USR_PRVMSG_UPDATE = "usr_prvmsgupdate";
+    public static final String USR_SPAMEX_UPDATE = "usr_spamexupdate";
+    public static final String USR_SEED = "usr_seed";
+    public static final String USR_SPAMEX = "usr_spamex";
+    public static final String USR_COMMUNITY = "usr_com";
+    public static final String USR_START_DEST = "start_dest";
+    public static final String USR_SET_RANK = "set_rank";
+    public static final String USR_SHARE_MGR = "share_mgr";
+    public static final String USR_CANCEL_DL = "cancel_dl";
+    public static final String USR_FORCE_SEARCHER = "usr_force_searcher";
 
     //Private fields
-    public static String PRV_LOCALFILE   = "prv_localfile";
-    public static String PRV_NAME        = "prv_name";
-    public static String PRV_FILESIZE    = "prv_filesize";
-    public static String PRV_FRAGDIGEST  = "prv_fragdig";
-    public static String PRV_FRAGSIZE    = "prv_fragsize";
-    public static String PRV_FRAGNUMBER  = "prv_fragnum";
-    public static String PRV_FILEDIGEST  = "prv_filedig";
-    public static String PRV_DEST_OPEN   = "prv_dest_open";
-    public static String PRV_CLEAR_ERR   = "prv_clear_err";
-    public static String PRV_PUSH_REQ    = "prv_push_req";
-    public static String PRV_PUSH_TIME   = "prv_push_time";
-    public static String PRV_DISPLAY_NAME = "prv_display_name";
-    public static String PRV_USER_RANK   = "prv_user_rank";
-    public static String PRV_DEF_FIELD   = "prv_def_field";
-    public static String PRV_FLD_NEW     = "prv_fld_new";
-    public static String PRV_QRY_AUTODOWNLOAD = "prv_auto_dl";
-    public static String PRV_RECIPIENT   = "prv_to";
-    public static String PRV_MSG_ID      = "prv_msg_id";
-    public static String PRV_SKIP_PAYMENT = "prv_skip_payment";
-    public static String PRV_GLOBAL_SEQ  = "prv_glbseq";
+    public static final String PRV_LOCALFILE   = "prv_localfile";
+    public static final String PRV_NAME        = "prv_name";
+    public static final String PRV_FILESIZE    = "prv_filesize";
+    public static final String PRV_FRAGDIGEST  = "prv_fragdig";
+    public static final String PRV_FRAGSIZE    = "prv_fragsize";
+    public static final String PRV_FRAGNUMBER  = "prv_fragnum";
+    public static final String PRV_FILEDIGEST  = "prv_filedig";
+    public static final String PRV_DEST_OPEN   = "prv_dest_open";
+    public static final String PRV_CLEAR_ERR   = "prv_clear_err";
+    public static final String PRV_PUSH_REQ    = "prv_push_req";
+    public static final String PRV_PUSH_TIME   = "prv_push_time";
+    public static final String PRV_DISPLAY_NAME = "prv_display_name";
+    public static final String PRV_USER_RANK   = "prv_user_rank";
+    public static final String PRV_DEF_FIELD   = "prv_def_field";
+    public static final String PRV_FLD_NEW     = "prv_fld_new";
+    public static final String PRV_QRY_AUTODOWNLOAD = "prv_auto_dl";
+    public static final String PRV_RECIPIENT   = "prv_to";
+    public static final String PRV_MSG_ID      = "prv_msg_id";
+    public static final String PRV_SKIP_PAYMENT = "prv_skip_payment";
+    public static final String PRV_GLOBAL_SEQ  = "prv_glbseq";
 
-    public static String PRV_TEMP_NEWPOSTS = "newposts";
+    public static final String PRV_TEMP_NEWPOSTS = "newposts";
 
-    public static String NAME = "name";
-    public static String TXTNAME = "txtname";
-    public static String DESCRIPTION = "desc";
-    public static String ERROR = "error";
-    public static String PRIVATEKEY = "privkey";
-    public static String DEST = "dest";
-    public static String KEY = "key";
-    public static String PAYLOAD = "payload";
-    public static String PAYLOAD2 = "payload2";
-    public static String SCOPE = "scope";
-    public static String CREATOR = "creator";
-    public static String CREATOR_NAME = "creator_name";
-    public static String COMMUNITY_NAME = "community_name";
-    public static String CREATEDON = "createdon";
-    public static String SEQNUM = "seqnum";
-    public static String MEMSEQNUM = "mseqnum";
-    public static String SUBSEQNUM = "sseqnum";
-    public static String COMMUNITYID = "comid";
-    public static String MEMBERID = "memid";
-    public static String ENCKEY = "enckey";
-    public static String SUBSCRIBED = "subscribed";
-    public static String LOCALFILE = "localfile";
-    public static String NUMBER_HAS  = "prv_numhas";
-    public static String FRAGSIZE = "fragsize";
-    public static String FILESIZE = "filesize";
-    public static String SCOPE_PRIVATE = "private";
-    public static String SCOPE_PUBLIC = "public";
-    public static String NAME_IS_PUBLIC = "namepub";
-    public static String FILEDIGEST = "fdig";
-    public static String FRAGDIGEST = "gdig"; //digest of digests
-    public static String FRAGDIG = "frgdig"; //digest of single fragment
-    public static String FRAGNUMBER = "fragnum"; //The number of fragments
-    public static String FRAGOFFSET = "foffset";
-    public static String STILLHASFILE = "stillhas";
-    public static String FIRSTNUM = "firstn";
-    public static String LASTNUM = "lastn";
-    public static String COMPLETE = "complete";
-    public static String COUNT = "count";
-    public static String DECODED = "decoded";
-    public static String LASTUPDATE = "lastupdate";
-    public static String PRIORITY = "priority";
-    public static String SUBJECT = "subject";
-    public static String BODY = "body";
-    public static String FILENAME = "fname";
-    public static String UPGRADEFLAG = "upgrade";
-    public static String SHARE_NAME = "sharename";
-    public static String STATUS = "fstatus";
-    public static String ENABLED = "enabled";
-    public static String MSGIDENT = "msgid";
-    public static String PAYMENT = "hashpayment";
+    public static final String NAME = "name";
+    public static final String TXTNAME = "txtname";
+    public static final String DESCRIPTION = "desc";
+    public static final String ERROR = "error";
+    public static final String PRIVATEKEY = "privkey";
+    public static final String DEST = "dest";
+    public static final String KEY = "key";
+    public static final String PAYLOAD = "payload";
+    public static final String PAYLOAD2 = "payload2";
+    public static final String SCOPE = "scope";
+    public static final String CREATOR = "creator";
+    public static final String CREATOR_NAME = "creator_name";
+    public static final String COMMUNITY_NAME = "community_name";
+    public static final String CREATEDON = "createdon";
+    public static final String SEQNUM = "seqnum";
+    public static final String MEMSEQNUM = "mseqnum";
+    public static final String SUBSEQNUM = "sseqnum";
+    public static final String COMMUNITYID = "comid";
+    public static final String MEMBERID = "memid";
+    public static final String ENCKEY = "enckey";
+    public static final String SUBSCRIBED = "subscribed";
+    public static final String LOCALFILE = "localfile";
+    public static final String NUMBER_HAS  = "prv_numhas";
+    public static final String FRAGSIZE = "fragsize";
+    public static final String FILESIZE = "filesize";
+    public static final String SCOPE_PRIVATE = "private";
+    public static final String SCOPE_PUBLIC = "public";
+    public static final String NAME_IS_PUBLIC = "namepub";
+    public static final String FILEDIGEST = "fdig";
+    public static final String FRAGDIGEST = "gdig"; //digest of digests
+    public static final String FRAGDIG = "frgdig"; //digest of single fragment
+    public static final String FRAGNUMBER = "fragnum"; //The number of fragments
+    public static final String FRAGOFFSET = "foffset";
+    public static final String STILLHASFILE = "stillhas";
+    public static final String FIRSTNUM = "firstn";
+    public static final String LASTNUM = "lastn";
+    public static final String COMPLETE = "complete";
+    public static final String COUNT = "count";
+    public static final String DECODED = "decoded";
+    public static final String LASTUPDATE = "lastupdate";
+    public static final String PRIORITY = "priority";
+    public static final String SUBJECT = "subject";
+    public static final String BODY = "body";
+    public static final String FILENAME = "fname";
+    public static final String UPGRADEFLAG = "upgrade";
+    public static final String SHARE_NAME = "sharename";
+    public static final String STATUS = "fstatus";
+    public static final String ENABLED = "enabled";
+    public static final String MSGIDENT = "msgid";
+    public static final String PAYMENT = "hashpayment";
+
+    public static final String INTERNAL_SHARE_NAME_CHANGED = "int_sharechanged";
+    //public static final String INTERNAL_HAS_FILE_COPY = "int_hasfilecp";
+
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
+    public static final String STATUS_DONE = "done";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.
@@ -756,18 +763,21 @@ public class CObj
     public static long MEMBER_CAN_GRANT = 1;
     public static long MEMBER_SUPER = 2;
 
-    private String id;
-    private String type;
+    private String id = null;
+    private String type = null;
     private Map<String, String> strings;
     private Map<String, String> text;
     private Map<String, Long> numbers;
     private Map<String, Double> decimals;
     private String dig;
-    private String signature;
+    private String signature = null;
+    private boolean signatureInvalidated = false;
 
     private Map<String, String> privatedata;
     private Map<String, Long> privatenumbers;
     private Map<String, Double> privatedecimals;
+
+    private Map<String, String> internalData;
 
     public void clear()
     {
@@ -782,6 +792,7 @@ public class CObj
         privatedata = null;
         privatenumbers = null;
         privatedecimals = null;
+        internalData = null;
     }
 
     public CObj clone()
@@ -791,6 +802,7 @@ public class CObj
         c.setId ( getId() );
         c.setDig ( getDig() );
         c.setSignature ( getSignature() );
+        c.setSignatrueInvalidated ( isSignatureInvalidated() );
 
         if ( strings != null )
         {
@@ -851,6 +863,15 @@ public class CObj
             for ( Entry<String, Double> e : privatedecimals.entrySet() )
             {
                 c.pushPrivateDecimal ( e.getKey(), e.getValue() );
+            }
+
+        }
+
+        if ( internalData != null )
+        {
+            for ( Entry<String, String> e : internalData.entrySet() )
+            {
+                c.pushInternal ( e.getKey(), e.getValue() );
             }
 
         }
@@ -1092,6 +1113,7 @@ public class CObj
         if ( jo.has ( PARAM_SIG ) )
         {
             signature = jo.getString ( PARAM_SIG );
+            signatureInvalidated = false;
         }
 
         if ( jo.has ( "strings" ) )
@@ -1398,6 +1420,7 @@ public class CObj
                 if ( PARAM_SIG.equals ( k ) )
                 {
                     signature = i.stringValue();
+                    signatureInvalidated = false;
                 }
 
                 if ( k.startsWith ( "strings_" ) )
@@ -1518,6 +1541,8 @@ public class CObj
         try
         {
             signature = Utils.toString ( enc.processBlock ( dg, 0, dg.length ) );
+            //System.out.println ( "CObj.signX(): Setting signature for CObj of type " + type + " with ID " + id );
+            signatureInvalidated = false;
         }
 
         catch ( InvalidCipherTextException e )
@@ -1709,6 +1734,13 @@ public class CObj
 
     public void setType ( String type )
     {
+        if ( signature != null && ( this.type != null && !this.type.equals ( type ) ) )
+        {
+            //System.out.println ( "CObj.setType(): Invalidating signature for CObj with ID " + id );
+            //System.out.println ( "CObj.setType(): Type to be updated from " + this.type + " to " + type );
+            signatureInvalidated = true;
+        }
+
         this.type = type;
     }
 
@@ -1729,7 +1761,40 @@ public class CObj
 
     public void setSignature ( String signature )
     {
+        //System.out.println ( "CObj.setSignature(): Setting signature for CObj of type " + type + " with ID " + id );
         this.signature = signature;
+        signatureInvalidated = false;
+    }
+
+    private void setSignatrueInvalidated ( boolean b )
+    {
+        signatureInvalidated = b;
+    }
+
+    public boolean isSignatureInvalidated()
+    {
+        return signatureInvalidated;
+    }
+
+    public void pushInternal ( String key, String v )
+    {
+        if ( v != null )
+        {
+            if ( internalData == null )
+            {
+                internalData = new HashMap<String, String>();
+            }
+
+            internalData.put ( key, v );
+        }
+
+    }
+
+    public String getInternal ( String key )
+    {
+        if ( internalData == null ) { return null; }
+
+        return internalData.get ( key );
     }
 
     public void pushPrivate ( String key, String v )
@@ -1809,6 +1874,19 @@ public class CObj
                 v = v.substring ( 0, MAXSTRING );
             }
 
+            if ( signature != null )
+            {
+                String currentValue = this.getString ( key );
+
+                if ( currentValue != null && !currentValue.equals ( v ) )
+                {
+                    //System.out.println ( "CObj.pushString(): Invalidating signature for CObj with type " + type + " and ID " + id );
+                    //System.out.println ( "CObj.pushString(): String " + key + " to be updated from " + currentValue + " to " + v );
+                    signatureInvalidated = true;
+                }
+
+            }
+
             strings.put ( key, v );
         }
 
@@ -1835,6 +1913,19 @@ public class CObj
                 v = v.substring ( 0, MAXSTRING );
             }
 
+            if ( signature != null )
+            {
+                String currentValue = this.getText ( key );
+
+                if ( currentValue != null && !currentValue.equals ( v ) )
+                {
+                    //System.out.println ( "CObj.pushText(): Invalidating signature for CObj with type " + type + " and ID " + id );
+                    //System.out.println ( "CObj.pushText(): Text " + key + " to be updated from " + currentValue + " to " + v );
+                    signatureInvalidated = true;
+                }
+
+            }
+
             text.put ( key, v );
         }
 
@@ -1854,6 +1945,19 @@ public class CObj
             numbers = new HashMap<String, Long>();
         }
 
+        if ( signature != null )
+        {
+            Long currentValue = this.getNumber ( key );
+
+            if ( currentValue != null && !currentValue.equals ( v ) )
+            {
+                //System.out.println ( "CObj.pushNumber(): Invalidating signature for CObj with type " + type + " and ID " + id );
+                //System.out.println ( "CObj.pushNumber(): Long " + key + " to be updated from " + currentValue + " to " + v );
+                signatureInvalidated = true;
+            }
+
+        }
+
         numbers.put ( key, v );
     }
 
@@ -1869,6 +1973,19 @@ public class CObj
         if ( decimals == null )
         {
             decimals = new HashMap<String, Double>();
+        }
+
+        if ( signature != null )
+        {
+            Double currentValue = this.getDecimal ( key );
+
+            if ( currentValue != null && !currentValue.equals ( v ) )
+            {
+                //System.out.println ( "CObj.pushDecimals(): Invalidating signature for CObj with type " + type + " and ID " + id );
+                //System.out.println ( "CObj.pushDecimals(): Double " + key + " to be updated from " + currentValue + " to " + v );
+                signatureInvalidated = true;
+            }
+
         }
 
         decimals.put ( key, v );
@@ -1923,6 +2040,12 @@ public class CObj
 
     public void setId ( String id )
     {
+        if ( signature != null && ( this.id != null && !this.id.equals ( id ) ) )
+        {
+            //System.out.println ( "CObj.setID(): Invalidating signature for CObj with type " + type + " and current ID " + this.id + " to be updated to " + id );
+            signatureInvalidated = true;
+        }
+
         this.id = id;
     }
 

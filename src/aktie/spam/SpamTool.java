@@ -25,7 +25,7 @@ public class SpamTool
         //Check private value to see if we want to generate payment
         String skip = c.getPrivate ( CObj.PRV_SKIP_PAYMENT );
 
-        if ( "true".equals ( skip ) )
+        if ( skip != null && skip.equals ( CObj.TRUE ) )
         {
             c.signX ( key, 0 );
         }

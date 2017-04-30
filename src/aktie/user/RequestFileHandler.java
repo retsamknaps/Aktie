@@ -24,7 +24,7 @@ public class RequestFileHandler
 {
     Logger log = Logger.getLogger ( "aktie" );
 
-    public static String AKTIEPART = ".aktiepart";
+    public static final String AKTIEPART = ".aktiepart";
 
     private HH2Session session;
     private Index index;
@@ -323,7 +323,7 @@ public class RequestFileHandler
     @SuppressWarnings ( "unchecked" )
     public RequestFile findFileByName ( String name )
     {
-        RequestFile r = null;
+        RequestFile requestFile = null;
         Session s = null;
 
         try
@@ -337,7 +337,7 @@ public class RequestFileHandler
 
             if ( l.size() > 0 )
             {
-                r = l.get ( 0 );
+                requestFile = l.get ( 0 );
             }
 
             s.close();
@@ -362,7 +362,7 @@ public class RequestFileHandler
 
         }
 
-        return r;
+        return requestFile;
     }
 
     public boolean claimFileListClaim ( RequestFile rf )

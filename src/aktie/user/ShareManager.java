@@ -36,9 +36,11 @@ public class ShareManager implements Runnable
     private ProcessQueue userQueue;
     private NewFileProcessor fileProc;
     private HH2Session session;
-    private RequestFileHandler rfh;
+    private RequestFileHandler requestFileHandler;
     private boolean running;
     private boolean enabled;
+
+    private Thread shareManagerThread = null;
 
     public ShareManager ( HH2Session s, RequestFileHandler rf, Index i, HasFileCreator h, NewFileProcessor n, ProcessQueue pq )
     {
@@ -49,8 +51,8 @@ public class ShareManager implements Runnable
         userQueue = pq;
         enabled = true;
         running = false;
-        rfh = rf;
-        rfh.setShareMan ( this );
+        requestFileHandler = rf;
+        requestFileHandler.setShareMan ( this );
         Thread t = new Thread ( this, "Share Manager Thread" );
         t.setDaemon ( true );
         t.start();
@@ -152,97 +154,107 @@ public class ShareManager implements Runnable
 
     }
 
-    private void addFile ( DirectoryShare s, File f )
+    private void addFile ( DirectoryShare directoryShare, File file )
     {
-        CObj hf = new CObj();
-        hf.setType ( CObj.HASFILE );
-        hf.pushString ( CObj.CREATOR, s.getMemberId() );
-        hf.pushString ( CObj.COMMUNITYID, s.getCommunityId() );
-        hf.pushString ( CObj.SHARE_NAME, s.getShareName() );
-        hf.pushPrivate ( CObj.LOCALFILE, f.getPath() ); //Canonical name gotten during processing
-        hf.pushPrivate ( CObj.PRV_SKIP_PAYMENT, s.isSkipSpam() ? "true" : "false" );
-        fileProc.process ( hf );
+        CObj hasFile = new CObj();
+        hasFile.setType ( CObj.HASFILE );
+        hasFile.pushString ( CObj.CREATOR, directoryShare.getMemberId() );
+        hasFile.pushString ( CObj.COMMUNITYID, directoryShare.getCommunityId() );
+        // Changing the share name will require re-signing the file!
+        hasFile.pushString ( CObj.SHARE_NAME, directoryShare.getShareName() );
+        hasFile.pushPrivate ( CObj.LOCALFILE, file.getPath() ); //Canonical name gotten during processing
+        hasFile.pushPrivate ( CObj.PRV_SKIP_PAYMENT, directoryShare.isSkipSpam() ? CObj.TRUE : CObj.FALSE );
+
+        fileProc.process ( hasFile );
     }
 
-    private void checkFoundFile ( DirectoryShare s, File f )
+    private void checkFoundFile ( DirectoryShare directoryShare, File file )
     {
-        if ( enabled )
+        if ( !enabled )
         {
-            String fp = f.getAbsolutePath();
+            return;
+        }
 
-            try
+        System.out.println ( "ShareManager.checkFoundFile(): member = " + directoryShare.getMemberId() + ", community = " + directoryShare.getCommunityId() + ", share = " + directoryShare.getShareName() + ", file = " + file.getName() );
+
+        String filePath = file.getAbsolutePath();
+
+        try
+        {
+            filePath = file.getCanonicalPath();
+        }
+
+        catch ( IOException e )
+        {
+            e.printStackTrace();
+        }
+
+        if ( requestFileHandler.findFileByName ( filePath ) == null )
+        {
+            // TODO: Why does getLocalHasFiles use "new Term ( CObj.docPrivate ( CObj.LOCALFILE ), localfile )"
+            CObjList knownHasFiles = index.getLocalHasFiles ( directoryShare.getCommunityId(), directoryShare.getMemberId(), filePath );
+
+            // if the file is not yet known for this share
+            if ( knownHasFiles.size() == 0 )
             {
-                fp = f.getCanonicalPath();
-            }
+                knownHasFiles.close();
 
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }
+                //Check if it's a duplicate
+                // TODO: And why does getDuplicate use "new Term ( CObj.docString ( CObj.LOCALFILE ), localfile )"
+                CObjList duplicateHasFiles = index.getDuplicate ( directoryShare.getCommunityId(), directoryShare.getMemberId(), filePath );
 
-
-            // TODO: correct indentation
-            if ( null == rfh.findFileByName ( fp ) )
-            {
-
-                CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
-
-                if ( mlst.size() == 0 )
+                // the file is not yet known as duplicate
+                if ( duplicateHasFiles.size() == 0 )
                 {
-                    mlst.close();
+                    duplicateHasFiles.close();
+                    // The file is not yet know and it is not a duplicate
+                    System.out.println ( "ShareManager.checkFoundFile(): adding file " + file.getPath() + " which is not known for this community and identity and not a duplicate file" );
+                    addFile ( directoryShare, file );
+                }
 
-                    //Check if it's a duplicate
-                    CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
+                // the file is already known as duplicate
+                else
+                {
+                    CObj duplicateHasFile = null;
 
-                    if ( dlst.size() == 0 )
+                    try
                     {
-                        dlst.close();
-                        addFile ( s, f );
+                        //Check if file referenced by the duplicate exists
+                        duplicateHasFile = duplicateHasFiles.get ( 0 );
                     }
 
-                    else
+                    catch ( Exception e )
                     {
-                        CObj dlp = null;
+                        e.printStackTrace();
+                    }
 
-                        try
+                    duplicateHasFiles.close();
+
+                    boolean add = true;
+
+                    if ( duplicateHasFile != null )
+                    {
+                        String hasFileID = duplicateHasFile.getString ( CObj.HASFILE );
+
+                        if ( hasFileID != null )
                         {
-                            //Check if file referenced by the duplicate exists
-                            dlp = dlst.get ( 0 );
-                        }
+                            CObj hasFile = index.getById ( hasFileID );
 
-                        catch ( Exception e )
-                        {
-                            e.printStackTrace();
-                        }
-
-                        dlst.close();
-
-                        boolean add = true;
-
-                        if ( dlp != null )
-                        {
-                            String rfid = dlp.getString ( CObj.HASFILE );
-
-                            if ( rfid != null )
+                            if ( hasFile != null )
                             {
-                                CObj hf = index.getById ( rfid );
+                                //There is a hasfile, check if the file
+                                //still exists
+                                String privateLocalFile = hasFile.getPrivate ( CObj.LOCALFILE );
+                                String stillHasFile = hasFile.getString ( CObj.STILLHASFILE );
 
-                                if ( hf != null )
+                                if ( privateLocalFile != null && stillHasFile.equals ( CObj.TRUE ) )
                                 {
-                                    //There is a hasfile, check if the file
-                                    //still exists
-                                    String phf = hf.getPrivate ( CObj.LOCALFILE );
-                                    String shf = hf.getString ( CObj.STILLHASFILE );
+                                    File privateFile = new File ( privateLocalFile );
 
-                                    if ( phf != null && "true".equals ( shf ) )
+                                    if ( privateFile.exists() )
                                     {
-                                        File pf = new File ( phf );
-
-                                        if ( pf.exists() )
-                                        {
-                                            add = false;
-                                        }
-
+                                        // the file exists and is known as duplicate, so nothing to do
+                                        add = false;
                                     }
 
                                 }
@@ -251,49 +263,73 @@ public class ShareManager implements Runnable
 
                         }
 
-                        if ( add )
-                        {
-                            //There is no hasfile for it.  So add it.
-                            addFile ( s, f );
-                        }
-
                     }
 
-                }
-
-                else
-                {
-                    CObj mhf = null;
-
-                    try
+                    if ( add )
                     {
-                        mhf = mlst.get ( 0 );
-                    }
-
-                    catch ( IOException e )
-                    {
-                        e.printStackTrace();
-                    }
-
-                    mlst.close();
-
-                    if ( mhf != null )
-                    {
-                        String shr = mhf.getString ( CObj.SHARE_NAME );
-
-                        if ( !s.getShareName().equals ( shr ) )
-                        {
-                            addFile ( s, f );
-                        }
-
+                        System.out.println ( "ShareManager.checkFoundFile(): adding file " + file.getPath() + " because it is a duplicate, but no hasfile for it" );
+                        //There is no hasfile for it.  So add it.
+                        addFile ( directoryShare, file );
                     }
 
                 }
 
             }
 
+            // if the file is already known for this share
+            else
+            {
+                CObj memberHasFile = null;
+
+                try
+                {
+                    memberHasFile = knownHasFiles.get ( 0 );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+                knownHasFiles.close();
+
+                if ( memberHasFile != null )
+                {
+                    String share = memberHasFile.getString ( CObj.SHARE_NAME );
+
+                    // if the share name has changed
+                    if ( !directoryShare.getShareName().equals ( share ) )
+                    {
+                        // TODO: We should just change the share name instead of re-adding which means re-hashing
+                        // and re-creating signature, see below
+
+                        System.out.println ( "ShareManager.checkFoundFile(): re-adding file " + file.getPath() + " because share name changed from " + share + " to " + directoryShare.getShareName() );
+                        addFile ( directoryShare, file );
+
+                        /*
+                            // This could work instead, couldn't it? But with the current implementation, it would invalid the signature of the file!
+                            memberHasFile.pushString ( CObj.SHARE_NAME, directoryShare.getShareName() );
+                            try
+                            {
+                            index.index ( memberHasFile );
+                            }
+
+                            catch ( IOException e )
+                            {
+                            e.printStackTrace();
+                            }
+
+                            // TODO: call HasFileCreator.updateFileInfo() + GuiCallback is a good idea?
+                            memberHasFile.pushInternal ( CObj.INTERNAL_SHARE_NAME_CHANGED, CObj.TRUE );
+                            hfc.updateFileInfo( memberHasFile);*/
+                    }
+
+                }
+
+            }
 
         }
+
 
     }
 
@@ -306,28 +342,29 @@ public class ShareManager implements Runnable
     */
     private void checkHasFile ( CObj hf )
     {
-        String lf = hf.getPrivate ( CObj.LOCALFILE );
-        String wd = hf.getString ( CObj.FILEDIGEST );
-        Long ut = hf.getNumber ( CObj.CREATEDON );
-        Long ln = hf.getNumber ( CObj.FILESIZE );
+        String localFile = hf.getPrivate ( CObj.LOCALFILE );
+        String fileDigest = hf.getString ( CObj.FILEDIGEST );
+        Long createdOn = hf.getNumber ( CObj.CREATEDON );
+        Long fileSize = hf.getNumber ( CObj.FILESIZE );
 
-        if ( lf != null && wd != null && ut != null && ln != null )
+        if ( localFile != null && fileDigest != null && createdOn != null && fileSize != null )
         {
-            File f = new File ( lf );
+            System.out.println ( "ShareManager.checkHasFile(): " + localFile );
+            File f = new File ( localFile );
             boolean remove = true;
 
             if ( f.exists() )
             {
-                if ( f.lastModified() <= ut && f.length() == ln )
+                if ( f.lastModified() <= createdOn && f.length() == fileSize )
                 {
                     remove = false;
                 }
 
                 else
                 {
-                    String rdig = FUtils.digWholeFile ( lf );
+                    String rdig = FUtils.digWholeFile ( localFile );
 
-                    if ( wd.equals ( rdig ) )
+                    if ( fileDigest.equals ( rdig ) )
                     {
                         remove = false;
                     }
@@ -338,7 +375,7 @@ public class ShareManager implements Runnable
 
             if ( remove )
             {
-                hf.pushString ( CObj.STILLHASFILE, "false" );
+                hf.pushString ( CObj.STILLHASFILE, CObj.FALSE );
                 hfc.createHasFile ( hf );
                 hfc.updateFileInfo ( hf );
             }
@@ -347,146 +384,150 @@ public class ShareManager implements Runnable
 
     }
 
-    private void crawlDirectory ( Path dlpath, Path nodepath, DirectoryShare s, File df )
+    private void crawlDirectory ( Path dlPath, Path nodePath, DirectoryShare directoryShare, File shareDir )
     {
-
-        if ( df != null && df.exists() && df.isDirectory() && enabled )
+        if ( !enabled )
         {
+            return;
+        }
 
-            try
+        if ( shareDir == null || !shareDir.exists() || !shareDir.isDirectory() )
+        {
+            System.err.println ( "ShareManager.crawlDirectory(): Not a directory: " + shareDir );
+            directoryShare.setMessage ( "Not a directory: " + shareDir );
+            return;
+        }
+
+        try
+        {
+            //Do not allow sharing of node dirs except
+            //the download dir
+            Path shareDirPath = shareDir.getCanonicalFile().toPath();
+
+            if ( ( !shareDirPath.startsWith ( dlPath ) ) && shareDirPath.startsWith ( nodePath ) )
             {
-                //Do not allow sharing of node dirs except
-                //the download dir
-                Path dfp = df.getCanonicalFile().toPath();
+                System.err.println ( "ShareManager.crawlDirectory(): Sharing of node directory not allowed: " + shareDir );
+                return;
+            }
 
-                if ( ( !dfp.startsWith ( dlpath ) ) && dfp.startsWith ( nodepath ) )
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+            return;
+        }
+
+        File filesInShare[] = shareDir.listFiles();
+        System.err.println ( "ShareManager.crawlDirectory(): Share " + directoryShare.getShareName() + " has " + filesInShare.length + " files and directories" );
+
+        continueHereWithNextFile:
+
+        for ( File file : filesInShare )
+        {
+            if ( !file.exists() )
+            {
+                continue continueHereWithNextFile;
+            }
+
+            if ( file.isDirectory() )
+            {
+                // If we are supposed to also share hidden directories
+                // or otherwise if the directory is not hidden, crawl it.
+                if ( Wrapper.getShareHiddenDirs() || !file.isHidden() )
                 {
-                    return;
+                    directoryShare.setNumberSubFolders ( directoryShare.getNumberSubFolders() + 1 );
+                    crawlDirectory ( dlPath, nodePath, directoryShare, file );
                 }
 
             }
 
-            catch ( Exception e )
+            else if ( file.isFile() )
             {
-                e.printStackTrace();
-                return;
-            }
-
-            File lsd[] = df.listFiles();
-
-            continueHereWithNextFile:
-
-            for ( int c = 0; c < lsd.length; c++ )
-            {
-                File f = lsd[c];
-
-                if ( f.exists() )
+                // If file is hidden and not supposed to share
+                // hidden files, do not proceed.
+                if ( file.isHidden() && !Wrapper.getShareHiddenFiles() )
                 {
-                    if ( f.isDirectory() )
+                    continue continueHereWithNextFile;
+                }
+
+                String fileName = file.getName();
+                String extension = FUtils.getFileExtension ( fileName );
+
+                // If the file extension is contained in the list of extensions
+                // not to be shared, do not proceed.
+                if ( extension != null )
+                {
+                    List<String> doNotShareExts = Wrapper.getDoNotShareFileExtensions();
+
+                    for ( String doNotShareExt : doNotShareExts )
                     {
-                        // If we are supposed to also share hidden directories
-                        // or otherwise if the directory is not hidden, crawl it.
-                        if ( Wrapper.getShareHiddenDirs() || !f.isHidden() )
+                        // File extensions sometimes don't care about upper and lower case
+                        // (e.g. ".pdf" = ".PDF"), so do a case-insensitive comparison.
+                        if ( doNotShareExt.equalsIgnoreCase ( extension ) )
                         {
-                            s.setNumberSubFolders ( s.getNumberSubFolders() + 1 );
-                            crawlDirectory ( dlpath, nodepath, s, f );
+                            // The file is not supposed to be shared,
+                            // so continue with the next file
+                            continue continueHereWithNextFile;
                         }
 
                     }
 
-                    else if ( f.isFile() )
+                }
+
+                // If the file name is contained in the list of file names
+                // not to be shared, do not proceed.
+                List<String> doNotShareFileNames = Wrapper.getDoNotShareFileNames();
+
+                for ( String doNotShareFileName : doNotShareFileNames )
+                {
+                    // Windows does not care about upper and lower case
+                    if ( Wrapper.osIsWindows() )
                     {
-                        // If file is hidden and not supposed to share
-                        // hidden files, do not proceed.
-                        if ( f.isHidden() && !Wrapper.getShareHiddenFiles() )
+                        if ( doNotShareFileName.equalsIgnoreCase ( fileName ) )
                         {
                             continue continueHereWithNextFile;
                         }
 
-                        String fname = f.getName();
-                        String ext = FUtils.getFileExtension ( fname );
+                    }
 
-                        // If the file extension is contained in the list of extensions
-                        // not to be shared, do not proceed.
-                        if ( ext != null )
+                    // Other systems care about case in file names
+                    else
+                    {
+                        if ( doNotShareFileName.equals ( fileName ) )
                         {
-                            List<String> doNotShareExts = Wrapper.getDoNotShareFileExtensions();
-
-                            for ( String doNotShareExt : doNotShareExts )
-                            {
-                                // File extensions sometimes don't care about upper and lower case
-                                // (e.g. ".pdf" = ".PDF"), so do a case-insensitive comparison.
-                                if ( doNotShareExt.equalsIgnoreCase ( ext ) )
-                                {
-                                    // The file is not supposed to be shared,
-                                    // so continue with the next file
-                                    continue continueHereWithNextFile;
-                                }
-
-                            }
-
+                            continue continueHereWithNextFile;
                         }
 
-                        // If the file name is contained in the list of file names
-                        // not to be shared, do not proceed.
-                        List<String> doNotShareFileNames = Wrapper.getDoNotShareFileNames();
-
-                        for ( String doNotShareFileName : doNotShareFileNames )
-                        {
-                            // Windows does not care about upper and lower case
-                            if ( Wrapper.osIsWindows() )
-                            {
-                                if ( doNotShareFileName.equalsIgnoreCase ( fname ) )
-                                {
-                                    continue continueHereWithNextFile;
-                                }
-
-                            }
-
-                            // Other systems care about case in file names
-                            else
-                            {
-                                if ( doNotShareFileName.equals ( fname ) )
-                                {
-                                    continue continueHereWithNextFile;
-                                }
-
-                            }
-
-                        }
-
-                        s.setNumberFiles ( s.getNumberFiles() + 1 );
-                        checkFoundFile ( s, f );
                     }
 
                 }
 
+                directoryShare.setNumberFiles ( directoryShare.getNumberFiles() + 1 );
+                checkFoundFile ( directoryShare, file );
             }
 
-        }
-
-        else
-        {
-            s.setMessage ( "Not a directory: " + df );
         }
 
     }
 
-    private void crawlShare ( Path dlpath, Path nodepath, DirectoryShare s )
+    private void crawlShare ( Path dlPath, Path nodePath, DirectoryShare directoryShare )
     {
         if ( enabled )
         {
-            String ds = s.getDirectory();
+            String sharePath = directoryShare.getDirectory();
 
-            if ( ds != null )
+            if ( sharePath != null )
             {
-                File df = new File ( ds );
-                crawlDirectory ( dlpath, nodepath, s, df );
+                System.err.println ( "ShareManager.crawlShare(): share = " + directoryShare.getShareName() + ", crawling directory " + sharePath );
+                File shareDir = new File ( sharePath );
+                crawlDirectory ( dlPath, nodePath, directoryShare, shareDir );
             }
 
             else
             {
-                s.setMessage ( "Directory not set." );
+                System.err.println ( "ShareManager.crawlShare(): Directory not set for share " + directoryShare.getShareName() );
+                directoryShare.setMessage ( "Directory not set." );
             }
 
         }
@@ -498,27 +539,32 @@ public class ShareManager implements Runnable
     {
         if ( enabled )
         {
+            System.out.println ( "ShareManager.processShares()" );
+
             Session s = null;
 
             try
             {
-                File noderundir = new File ( Wrapper.RUNDIR );
-                Path nodepath = noderundir.getCanonicalFile().toPath();
+                File nodeRunDir = new File ( Wrapper.RUNDIR );
+                Path nodePath = nodeRunDir.getCanonicalFile().toPath();
 
-                File dldir = new File ( Wrapper.DLDIR );
-                Path dlpath = dldir.getCanonicalFile().toPath();
+                File dlDir = new File ( Wrapper.DLDIR );
+                Path dlPath = dlDir.getCanonicalFile().toPath();
 
                 s = session.getSession();
-                List<DirectoryShare> l = s.createCriteria ( DirectoryShare.class ).list();
+                List<DirectoryShare> directoryShares = s.createCriteria ( DirectoryShare.class ).list();
+                System.out.println ( "ShareManager.processShares() Found " + directoryShares.size() + " shares" );
 
-                for ( DirectoryShare ds : l )
+                for ( DirectoryShare directoryShare : directoryShares )
                 {
                     if ( enabled )
                     {
-                        ds.setNumberSubFolders ( 0 );
-                        ds.setNumberFiles ( 0 );
-                        crawlShare ( dlpath, nodepath, ds );
-                        saveShare ( s, ds );
+                        System.out.println ( "ShareManager.processShares(): Processing share = " + directoryShare.getShareName() + ", member " + directoryShare.getMemberId() + ", community = " + directoryShare.getCommunityId() );
+                        directoryShare.setNumberSubFolders ( 0 );
+                        directoryShare.setNumberFiles ( 0 );
+                        crawlShare ( dlPath, nodePath, directoryShare );
+                        saveShare ( s, directoryShare );
+                        System.out.println ( "ShareManager.processShares(): Share = " + directoryShare.getShareName() + " has " + + directoryShare.getNumberFiles() + " files" );
                     }
 
                 }
@@ -558,6 +604,7 @@ public class ShareManager implements Runnable
 
             }
 
+            System.out.println ( "ShareManager.processShares() done." );
         }
 
     }
@@ -569,21 +616,22 @@ public class ShareManager implements Runnable
     {
         if ( d != null )
         {
-            String comid = d.getString ( CObj.COMMUNITYID );
-            String memid = d.getString ( CObj.CREATOR );
-            String lf = d.getString ( CObj.LOCALFILE );
-            String hf = d.getString ( CObj.HASFILE );
+            String communityID = d.getString ( CObj.COMMUNITYID );
+            String memberID = d.getString ( CObj.CREATOR );
+            String localFile = d.getString ( CObj.LOCALFILE );
+            String hasFile = d.getString ( CObj.HASFILE );
             boolean remove = true;
 
-            if ( comid != null && memid != null && lf != null && hf != null )
+            if ( communityID != null && memberID != null && localFile != null && hasFile != null )
             {
-                File f = new File ( lf );
+                System.out.println ( "ShareManager.checkHasDuplicate(): " + localFile + " for hasfile " + hasFile );
+                File f = new File ( localFile );
 
                 if ( f.exists() )
                 {
                     try
                     {
-                        CObj thf = index.getById ( hf );
+                        CObj thf = index.getById ( hasFile );
 
                         if ( thf != null )
                         {
@@ -728,7 +776,7 @@ public class ShareManager implements Runnable
     {
         if ( enabled )
         {
-            List<RequestFile> rl = rfh.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
+            List<RequestFile> rl = requestFileHandler.listRequestFilesNE ( RequestFile.COMPLETE, Integer.MAX_VALUE );
 
             for ( RequestFile rf : rl )
             {
@@ -761,7 +809,7 @@ public class ShareManager implements Runnable
                                     rf.getLastRequest() <= ( System.currentTimeMillis() - 60L * 60L * 1000L ) )
                             {
                                 log.warning ( "REREQUESTING FRAGMENT LIST" );
-                                rfh.setReRequestList ( rf );
+                                requestFileHandler.setReRequestList ( rf );
 
                             }
 
@@ -1084,40 +1132,40 @@ public class ShareManager implements Runnable
     }
 
     @SuppressWarnings ( "unchecked" )
-    public void addShare ( String comid, String memid, String name, String dir, boolean def, boolean skipspam )
+    public void addShare ( String communityID, String memberID, String shareName, String directory, boolean isDefaultShare, boolean skipSpam )
     {
-        boolean hassometing = false;
+        boolean fileNameNotOnlyWhitespace = false;
 
-        if ( name != null )
+        if ( shareName != null )
         {
-            Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( name );
-            hassometing = m.find();
+            Matcher m = Pattern.compile ( "(\\S+)" ).matcher ( shareName );
+            fileNameNotOnlyWhitespace = m.find();
         }
 
-        if ( !hassometing )
+        if ( !fileNameNotOnlyWhitespace )
         {
             return;
         }
 
-        String conn = null;
-        File sd = new File ( dir );
+        String shareDirectoryPath = null;
+        File shareDirectory = new File ( directory );
 
-        if ( sd.exists() )
+        if ( shareDirectory.exists() )
         {
             try
             {
-                conn = sd.getCanonicalPath();
+                shareDirectoryPath = shareDirectory.getCanonicalPath();
             }
 
             catch ( Exception e )
             {
-                conn = null;
+                shareDirectoryPath = null;
                 e.printStackTrace();
             }
 
         }
 
-        if ( conn != null )
+        if ( shareDirectoryPath != null )
         {
             Session s = null;
 
@@ -1126,52 +1174,53 @@ public class ShareManager implements Runnable
                 s = session.getSession();
                 s.getTransaction().begin();
 
-                DirectoryShare d = null;
+                DirectoryShare directoryShare = null;
                 Query q = s.createQuery ( "SELECT x FROM DirectoryShare x WHERE "
                                           + "( x.directory = :path OR x.shareName = :name ) AND "
                                           + "x.communityId = :comid AND x.memberId = :memid" );
-                q.setParameter ( "name", name );
-                q.setParameter ( "path", conn );
-                q.setParameter ( "comid", comid );
-                q.setParameter ( "memid", memid );
-                List<DirectoryShare> sl = q.list();
+                q.setParameter ( "name", shareName );
+                q.setParameter ( "path", shareDirectoryPath );
+                q.setParameter ( "comid", communityID );
+                q.setParameter ( "memid", memberID );
+                List<DirectoryShare> shareList = q.list();
 
-                if ( sl.size() > 0 )
+                if ( shareList.size() > 0 )
                 {
-                    d = sl.get ( 0 );
+                    directoryShare = shareList.get ( 0 );
                 }
 
-                if ( d == null )
+                if ( directoryShare == null )
                 {
-                    d = new DirectoryShare();
+                    directoryShare = new DirectoryShare();
                 }
 
-                if ( def )
+                if ( isDefaultShare )
                 {
                     q = s.createQuery ( "SELECT x FROM DirectoryShare x WHERE "
                                         + "x.defaultDownload = :def AND "
                                         + "x.communityId = :comid AND x.memberId = :memid" );
                     q.setParameter ( "def", true );
-                    q.setParameter ( "comid", comid );
-                    q.setParameter ( "memid", memid );
-                    sl = q.list();
+                    q.setParameter ( "comid", communityID );
+                    q.setParameter ( "memid", memberID );
+                    shareList = q.list();
 
-                    for ( DirectoryShare ds : sl )
+                    // set the other shares for this community and member to non-default
+                    for ( DirectoryShare share : shareList )
                     {
-                        ds.setDefaultDownload ( false );
-                        s.merge ( ds );
+                        share.setDefaultDownload ( false );
+                        s.merge ( share );
                     }
 
                 }
 
-                d.setCommunityId ( comid );
-                d.setDirectory ( conn );
-                d.setMemberId ( memid );
-                d.setShareName ( name );
-                d.setDefaultDownload ( def );
-                d.setSkipSpam ( skipspam );
+                directoryShare.setCommunityId ( communityID );
+                directoryShare.setDirectory ( shareDirectoryPath );
+                directoryShare.setMemberId ( memberID );
+                directoryShare.setShareName ( shareName );
+                directoryShare.setDefaultDownload ( isDefaultShare );
+                directoryShare.setSkipSpam ( skipSpam );
 
-                s.merge ( d );
+                s.merge ( directoryShare );
 
                 s.getTransaction().commit();
                 s.close();
@@ -1231,20 +1280,28 @@ public class ShareManager implements Runnable
         notifyAll();
     }
 
-    public static long SHARE_DELAY = 60L * 1000L;
-    public static long CHECKHASFILE_DELAY = 1L * 60L * 60L * 1000L;
+    public static final long SHARE_DELAY = 60L * 1000L;
+    public static final long CHECKHASFILE_DELAY = 1L * 60L * 60L * 1000L;
 
     private long nextcheckhasfile = 0;
 
-    public synchronized void delay()
+    private boolean delay = false;
+
+    private void delay() throws InterruptedException
     {
         try
         {
-            wait ( SHARE_DELAY );
+            delay = true;
+            Thread.sleep ( SHARE_DELAY );
+            delay = false;
         }
 
-        catch ( Exception e )
+        catch ( InterruptedException e )
         {
+            delay = false;
+            System.out.println ( "ShareManager.delay() interrupted." );
+            // We were woken up
+            throw e;
         }
 
     }
@@ -1266,8 +1323,11 @@ public class ShareManager implements Runnable
 
     }
 
+    @Override
     public void run()
     {
+        shareManagerThread = Thread.currentThread();
+
         while ( !stop )
         {
             newshare = false;
@@ -1283,7 +1343,18 @@ public class ShareManager implements Runnable
 
             if ( !newshare )
             {
-                delay();
+                try
+                {
+                    delay();
+                }
+
+                catch ( InterruptedException e )
+                {
+                    // If we are interrupted (by setEnabled() which should be due to user interaction)
+                    // continue with processing the shares instead of the sanity tasks below.
+                    continue;
+                }
+
             }
 
             long curtime = System.currentTimeMillis();
@@ -1312,6 +1383,8 @@ public class ShareManager implements Runnable
 
         }
 
+        shareManagerThread = null;
+
     }
 
     public boolean isEnabled()
@@ -1322,6 +1395,12 @@ public class ShareManager implements Runnable
     public void setEnabled ( boolean enabled )
     {
         this.enabled = enabled;
+
+        if ( enabled && delay && shareManagerThread != null )
+        {
+            shareManagerThread.interrupt();
+        }
+
     }
 
     public boolean isRunning()

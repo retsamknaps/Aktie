@@ -1551,17 +1551,17 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getFragments ( String wdig, String pdig )
+    public CObjList getFragments ( String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term dig = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term dig = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( dig ), BooleanClause.Occur.MUST );
 
-        Term ddig = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
+        Term ddig = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( ddig ), BooleanClause.Occur.MUST );
 
         SortedNumericSortField field = new SortedNumericSortField ( CObj.docNumber ( CObj.FRAGOFFSET ), SortField.Type.LONG );
@@ -1570,26 +1570,48 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE, sort );
     }
 
-    public CObj getFragment ( String comid, String wdig, String ddig, String dig )
+    public CObjList getFragments ( String communityID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term ct = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term ct = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( ct ), BooleanClause.Occur.MUST );
 
-        Term wdt = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term dig = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
+        builder.add ( new TermQuery ( dig ), BooleanClause.Occur.MUST );
+
+        Term ddig = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
+        builder.add ( new TermQuery ( ddig ), BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField ( CObj.docNumber ( CObj.FRAGOFFSET ), SortField.Type.LONG );
+        Sort sort = new Sort ( field );
+
+        return search ( builder.build(), Integer.MAX_VALUE, sort );
+    }
+
+    public CObj getFragment ( String communityID, String fileDigest, String fragDigest, String fragDig )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term ct = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
+        builder.add ( new TermQuery ( ct ), BooleanClause.Occur.MUST );
+
+        Term wdt = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wdt ), BooleanClause.Occur.MUST );
 
-        Term tddt = new Term ( CObj.docString ( CObj.FRAGDIGEST ), ddig );
+        Term tddt = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( tddt ), BooleanClause.Occur.MUST );
 
-        Term ddt = new Term ( CObj.docString ( CObj.FRAGDIG ), dig );
+        Term ddt = new Term ( CObj.docString ( CObj.FRAGDIG ), fragDig );
         builder.add ( new TermQuery ( ddt ), BooleanClause.Occur.MUST );
 
-        Term shf = new Term ( CObj.docPrivate ( CObj.COMPLETE ), "true" );
+        Term shf = new Term ( CObj.docPrivate ( CObj.COMPLETE ), CObj.TRUE );
         builder.add ( new TermQuery ( shf ), BooleanClause.Occur.MUST );
 
         CObj r = null;
@@ -1613,64 +1635,64 @@ public class Index implements Runnable
         return r;
     }
 
-    public CObjList getFragmentsComplete ( String comid, String wdig, String fdig )
+    public CObjList getFragmentsComplete ( String communityID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wterm ), BooleanClause.Occur.MUST );
 
-        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fdig );
+        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( fterm ), BooleanClause.Occur.MUST );
 
-        Term cpltterm = new Term ( CObj.docPrivate ( CObj.COMPLETE ), "true" );
+        Term cpltterm = new Term ( CObj.docPrivate ( CObj.COMPLETE ), CObj.TRUE );
         builder.add ( new TermQuery ( cpltterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getFragmentsToRequest ( String comid, String wdig, String fdig )
+    public CObjList getFragmentsToRequest ( String communityID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wterm ), BooleanClause.Occur.MUST );
 
-        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fdig );
+        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( fterm ), BooleanClause.Occur.MUST );
 
-        Term cpltterm = new Term ( CObj.docPrivate ( CObj.COMPLETE ), "false" );
+        Term cpltterm = new Term ( CObj.docPrivate ( CObj.COMPLETE ), CObj.FALSE );
         builder.add ( new TermQuery ( cpltterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getFragmentsToReset ( String comid, String wdig, String fdig )
+    public CObjList getFragmentsToReset ( String communityID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wterm ), BooleanClause.Occur.MUST );
 
-        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fdig );
+        Term fterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( fterm ), BooleanClause.Occur.MUST );
 
         Term cpltterm = new Term ( CObj.docPrivate ( CObj.COMPLETE ), "req" );
@@ -1679,14 +1701,14 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getFragments ( String digs )
+    public CObjList getFragments ( String fragDig )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.FRAGMENT );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term dig = new Term ( CObj.docString ( CObj.FRAGDIG ), digs );
+        Term dig = new Term ( CObj.docString ( CObj.FRAGDIG ), fragDig );
         builder.add ( new TermQuery ( dig ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
@@ -1725,7 +1747,7 @@ public class Index implements Runnable
         return search ( builder.build(), maxvals );
     }
 
-    public CObjList getHasFiles ( String comid, String memid, long first, long last )
+    public CObjList getHasFiles ( String communityID, String memberID, long first, long last )
     {
         int maxvals = ( int ) ( last - first );
 
@@ -1739,10 +1761,10 @@ public class Index implements Runnable
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
+        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memberID );
         builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
@@ -1758,28 +1780,28 @@ public class Index implements Runnable
         return search ( builder.build(), maxvals );
     }
 
-    public CObjList getHasFiles ( String comid, String wdig, String pdig )
+    public CObjList getHasFiles ( String communityID, String fileDigest, String fragDigest )
     {
-        return getHasFiles ( comid, wdig, pdig, null );
+        return getHasFiles ( communityID, fileDigest, fragDigest, null );
     }
 
-    public CObjList getHasFiles ( String comid, String wdig, String pdig, Sort s )
+    public CObjList getHasFiles ( String communityID, String fileDigest, String fragDigest, Sort sort )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wdigterm ), BooleanClause.Occur.MUST );
 
-        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
+        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( pdigterm ), BooleanClause.Occur.MUST );
 
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
+        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
@@ -1787,29 +1809,29 @@ public class Index implements Runnable
                                           0L, Long.MAX_VALUE, false, true );
         builder.add ( nrq, BooleanClause.Occur.MUST );
 
-        return search ( builder.build(), Integer.MAX_VALUE, s );
+        return search ( builder.build(), Integer.MAX_VALUE, sort );
     }
 
-    public CObjList getMyHasFiles ( String comid, String wdig, String pdig )
+    public CObjList getMyHasFiles ( String communityID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wdigterm ), BooleanClause.Occur.MUST );
 
-        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
+        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( pdigterm ), BooleanClause.Occur.MUST );
 
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
+        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
-        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), CObj.TRUE );
         builder.add ( new TermQuery ( myterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
@@ -1822,10 +1844,10 @@ public class Index implements Runnable
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
+        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
-        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), CObj.TRUE );
         builder.add ( new TermQuery ( myterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
@@ -1856,80 +1878,98 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getMyHasFiles ( String wdig, String pdig )
+    public CObjList getMyHasFiles ( String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wdigterm ), BooleanClause.Occur.MUST );
 
-        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
+        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( pdigterm ), BooleanClause.Occur.MUST );
 
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
+        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
-        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), "true" );
+        Term myterm = new Term ( CObj.docPrivate ( CObj.MINE ), CObj.TRUE );
         builder.add ( new TermQuery ( myterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getLocalHasFiles ( String comid, String memid, String localfile )
+    public CObjList getHasFilesBySize ( long fileSize )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
-        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+        Term typeTerm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typeTerm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
-        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docNumber ( CObj.FILESIZE ),
+                                          fileSize, fileSize, true, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
 
-        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
-        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
-
-        Term lfterm = new Term ( CObj.docPrivate ( CObj.LOCALFILE ), localfile );
-        builder.add ( new TermQuery ( lfterm ), BooleanClause.Occur.MUST );
-
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
-        builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
+        Term stillHasTerm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
+        builder.add ( new TermQuery ( stillHasTerm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
-    public CObjList getDuplicate ( String comid, String memid, String localfile )
+    public CObjList getLocalHasFiles ( String communityID, String memberID, String localFile )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typeTerm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typeTerm ), BooleanClause.Occur.MUST );
+
+        Term communityTerm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
+        builder.add ( new TermQuery ( communityTerm ), BooleanClause.Occur.MUST );
+
+        Term memberTerm = new Term ( CObj.docString ( CObj.CREATOR ), memberID );
+        builder.add ( new TermQuery ( memberTerm ), BooleanClause.Occur.MUST );
+
+        Term localFileTerm = new Term ( CObj.docPrivate ( CObj.LOCALFILE ), localFile );
+        builder.add ( new TermQuery ( localFileTerm ), BooleanClause.Occur.MUST );
+
+        Term stillHasTerm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
+        builder.add ( new TermQuery ( stillHasTerm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getDuplicate ( String communityID, String memberID, String localFile )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typeTerm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
+        builder.add ( new TermQuery ( typeTerm ), BooleanClause.Occur.MUST );
+
+        Term communityTerm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
+        builder.add ( new TermQuery ( communityTerm ), BooleanClause.Occur.MUST );
+
+        Term memberTerm = new Term ( CObj.docString ( CObj.CREATOR ), memberID );
+        builder.add ( new TermQuery ( memberTerm ), BooleanClause.Occur.MUST );
+
+        Term llocalFileTerm = new Term ( CObj.docString ( CObj.LOCALFILE ), localFile );
+        builder.add ( new TermQuery ( llocalFileTerm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObj getDuplicate ( String hasFileID, String localFile )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.HASFILE ), hasFileID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), memid );
-        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
-
-        Term lfterm = new Term ( CObj.docString ( CObj.LOCALFILE ), localfile );
-        builder.add ( new TermQuery ( lfterm ), BooleanClause.Occur.MUST );
-
-        return search ( builder.build(), Integer.MAX_VALUE );
-    }
-
-    public CObj getDuplicate ( String refid, String localfile )
-    {
-        BooleanQuery.Builder builder = new BooleanQuery.Builder();
-        //BooleanQuery bq = new BooleanQuery();
-        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.DUPFILE );
-        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
-
-        Term comterm = new Term ( CObj.docString ( CObj.HASFILE ), refid );
-        builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
-
-        Term lfterm = new Term ( CObj.docString ( CObj.LOCALFILE ), localfile );
+        Term lfterm = new Term ( CObj.docString ( CObj.LOCALFILE ), localFile );
         builder.add ( new TermQuery ( lfterm ), BooleanClause.Occur.MUST );
 
         CObj r = null;
@@ -1953,26 +1993,26 @@ public class Index implements Runnable
         return r;
     }
 
-    public CObj getIdentHasFile ( String comid, String uid, String wdig, String pdig )
+    public CObj getIdentHasFile ( String communityID, String creatorID, String fileDigest, String fragDigest )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
-        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), comid );
+        Term comterm = new Term ( CObj.docString ( CObj.COMMUNITYID ), communityID );
         builder.add ( new TermQuery ( comterm ), BooleanClause.Occur.MUST );
 
-        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), wdig );
+        Term wdigterm = new Term ( CObj.docString ( CObj.FILEDIGEST ), fileDigest );
         builder.add ( new TermQuery ( wdigterm ), BooleanClause.Occur.MUST );
 
-        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), pdig );
+        Term pdigterm = new Term ( CObj.docString ( CObj.FRAGDIGEST ), fragDigest );
         builder.add ( new TermQuery ( pdigterm ), BooleanClause.Occur.MUST );
 
-        Term cidterm = new Term ( CObj.docString ( CObj.CREATOR ), uid );
+        Term cidterm = new Term ( CObj.docString ( CObj.CREATOR ), creatorID );
         builder.add ( new TermQuery ( cidterm ), BooleanClause.Occur.MUST );
 
-        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), "true" );
+        Term shterm = new Term ( CObj.docString ( CObj.STILLHASFILE ), CObj.TRUE );
         builder.add ( new TermQuery ( shterm ), BooleanClause.Occur.MUST );
 
         CObj r = null;

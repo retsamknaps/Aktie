@@ -118,7 +118,7 @@ public class ConnectionThread implements Runnable, GuiCallback
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
-        hfc = new HasFileCreator ( session, index, st );
+        hfc = new HasFileCreator ( session, index, st, cb );
         outqueue = new ConcurrentLinkedQueue<Object>();
         inQueue = new ConcurrentLinkedQueue<CObj>();
         accumulateTypes = new HashSet<String>();

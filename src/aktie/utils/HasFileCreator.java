@@ -15,6 +15,7 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
+import aktie.gui.GuiCallback;
 import aktie.gui.UpdateInterface;
 import aktie.gui.Wrapper;
 import aktie.index.CObjList;
@@ -31,14 +32,16 @@ public class HasFileCreator
     private SubscriptionValidator validator;
     private SpamTool spamtool;
     private IdentityManager identManager;
+    private GuiCallback usrCallback;
 
-    public HasFileCreator ( HH2Session s, Index i, SpamTool st )
+    public HasFileCreator ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
     {
         index = i;
         session = s;
         spamtool = st;
         identManager = new IdentityManager ( s, i );
         validator = new SubscriptionValidator ( index );
+        usrCallback = cb;
     }
 
     public void updateDownloadRequested ( CObj hasfile )
@@ -152,7 +155,7 @@ public class HasFileCreator
             {
                 if ( localfile != null )
                 {
-                    if ( "false".equals ( stillhas ) )
+                    if ( stillhas.equals ( CObj.FALSE ) )
                     {
                         fi.pushString ( CObj.STATUS, "" );
                         localfile = "";
@@ -160,7 +163,7 @@ public class HasFileCreator
 
                     else
                     {
-                        fi.pushString ( CObj.STATUS, "done" );
+                        fi.pushString ( CObj.STATUS, CObj.STATUS_DONE );
                     }
 
                     fi.pushString ( CObj.LOCALFILE, localfile );
@@ -185,6 +188,15 @@ public class HasFileCreator
                 e.printStackTrace();
             }
 
+            usrCallback.update ( fi );
+
+            String shareNameChanged = fi.getInternal ( CObj.INTERNAL_SHARE_NAME_CHANGED );
+
+            if ( shareNameChanged != null && shareNameChanged.equals ( CObj.TRUE ) )
+            {
+                System.out.println ( "Share name '" + share + "' changed for community '" + comid + "'" );
+                usrCallback.update ( fi );
+            }
 
         }
 
@@ -328,6 +340,8 @@ public class HasFileCreator
         String digofdigs = o.getString ( CObj.FRAGDIGEST );
         String wholedig = o.getString ( CObj.FILEDIGEST );
 
+        String stillhas = o.getString ( CObj.STILLHASFILE );
+
         CObj myid = validator.isMyUserSubscribed ( comid, creator );
 
         if ( myid == null ) { return false; }
@@ -360,8 +374,20 @@ public class HasFileCreator
             long num = m.getLastFileNumber();
             lastnum = num;
             num++;
-            o.pushNumber ( CObj.SEQNUM, num );
-            o.pushPrivate ( CObj.MINE, "true" );
+
+            //if ( stillhas != null && stillhas.equals ( CObj.TRUE ) &&
+            //      ( o.isSignatureInvalidated() || o.getNumber ( CObj.SEQNUM ) == null ) )
+            if ( o.isSignatureInvalidated() || o.getNumber ( CObj.SEQNUM ) == null )
+            {
+                o.pushNumber ( CObj.SEQNUM, num );
+            }
+
+            else
+            {
+                System.out.println ( "HasFileCreator.createHasFile(): Not setting sequence number for hasfile " + id );
+            }
+
+            o.pushPrivate ( CObj.MINE, CObj.TRUE );
             m.setLastFileNumber ( num );
             s.merge ( m );
             s.getTransaction().commit();
@@ -405,18 +431,18 @@ public class HasFileCreator
 
         //Make the path absolute to help with queries based on the file
         //name later.
-        String lf = o.getPrivate ( CObj.LOCALFILE );
+        String localFile = o.getPrivate ( CObj.LOCALFILE );
 
-        if ( lf != null )
+        if ( localFile != null )
         {
-            File f = new File ( lf );
+            File f = new File ( localFile );
 
             if ( f.exists() )
             {
                 try
                 {
-                    lf = f.getCanonicalPath();
-                    o.pushPrivate ( CObj.LOCALFILE, lf );
+                    localFile = f.getCanonicalPath();
+                    o.pushPrivate ( CObj.LOCALFILE, localFile );
                 }
 
                 catch ( IOException e )
@@ -429,7 +455,7 @@ public class HasFileCreator
         }
 
         //If the file is a duplicate remove it
-        CObj ed = index.getDuplicate ( hasfileid, lf );
+        CObj ed = index.getDuplicate ( hasfileid, localFile );
 
         if ( ed != null )
         {
@@ -453,7 +479,7 @@ public class HasFileCreator
         {
             String oldlocal = oldfile.getPrivate ( CObj.LOCALFILE );
 
-            if ( oldlocal != null && !oldlocal.equals ( lf ) )
+            if ( oldlocal != null && !oldlocal.equals ( localFile ) )
             {
                 File f = new File ( oldlocal );
 
@@ -527,13 +553,66 @@ public class HasFileCreator
         }
 
         //Set the created on time
-        o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
+        if ( o.isSignatureInvalidated() || o.getNumber ( CObj.CREATEDON ) == null )
+        {
+            o.pushNumber ( CObj.CREATEDON, Utils.fuzzTime ( lasttime + 1 ) );
+        }
+
+        else
+        {
+            System.out.println ( "HasFileCreator.createHasFile(): Not setting fuzzed time for hasfile " + id );
+        }
 
         long sq = identManager.getGlobalSequenceNumber ( creator, false );
         o.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), sq );
 
-        //Sign it.
-        spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+        // If the hasfile is not a copy from a previous hasfile or (for whatever unknown reason) it should
+        // not have a signature, sign it.
+        // Otherwise save the compute effort for the signature.
+        // A hasfile copy only applies to private data, an existing signature is valid in this case.
+        // We can save the compute effort of creating a signature for the file.
+        boolean createSignature = false;
+
+        // Only consider creating a signature if the member still has the file
+        if ( stillhas != null && stillhas.equals ( CObj.TRUE ) )
+        {
+
+            if ( o.getSignature() == null )
+            {
+                System.out.println ( "HasFileCreator.createHasFile(): File has no signature: " + localFile );
+                createSignature = true;
+            }
+
+            else if ( o.isSignatureInvalidated() )
+            {
+                System.out.println ( "HasFileCreator.createHasFile(): File has invalidated signature: " + localFile );
+                createSignature = true;
+            }
+
+            else if ( !spamtool.check ( Utils.publicKeyFromString ( myid.getString ( CObj.KEY ) ), myid, o ) )
+            {
+                System.out.println ( "HasFileCreator.createHasFile(): File signature failed spam tool check: " + localFile );
+                createSignature = true;
+            }
+
+        }
+
+        else
+        {
+            System.out.println ( "HasFileCreator.createHasFile(): File " + localFile + " not owned any more" );
+        }
+
+        if ( createSignature )
+        {
+            //Sign it.
+            System.out.println ( "HasFileCreator.createHasFile(): Creating signature and, if required, hascash (anti-spam) for file " + localFile );
+            spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
+        }
+
+        else
+        {
+            System.out.println ( "HasFileCreator.createHasFile(): Skipping signature creation (anti-spam) for file " + localFile );
+        }
 
         if ( Level.INFO.equals ( log.getLevel() ) )
         {
