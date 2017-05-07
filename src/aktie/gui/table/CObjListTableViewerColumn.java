@@ -94,17 +94,14 @@ public class CObjListTableViewerColumn<E extends CObjListGetter> extends AktieTa
     @Override
     public void sort()
     {
-        //System.out.println ( "CObjListTableViewerColumn.sort()" );
 
         if ( !isSortable() )
         {
-            //System.out.println ( "CObjListTableViewerColumn.sort(): not sortable" );
             return;
         }
 
         if ( inputProvider == null )
         {
-            //System.out.println ( "CObjListTableViewerColumn.sort(): inputProvider is null" );
             return;
         }
 
@@ -113,13 +110,9 @@ public class CObjListTableViewerColumn<E extends CObjListGetter> extends AktieTa
         // a swt table based sort.
         if ( !isIndexSorted() )
         {
-            // if the table is still empty, get us an unsorted input
-            if ( getViewer().getInput() == null )
-            {
-                getViewer().setInput ( inputProvider.getInput ( null ) );
-            }
+            //Still call get input because search strings could have changed.
+            getViewer().setInput ( inputProvider.getInput ( null ) );
 
-            //System.out.println ( "CObjListTableViewerColumn.sort(): Calling super.sort()" );
             super.sort();
 
             return;
@@ -171,14 +164,11 @@ public class CObjListTableViewerColumn<E extends CObjListGetter> extends AktieTa
     @Override
     public int compare ( Object o1, Object o2, boolean reverse )
     {
-        //System.out.println ( "CObjListTableViewerColumn.compare()" );
         if ( isIndexSorted() )
         {
-            //System.out.println ( "CObjListTableViewerColumn.compare(): index sorted" );
             return 0;
         }
 
-        //System.out.println ( "CObjListTableViewerColumn.compare(): not index sorted" );
         return getLabelProvider().compare ( o1, o2, reverse );
     }
 

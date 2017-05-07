@@ -3,6 +3,8 @@ package aktie.gui.table;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewerColumn;
 
+import aktie.utils.NeverHappen;
+
 public class AktieTableViewerColumn<L, E>
 {
 
@@ -124,7 +126,6 @@ public class AktieTableViewerColumn<L, E>
 
     public void sort()
     {
-        //System.out.println ( "AktieTableViewerColumn.sort()" );
         if ( sortable )
         {
             getViewer().setSortColumn ( this, reverse );
@@ -136,6 +137,11 @@ public class AktieTableViewerColumn<L, E>
 
     public int compare ( Object o1, Object o2, boolean reverse )
     {
+        if ( isIndexSorted() )
+        {
+            NeverHappen.never();
+        }
+
         if ( labelProvider != null )
         {
             return labelProvider.compare ( o1, o2, reverse );

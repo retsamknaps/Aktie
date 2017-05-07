@@ -121,7 +121,6 @@ public abstract class CObjListTableCellLabelProvider extends AktieTableCellLabel
     @Override
     public int compare ( Object e1, Object e2, boolean reverse )
     {
-        //System.out.println ( "CObjListTableCellLabelProvider.compare()" );
         return 0;
     }
 

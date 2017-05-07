@@ -36,9 +36,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.layout.FillLayout;
-//import org.eclipse.swt.widgets.Table;
 import org.eclipse.jface.viewers.TableViewer;
-//import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -282,7 +280,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                 }
 
                 dlst.close();
-                //fieldTableViewer.setInput ( lf );
                 table.getTableViewer().setInput ( lf );
 
                 lblPostingToCommunity.setText ( "Posting to community: " + community.getPrivateDisplayName() );

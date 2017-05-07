@@ -86,7 +86,7 @@ public class LauncherTable extends AktieTable<List<Launcher>, Launcher>
             try
             {
                 Launcher launcher = Launcher.class.cast ( cell.getElement() );
-                cell.setText ( launcher.getExtension() );
+                cell.setText ( launcher.getPath() );
             }
 
             catch ( ClassCastException e )

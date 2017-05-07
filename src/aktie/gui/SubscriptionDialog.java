@@ -305,9 +305,6 @@ public class SubscriptionDialog extends Dialog
 
             addColumn ( "Scope", 50, new CObjListTableCellLabelProviderTypeString ( CObj.SCOPE, false, null ) );
 
-            // This attribute seems not to exist.
-            //addColumn ( "Date Created", 100, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
-
         }
 
         @Override

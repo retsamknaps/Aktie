@@ -223,12 +223,11 @@ public class SelectIdentityDialog extends Dialog
 
             AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-            // FIXME: How to sort by lucene?
-            column = addColumn ( "Name", 150, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
-            getTableViewer().setSortColumn ( column, false );
+            //Display name is not index sortable
+            column = addNonIndexSortedColumn ( "Name", 150, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
+            getTableViewer().setSortColumn ( column, true );
+
             addColumn ( "Description", 150, new CObjListTableCellLabelProviderTypeString ( CObj.DESCRIPTION, false, null ) );
-            // FIXME: Seems to be empty.
-            //addColumn ( "Date Created", 150, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
         }
 
         @Override

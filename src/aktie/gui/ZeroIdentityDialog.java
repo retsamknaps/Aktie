@@ -157,7 +157,7 @@ public class ZeroIdentityDialog extends Dialog
 
             AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-            column = addColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            column = addColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
 
             getTableViewer().setSortColumn ( column, false );
         }

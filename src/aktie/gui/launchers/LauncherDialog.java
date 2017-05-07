@@ -1,7 +1,6 @@
 package aktie.gui.launchers;
 
 import java.util.Iterator;
-//import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -16,14 +15,11 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-//import org.eclipse.swt.widgets.Table;
 
 import aktie.data.Launcher;
 import aktie.gui.SWTApp;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
-//import org.eclipse.jface.viewers.TableViewer;
-//import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;

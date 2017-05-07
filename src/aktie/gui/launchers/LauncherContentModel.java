@@ -63,7 +63,6 @@ public class LauncherContentModel
         if ( localfile != null )
         {
             String bits[] = localfile.split ( "\\." );
-            System.out.println ( "BITS: " + bits.length );
 
             if ( bits.length > 1 )
             {
@@ -160,7 +159,6 @@ public class LauncherContentModel
 
     public void addLauncher ( String program, String extensions )
     {
-        System.out.println ( "PROG: " + program + " ext: " + extensions );
 
         if ( extensions != null && program != null )
         {
@@ -168,7 +166,6 @@ public class LauncherContentModel
 
             if ( f.exists() )
             {
-                System.out.println ( "F exists" );
                 String extlst[] = extensions.split ( "[\\s,]+" );
 
                 for ( int c = 0; c < extlst.length; c++ )
@@ -181,7 +178,6 @@ public class LauncherContentModel
                         s = session.getSession();
                         s.getTransaction().begin();
                         Launcher l = new Launcher();
-                        System.out.println ( ":: " + program + " :: " + ext );
                         l.setExtension ( ext );
                         l.setPath ( program );
                         s.merge ( l );

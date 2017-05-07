@@ -22,8 +22,9 @@ public class MembershipsTable extends CObjListTable<CObjListArrayElement>
         setInputProvider ( new MembershipsTableInputProvider ( app ) );
 
         AktieTableViewerColumn<CObjList, CObjListGetter> sortColumn;
-        sortColumn = addColumn ( "Memberships", 170, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
-        getTableViewer().setSortColumn ( sortColumn, false );
+
+        sortColumn = this.addNonIndexSortedColumn ( "Memberships", 170, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+        getTableViewer().setSortColumn ( sortColumn, true );
     }
 
     private class MembershipsTableInputProvider extends CObjListTableInputProvider

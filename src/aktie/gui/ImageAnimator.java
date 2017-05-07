@@ -15,10 +15,6 @@ import org.eclipse.swt.widgets.Display;
 public class ImageAnimator implements Runnable
 {
     private SWTApp app;
-    //event.gc.setAntialias ( SWT.ON );
-    //event.gc.drawImage ( image, 0, 0,
-    //                     image.getBounds().width, image.getBounds().height,
-    //                     imagex, imagey, sw, sh );
     private Canvas imageCanvas;
     private boolean stop;
     private ImageLoader imgLoader;
@@ -100,26 +96,6 @@ public class ImageAnimator implements Runnable
         }
 
     }
-
-    //        private synchronized void overlayImage ( Image tmp, GC g )
-    //        {
-    //
-    //            if ( imgLoader != null )
-    //            {
-    //              Image bkimg = image;
-    //                ImageData id = imgLoader.data[idx];
-    //                g.setAntialias ( SWT.ON );
-    //                Image img = new Image ( Display.getDefault(), id );
-    //                g.drawImage ( bkimg, 0, 0 );
-    //                g.drawImage ( img, 0, 0, img.getBounds().width,
-    //                              img.getBounds().height, 0, 0, sw, sh );
-    //                image = tmp;
-    //                img.dispose();
-    //                bkimg.dispose();
-    //            }
-
-    //
-    //        }
 
     public synchronized void stop()
     {

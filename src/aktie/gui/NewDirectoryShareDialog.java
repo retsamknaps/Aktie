@@ -132,7 +132,8 @@ public class NewDirectoryShareDialog extends Dialog
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
-                DirectoryDialog dialog = new DirectoryDialog ( NewDirectoryShareDialog.this.getShell() );
+                DirectoryDialog dialog = new DirectoryDialog (
+                    NewDirectoryShareDialog.this.getShell() );
                 String sharedir = dialog.open();
 
                 if ( sharedir != null )

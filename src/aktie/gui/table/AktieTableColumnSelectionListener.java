@@ -15,8 +15,6 @@ public class AktieTableColumnSelectionListener<L, E> implements SelectionListene
     @Override
     public void widgetSelected ( SelectionEvent e )
     {
-        //System.out.println ( "AktieTableColumnSelectionListener.widgetSelected()" );
-
         tableViewerColumn.setPermitSortReverseToggling ( true );
 
         this.tableViewerColumn.sort();

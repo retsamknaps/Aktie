@@ -49,7 +49,6 @@ public class CObjListTableCellLabelProviderTypeIdentityName extends CObjListTabl
     @Override
     public int compare ( Object e1, Object e2, boolean reverse )
     {
-        //System.out.println("CObjListTableCellLabelProviderTypeIdentityName.compare()");
         if ( e1 instanceof CObjListGetter && e2 instanceof CObjListGetter )
         {
             try

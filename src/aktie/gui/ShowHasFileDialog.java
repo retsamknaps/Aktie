@@ -144,7 +144,21 @@ public class ShowHasFileDialog extends Dialog
 
                         else if ( fr != null )
                         {
-                            prvMessageDialog.open ( app.getSelectedIdentity().getId(), fr.getId() );
+                            CObj rply = null;
+
+                            if ( fileo != null )
+                            {
+                                String subj = fileo.getString ( CObj.NAME );
+
+                                if ( subj != null )
+                                {
+                                    rply =  new CObj();
+                                    rply.pushPrivate ( CObj.SUBJECT, subj );
+                                }
+
+                            }
+
+                            prvMessageDialog.open ( app.getSelectedIdentity().getId(), fr.getId(), rply );
                         }
 
                     }
@@ -168,10 +182,11 @@ public class ShowHasFileDialog extends Dialog
 
     public void open ( CObj f )
     {
-        doHasFileSearch ( f );
-
-        if ( table.getTableViewer().getInput() != null )
+        if ( f != null )
         {
+            doHasFileSearch ( f );
+            //Note: table COULD be disposed or not.  createDialogArea is
+            //called as needed during super.open();
             super.open();
         }
 
@@ -179,8 +194,14 @@ public class ShowHasFileDialog extends Dialog
 
     private void doHasFileSearch ( CObj f )
     {
-        table.setHasFile ( f );
-        table.searchAndSort();
+        fileo = f;
+
+        if ( fileo != null && table != null && !table.isDisposed() )
+        {
+            table.setHasFile ( f );
+            table.searchAndSort();
+        }
+
     }
 
     /**
@@ -215,10 +236,8 @@ public class ShowHasFileDialog extends Dialog
 
             AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-            column = addColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
-            getTableViewer().setSortColumn ( column, false );
-            /// Seems to be empty
-            //addColumn ( "Date Created", 150, new CObjListTableCellLabelProviderTypeDate( CObj.CREATEDON, false, null ) );
+            column = addNonIndexSortedColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
+            getTableViewer().setSortColumn ( column, true );
         }
 
         @Override

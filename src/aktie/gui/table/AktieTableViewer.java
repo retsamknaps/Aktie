@@ -2,6 +2,9 @@ package aktie.gui.table;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.ViewerComparator;
+
+import aktie.utils.NeverHappen;
 
 public class AktieTableViewer<L, E> extends TableViewer
 {
@@ -34,6 +37,13 @@ public class AktieTableViewer<L, E> extends TableViewer
 
     }
 
+    @Override
+    public void setComparator ( ViewerComparator c )
+    {
+        super.setComparator ( c );
+        NeverHappen.never();
+    }
+
     @SuppressWarnings ( "unchecked" )
     @Override
     public AktieTableViewerSorter<L, E> getSorter()
@@ -45,12 +55,13 @@ public class AktieTableViewer<L, E> extends TableViewer
 
         catch ( ClassCastException e )
         {
+            e.printStackTrace();
             return null;
         }
 
     }
 
-    public void setSorter ( AktieTableViewerSorter<L, E> sorter )
+    public void setAktieSorter ( AktieTableViewerSorter<L, E> sorter )
     {
         super.setSorter ( sorter );
     }
@@ -60,5 +71,6 @@ public class AktieTableViewer<L, E> extends TableViewer
     {
         return ( IStructuredSelection ) super.getSelection();
     }
+
 
 }

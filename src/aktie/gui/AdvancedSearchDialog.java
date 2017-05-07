@@ -118,6 +118,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     private Text maxFileSize;
     private Text minFileSize;
     private Text daysNew;
+
     public void setCommunity ( CObj c )
     {
         community = c;

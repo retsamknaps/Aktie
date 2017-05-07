@@ -166,6 +166,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -195,7 +196,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -231,6 +232,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -260,7 +262,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -281,6 +283,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -310,7 +313,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -331,6 +334,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -360,7 +364,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -381,6 +385,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -410,7 +415,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -435,6 +440,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -464,7 +470,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -538,7 +544,7 @@ public class DownloadsTable extends AktieTable<RequestFileHandler, RequestFile>
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 

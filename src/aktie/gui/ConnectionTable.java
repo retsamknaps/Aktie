@@ -82,6 +82,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -111,7 +112,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -133,6 +134,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -162,7 +164,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -184,6 +186,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -213,7 +216,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -235,6 +238,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -264,7 +268,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -285,6 +289,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -314,7 +319,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -335,6 +340,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -364,7 +370,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -385,6 +391,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -414,7 +421,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -435,6 +442,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -464,7 +472,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -485,6 +493,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -514,7 +523,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -535,6 +544,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -564,7 +574,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 
@@ -585,6 +595,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
+                e.printStackTrace();
                 cell.setText ( "" );
             }
 
@@ -614,7 +625,7 @@ public class ConnectionTable extends AktieTable<ConnectionCallback, ConnectionEl
 
             catch ( ClassCastException e )
             {
-                System.out.println ( e.toString() );
+                e.printStackTrace();
                 return 0;
             }
 

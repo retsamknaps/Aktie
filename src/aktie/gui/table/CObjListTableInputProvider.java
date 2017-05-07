@@ -33,7 +33,6 @@ public class CObjListTableInputProvider
     */
     public CObjList getInput ( Sort sort )
     {
-        //System.out.println( "CObjListTableInputProvider.getInput()" );
         this.sort = sort;
         CObjList newInput = provideInput ( sort );
 

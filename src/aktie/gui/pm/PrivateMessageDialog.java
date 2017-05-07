@@ -84,33 +84,63 @@ public class PrivateMessageDialog extends Dialog
         btnSkipAntispam = new Button ( container, SWT.CHECK );
         btnSkipAntispam.setText ( "Skip Anti-Spam" );
 
-        updateToFrom ( fromIdent, toIdent );
+        updateToFrom ( fromIdent, toIdent, replyToMessage );
 
         return container;
     }
 
     private String fromIdent;
     private String toIdent;
-    public void updateToFrom ( String from, String to )
+    private CObj replyToMessage;
+    public void updateToFrom ( String from, String to, CObj replytomsg )
     {
         fromIdent = from;
         toIdent = to;
+        replyToMessage = replytomsg;
 
         if ( fromIdent != null && toIdent != null )
         {
-            if ( lblFrm != null && !lblFrm.isDisposed() )
+            if ( lblFrm != null && !lblFrm.isDisposed() &&
+                    lblMsgTo != null && !lblMsgTo.isDisposed() &&
+                    SubjectText != null && !SubjectText.isDisposed() )
             {
                 lblFrm.setText ( app.getIdCache().getName ( fromIdent ) );
                 lblMsgTo.setText ( app.getIdCache().getName ( toIdent ) );
+
+                if ( replyToMessage != null )
+                {
+                    String subj = replyToMessage.getString ( CObj.SUBJECT );
+
+                    if ( subj == null )
+                    {
+                        subj = replyToMessage.getPrivate ( CObj.SUBJECT );
+                    }
+
+                    if ( subj != null )
+                    {
+                        if ( subj.startsWith ( "Re: " ) )
+                        {
+                            SubjectText.setText ( subj );
+                        }
+
+                        else
+                        {
+                            SubjectText.setText ( "Re: " + subj );
+                        }
+
+                    }
+
+                }
+
             }
 
         }
 
     }
 
-    public void open ( String from, String to )
+    public void open ( String from, String to, CObj replytomsg )
     {
-        updateToFrom ( from, to );
+        updateToFrom ( from, to, replytomsg );
         super.open();
     }
 

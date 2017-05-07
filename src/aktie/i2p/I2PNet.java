@@ -152,14 +152,12 @@ public class I2PNet  implements Net
 
             while ( manager == null )
             {
-                System.out.println ( "STARTING I2P SocketManager: " + privateinfo + " hst: " + hst + " port: " + port + " p: " + p );
                 FileInputStream fis = new FileInputStream ( privateinfo );
                 manager = I2PSocketManagerFactory.createManager ( fis, hst, port, p );
                 fis.close();
 
                 if ( manager == null )
                 {
-                    System.out.println ( "Waiting for socket manager for existing destination." );
                     Thread.sleep ( 1000 );
                 }
 
@@ -219,7 +217,6 @@ public class I2PNet  implements Net
 
             if ( manager == null )
             {
-                System.out.println ( "Waiting for socket manager for new destination." );
 
                 try
                 {

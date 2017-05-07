@@ -5,6 +5,15 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Composite;
 
+/**
+    AktieTable is used for swing tables.
+
+    ConnectionTable L: uses ConnectionCallback (inner class of SWTApp)
+                    E: ConnectionElement
+
+    @param <L>
+    @param <E>
+*/
 public class AktieTable<L, E>
 {
 

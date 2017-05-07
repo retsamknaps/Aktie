@@ -107,7 +107,7 @@ public class PMTab extends Composite
         tree.setMenu ( menu_5 );
 
         MenuItem reply = new MenuItem ( menu_5, SWT.NONE );
-        reply.setText ( "Reply" );
+        reply.setText ( "New Message" );
         reply.addSelectionListener ( new SelectionListener()
         {
             @Override
@@ -131,7 +131,7 @@ public class PMTab extends Composite
                         {
                             if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) )
                             {
-                                openDialog ( co );
+                                openDialog ( co, null );
                             }
 
                         }
@@ -200,7 +200,7 @@ public class PMTab extends Composite
             {
                 if ( currentMsgId != null )
                 {
-                    openDialog ( currentMsgId );
+                    openDialog ( currentMsgId, table.getCurrentMessage() );
                 }
 
             }
@@ -248,7 +248,7 @@ public class PMTab extends Composite
                         {
                             if ( CObj.IDENTITY.equals ( co.getType() ) )
                             {
-                                msgDialog.open ( co.getId(), i.getId() );
+                                msgDialog.open ( co.getId(), i.getId(), null );
                             }
 
                             if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) )
@@ -257,7 +257,7 @@ public class PMTab extends Composite
 
                                 if ( ft != null )
                                 {
-                                    msgDialog.open ( ft[0], i.getId() );
+                                    msgDialog.open ( ft[0], i.getId(), null );
                                 }
 
                             }
@@ -305,7 +305,7 @@ public class PMTab extends Composite
         return null;
     }
 
-    public void openDialog ( CObj msgIdent )
+    public void openDialog ( CObj msgIdent, CObj replytomsg )
     {
         if ( msgDialog != null && msgIdent != null )
         {
@@ -313,7 +313,7 @@ public class PMTab extends Composite
 
             if ( ft != null )
             {
-                msgDialog.open ( ft[0], ft[1] );
+                msgDialog.open ( ft[0], ft[1], replytomsg );
             }
 
         }

@@ -154,7 +154,9 @@ public class ShowPrivateCommunityDialog extends Dialog
 
                                 if ( creator != null )
                                 {
-                                    msgDialog.open ( selid.getId(), creator );
+                                    CObj rply = new CObj();
+                                    rply.pushPrivate ( CObj.SUBJECT, com.getDisplayName() );
+                                    msgDialog.open ( selid.getId(), creator, rply );
                                 }
 
                             }
@@ -245,7 +247,7 @@ public class ShowPrivateCommunityDialog extends Dialog
 
             AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-            column = addColumn ( "Community", 150, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            column = addColumn ( "Community", 150, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
             getTableViewer().setSortColumn ( column, false );
 
             addColumn ( "Creator", 150, new CObjListTableCellLabelProviderTypeString ( CObj.CREATOR_NAME, false, null ) );

@@ -197,7 +197,6 @@ public class CObjList implements Closeable, AutoCloseable
             alllists.remove ( this );
         }
 
-        //System.out.println ( "CObjList.close()" );
     }
 
     @Override
@@ -205,7 +204,6 @@ public class CObjList implements Closeable, AutoCloseable
     {
         // Why not have the garbage collector close the searcher?
         // This should be fool proof and works well.
-        //System.out.println ( "CObjList.finalize()" );
         if ( searcher != null )
         {
             searcher.closeSearch();

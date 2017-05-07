@@ -428,7 +428,6 @@ public class SWTApp implements UpdateInterface
                         @Override
                         public void run()
                         {
-                            //downloadTableViewer.setInput ( getNode().getFileHandler() );
                             downloadsTable.getTableViewer().setInput ( SWTApp.this.node.getFileHandler() );
                         }
 
@@ -4069,7 +4068,7 @@ public class SWTApp implements UpdateInterface
 
                             if ( pr != null && ps != null )
                             {
-                                prvMsgDialog.open ( ps, pr );
+                                prvMsgDialog.open ( ps, pr, pst );
                             }
 
                         }

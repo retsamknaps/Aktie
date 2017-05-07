@@ -57,20 +57,27 @@ public class PostsTable extends CObjListTable<CObjListArrayElement>
 
         AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-        addColumn ( "Identity", 100, new CObjListTableCellLabelProviderTypeString ( CObj.CREATOR_NAME, false, highlightKey ) );
+        addColumn ( "Identity", 100,
+                    new CObjListTableCellLabelProviderTypeString ( CObj.CREATOR_NAME, false, highlightKey ) );
 
-        addColumn ( "Rank", 20, new CObjListTableCellLabelProviderTypeLong ( CObj.PRV_USER_RANK, true, highlightKey ) );
+        addColumn ( "Rank", 20,
+                    new CObjListTableCellLabelProviderTypeLong ( CObj.PRV_USER_RANK, true, highlightKey ) );
 
-        addColumn ( "Subject", 300, new CObjListTableCellLabelProviderTypeString ( CObj.SUBJECT, false, highlightKey ) );
+        addColumn ( "Subject", 300,
+                    new CObjListTableCellLabelProviderTypeString ( CObj.SUBJECT, false, highlightKey ) );
 
-        column = addColumn ( "Date", 100, new CObjListTableCellLabelProviderTypeDate ( CObj.CREATEDON, false, highlightKey ) );
+        column = addColumn ( "Date", 100,
+                             new CObjListTableCellLabelProviderTypeDate ( CObj.CREATEDON, false, highlightKey ) );
         getTableViewer().setSortColumn ( column, true );
 
-        addColumn ( "File", 100, new CObjListTableCellLabelProviderTypeString ( CObj.NAME, false, highlightKey ) );
+        addColumn ( "File", 100,
+                    new CObjListTableCellLabelProviderTypeString ( CObj.NAME, false, highlightKey ) );
 
-        addColumn ( "Preview", 100, new CObjListTableCellLabelProviderTypeString ( CObj.PRV_NAME, false, highlightKey ) );
+        addColumn ( "Preview", 100,
+                    new CObjListTableCellLabelProviderTypeString ( CObj.PRV_NAME, false, highlightKey ) );
 
-        addColumn ( "Local File", 100, new PostsTableFileCellLabelProvider ( app, CObj.LOCALFILE, highlightKey ) );
+        addColumn ( "Local File", 100,
+                    new PostsTableFileCellLabelProvider ( app, CObj.LOCALFILE, highlightKey ) );
 
         getTableViewer().addSelectionChangedListener ( new ISelectionChangedListener()
         {

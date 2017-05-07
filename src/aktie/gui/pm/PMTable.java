@@ -31,6 +31,7 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
     private PMTab tab;
     private SimpleDateFormat dateformat;
     private final String highlightKey;
+    private CObj currentMessage;
 
     public PMTable ( Composite composite, PMTab tab )
     {
@@ -70,21 +71,21 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
                     if ( selo instanceof CObjListArrayElement )
                     {
                         CObjListArrayElement selm = ( CObjListArrayElement ) selo;
-                        CObj msg = selm.getCObj();
+                        currentMessage = selm.getCObj();
 
-                        if ( msg != null )
+                        if ( currentMessage != null )
                         {
-                            PMTable.this.tab.getIdentityModel().clearBlueMessages ( msg );
+                            PMTable.this.tab.getIdentityModel().clearBlueMessages ( currentMessage );
                             PMTable.this.tab.getTreeViewer().refresh ( true );
-                            Long np = msg.getPrivateNumber ( highlightKey );
+                            Long np = currentMessage.getPrivateNumber ( highlightKey );
 
                             if ( np != null && !np.equals ( 0L ) )
                             {
-                                msg.pushPrivateNumber ( highlightKey, 0L );
+                                currentMessage.pushPrivateNumber ( highlightKey, 0L );
 
                                 try
                                 {
-                                    PMTable.this.tab.getSWTApp().getNode().getIndex().index ( msg );
+                                    PMTable.this.tab.getSWTApp().getNode().getIndex().index ( currentMessage );
                                 }
 
                                 catch ( IOException e1 )
@@ -94,8 +95,8 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
 
                             }
 
-                            String pfrom = msg.getString ( CObj.CREATOR );
-                            String pto = msg.getPrivate ( CObj.PRV_RECIPIENT );
+                            String pfrom = currentMessage.getString ( CObj.CREATOR );
+                            String pto = currentMessage.getPrivate ( CObj.PRV_RECIPIENT );
 
                             if ( pfrom != null && pto != null )
                             {
@@ -107,7 +108,7 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
                                 sb.append ( PMTable.this.tab.getSWTApp().getIdCache().getName ( pto ) );
                                 sb.append ( "\n" );
                                 sb.append ( "DATE: " );
-                                Long co = msg.getPrivateNumber ( CObj.CREATEDON );
+                                Long co = currentMessage.getPrivateNumber ( CObj.CREATEDON );
 
                                 if ( co != null )
                                 {
@@ -116,10 +117,10 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
 
                                 sb.append ( "\n" );
                                 sb.append ( "SUBJ: " );
-                                sb.append ( msg.getPrivate ( CObj.SUBJECT ) );
+                                sb.append ( currentMessage.getPrivate ( CObj.SUBJECT ) );
                                 sb.append ( "\n======================================\n" );
 
-                                String bdy = msg.getPrivate ( CObj.BODY );
+                                String bdy = currentMessage.getPrivate ( CObj.BODY );
 
                                 if ( bdy != null )
                                 {
@@ -140,6 +141,11 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
 
         } );
 
+    }
+
+    public CObj getCurrentMessage()
+    {
+        return currentMessage;
     }
 
 

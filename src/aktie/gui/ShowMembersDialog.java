@@ -26,6 +26,7 @@ public class ShowMembersDialog extends Dialog
     private ShowMembersSubscriptionTable subscriptionTable;
     private Label lblMembersOfCommunity;
     private SWTApp app;
+    private CObj CommunityId;
 
     /**
         Create the dialog.
@@ -61,6 +62,8 @@ public class ShowMembersDialog extends Dialog
         subscriptionTable = new ShowMembersSubscriptionTable ( container, app );
         subscriptionTable.setLayoutData ( new GridData ( SWT.FILL, SWT.FILL, true, true, 1, 1 ) );
 
+        setCommunity ( CommunityId );
+
         return container;
     }
 
@@ -81,18 +84,26 @@ public class ShowMembersDialog extends Dialog
 
     public void open ( CObj comid )
     {
-        setCommunity ( comid );
+        CommunityId = comid;
+        setCommunity ( CommunityId );
         super.open();
     }
 
     public void setCommunity ( CObj community )
     {
-        memberTable.setSelectedCommunity ( community );
-        subscriptionTable.setSelectedCommunity ( community );
+        if ( community != null &&
+                memberTable != null && !memberTable.isDisposed() &&
+                subscriptionTable != null && !subscriptionTable.isDisposed() )
+        {
 
-        doMemberSearch();
+            memberTable.setSelectedCommunity ( community );
+            subscriptionTable.setSelectedCommunity ( community );
+            doMemberSearch();
 
-        doSubscriptionSearch();
+            doSubscriptionSearch();
+
+        }
+
     }
 
     private void doSubscriptionSearch()

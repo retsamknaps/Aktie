@@ -3,6 +3,8 @@ package aktie.gui.table;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 
+import aktie.utils.NeverHappen;
+
 public class AktieTableViewerSorter<L, E> extends ViewerSorter
 {
 
@@ -38,15 +40,15 @@ public class AktieTableViewerSorter<L, E> extends ViewerSorter
     @Override
     public int compare ( Viewer viewer, Object o1, Object o2 )
     {
-        //System.out.println ( "AktieTableViewerSorter.compare()" );
-
         if ( sortColumn == null || !sortColumn.isSortable() )
         {
-            //System.out.println ( "AktieTableViewerSorter.compare(): sort column is null or not sortable" );
             return 0;
         }
 
-        //System.out.println ( "AktieTableViewerSorter.compare(): sort column not null, comparing" );
+        if ( sortColumn.isIndexSorted() )
+        {
+            NeverHappen.never();
+        }
 
         return sortColumn.compare ( o1, o2, sortColumn.isSortedReverse() );
     }
