@@ -14,6 +14,7 @@ import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
 import aktie.net.Net;
 import aktie.spam.SpamTool;
+import aktie.utils.FUtils;
 
 public class UsrStartDestinationProcessor extends GenericProcessor
 {
@@ -103,6 +104,40 @@ public class UsrStartDestinationProcessor extends GenericProcessor
                         updatemsg.pushString ( CObj.ERROR, "Could not start destination" );
                         guicallback.update ( updatemsg );
                         return true;
+                    }
+
+
+                    String pubdest = d.getPublicDestinationInfo();
+
+                    if ( !pubdest.equals ( deststr ) )
+                    {
+                        System.out.println ( "OH NO!  THIS IS BROKEN! DEST WAS:" );
+                        System.out.println ( deststr );
+                        System.out.println ( "BUT IS NOW:" );
+                        System.out.println ( pubdest );
+                    }
+
+                    File tf = d.savePrivateDestinationInfo();
+
+                    try
+                    {
+                        if ( !FUtils.diff ( f, tf ) )
+                        {
+                            System.out.println ( "NEW DESTINATION FILE!: " + tf.getPath() + " was: " + f.getPath() );
+                            o.pushPrivate ( CObj.DEST, tf.getPath() );
+                            index.index ( o );
+                        }
+
+                        else
+                        {
+                            tf.delete();
+                        }
+
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
                     }
 
                 }
