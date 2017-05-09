@@ -275,7 +275,7 @@ public class PostsTable extends CObjListTable<CObjListArrayElement>
                         dsc.replace ( "\r", "" );
                         String fldline = String.format ( "%15s:%-20s | %20s | %s",
                                                          nm, vs,
-                                                         app.getIdCache().getName ( pst.getString ( CObj.CREATOR ) ),
+                                                         app.getNode().getIndex().getDisplayNameForIdentity ( pst.getString ( CObj.CREATOR ) ),
                                                          dsc );
                         fldline = fldline.substring ( 0, Math.min ( fldline.length(), 79 ) );
                         msg.append ( fldline );

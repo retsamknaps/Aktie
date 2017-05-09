@@ -12,8 +12,6 @@ public interface AddFieldInterface
 
     public CObj getCommunity();
 
-    public IdentityCache getIdCache();
-
     public TableViewer getTableViewer();
 
 }

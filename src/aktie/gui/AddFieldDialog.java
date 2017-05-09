@@ -193,7 +193,7 @@ public class AddFieldDialog extends Dialog
             column.setMoveable ( false );
             column.setSortable ( false );
 
-            column = addColumn ( "Creator", 100, new CObjListTableCellLabelProviderTypeIdentityName ( CObj.CREATOR, true, null, fieldAdder.getIdCache() ) );
+            column = addColumn ( "Creator", 100, new CObjListTableCellLabelProviderTypeIdentityName ( CObj.CREATOR, true, null, fieldAdder.getIndex() ) );
             column.setMoveable ( false );
         }
 

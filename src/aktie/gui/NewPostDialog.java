@@ -1004,12 +1004,6 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     }
 
     @Override
-    public IdentityCache getIdCache()
-    {
-        return app.getIdCache();
-    }
-
-    @Override
     public TableViewer getTableViewer()
     {
         return table.getTableViewer();

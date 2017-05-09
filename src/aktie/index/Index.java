@@ -3,9 +3,11 @@ package aktie.index;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,11 +40,19 @@ public class Index implements Runnable
     private Analyzer analyzer;
     private IndexWriter writer;
     //private AktieSearcher searcher;
+    
+	/**
+	 * Lookup cache for identity names.
+	 */
+	private Map<String, String> idToIdentityNameMap;
+
+
 
     private File indexdir;
 
     public Index()
     {
+    	idToIdentityNameMap = new HashMap<String, String>();
     }
 
     public static List<CObj> list ( CObjList cl )
@@ -527,6 +537,41 @@ public class Index implements Runnable
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
+    
+	/**
+	 * Get the display name for an identity.
+	 * Queried names are cached to speed up further lookups.
+	 * 
+	 * @param identityID
+	 *            The ID of the identity.
+	 * @return The display name of the identity.
+	 */
+	public String getDisplayNameForIdentity(String identityID) {
+		String name = null;
+
+		synchronized (idToIdentityNameMap) {
+			name = idToIdentityNameMap.get(identityID);
+		}
+
+		if (name == null) {
+			CObj identity = getIdentity(identityID);
+
+			if (identity != null) {
+				name = identity.getDisplayName();
+
+				if (name != null) {
+					synchronized (idToIdentityNameMap) {
+						idToIdentityNameMap.put(identityID, name);
+					}
+
+				}
+
+			}
+
+		}
+
+		return name;
+	}
 
     public CObjList getZeroIdentities()
     {

@@ -17,7 +17,6 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 
 import aktie.data.CObj;
-import aktie.gui.IdentityCache;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -35,7 +34,6 @@ public class SubTreeModel implements ITreeContentProvider
     private Map<String, SubTreeEntity> idMap;
     private SubTreeEntityDBInterface db;
     private Index index;
-    private IdentityCache cache;
     private int type;
     private int treeId;
 
@@ -52,7 +50,6 @@ public class SubTreeModel implements ITreeContentProvider
         parents = new HashMap<Long, Long>();
         fullObj = new HashMap<Long, CObj>();
         idMap = new HashMap<String, SubTreeEntity>();
-        cache = new IdentityCache ( idx );
     }
 
     private synchronized void removeFromChildren ( SubTreeEntity se )
@@ -378,7 +375,7 @@ public class SubTreeModel implements ITreeContentProvider
 
                     if ( privname == null )
                     {
-                        privname = cache.getName ( rid );
+                        privname = index.getDisplayNameForIdentity ( rid );
 
                         if ( privname != null )
                         {
@@ -404,7 +401,7 @@ public class SubTreeModel implements ITreeContentProvider
 
                                         if ( mcreator != null )
                                         {
-                                            String cname = cache.getName ( mcreator );
+                                            String cname = index.getDisplayNameForIdentity ( mcreator );
                                             msg.pushPrivate ( CObj.NAME, cname );
                                             index.index ( msg );
                                         }

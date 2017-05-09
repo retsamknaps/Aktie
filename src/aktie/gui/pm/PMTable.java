@@ -102,10 +102,10 @@ public class PMTable extends CObjListTable<CObjListArrayElement>
                             {
                                 StringBuilder sb = new StringBuilder();
                                 sb.append ( "FROM: " );
-                                sb.append ( PMTable.this.tab.getSWTApp().getIdCache().getName ( pfrom ) );
+                                sb.append ( PMTable.this.tab.getSWTApp().getNode().getIndex().getDisplayNameForIdentity ( pfrom ) );
                                 sb.append ( "\n" );
                                 sb.append ( "TO:   " );
-                                sb.append ( PMTable.this.tab.getSWTApp().getIdCache().getName ( pto ) );
+                                sb.append ( PMTable.this.tab.getSWTApp().getNode().getIndex().getDisplayNameForIdentity ( pto ) );
                                 sb.append ( "\n" );
                                 sb.append ( "DATE: " );
                                 Long co = currentMessage.getPrivateNumber ( CObj.CREATEDON );

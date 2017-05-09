@@ -122,14 +122,14 @@ public class ConnectionDialog extends Dialog
         if ( fromId != null && toId != null && lblFrom != null && !lblFrom.isDisposed() &&
                 lblTo != null && !lblTo.isDisposed() )
         {
-            String ln = app.getIdCache().getName ( fromId );
+            String ln = app.getNode().getIndex().getDisplayNameForIdentity ( fromId );
 
             if ( ln != null )
             {
                 lblFrom.setText ( ln );
             }
 
-            String rm = app.getIdCache().getName ( toId );
+            String rm = app.getNode().getIndex().getDisplayNameForIdentity ( toId );
 
             if ( rm != null )
             {
