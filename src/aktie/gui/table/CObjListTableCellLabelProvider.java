@@ -22,6 +22,7 @@ public abstract class CObjListTableCellLabelProvider extends AktieTableCellLabel
     {
         this.key = key;
         this.privateAttribute = privateAttribute;
+        this.highlightKey = highlightKey;
 
         if ( privateAttribute )
         {

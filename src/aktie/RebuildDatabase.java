@@ -44,29 +44,29 @@ public class RebuildDatabase
     	r.rebuild(h2dir, iddir);
     }
 
+    private void backupfile(String str) {
+    	File tf = new File(str);
+    	if (tf.exists()) {
+    		File f = new File(str);
+    		int idx = 0;
+    		while (f.exists()) {
+    			f = new File (str + "." + idx);
+    			idx++;
+    		}
+    		tf.renameTo(f);
+    		tf = new File(str);
+    		if (tf.exists()) {
+    			throw new RuntimeException("Failed to rename file. " + str);
+    		}
+    	}
+    }
+    
     public void rebuild ( String dbdir, String idxdir )
     {
     	String dbstr = dbdir + File.separator + "data.h2.db";
-        File f = new File ( dbstr );
-        File dbf = new File ( dbstr );
-        int tdx = 0;
-
-        while ( f.exists() )
-        {
-            f = new File ( dbstr + "." + tdx );
-            tdx++;
-        }
-
-        if ( dbf.exists() )
-        {
-            dbf.renameTo ( f );
-            dbf = new File ( dbstr );
-        }
-
-        if ( dbf.exists() )
-        {
-            throw new RuntimeException ( "Error: could not backup existing file." );
-        }
+    	backupfile(dbstr);
+    	dbstr = dbdir + File.separator + "data.mv.db";
+    	backupfile(dbstr);
 
         session = new HH2Session();
         session.init ( dbdir );
