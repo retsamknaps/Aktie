@@ -19,6 +19,11 @@ public class RequestSequencedData
     private int priority;
     private long lastRequest;
 
+    public RequestSequencedData()
+    {
+
+    }
+
     public long getId()
     {
         return id;

@@ -221,12 +221,7 @@ public class Index implements Runnable
 
         builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
 
-        SortedNumericSortField field = new SortedNumericSortField (
-            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
-            SortField.Type.LONG );
-        Sort sort = new Sort ( field );
-
-        return search ( builder.build(), max, sort );
+        return search ( builder.build(), max );
     }
 
     public CObjList getSubMissingSeqNumbers ( String ident, int max )
@@ -244,12 +239,7 @@ public class Index implements Runnable
 
         builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
 
-        SortedNumericSortField field = new SortedNumericSortField (
-            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
-            SortField.Type.LONG );
-        Sort sort = new Sort ( field );
-
-        return search ( builder.build(), max, sort );
+        return search ( builder.build(), max );
     }
 
     public CObjList getPubMissingSeqNumbers ( String ident, int max )
@@ -274,12 +264,7 @@ public class Index implements Runnable
                                           0L, Long.MAX_VALUE, true, true );
         builder.add ( nrq, BooleanClause.Occur.MUST_NOT );
 
-        SortedNumericSortField field = new SortedNumericSortField (
-            CObj.docPrivateNumber ( CObj.docNumber ( CObj.SEQNUM ) ),
-            SortField.Type.LONG );
-        Sort sort = new Sort ( field );
-
-        return search ( builder.build(), max, sort );
+        return search ( builder.build(), max );
     }
 
     public CObjList getCommunitySeqNumbers ( String ident, String comid, long lastseq, long curseq )
@@ -615,6 +600,74 @@ public class Index implements Runnable
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
         return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObj getLastGlobalSequence ( String creator )
+    {
+        CObj r = null;
+        MatchAllDocsQuery alld = new MatchAllDocsQuery();
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docPrivateNumber ( CObj.getGlobalSeq ( creator ) ),
+            SortField.Type.LONG, true );
+        Sort sort = new Sort ( field );
+
+        CObjList lst = search ( alld, 1, sort );
+
+        if ( lst.size() > 0 )
+        {
+            try
+            {
+                r = lst.get ( 0 );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        lst.close();
+
+        return r;
+    }
+
+    public CObj getLastCreated ( String type, String creator )
+    {
+        CObj r = null;
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+        Term typterm = new Term ( CObj.PARAM_TYPE, type );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        SortedNumericSortField field = new SortedNumericSortField (
+            CObj.docNumber ( CObj.SEQNUM ),
+            SortField.Type.LONG, true );
+        Sort sort = new Sort ( field );
+
+        CObjList lst = search ( builder.build(), 1, sort );
+
+        if ( lst.size() > 0 )
+        {
+            try
+            {
+                r = lst.get ( 0 );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        lst.close();
+
+        return r;
     }
 
     public CObjList getSpamEx ( String creator, long first, long last )
@@ -1458,6 +1511,19 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getAllSubscriptions ( )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term subterm = new Term ( CObj.docString ( CObj.SUBSCRIBED ), "true" );
+        builder.add ( new TermQuery ( subterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObjList getMySubscriptions ( String comid )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -1846,6 +1912,21 @@ public class Index implements Runnable
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.HASFILE );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
+                                          CObj.docPrivateNumber ( CObj.PRV_USER_RANK ),
+                                          0L, Long.MAX_VALUE, false, true );
+        builder.add ( nrq, BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
+    public CObjList getAllPosts ( )
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.POST );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (

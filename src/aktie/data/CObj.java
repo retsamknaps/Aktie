@@ -2252,5 +2252,11 @@ public class CObj
         return productionEquals ( o );
         //return whoopyEquals(o);
     }
+    
+    @Override
+    public String toString() {
+    	JSONObject js = this.GETPRIVATEJSON();
+    	return js.toString();
+    }
 
 }

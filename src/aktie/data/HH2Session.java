@@ -48,6 +48,7 @@ public class HH2Session
             configuration.setProperty ( "hibernate.connection.provider_class", "org.hibernate.connection.C3P0ConnectionProvider" );
             configuration.setProperty ( "hibernate.connection.driver_class", "org.h2.Driver" );
             configuration.setProperty ( "hibernate.c3p0.maxPoolSize", "10" );
+            //configuration.setProperty ("hibernate.show_sql", "true" );
 
             //--- Add Mappings ---
             configuration.addAnnotatedClass ( IdentityData.class );

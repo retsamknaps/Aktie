@@ -130,6 +130,7 @@ public class Wrapper
         boolean headless = false;
         boolean backup = false;
         boolean restore = false;
+        boolean rebuild = false;
 
         for ( int ct = 0; ct < args.length; ct++ )
         {
@@ -153,6 +154,9 @@ public class Wrapper
                 restore = true;
             }
 
+            if ("-rebuild".equals(args[ct])) {
+            	rebuild = true;
+            }
         }
 
         //Test if rundir exists.
@@ -319,6 +323,10 @@ public class Wrapper
         else if ( restore )
         {
             cmd.add ( "aktie.IdentityBackupRestore" );
+        }
+        
+        else if ( rebuild ) {
+        	cmd.add("aktie.RebuildDatabase");
         }
 
         else

@@ -172,7 +172,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
             try
             {
                 //Set the ID, so we always overwrite the last subscription
-                log.info ( "SUBSCRIPTION DIG: " + o.getDig() + "CREATOR: " + creator + " SEQ: " + gseq );
+                log.info ( "SUBSCRIPTION DIG: " + o.getDig() + "CREATOR: " + creator + " myid:(" + myid.getId() + ") SEQ: " + gseq );
                 index.index ( o );
                 index.forceNewSearcher();
             }

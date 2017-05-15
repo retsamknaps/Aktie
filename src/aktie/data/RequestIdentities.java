@@ -16,6 +16,11 @@ public class RequestIdentities
     private int priority;
     private long lastRequest;
 
+    public RequestIdentities()
+    {
+
+    }
+
     public String getId()
     {
         return id;

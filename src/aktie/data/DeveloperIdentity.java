@@ -22,6 +22,10 @@ public class DeveloperIdentity
     @Column ( columnDefinition = "INTEGER(10) default 0" )
     private int spamExUpdateCycle;
 
+    public DeveloperIdentity()
+    {
+    }
+
     public String getId()
     {
         return id;
