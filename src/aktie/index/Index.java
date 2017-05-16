@@ -851,6 +851,7 @@ public class Index implements Runnable
 			try {
 				membership = memberships.get(i);
 			} catch (IOException e) {
+				e.printStackTrace();
 				continue;
 			}
 			String id = membership.getPrivate(CObj.MEMBERID);
