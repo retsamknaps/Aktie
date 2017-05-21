@@ -252,6 +252,26 @@ public class DestinationThread implements Runnable
 
     }
 
+    public void update ( CObj o )
+    {
+        List<ConnectionThread> tl = new LinkedList<ConnectionThread>();
+
+        synchronized ( connections )
+        {
+            for ( List<ConnectionThread> l : connections.values() )
+            {
+                tl.addAll ( l );
+            }
+
+        }
+
+        for ( ConnectionThread t : tl )
+        {
+            t.update ( o );
+        }
+
+    }
+
     public void send ( CObj o )
     {
         List<ConnectionThread> tl = new LinkedList<ConnectionThread>();

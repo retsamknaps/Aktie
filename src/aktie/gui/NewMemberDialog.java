@@ -1,6 +1,7 @@
 package aktie.gui;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import aktie.data.CObj;
 import aktie.gui.table.AktieTableViewerColumn;
@@ -14,6 +15,8 @@ import aktie.index.CObjList;
 import org.apache.lucene.search.Sort;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
@@ -56,6 +59,7 @@ public class NewMemberDialog extends Dialog
 
     private String selectedIdentity;
     private String selectedCommunity;
+    private String communityDisplayName;
 
     private void selectIdentity ( String selid, String comid )
     {
@@ -113,12 +117,12 @@ public class NewMemberDialog extends Dialog
 
                 }
 
-                String comname = community.getPrivateDisplayName();
+                communityDisplayName = community.getPrivateDisplayName();
                 String identname = identity.getDisplayName();
 
-                if ( comname != null )
+                if ( communityDisplayName != null )
                 {
-                    lblGrantMembershipFor.setText ( "Grant membership for community: " + comname );
+                    lblGrantMembershipFor.setText ( "Grant membership for community: " + communityDisplayName );
                 }
 
                 if ( identname != null )
@@ -312,8 +316,6 @@ public class NewMemberDialog extends Dialog
     @Override
     protected void okPressed()
     {
-        CObjList clst = ( CObjList ) table.getTableViewer().getInput();
-
         if ( selectedIdentity != null && selectedCommunity != null )
         {
             long auth = 0;
@@ -333,30 +335,51 @@ public class NewMemberDialog extends Dialog
                 auth = CObj.MEMBER_SIMPLE;
             }
 
-            int idx[] = table.getSelectionIndices();
+            IStructuredSelection ssel = table.getTableViewer().getSelection();
 
-            for ( int c = 0; c < idx.length; c++ )
+            @SuppressWarnings ( "rawtypes" )
+            Iterator i = ssel.iterator();
+
+            while ( i.hasNext() )
             {
-                try
-                {
-                    CObj ident = clst.get ( idx[c] );
-                    CObj co = new CObj();
-                    co.setType ( CObj.MEMBERSHIP );
-                    co.pushString ( CObj.CREATOR, selectedIdentity );
-                    co.pushPrivateNumber ( CObj.AUTHORITY, auth );
-                    co.pushPrivate ( CObj.COMMUNITYID, selectedCommunity );
-                    co.pushPrivate ( CObj.MEMBERID, ident.getId() );
 
-                    if ( app != null )
+                Object o = i.next();
+
+                if ( o instanceof CObjListArrayElement )
+                {
+                    CObjListArrayElement ce = ( CObjListArrayElement ) o;
+
+                    if ( ce != null )
                     {
-                        app.getNode().enqueue ( co );
+                        CObj ident = ce.getCObj();
+
+                        CObj co = new CObj();
+                        co.setType ( CObj.MEMBERSHIP );
+                        co.pushString ( CObj.CREATOR, selectedIdentity );
+                        co.pushPrivateNumber ( CObj.AUTHORITY, auth );
+                        co.pushPrivate ( CObj.COMMUNITYID, selectedCommunity );
+                        co.pushPrivate ( CObj.MEMBERID, ident.getId() );
+
+                        if ( app != null )
+                        {
+                            boolean doit = MessageDialog.openConfirm ( getParentShell(), "Confirm Membership",
+                                           "Are you sure you want to grant: " +  ident.getDisplayName() + "\n" +
+                                           "membership to: " + communityDisplayName );
+
+                            if ( doit )
+                            {
+                                app.getNode().enqueue ( co );
+                            }
+
+                            else
+                            {
+                                return;
+                            }
+
+                        }
+
                     }
 
-                }
-
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
                 }
 
             }

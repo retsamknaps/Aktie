@@ -343,6 +343,14 @@ public class ShareManager implements Runnable
 
         }
 
+        else
+        {
+            HasFileCreator.wtfHasFileWithoutfile ( hf );
+            hf.pushString ( CObj.STILLHASFILE, "false" );
+            hfc.createHasFile ( hf );
+            hfc.updateFileInfo ( hf );
+        }
+
     }
 
     private void crawlDirectory ( Path dlpath, Path nodepath, DirectoryShare s, File df )

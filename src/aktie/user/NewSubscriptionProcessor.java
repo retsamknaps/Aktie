@@ -199,6 +199,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
             if ( conMan != null )
             {
                 conMan.resetAllConnections();
+                conMan.updateAllConnections ( o );
             }
 
             if ( "true".equals ( o.getString ( CObj.SUBSCRIBED ) ) )

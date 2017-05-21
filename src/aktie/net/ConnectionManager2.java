@@ -1413,6 +1413,24 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
+    public void updateAllConnections ( CObj o )
+    {
+        List<DestinationThread> dl = new LinkedList<DestinationThread>();
+
+        synchronized ( destinations )
+        {
+            dl.addAll ( destinations.values() );
+
+        }
+
+        for ( DestinationThread dt : dl )
+        {
+            dt.update ( o );
+        }
+
+    }
+
+
     public void closeAllConnections()
     {
         synchronized ( destinations )
@@ -1708,6 +1726,8 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                             index.index ( m );
 
+                            updateAllConnections ( m );
+
                             if ( callback != null )
                             {
                                 callback.update ( m );
@@ -1815,6 +1835,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                     }
 
                     index.index ( co );
+                    updateAllConnections ( co );
                 }
 
             }
@@ -1851,7 +1872,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     {
         notifyAll();
     }
-
 
     private synchronized void delay()
     {

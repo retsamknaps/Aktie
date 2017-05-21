@@ -1999,6 +1999,12 @@ public class ConnectionThread implements Runnable, GuiCallback
                 updateSubsAndFiles();
             }
 
+            if ( CObj.MEMBERSHIP.equals ( co.getType() ) )
+            {
+                sendFirstMemSubs = true;
+                updateSubsAndFiles();
+            }
+
         }
 
     }

@@ -1,0 +1,13 @@
+
+rm in_*trace0*
+rm in_*trace1*
+rm in_*trace2*
+rm in_*trace3*
+rm in_*trace4*
+rm in_*trace*
+rm out_*trace0*
+rm out_*trace1*
+rm out_*trace2*
+rm out_*trace3*
+rm out_*trace4*
+rm out_*trace*

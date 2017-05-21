@@ -319,6 +319,15 @@ public class HasFileCreator
 
     }
 
+    public static void wtfHasFileWithoutfile ( CObj o )
+    {
+        System.out.println ( "--------------------------------------------------" );
+        System.out.println ( "WTF?  I think I have a file.. but I don't." );
+        System.out.println ( "Is there something odd with: " );
+        System.out.println ( o.toString() );
+        System.out.println ( "--------------------------------------------------" );
+    }
+
     public boolean createHasFile ( CObj o )
     {
         //Set File sequence number for the community/creator
@@ -369,12 +378,29 @@ public class HasFileCreator
         if ( oldfile != null )
         {
             String oldlf = oldfile.getPrivate ( CObj.LOCALFILE );
-            File oldf = new File ( oldlf );
             String oldsh = oldfile.getString ( CObj.STILLHASFILE );
+
+            if ( oldlf == null )
+            {
+                if ( "true".equals ( oldsh ) || oldlf != null )
+                {
+                    wtfHasFileWithoutfile ( oldfile );
+                }
+
+            }
+
+            boolean oldfexists = false;
+
+            if ( oldlf != null )
+            {
+                File oldf = new File ( oldlf );
+                oldfexists = oldf.exists();
+            }
+
             String newsh = o.getString ( CObj.STILLHASFILE );
 
             log.info ( "Old hasfile found: " + oldlf + " name: " + oldfile.getString ( CObj.NAME ) +
-                       " exists: " + oldf.exists() +
+                       " exists: " + oldfexists +
                        " old stillhas: " + oldsh + " new stillhas: " + newsh );
 
             //Can never re-use if stillhas is different
@@ -382,7 +408,7 @@ public class HasFileCreator
             {
                 File lff = new File ( lf );
 
-                if ( lff.exists() && !oldf.exists() && "true".equals ( newsh ) )
+                if ( lff.exists() && !oldfexists && "true".equals ( newsh ) )
                 {
                     //The new file exists, the old one does not.  Just
                     //update the localfile path of the old one to match this
@@ -437,7 +463,7 @@ public class HasFileCreator
 
                 }
 
-                if ( ed == null && lff.exists() && oldf.exists() && "true".equals ( newsh ) )
+                if ( ed == null && lff.exists() && oldfexists && "true".equals ( newsh ) )
                 {
                     log.info ( "Creating duplicate for: " + lf );
                     CObj dp = new CObj();
@@ -465,6 +491,7 @@ public class HasFileCreator
                 log.info ( "Reused..." );
                 oldfile.makeCopy ( o );
                 return true;
+
 
             }
 

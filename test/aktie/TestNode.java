@@ -547,7 +547,7 @@ public class TestNode
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 20L * 1000L );
             }
 
             catch ( InterruptedException e )
