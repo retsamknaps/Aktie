@@ -44,7 +44,7 @@ public class CObjListTableCellLabelProviderTypeHex extends CObjListTableCellLabe
 
                 formatter.close();
 
-                return attribute;
+                return sb.toString();
             }
 
         }

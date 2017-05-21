@@ -657,6 +657,8 @@ public class Wrapper
                     fos.close();
                 }
 
+                Matcher nonwhite = Pattern.compile ( "\\S+" ).matcher ( "" );
+
                 if ( "DELETELIST".equals ( fileName ) )
                 {
                     BufferedReader br = new BufferedReader ( new FileReader ( newFile ) );
@@ -664,13 +666,19 @@ public class Wrapper
 
                     while ( ln != null )
                     {
-                        File df = new File ( LIBDIR + File.separator + ln );
+                        nonwhite.reset ( ln );
 
-                        if ( df.exists() )
+                        if ( nonwhite.find() )
                         {
-                            if ( !df.delete() )
+                            File df = new File ( LIBDIR + File.separator + ln );
+
+                            if ( df.exists() )
                             {
-                                System.out.println ( "WARNING: COULD NOT REMOVE " + df + " Please do so manually." );
+                                if ( !df.delete() )
+                                {
+                                    System.out.println ( "WARNING: COULD NOT REMOVE " + df + " Please do so manually." );
+                                }
+
                             }
 
                         }
