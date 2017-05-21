@@ -2294,6 +2294,16 @@ public class Index implements Runnable
         return search ( builder.build(), Integer.MAX_VALUE );
     }
 
+    public CObjList getInvalidSubscriptions()
+    {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.INV_SUBSCRIPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
+    }
+
     public CObj getSubscription ( String comid, String memid )
     {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
@@ -2467,6 +2477,7 @@ public class Index implements Runnable
 
         if ( indexit )
         {
+
             Document d = o.getDocument();
             idx.updateDocument ( updateterm, d );
         }

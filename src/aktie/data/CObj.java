@@ -41,6 +41,7 @@ public class CObj
     public static String COMMUNITY = "community";
     public static String MEMBERSHIP = "membership";
     public static String SUBSCRIPTION = "subscription";
+    public static String INV_SUBSCRIPTION = "invalidsub";
     public static String POST = "post";
     public static String FILE = "filetype";
     public static String HASFILE = "hasfile";
@@ -784,9 +785,9 @@ public class CObj
         privatedecimals = null;
     }
 
-    public CObj clone()
+    public void makeCopy ( CObj c )
     {
-        CObj c = new CObj();
+        c.clear();
         c.setType ( getType() );
         c.setId ( getId() );
         c.setDig ( getDig() );
@@ -854,6 +855,13 @@ public class CObj
             }
 
         }
+
+    }
+
+    public CObj clone()
+    {
+        CObj c = new CObj();
+        makeCopy ( c );
 
         return c;
     }
@@ -1507,9 +1515,18 @@ public class CObj
 
     }
 
+    private boolean giveup = false;
+    public void GiveUp()
+    {
+        giveup = true;
+    }
+
     public void signX ( RSAPrivateCrtKeyParameters key, long bm )
     {
         byte dg[] = genPayment ( bm );
+
+        if ( giveup ) { return; }
+
         dig = Utils.toString ( dg );
         RSAEngine eng = new RSAEngine();
         PKCS1Encoding enc = new PKCS1Encoding ( eng );
@@ -1644,13 +1661,13 @@ public class CObj
 
             Map<String, String> cm = new HashMap<String, String>();
             byte tb[] = new byte[d.length];
-            long payment = 0L;
+            long payment = Utils.Random.nextLong();
             String paymentbase = Utils.toString ( d ) + ",";
             String paymentstr = paymentbase + Long.toString ( payment );
             cm.put ( CObj.PAYMENT, paymentstr );
             Utils.digStringMap ( rb, tb, d, cm );
 
-            while ( !Utils.checkDig ( rb, tstb ) )
+            while ( !Utils.checkDig ( rb, tstb ) && !giveup )
             {
                 payment++;
                 paymentstr = paymentbase + Long.toString ( payment );
@@ -2252,11 +2269,12 @@ public class CObj
         return productionEquals ( o );
         //return whoopyEquals(o);
     }
-    
+
     @Override
-    public String toString() {
-    	JSONObject js = this.GETPRIVATEJSON();
-    	return js.toString();
+    public String toString()
+    {
+        JSONObject js = this.GETPRIVATEJSON();
+        return js.toString();
     }
 
 }

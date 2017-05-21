@@ -336,9 +336,141 @@ public class HasFileCreator
         String hasfileid = getHasFileId ( id, digofdigs, wholedig );
 
         o.setId ( hasfileid ); //only 1 has file per user per community per file digest
-        //This is an upgrade.  We have to make adjustments for this
-        //to be null when validating signatures for old hasfile records
 
+        //Make the path absolute to help with queries based on the file
+        //name later.
+        String lf = o.getPrivate ( CObj.LOCALFILE );
+
+        if ( lf != null )
+        {
+            File f = new File ( lf );
+
+            if ( f.exists() )
+            {
+                try
+                {
+                    lf = f.getCanonicalPath();
+                    o.pushPrivate ( CObj.LOCALFILE, lf );
+                }
+
+                catch ( IOException e )
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
+        }
+
+        //Check if we're a duplicate
+        CObj ed = index.getDuplicate ( hasfileid, lf );
+        CObj oldfile = index.getById ( hasfileid );
+
+        if ( oldfile != null )
+        {
+            String oldlf = oldfile.getPrivate ( CObj.LOCALFILE );
+            File oldf = new File ( oldlf );
+            String oldsh = oldfile.getString ( CObj.STILLHASFILE );
+            String newsh = o.getString ( CObj.STILLHASFILE );
+
+            log.info ( "Old hasfile found: " + oldlf + " name: " + oldfile.getString ( CObj.NAME ) +
+                       " exists: " + oldf.exists() +
+                       " old stillhas: " + oldsh + " new stillhas: " + newsh );
+
+            //Can never re-use if stillhas is different
+            if ( oldsh != null && oldsh.equals ( newsh ) )
+            {
+                File lff = new File ( lf );
+
+                if ( lff.exists() && !oldf.exists() && "true".equals ( newsh ) )
+                {
+                    //The new file exists, the old one does not.  Just
+                    //update the localfile path of the old one to match this
+                    //file.  If it's false we don't care really.
+                    log.info ( "Reusing old hasfile.  Changing localfile. name: " +
+                               oldfile.getString ( CObj.NAME ) );
+                    oldfile.pushPrivate ( CObj.LOCALFILE, lf );
+
+                    try
+                    {
+                        index.index ( oldfile );
+                        index.forceNewSearcher();
+                    }
+
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                        return false;
+                    }
+
+                    if ( ed != null )
+                    {
+                        try
+                        {
+                            //It's no longer a duplicate
+                            index.delete ( ed );
+                            index.forceNewSearcher();
+                        }
+
+                        catch ( IOException e )
+                        {
+                            e.printStackTrace();
+                            return false;
+                        }
+
+                    }
+
+                }
+
+                if ( ed != null && !lff.exists() )
+                {
+                    try
+                    {
+                        index.delete ( ed );
+                        index.forceNewSearcher();
+                    }
+
+                    catch ( IOException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+                if ( ed == null && lff.exists() && oldf.exists() && "true".equals ( newsh ) )
+                {
+                    log.info ( "Creating duplicate for: " + lf );
+                    CObj dp = new CObj();
+                    dp.setType ( CObj.DUPFILE );
+                    dp.pushString ( CObj.HASFILE, hasfileid );
+                    dp.pushString ( CObj.LOCALFILE, lf );
+                    dp.pushString ( CObj.COMMUNITYID, comid );
+                    dp.pushString ( CObj.CREATOR, creator );
+                    dp.simpleDigest();
+
+                    try
+                    {
+                        index.index ( dp );
+                        index.forceNewSearcher();
+                    }
+
+                    catch ( Exception e )
+                    {
+                        e.printStackTrace();
+                        return false;
+                    }
+
+                }
+
+                log.info ( "Reused..." );
+                oldfile.makeCopy ( o );
+                return true;
+
+            }
+
+        }
+
+        //Ok, we have to create a new one.
         Session s = null;
         long lastnum = 0;
 
@@ -403,86 +535,8 @@ public class HasFileCreator
             return false;
         }
 
-        //Make the path absolute to help with queries based on the file
-        //name later.
-        String lf = o.getPrivate ( CObj.LOCALFILE );
-
-        if ( lf != null )
-        {
-            File f = new File ( lf );
-
-            if ( f.exists() )
-            {
-                try
-                {
-                    lf = f.getCanonicalPath();
-                    o.pushPrivate ( CObj.LOCALFILE, lf );
-                }
-
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
-                }
-
-            }
-
-        }
-
-        //If the file is a duplicate remove it
-        CObj ed = index.getDuplicate ( hasfileid, lf );
-
-        if ( ed != null )
-        {
-            try
-            {
-                index.delete ( ed );
-            }
-
-            catch ( Exception e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
         //See if there is an existing file already for it
         //Make the old one a duplicate
-        CObj oldfile = index.getById ( hasfileid );
-
-        if ( oldfile != null )
-        {
-            String oldlocal = oldfile.getPrivate ( CObj.LOCALFILE );
-
-            if ( oldlocal != null && !oldlocal.equals ( lf ) )
-            {
-                File f = new File ( oldlocal );
-
-                if ( f.exists() )
-                {
-                    CObj dp = new CObj();
-                    dp.setType ( CObj.DUPFILE );
-                    dp.pushString ( CObj.HASFILE, hasfileid );
-                    dp.pushString ( CObj.LOCALFILE, oldlocal );
-                    dp.pushString ( CObj.COMMUNITYID, comid );
-                    dp.pushString ( CObj.CREATOR, creator );
-                    dp.simpleDigest();
-
-                    try
-                    {
-                        index.index ( dp );
-                        index.forceNewSearcher();
-                    }
-
-                    catch ( Exception e )
-                    {
-                        e.printStackTrace();
-                    }
-
-                }
-
-            }
-
-        }
 
         //Get the time of the last file and make sure our new fuzzy time
         //is after that.

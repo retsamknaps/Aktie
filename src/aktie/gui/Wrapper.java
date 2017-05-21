@@ -44,7 +44,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1494200496L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1495329157L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     public static long OLDPAYMENT_V0 = 0x0000004000000000L;
@@ -54,6 +54,8 @@ public class Wrapper
     //                              0x0000004000000000L;
     //                              0x0123456789ABCDEFL;
     public static long NEWPAYMENT = 0x0000003FFF000000L;
+
+    public static int PAYMENTTHREADS = 4;
 
     public static String RUNDIR = "aktie_run_dir";
     public static String NODEDIR = RUNDIR + File.separator + "aktie_node";
@@ -112,6 +114,8 @@ public class Wrapper
     public static final String PROP_WINDOW_WIDTH = "aktie.window.width";
     public static final String PROP_WINDOW_HEIGHT = "aktie.window.height";
 
+    public static final String PROP_PAYMENT_THREADS = "aktie.payment.threads";
+
     public static void main ( String args[] )
     {
         int rc = RESTART_RC;
@@ -131,6 +135,7 @@ public class Wrapper
         boolean backup = false;
         boolean restore = false;
         boolean rebuild = false;
+        boolean dumpindex = false;
 
         for ( int ct = 0; ct < args.length; ct++ )
         {
@@ -154,9 +159,16 @@ public class Wrapper
                 restore = true;
             }
 
-            if ("-rebuild".equals(args[ct])) {
-            	rebuild = true;
+            if ( "-rebuild".equals ( args[ct] ) )
+            {
+                rebuild = true;
             }
+
+            if ( "-dumpindex".equals ( args[ct] ) )
+            {
+                dumpindex = true;
+            }
+
         }
 
         //Test if rundir exists.
@@ -324,9 +336,15 @@ public class Wrapper
         {
             cmd.add ( "aktie.IdentityBackupRestore" );
         }
-        
-        else if ( rebuild ) {
-        	cmd.add("aktie.RebuildDatabase");
+
+        else if ( rebuild )
+        {
+            cmd.add ( "aktie.RebuildDatabase" );
+        }
+
+        else if ( dumpindex )
+        {
+            cmd.add ( "aktie.DumpIndex" );
         }
 
         else
@@ -1035,6 +1053,36 @@ public class Wrapper
         }
 
         return NEWPAYMENT;
+    }
+
+    public static void setPaymentThreads ( int t )
+    {
+        Properties p = loadExistingProps();
+        p.setProperty ( PROP_PAYMENT_THREADS, Integer.toString ( t ) );
+        savePropsFile ( p );
+    }
+
+    public static int getPaymentThreads()
+    {
+        Properties p = loadExistingProps();
+        String ts = p.getProperty ( PROP_PAYMENT_THREADS );
+
+        try
+        {
+            if ( ts != null )
+            {
+                return Integer.valueOf ( ts );
+            }
+
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
+        setPaymentThreads ( PAYMENTTHREADS );
+        return PAYMENTTHREADS;
     }
 
     public static boolean getShareHiddenFiles()

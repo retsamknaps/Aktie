@@ -25,48 +25,65 @@ public class RebuildDatabase
 
     private Index index;
     private HH2Session session;
-    
-    public static void main(String args[]) {
-    	if (args.length < 1) {
-    		System.out.println("Node dir must be specified.");
-    		System.exit(1);
-    	}
-    	String nodedir = args[0];
-    	RebuildDatabase r = new RebuildDatabase();
-    	String h2dir = nodedir + File.separator + "h2";
-    	String iddir = nodedir + File.separator + "index";
-    	File h2 = new File(h2dir);
-    	File id = new File(iddir);
-    	if (!h2.exists() || !h2.isDirectory() || !id.exists() || !id.isDirectory()) {
-    		System.out.println("You need to be in your aktie_run_dir");
-    		System.exit(1);
-    	}
-    	r.rebuild(h2dir, iddir);
+
+    public static void main ( String args[] )
+    {
+        if ( args.length < 1 )
+        {
+            System.out.println ( "Node dir must be specified." );
+            System.exit ( 1 );
+        }
+
+        String nodedir = args[0];
+        RebuildDatabase r = new RebuildDatabase();
+        String h2dir = nodedir + File.separator + "h2";
+        String iddir = nodedir + File.separator + "index";
+        File h2 = new File ( h2dir );
+        File id = new File ( iddir );
+
+        if ( !h2.exists() || !h2.isDirectory() || !id.exists() || !id.isDirectory() )
+        {
+            System.out.println ( "You need to be in your aktie_run_dir" );
+            System.exit ( 1 );
+        }
+
+        r.rebuild ( h2dir, iddir );
+        r.close();
     }
 
-    private void backupfile(String str) {
-    	File tf = new File(str);
-    	if (tf.exists()) {
-    		File f = new File(str);
-    		int idx = 0;
-    		while (f.exists()) {
-    			f = new File (str + "." + idx);
-    			idx++;
-    		}
-    		tf.renameTo(f);
-    		tf = new File(str);
-    		if (tf.exists()) {
-    			throw new RuntimeException("Failed to rename file. " + str);
-    		}
-    	}
+    private void backupfile ( String str )
+    {
+        File tf = new File ( str );
+
+        if ( tf.exists() )
+        {
+            File f = new File ( str );
+            int idx = 0;
+
+            while ( f.exists() )
+            {
+                f = new File ( str + "." + idx );
+                idx++;
+            }
+
+            tf.renameTo ( f );
+            tf = new File ( str );
+
+            if ( tf.exists() )
+            {
+                throw new RuntimeException ( "Failed to rename file. " + str );
+            }
+
+        }
+
     }
-    
+
     public void rebuild ( String dbdir, String idxdir )
     {
-    	String dbstr = dbdir + File.separator + "data.h2.db";
-    	backupfile(dbstr);
-    	dbstr = dbdir + File.separator + "data.mv.db";
-    	backupfile(dbstr);
+        String dbstr = dbdir + File.separator + "data.h2.db";
+        backupfile ( dbstr );
+        dbstr = dbdir + File.separator + "data.mv.db";
+        backupfile ( dbstr );
 
         session = new HH2Session();
         session.init ( dbdir );
@@ -89,10 +106,11 @@ public class RebuildDatabase
         }
 
     }
-    
-    public void close() {
-    	session.close();
-    	index.close();
+
+    public void close()
+    {
+        session.close();
+        index.close();
     }
 
     private void buildPrivateMsgIdentity()
@@ -197,18 +215,24 @@ public class RebuildDatabase
         try
         {
             s.getTransaction().begin();
-            for ( int c = 0; c < col.size(); c++) {
-            	CObj sb = col.get(c);
-            	String creator = sb.getString(CObj.CREATOR);
-            	String comid = sb.getString(CObj.COMMUNITYID);
-            	if (creator != null && comid != null) {
-            		CommunityMember cm = addCommunityMember(s, creator, comid);
-            		s.merge(cm);
-            	}
+
+            for ( int c = 0; c < col.size(); c++ )
+            {
+                CObj sb = col.get ( c );
+                String creator = sb.getString ( CObj.CREATOR );
+                String comid = sb.getString ( CObj.COMMUNITYID );
+
+                if ( creator != null && comid != null )
+                {
+                    CommunityMember cm = addCommunityMember ( s, creator, comid );
+                    s.merge ( cm );
+                }
+
             }
-            
+
             col.close();
             col = index.getAllHasFiles();
+
             for ( int c = 0; c < col.size(); c++ )
             {
                 CObj o = col.get ( c );
@@ -446,19 +470,22 @@ public class RebuildDatabase
                 }
 
                 lst = index.getLastCreated ( CObj.SUBSCRIPTION, co.getId() );
+
                 if ( lst != null )
                 {
                     id.setLastSubNumber ( lst.getNumber ( CObj.SEQNUM ) );
                 }
 
-                if (id.isMine()) {
-                	lst = index.getLastGlobalSequence ( co.getId() );
+                if ( id.isMine() )
+                {
+                    lst = index.getLastGlobalSequence ( co.getId() );
 
-                	if ( lst != null )
-                	{
-                		id.setLastPubGlobalSequence (
-                				lst.getPrivateNumber ( CObj.getGlobalSeq ( co.getId() ) ) );
-                	}
+                    if ( lst != null )
+                    {
+                        id.setLastPubGlobalSequence (
+                            lst.getPrivateNumber ( CObj.getGlobalSeq ( co.getId() ) ) );
+                    }
+
                 }
 
                 s.merge ( id );

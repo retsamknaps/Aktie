@@ -35,6 +35,7 @@ import aktie.user.IdentityManager;
 import aktie.user.PushInterface;
 import aktie.user.RequestFileHandler;
 import aktie.utils.MembershipValidator;
+import aktie.utils.SubscriptionValidator;
 import aktie.utils.SymDecoder;
 
 public class ConnectionManager2 implements GetSendData2, DestinationListener, PushInterface, Runnable
@@ -88,6 +89,9 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     //a non-indenfinate interval so we get new subs for peers
     private Map<String, WeakReference<Set<String>>> subCache;
 
+    private SubscriptionValidator subvalidator;
+
+
     public ConnectionManager2 ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
                                 GuiCallback cb )
     {
@@ -101,6 +105,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         pubPushes = new ConcurrentLinkedQueue<CObj>();
         subCache = new ConcurrentHashMap<String, WeakReference<Set<String>>>();
         index = i;
+        subvalidator = new SubscriptionValidator ( index );
         fileHandler = r;
         identityManager = id;
         callback = cb;
@@ -1785,6 +1790,45 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
+    private void checkInvalidSubs()
+    {
+        CObjList lst = index.getInvalidSubscriptions();
+
+        for ( int c = 0; c < lst.size(); c++ )
+        {
+            try
+            {
+                CObj co = lst.get ( c );
+                String creatorid = co.getString ( CObj.CREATOR );
+                String comid = co.getString ( CObj.COMMUNITYID );
+
+                if ( subvalidator.canSubscribe ( comid, creatorid ) )
+                {
+                    co.setType ( CObj.SUBSCRIPTION );
+                    CObjList ilst = index.getMyIdentities();
+
+                    for ( int c2 = 0; c2 < ilst.size(); c2++ )
+                    {
+                        CObj id = ilst.get ( c2 );
+                        long gseq = identityManager.getGlobalSequenceNumber ( id.getId(), true );
+                        co.pushPrivateNumber ( CObj.getGlobalSeq ( id.getId() ), gseq );
+                    }
+
+                    index.index ( co );
+                }
+
+            }
+
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        lst.close();
+    }
+
     public synchronized void stop()
     {
         stop = true;
@@ -1843,6 +1887,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 if ( System.currentTimeMillis() >= nextdecode )
                 {
                     decodeMemberships();
+                    checkInvalidSubs();
                     clearRecentConnections();
                     checkConnections();
                     checkGlobalSequences();

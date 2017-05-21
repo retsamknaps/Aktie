@@ -180,8 +180,6 @@ public class ShareManager implements Runnable
                 e.printStackTrace();
             }
 
-
-            // TODO: correct indentation
             if ( null == rfh.findFileByName ( fp ) )
             {
 
@@ -590,7 +588,9 @@ public class ShareManager implements Runnable
                             String olf = thf.getPrivate ( CObj.LOCALFILE );
                             String shf = thf.getString ( CObj.STILLHASFILE );
 
-                            if ( olf != null && "true".equals ( shf ) )
+                            //If the hasfile still has the file, and the localfile path
+                            //is not the same as the duplicate one, then we don't remove.
+                            if ( olf != null && "true".equals ( shf ) && !olf.equals ( lf ) )
                             {
                                 File of = new File ( olf );
 

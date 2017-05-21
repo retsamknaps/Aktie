@@ -118,19 +118,14 @@ public class InSubProcessor extends GenericProcessor
 
                         else
                         {
+                            update = true;
+
                             //We need to see if this user can subscribe.
-                            if ( subvalidator.canSubscribe ( comid, creatorid ) )
+                            if ( ! subvalidator.canSubscribe ( comid, creatorid ) )
                             {
-                                if ( Level.INFO.equals ( log.getLevel() ) )
-                                {
-                                    logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " CAN SUBSCRIBE " );
-                                }
+                                //Save it as an invalid subscription to validate later.
+                                b.setType ( CObj.INV_SUBSCRIPTION );
 
-                                update = true;
-                            }
-
-                            else
-                            {
                                 if ( Level.INFO.equals ( log.getLevel() ) )
                                 {
                                     logIt ( "REC: (VALID) " + b.getDig() + " creator: " + creatorid + " comid: " + comid + " CANNOT SUBSCRIBE " );
@@ -177,7 +172,8 @@ public class InSubProcessor extends GenericProcessor
                                 index.index ( b );
                                 conThread.update ( b );
 
-                                if ( "true".equals ( b.getString ( CObj.SUBSCRIBED ) ) )
+                                if ( "true".equals ( b.getString ( CObj.SUBSCRIBED ) ) &&
+                                        CObj.SUBSCRIPTION.equals ( b.getType() ) )
                                 {
                                     identManager.updateIdentityCommunitySeqNumber ( creatorid, comid, 0, true );
                                 }

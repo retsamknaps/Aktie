@@ -142,7 +142,7 @@ public class ShowMembersDialog extends Dialog
 
             AktieTableViewerColumn<CObjList, CObjListGetter> column;
 
-            column = addNonIndexSortedColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( true, null ) );
+            column = addNonIndexSortedColumn ( "Identity", 300, new CObjListTableCellLabelProviderTypeDisplayName ( false, null ) );
             getTableViewer().setSortColumn ( column, false );
         }
 

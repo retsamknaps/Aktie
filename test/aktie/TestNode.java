@@ -2435,25 +2435,26 @@ public class TestNode
                 o0.print();
             }
 
-//            //-------------------------------------------------------
-//            RebuildDatabase rd = new RebuildDatabase();
-//            
-//            rd.rebuild("testnode0", idxdir);
-//            Session ss = n0.getSession().getSession();
-//            Query q = ss.createQuery("SELECT x FROM IdentityData x");
-//            @SuppressWarnings("unchecked")
-//			List<IdentityData> lst = q.list();
-//            for (IdentityData idt : lst) {
-//            	
-//            }
-//            ss.close();
-            
+            //            //-------------------------------------------------------
+            //            RebuildDatabase rd = new RebuildDatabase();
+            //
+            //            rd.rebuild("testnode0", idxdir);
+            //            Session ss = n0.getSession().getSession();
+            //            Query q = ss.createQuery("SELECT x FROM IdentityData x");
+            //            @SuppressWarnings("unchecked")
+            //          List<IdentityData> lst = q.list();
+            //            for (IdentityData idt : lst) {
+            //
+            //            }
+
+            //            ss.close();
+
             //Test rebuild database
             n3.close();
             RebuildDatabase rdb = new RebuildDatabase();
-            rdb.rebuild("testnode3/h2", "testnode3/index");
+            rdb.rebuild ( "testnode3/h2", "testnode3/index" );
             rdb.close();
-            
+
             n3 = new Node ( "testnode3", net3, cb3, cb3, cn3 );
             clst = n3.getIndex().getMyIdentities();
             assertEquals ( 2, clst.size() );
@@ -2476,7 +2477,7 @@ public class TestNode
             postx.pushString ( CObj.CREATOR, node3b.getId() );
             postx.pushString ( CObj.PAYLOAD, "This is a post after restore." );
             n3.enqueue ( postx );
-            
+
             try
             {
                 Thread.sleep ( 50000 );
@@ -2494,7 +2495,7 @@ public class TestNode
             clst = n0.getIndex().getPosts ( pubcom.getDig(), node3b.getId(), 0, Long.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             clst.close();
-            
+
             n0.close();
             n1.close();
             n2.close();

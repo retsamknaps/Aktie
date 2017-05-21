@@ -20,6 +20,68 @@ public class SpamTool
         index = i;
     }
 
+    class HashThread implements Runnable
+    {
+
+        private CObj tmpCo;
+        private HashCallback callBack;
+        private RSAPrivateCrtKeyParameters key;
+
+        public HashThread ( CObj c, HashCallback cb, RSAPrivateCrtKeyParameters k )
+        {
+            tmpCo = c.clone();
+            callBack = cb;
+            key = k;
+            Thread t = new Thread ( this );
+            t.start();
+        }
+
+        public void stop()
+        {
+            tmpCo.GiveUp();
+        }
+
+        @Override
+        public void run()
+        {
+            tmpCo.signX ( key, Wrapper.getGenPayment() );
+            callBack.done ( tmpCo );
+        }
+
+    }
+
+    class HashCallback
+    {
+        private CObj co;
+
+        public synchronized void done ( CObj c )
+        {
+            co = c;
+            notifyAll();
+        }
+
+        public synchronized CObj waitForDone()
+        {
+            if ( co != null )
+            {
+                return co;
+            }
+
+            try
+            {
+                wait();
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            return co;
+        }
+
+    }
+
     public void finalize ( RSAPrivateCrtKeyParameters key, CObj c )
     {
         //Check private value to see if we want to generate payment
@@ -32,7 +94,23 @@ public class SpamTool
 
         else
         {
-            c.signX ( key, Wrapper.getGenPayment() );
+            HashCallback hb = new HashCallback();
+            int numThreads = Wrapper.getPaymentThreads();
+            HashThread ht[] = new HashThread[numThreads];
+
+            for ( int ct = 0; ct < numThreads; ct++ )
+            {
+                ht[ct] = new HashThread ( c, hb, key );
+            }
+
+            CObj doneObj = hb.waitForDone();
+            doneObj.makeCopy ( c );
+
+            for ( int ct = 0; ct < numThreads; ct++ )
+            {
+                ht[ct].stop();
+            }
+
         }
 
     }

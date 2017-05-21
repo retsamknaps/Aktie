@@ -84,7 +84,17 @@ public class NewSubscriptionProcessor extends GenericProcessor
             }
 
             CObj updatemsg = new CObj();
-            updatemsg.pushString ( CObj.ERROR, "Creating new subscription. " );
+
+            if ( "true".equals ( o.getString ( CObj.SUBSCRIBED ) ) )
+            {
+                updatemsg.pushString ( CObj.ERROR, "Creating new subscription. " );
+            }
+
+            else
+            {
+                updatemsg.pushString ( CObj.ERROR, "Unsubscribing." );
+            }
+
             updatemsg.pushPrivate ( CObj.PRV_CLEAR_ERR, "false" );
             guicallback.update ( updatemsg );
 
