@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.json.JSONObject;
 
 import aktie.data.CObj;
+import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
@@ -45,6 +46,8 @@ public class DumpIndex
                 CObj co = lst.get ( c );
                 JSONObject jo = co.GETPRIVATEJSON();
                 System.out.println ( jo.toString ( 4 ) );
+                System.out.println ( "NAME: " + co.getString ( CObj.NAME ) + " payment: " +
+                                     co.checkPayment ( Wrapper.NEWPAYMENT ) );
             }
 
             catch ( IOException e )

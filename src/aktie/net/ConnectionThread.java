@@ -306,6 +306,11 @@ public class ConnectionThread implements Runnable, GuiCallback
 
         }
 
+        if ( doLog() )
+        {
+            appendInput ( "Check memReqdigs: " + memReqdigs + " done: " + dg );
+        }
+
         for ( Iterator<Entry<Long, Set<String>>> i = memReqdigs.entrySet().iterator(); i.hasNext(); )
         {
             Entry<Long, Set<String>> e = i.next();
@@ -313,8 +318,19 @@ public class ConnectionThread implements Runnable, GuiCallback
 
             if ( ss.remove ( dg ) )
             {
+                if ( doLog() )
+                {
+                    appendInput ( "Removing from member list for seqnum: " + e.getKey() +
+                                  " size: " + ss.size() + " upmem: " + updatemembers );
+                }
+
                 if ( ss.size() == 0 && updatemembers )
                 {
+                    if ( doLog() )
+                    {
+                        appendInput ( "Global sequence number complete " + e.getKey() );
+                    }
+
                     IdentManager.updateGlobalSequenceNumber (
                         getEndDestination().getId(),
                         false, 0L,
@@ -352,8 +368,8 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void checkDone()
     {
-        updatemembers = ( chkMemberships.containsAll ( memberships ) );
-        updatesubs = updatemembers && ( chkSubs.containsAll ( subs ) );
+        updatemembers = ( chkMemberships.equals ( memberships ) );
+        updatesubs = updatemembers && ( chkSubs.equals ( subs ) );
 
         if ( doLog() )
         {
@@ -404,6 +420,16 @@ public class ConnectionThread implements Runnable, GuiCallback
 
     public void setLastSeq ( boolean pb, long ps, boolean mb, long ms, boolean sb, long ss )
     {
+        if ( doLog() )
+        {
+            appendInput ( "setLastSeq: pb: " + pb + " ps: "
+                          + ps + " mb: " + mb
+                          + " updatemembers: " + updatemembers
+                          + " ms: " + ms + " sb: " + sb
+                          + " updatesubs: " + updatesubs + " ss:" + ss +
+                          " filllst: " + fillList );
+        }
+
         if ( fillList.size() == 0 )
         {
             IdentManager.updateGlobalSequenceNumber (
@@ -685,8 +711,6 @@ public class ConnectionThread implements Runnable, GuiCallback
                 sendMemsAndSubs();
             }
 
-            lastFileUpdate = conMan.getLastFileUpdate();
-
             if ( doLog() )
             {
                 appendOutput ( "updateSubsAndFiles: subs: " + subs );
@@ -912,6 +936,8 @@ public class ConnectionThread implements Runnable, GuiCallback
         pubReqdigs.clear();
         memReqdigs.clear();
         subReqdigs.clear();
+
+        sendFirstMemSubs = true;
 
         if ( outproc != null )
         {
@@ -1992,6 +2018,12 @@ public class ConnectionThread implements Runnable, GuiCallback
         if ( o instanceof CObj )
         {
             CObj co = ( CObj ) o;
+
+            if ( CObj.COMMUNITY.equals ( co.getType() ) )
+            {
+                sendFirstMemSubs = true;
+                updateSubsAndFiles();
+            }
 
             if ( CObj.SUBSCRIPTION.equals ( co.getType() ) )
             {

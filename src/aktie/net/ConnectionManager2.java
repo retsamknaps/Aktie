@@ -827,7 +827,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                 try
                 {
                     CObj sub = clt.get ( c );
-                    String comid = sub.getString ( CObj.COMMUNITYID );
+                    String comid = sub.getDig();
 
                     if ( comid != null )
                     {
@@ -877,7 +877,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
                                 con < ATTEMPT_CONNECTIONS; c0++ )
                         {
                             CObj suber = othersubs.get ( ori[c0] );
-                            String memid = suber.getString ( CObj.MEMBERID );
+                            String memid = suber.getPrivate ( CObj.MEMBERID );
 
                             if ( memid != null )
                             {
@@ -1315,24 +1315,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
     }
 
-    public void resetAllConnections()
-    {
-        fileManager.bumpUpdate();
-
-        List<DestinationThread> dlst = new LinkedList<DestinationThread>();
-
-        synchronized ( destinations )
-        {
-            dlst.addAll ( destinations.values() );
-        }
-
-        for ( DestinationThread dt : dlst )
-        {
-            dt.poke();
-        }
-
-    }
-
     @Override
     public void push ( CObj fromid, CObj o )
     {
@@ -1752,9 +1734,6 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
         }
 
         invliddeclist.close();
-
-        //Force connections to update their memberships and subs
-        resetAllConnections();
 
         //Reset membership and subscription sequence numbers for communities
         //with new members.  This is in case we missed things from old members

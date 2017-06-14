@@ -176,11 +176,6 @@ public class Node
 
     }
 
-    public void resetAllConnections()
-    {
-        conMan.resetAllConnections();
-    }
-
     public void close()
     {
         shareManager.stop();

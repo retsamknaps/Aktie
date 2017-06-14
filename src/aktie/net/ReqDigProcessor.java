@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
 import aktie.data.CObj;
+import aktie.index.CObjList;
 import aktie.index.Index;
 
 public class ReqDigProcessor extends GenericProcessor
@@ -37,8 +38,14 @@ public class ReqDigProcessor extends GenericProcessor
             String d = b.getDig();
             //Get the object with that digest.
             CObj rid = conThread.getEndDestination();
+            CObj mid = null;
 
-            if ( d != null && rid != null )
+            if ( conThread.getLocalDestination() != null )
+            {
+                mid = conThread.getLocalDestination().getIdentity();
+            }
+
+            if ( d != null && rid != null && mid != null )
             {
                 CObj o = index.getByDig ( d );
                 log ( "GET DIG: " + d + " obj: " + o );
@@ -66,25 +73,51 @@ public class ReqDigProcessor extends GenericProcessor
                     {
                         String comid = o.getString ( CObj.COMMUNITYID );
 
-                        if ( conThread.getMemberships().contains ( comid ) )
-                        {
-                            //Just send it if they're already members
-                            log ( "SND PRV SUB: " + d );
-                            conThread.enqueue ( o );
-                        }
-
-                        else
+                        if ( comid != null )
                         {
                             CObj com = index.getCommunity ( comid );
 
                             if ( com != null )
                             {
+
                                 String pp = com.getString ( CObj.SCOPE );
 
                                 if ( CObj.SCOPE_PUBLIC.equals ( pp ) )
                                 {
                                     log ( "SND PUB SUB: " + d );
                                     conThread.enqueue ( o );
+                                }
+
+                                else
+                                {
+                                    CObjList mlst = index.getMembership ( comid, rid.getId() );
+                                    boolean ismem = mlst.size() > 0;
+                                    mlst.close();
+
+                                    if ( !ismem )
+                                    {
+                                        ismem = rid.getId().equals ( com.getString ( CObj.CREATOR ) );
+                                    }
+
+                                    if ( ismem )
+                                    {
+                                        mlst = index.getMembership ( comid, mid.getId() );
+
+                                        if ( mlst.size() == 0 )
+                                        {
+                                            ismem = mid.getId().equals ( com.getString ( CObj.CREATOR ) );
+                                        }
+
+                                        mlst.close();
+                                    }
+
+                                    if ( ismem )
+                                    {
+                                        //Just send it if they're already members
+                                        log ( "SND PRV SUB: " + d );
+                                        conThread.enqueue ( o );
+                                    }
+
                                 }
 
                             }

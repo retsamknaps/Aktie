@@ -284,7 +284,7 @@ public class NewMembershipProcessor extends GenericProcessor
 
             if ( conMan != null )
             {
-                conMan.resetAllConnections();
+                conMan.updateAllConnections ( o );
             }
 
             guicallback.update ( o );

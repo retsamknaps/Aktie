@@ -28,8 +28,6 @@ import aktie.utils.FUtils;
 
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedNumericSortField;
-import org.hibernate.Query;
-import org.hibernate.Session;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -127,7 +125,6 @@ public class TestNode
         nn.setType ( CObj.IDENTITY );
         nn.pushString ( CObj.NAME, name );
         n.enqueue ( nn );
-        n.resetAllConnections();
         return nn;
     }
 
@@ -300,8 +297,6 @@ public class TestNode
             n0seed.setType ( CObj.USR_SEED );
             n1.enqueue ( n0seed );
 
-            n1.resetAllConnections();
-
             cb1.waitForUpdate();
 
             try
@@ -318,8 +313,6 @@ public class TestNode
             n0seed.setType ( CObj.USR_SEED );
             n2.enqueue ( n0seed );
 
-            n2.resetAllConnections();
-
             cb2.waitForUpdate();
 
             try
@@ -335,8 +328,6 @@ public class TestNode
             cb3.oqueue.clear();
             n0seed.setType ( CObj.USR_SEED );
             n3.enqueue ( n0seed );
-
-            n3.resetAllConnections();
 
             cb3.waitForUpdate();
 
@@ -365,11 +356,6 @@ public class TestNode
             n3.enqueue ( updateIdent );
             n0.enqueue ( updateIdent );
 
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-            n0.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10L * 1000L );
@@ -386,8 +372,6 @@ public class TestNode
             n3.getIndex().forceNewSearcher();
 
             n0.enqueue ( updateIdent );
-
-            n0.resetAllConnections();
 
             try
             {
@@ -412,10 +396,6 @@ public class TestNode
             n2.enqueue ( updateIdent );
             n3.enqueue ( updateIdent );
 
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10L * 1000L );
@@ -430,11 +410,6 @@ public class TestNode
             n1.enqueue ( updateIdent );
             n2.enqueue ( updateIdent );
             n3.enqueue ( updateIdent );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -523,10 +498,6 @@ public class TestNode
             n2.enqueue ( comupdate );
             n3.enqueue ( comupdate );
 
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10L * 1000L );
@@ -540,10 +511,6 @@ public class TestNode
             n1.enqueue ( comupdate );
             n2.enqueue ( comupdate );
             n3.enqueue ( comupdate );
-
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -595,8 +562,6 @@ public class TestNode
             mem0.pushPrivateNumber ( CObj.AUTHORITY, CObj.MEMBER_CAN_GRANT );
             n0.enqueue ( mem0 );
 
-            n0.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 1000L );
@@ -613,10 +578,6 @@ public class TestNode
             n1.enqueue ( memupdate );
             n2.enqueue ( memupdate );
             n3.enqueue ( memupdate );
-
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -636,10 +597,6 @@ public class TestNode
             n1.enqueue ( memupdate );
             n2.enqueue ( memupdate );
             n3.enqueue ( memupdate );
-
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -703,8 +660,6 @@ public class TestNode
             sub0.pushString ( CObj.SUBSCRIBED, "true" );
             n0.enqueue ( sub0 );
 
-            n0.resetAllConnections();
-
             cb0.waitForUpdate();
             n0.getIndex().forceNewSearcher();
             co = n0.getIndex().getSubscription ( com0n0.getDig(), n0seed.getId() );
@@ -719,10 +674,6 @@ public class TestNode
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
-
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -749,11 +700,6 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10000 );
@@ -773,11 +719,6 @@ public class TestNode
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -803,11 +744,6 @@ public class TestNode
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -864,8 +800,6 @@ public class TestNode
             mem2.pushPrivateNumber ( CObj.AUTHORITY, CObj.MEMBER_SIMPLE );
             n2.enqueue ( mem2 );
 
-            n2.resetAllConnections();
-
             cb2.waitForUpdate();
             n2.getIndex().forceNewSearcher();
 
@@ -903,11 +837,6 @@ public class TestNode
                     n2.enqueue ( memupdate );
                     n3.enqueue ( memupdate );
 
-                    n0.resetAllConnections();
-                    n1.resetAllConnections();
-                    n2.resetAllConnections();
-                    n3.resetAllConnections();
-
                 }
 
                 else
@@ -916,11 +845,6 @@ public class TestNode
                     n2.enqueue ( memupdate );
                     n1.enqueue ( memupdate );
                     n0.enqueue ( memupdate );
-
-                    n3.resetAllConnections();
-                    n2.resetAllConnections();
-                    n1.resetAllConnections();
-                    n0.resetAllConnections();
 
                 }
 
@@ -1077,10 +1001,6 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 30000 );
@@ -1102,10 +1022,6 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10000 );
@@ -1128,11 +1044,6 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10000 );
@@ -1154,11 +1065,6 @@ public class TestNode
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1202,8 +1108,6 @@ public class TestNode
             sub3.pushString ( CObj.SUBSCRIBED, "true" );
             n3.enqueue ( sub3 );
 
-            n3.resetAllConnections();
-
             cb3.waitForUpdate();
 
             n0.getIndex().forceNewSearcher();
@@ -1225,10 +1129,25 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
+            try
+            {
+                Thread.sleep ( 10000 );
+            }
+
+            catch ( InterruptedException e )
+            {
+                e.printStackTrace();
+            }
+
+            n0.getIndex().forceNewSearcher();
+            n1.getIndex().forceNewSearcher();
+            n2.getIndex().forceNewSearcher();
+            n3.getIndex().forceNewSearcher();
+
+            n0.enqueue ( updatesubs );
+            n1.enqueue ( updatesubs );
+            n2.enqueue ( updatesubs );
+            n3.enqueue ( updatesubs );
 
             try
             {
@@ -1250,11 +1169,6 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 10000 );
@@ -1275,14 +1189,9 @@ public class TestNode
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 30000 );
             }
 
             catch ( InterruptedException e )
@@ -1299,36 +1208,6 @@ public class TestNode
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1421,11 +1300,6 @@ public class TestNode
             n1.enqueue ( upp );
             n2.enqueue ( upp );
             n3.enqueue ( upp );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1627,8 +1501,6 @@ public class TestNode
             //hf0.pushPrivate ( CObj.LOCALFILE, nf.getPath() );
             //n3.enqueue ( hf0 );
 
-            n3.resetAllConnections();
-
             cb3.waitForUpdate();
             o = cb3.oqueue.poll();
             CObj hf0 = ( CObj ) o;
@@ -1644,11 +1516,6 @@ public class TestNode
             n1.enqueue ( hfupdate );
             n2.enqueue ( hfupdate );
             n3.enqueue ( hfupdate );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1669,11 +1536,6 @@ public class TestNode
             n1.enqueue ( hfupdate );
             n2.enqueue ( hfupdate );
             n3.enqueue ( hfupdate );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1710,8 +1572,6 @@ public class TestNode
             post.pushString ( CObj.PAYLOAD, "This is a post." );
             n0.enqueue ( post );
 
-            n0.resetAllConnections();
-
             cb0.waitForUpdate();
             o = cb0.oqueue.poll();
             post = ( CObj ) o;
@@ -1725,11 +1585,6 @@ public class TestNode
             n1.enqueue ( pupdate );
             n2.enqueue ( pupdate );
             n3.enqueue ( pupdate );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1745,11 +1600,6 @@ public class TestNode
             n1.enqueue ( pupdate );
             n2.enqueue ( pupdate );
             n3.enqueue ( pupdate );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1801,8 +1651,6 @@ public class TestNode
             hf0.pushPrivate ( CObj.LOCALFILE, nlf.getPath() );
             n0.enqueue ( hf0 );
 
-            n0.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 300000 );
@@ -1823,11 +1671,6 @@ public class TestNode
             n2.enqueue ( hfupdate );
             n3.enqueue ( hfupdate );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 20000 );
@@ -1843,11 +1686,6 @@ public class TestNode
             n1.enqueue ( hfupdate );
             n2.enqueue ( hfupdate );
             n3.enqueue ( hfupdate );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1893,11 +1731,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -1973,10 +1806,6 @@ public class TestNode
             n1.enqueue ( comupdate );
             n2.enqueue ( comupdate );
             n3.enqueue ( comupdate );
-
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -2161,8 +1990,6 @@ public class TestNode
 
             n4.enqueue ( comupdate );
 
-            n4.resetAllConnections();
-
             try
             {
                 Thread.sleep ( 40L * 1000L );
@@ -2194,23 +2021,12 @@ public class TestNode
             sub2.pushString ( CObj.SUBSCRIBED, "true" );
             n3.enqueue ( sub2 );
 
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-
             updatesubs.setType ( CObj.USR_SUB_UPDATE );
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
             n3.enqueue ( updatesubs );
             n4.enqueue ( updatesubs );
-
-            n0.resetAllConnections();
-            n1.resetAllConnections();
-            n2.resetAllConnections();
-            n3.resetAllConnections();
-            n4.resetAllConnections();
 
             try
             {
@@ -2255,9 +2071,6 @@ public class TestNode
 
             n0.enqueue ( pupdate );
             n3.enqueue ( pupdate );
-
-            n0.resetAllConnections();
-            n3.resetAllConnections();
 
             try
             {
@@ -2355,8 +2168,6 @@ public class TestNode
             hf0.pushString ( CObj.CREATOR, n0seed.getId() );
             hf0.pushPrivate ( CObj.LOCALFILE, nlf.getPath() );
             n0.enqueue ( hf0 );
-
-            n0.resetAllConnections();
 
             try
             {

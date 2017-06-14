@@ -92,14 +92,16 @@ public class InHasFileProcessor extends GenericProcessor
 
                     CObj mysubid = subvalid.isMyUserSubscribed ( comid, destIdent.getId() );
                     CObj sid = subvalid.isUserSubscribed ( comid, creatorid );
+                    boolean canhas = subvalid.canHasFile ( comid, creatorid, wdig, ddig );
 
                     if ( Level.INFO.equals ( log.getLevel() ) )
                     {
                         logIt ( "Mysub: " + mysubid + " sid: " + sid + " isnew: " + isnew + " creator: " +
-                                creatorid + " comid: " + comid + " wdig: " + wdig + " seq: " + seqnum );
+                                creatorid + " comid: " + comid + " wdig: " + wdig + " canhas: " + canhas +
+                                " seq: " + seqnum );
                     }
 
-                    if ( mysubid != null && sid != null )
+                    if ( mysubid != null && sid != null && canhas )
                     {
                         try
                         {

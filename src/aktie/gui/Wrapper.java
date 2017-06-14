@@ -47,8 +47,14 @@ public class Wrapper
     public static long RELEASETIME = ( 1495390963L * 1000L ) + 3600000L;
 
     //Hash cash payment values
+    //Process for updating payment: Only increase payment value.
+    //Copy NEWPAYMENT value to OLDPAYMENT.  Get
+    //the time and update CHECKNEWPAYMENTAFTER.
+    //Make sure the time is within a day of release.
+    //NEVER CHANGE OLDPAYMENT_V0.  NEVER MAKE NEWPAYMENT EQUAL
+    //TO OLDPAYMENT_V0.
     public static long OLDPAYMENT_V0 = 0x0000004000000000L;
-    public static long OLDPAYMENT = 0x0000004000000000L;
+    public static long OLDPAYMENT =    0x0000004000000000L;
     public static long CHECKNEWPAYMENTAFTER = ( 1467260141L * 1000L ) +
             ( 4L * 24L * 60L * 60L * 1000L );
     //                              0x0000004000000000L;

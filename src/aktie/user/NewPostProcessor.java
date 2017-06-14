@@ -65,6 +65,13 @@ public class NewPostProcessor extends GenericProcessor
                 return true;
             }
 
+            if ( !validator.canPost ( comid, creator ) )
+            {
+                o.pushString ( CObj.ERROR, "you cannot post to this blog" );
+                guicallback.update ( o );
+                return true;
+            }
+
             //Set the sequence number
             Session s = null;
             long lastpostnum = 0;

@@ -225,8 +225,8 @@ public class SWTApp implements UpdateInterface
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        if ( developerIdentity != null && creator != null &&
-                creator.equals ( developerIdentity.getId() ) )
+        if ( creator != null &&
+                developerIdentities.contains ( creator ) )
         {
 
             Long createdon = co.getNumber ( CObj.CREATEDON );
@@ -383,8 +383,8 @@ public class SWTApp implements UpdateInterface
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        if ( developerIdentity != null && creator != null &&
-                creator.equals ( developerIdentity.getId() ) )
+        if ( creator != null &&
+                developerIdentities.contains ( creator ) )
         {
 
             //Update subject line
@@ -893,13 +893,9 @@ public class SWTApp implements UpdateInterface
 
                             boolean isupgrade = false;
 
-                            if ( developerIdentity != null )
+                            if ( developerIdentities.contains ( selectedIdentity.getId() ) )
                             {
-                                if ( developerIdentity.getId().equals ( selectedIdentity.getId() ) )
-                                {
-                                    isupgrade = MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" );
-                                }
-
+                                isupgrade = MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" );
                             }
 
                             CObj nf = new CObj();
@@ -1069,7 +1065,7 @@ public class SWTApp implements UpdateInterface
     private FilesTable filesTable;
     private DownloadsTable downloadsTable;
     private String exportCommunitiesFile;
-    private CObj developerIdentity;
+    private List<String> developerIdentities = new LinkedList<String>();
     private Map<String, List<CObj>> pendingPosts = new HashMap<String, List<CObj>>();
     private CObj advQuery;
 
@@ -1195,6 +1191,45 @@ public class SWTApp implements UpdateInterface
         return node;
     }
 
+
+
+    private void setBlogMode ( CObj id, CObj comid )
+    {
+        boolean blg = false;
+
+        if ( "true".equals ( comid.getString ( CObj.BLOGMODE ) ) )
+        {
+            String ids = id.getId();
+
+            if ( ids != null && ids.equals ( comid.getString ( CObj.CREATOR ) ) )
+            {
+                blg = false;
+            }
+
+            else
+            {
+                blg = true;
+            }
+
+        }
+
+        btnDelete.setEnabled ( !blg );
+        btnShare.setEnabled ( !blg );
+        textShareName.setEditable ( !blg );
+        textSharePath.setEditable ( !blg );
+        textNumberSubDirs.setEditable ( !blg );
+        textNumberFiles.setEditable ( !blg );
+        shareCombo.setEnabled ( !blg );
+        comboShareName.setEnabled ( !blg );
+        btnDefaultDownloadLocation.setEnabled ( !blg );
+        btnDoNotGenerate.setEnabled ( !blg );
+        txtAShareIs.setEditable ( !blg );
+        btnPost.setEnabled ( !blg );
+        mntmReply.setEnabled ( !blg );
+        mntmCreatePost.setEnabled ( !blg );
+        btnAddFiles.setEnabled ( !blg );
+    }
+
     public void setSelected ( CObj id, CObj comid )
     {
         selectedIdentity = id;
@@ -1215,6 +1250,8 @@ public class SWTApp implements UpdateInterface
         filesSearch();
         postText.setText ( "" );
         animator.update ( null, 0, 0, 10, 10 );
+
+        setBlogMode ( id, comid );
     }
 
     public void setVerbose()
@@ -2251,12 +2288,23 @@ public class SWTApp implements UpdateInterface
             JSONTokener p = new JSONTokener ( br );
             JSONObject o = new JSONObject ( p );
 
-            if ( o != null )
+            while ( o != null )
             {
                 CObj co = new CObj();
                 co.loadJSON ( o );
-                developerIdentity = co;
+                developerIdentities.add ( co.getId() );
                 node.newDeveloperIdentity ( co.getId() );
+
+                try
+                {
+                    o = new JSONObject ( p );
+                }
+
+                catch ( Exception xr )
+                {
+                    o = null;
+                }
+
             }
 
             br.close();
@@ -2493,6 +2541,7 @@ public class SWTApp implements UpdateInterface
     private MembershipsTable membershipsTable;
     private Composite composite_header;
     private Label lblError;
+
     private Text textShareName;
     private Text textSharePath;
     private Text textNumberSubDirs;
@@ -2506,6 +2555,13 @@ public class SWTApp implements UpdateInterface
     private Button btnDefaultDownloadLocation;
     private Button btnDoNotGenerate;
     private Text txtAShareIs;
+
+    private Button btnPost;
+    private MenuItem mntmReply;
+    private MenuItem mntmCreatePost;
+    private Button btnAddFiles;
+    private Button btnShare;
+    private Button btnDelete;
 
     private boolean doDownloadLrg ( CObj c )
     {
@@ -3592,7 +3648,7 @@ public class SWTApp implements UpdateInterface
         composite_7.setLayout ( new GridLayout ( 7, false ) );
         new Label ( composite_7, SWT.NONE );
 
-        Button btnPost = new Button ( composite_7, SWT.NONE );
+        btnPost = new Button ( composite_7, SWT.NONE );
         btnPost.setText ( "Post" );
         btnPost.addSelectionListener ( new SelectionListener()
         {
@@ -4002,7 +4058,7 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        MenuItem mntmReply = new MenuItem ( menu_5, SWT.NONE );
+        mntmReply = new MenuItem ( menu_5, SWT.NONE );
         mntmReply.setText ( "Reply" );
         mntmReply.addSelectionListener ( new SelectionListener()
         {
@@ -4194,7 +4250,7 @@ public class SWTApp implements UpdateInterface
         composite_9.setLayoutData ( BorderLayout.NORTH );
         composite_9.setLayout ( new GridLayout ( 6, false ) );
 
-        Button btnAddFiles = new Button ( composite_9, SWT.NONE );
+        btnAddFiles = new Button ( composite_9, SWT.NONE );
         btnAddFiles.setText ( "Add File(s)" );
         btnAddFiles.addSelectionListener ( new AddFile() );
 
@@ -4417,7 +4473,7 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        MenuItem mntmCreatePost = new MenuItem ( menu_3, SWT.NONE );
+        mntmCreatePost = new MenuItem ( menu_3, SWT.NONE );
         mntmCreatePost.setText ( "Attach to Post" );
         mntmCreatePost.addSelectionListener ( new SelectionListener()
         {
@@ -4530,7 +4586,7 @@ public class SWTApp implements UpdateInterface
         tbtmShare.setControl ( composite_14 );
         composite_14.setLayout ( new GridLayout ( 2, false ) );
 
-        Button btnShare = new Button ( composite_14, SWT.NONE );
+        btnShare = new Button ( composite_14, SWT.NONE );
         btnShare.setText ( "Add a directory to share" );
         btnShare.addSelectionListener ( new SelectionListener()
         {
@@ -4683,7 +4739,7 @@ public class SWTApp implements UpdateInterface
         } );
 
 
-        Button btnDelete = new Button ( composite_14, SWT.NONE );
+        btnDelete = new Button ( composite_14, SWT.NONE );
         btnDelete.setText ( "Delete" );
         btnDelete.addSelectionListener ( new SelectionListener()
         {

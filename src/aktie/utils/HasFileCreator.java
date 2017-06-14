@@ -339,7 +339,17 @@ public class HasFileCreator
 
         CObj myid = validator.isMyUserSubscribed ( comid, creator );
 
-        if ( myid == null ) { return false; }
+        if ( myid == null )
+        {
+            o.pushString ( CObj.ERROR, "Cannot add file - not properly subscribed" );
+            return false;
+        }
+
+        if ( !validator.canHasFile ( comid, creator, wholedig, digofdigs ) )
+        {
+            o.pushString ( CObj.ERROR, "Cannot add file to this blog" );
+            return false;
+        }
 
         String id = getCommunityMemberId ( creator, comid );
         String hasfileid = getHasFileId ( id, digofdigs, wholedig );
@@ -365,6 +375,8 @@ public class HasFileCreator
                 catch ( IOException e )
                 {
                     e.printStackTrace();
+                    o.pushString ( CObj.ERROR, e.getMessage() );
+                    return false;
                 }
 
             }
@@ -425,6 +437,7 @@ public class HasFileCreator
 
                     catch ( IOException e )
                     {
+                        o.pushString ( CObj.ERROR, e.getMessage() );
                         e.printStackTrace();
                         return false;
                     }
@@ -440,6 +453,7 @@ public class HasFileCreator
 
                         catch ( IOException e )
                         {
+                            o.pushString ( CObj.ERROR, e.getMessage() );
                             e.printStackTrace();
                             return false;
                         }
@@ -483,6 +497,7 @@ public class HasFileCreator
                     catch ( Exception e )
                     {
                         e.printStackTrace();
+                        o.pushString ( CObj.ERROR, e.getMessage() );
                         return false;
                     }
 
@@ -530,7 +545,7 @@ public class HasFileCreator
         catch ( Exception e )
         {
             e.printStackTrace();
-            o.pushString ( CObj.ERROR, "Bad error: " + e.getMessage() );
+            o.pushString ( CObj.ERROR, e.getMessage() );
             e.printStackTrace();
 
             if ( s != null )

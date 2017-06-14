@@ -101,7 +101,7 @@ public class NewDirectoryShareDialog extends Dialog
 
         Label lblShareName = new Label ( container, SWT.NONE );
         lblShareName.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
-        lblShareName.setText ( "Share Name" );
+        lblShareName.setText ( "Share Name (Publicly Visible)" );
 
         textShareName = new Text ( container, SWT.BORDER );
         textShareName.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
@@ -193,7 +193,7 @@ public class NewDirectoryShareDialog extends Dialog
     @Override
     protected Point getInitialSize()
     {
-        return new Point ( 550, 277 );
+        return new Point ( 550, 344 );
     }
 
     public Label getLblMemberid()

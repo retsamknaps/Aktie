@@ -147,6 +147,7 @@ public class NewCommunityDialog extends Dialog
     }
 
     private String selectedid;
+    private Button btnBlogModeonly;
 
     public void open ( String selid )
     {
@@ -230,6 +231,10 @@ public class NewCommunityDialog extends Dialog
 
         btnPrivate = new Button ( composite, SWT.RADIO );
         btnPrivate.setText ( "Private access, name hidden to public" );
+        new Label ( container, SWT.NONE );
+
+        btnBlogModeonly = new Button ( container, SWT.CHECK );
+        btnBlogModeonly.setText ( "Blog Mode (Only you can add posts and files)" );
 
         Label lblName = new Label ( container, SWT.NONE );
         lblName.setLayoutData ( new GridData ( SWT.RIGHT, SWT.CENTER, false, false, 1, 1 ) );
@@ -312,6 +317,8 @@ public class NewCommunityDialog extends Dialog
         String sname = name.getText();
         String desc = description.getText();
         String scope = CObj.SCOPE_PRIVATE;
+        String blogmode = "false";
+
         boolean pubname = false;
 
         if ( btnPublic.getSelection() )
@@ -325,10 +332,16 @@ public class NewCommunityDialog extends Dialog
             pubname = true;
         }
 
+        if ( btnBlogModeonly.getSelection() )
+        {
+            blogmode = "true";
+        }
+
         CObj c = new CObj();
         c.setType ( CObj.COMMUNITY );
         c.pushPrivate ( CObj.NAME, sname );
         c.pushPrivate ( CObj.DESCRIPTION, desc );
+        c.pushString ( CObj.BLOGMODE, blogmode );
 
         if ( identList.getSelectionCount() == 1 )
         {
@@ -391,6 +404,11 @@ public class NewCommunityDialog extends Dialog
     public List getIdentList()
     {
         return identList;
+    }
+
+    public Button getBtnBlogModeonly()
+    {
+        return btnBlogModeonly;
     }
 
 }

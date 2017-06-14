@@ -198,7 +198,6 @@ public class NewSubscriptionProcessor extends GenericProcessor
             //Force update of connections
             if ( conMan != null )
             {
-                conMan.resetAllConnections();
                 conMan.updateAllConnections ( o );
             }
 

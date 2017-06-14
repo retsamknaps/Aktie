@@ -118,6 +118,7 @@ public class InSubProcessor extends GenericProcessor
 
                         else
                         {
+                            //Just save it anyway!  But mark it as invalid type.
                             update = true;
 
                             //We need to see if this user can subscribe.

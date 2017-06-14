@@ -187,6 +187,7 @@ public class CObj
     public static String ENABLED = "enabled";
     public static String MSGIDENT = "msgid";
     public static String PAYMENT = "hashpayment";
+    public static String BLOGMODE = "blogmode";
 
     //Field prefixes
     //Fields are added to posts.  They are specific to communities.
@@ -1551,52 +1552,21 @@ public class CObj
         dig = Utils.toString ( dg );
     }
 
-    public boolean checkSignatureX_V0 ( RSAKeyParameters key, long bm )
+
+    public boolean checkPayment ( long bm )
     {
         byte td[] = digest();
-
-        if ( bm > 0 )
-        {
-            byte tstb[] = Utils.getTarget ( bm, td.length );
-
-            if ( !Utils.checkDig ( td, tstb ) )
-            {
-                return false;
-            }
-
-        }
-
-        if ( !Arrays.equals ( td, Utils.toByteArray ( dig ) ) ) { return false; }
-
-        RSAEngine eng = new RSAEngine();
-        PKCS1Encoding enc = new PKCS1Encoding ( eng );
-        enc.init ( false, key );
-
-        try
-        {
-            byte sb[] = Utils.toByteArray ( signature );
-            byte decsig[] = enc.processBlock ( sb, 0, sb.length );
-            return Arrays.equals ( decsig, td );
-        }
-
-        catch ( Exception e )
-        {
-        }
-
-        return false;
+        return checkPayment ( bm, td );
     }
 
-
-
-    public boolean checkSignatureX ( RSAKeyParameters key, long bm )
+    public boolean checkPayment ( long bm, byte precalcdig[] )
     {
-        byte td[] = digest();
 
         if ( bm > 0 )
         {
-            byte tstb[] = Utils.getTarget ( bm, td.length );
+            byte tstb[] = Utils.getTarget ( bm, precalcdig.length );
 
-            if ( !Utils.checkDig ( td, tstb ) )
+            if ( !Utils.checkDig ( precalcdig, tstb ) )
             {
                 return false;
             }
@@ -1627,7 +1597,19 @@ public class CObj
             pushString ( CObj.PAYMENT, payment );
         }
 
-        if ( !Arrays.equals ( td, Utils.toByteArray ( dig ) ) ) { return false; }
+        if ( !Arrays.equals ( precalcdig, Utils.toByteArray ( dig ) ) ) { return false; }
+
+        return true;
+    }
+
+    public boolean checkSignatureX ( RSAKeyParameters key, long bm )
+    {
+        byte td[] = digest();
+
+        if ( !checkPayment ( bm, td ) )
+        {
+            return false;
+        }
 
         RSAEngine eng = new RSAEngine();
         PKCS1Encoding enc = new PKCS1Encoding ( eng );

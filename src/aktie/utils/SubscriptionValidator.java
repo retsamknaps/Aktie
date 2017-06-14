@@ -107,4 +107,53 @@ public class SubscriptionValidator
         return ismem;
     }
 
+    public boolean canHasFile ( String comid, String creator, String wdig, String pdig )
+    {
+        boolean canhas = true;
+        CObj community = index.getCommunity ( comid );
+
+        if ( community != null && creator != null )
+        {
+            if ( "true".equals ( community.getString ( CObj.BLOGMODE ) ) )
+            {
+                String comcreator = community.getString ( CObj.CREATOR );
+                canhas = creator.equals ( comcreator );
+
+                if ( !canhas )
+                {
+                    //We can have the file is the community creator does
+                    CObj o = index.getIdentHasFile ( comid, comcreator, wdig, pdig );
+
+                    if ( o != null && "true".equals ( o.getString ( CObj.STILLHASFILE ) ) )
+                    {
+                        canhas = true;
+                    }
+
+                }
+
+            }
+
+        }
+
+        return canhas;
+
+    }
+
+    public boolean canPost ( String comid, String creator )
+    {
+        boolean canpst = true;
+        CObj community = index.getCommunity ( comid );
+
+        if ( community != null && creator != null )
+        {
+            if ( "true".equals ( community.getString ( CObj.BLOGMODE ) ) )
+            {
+                canpst = creator.equals ( community.getString ( CObj.CREATOR ) );
+            }
+
+        }
+
+        return canpst;
+    }
+
 }

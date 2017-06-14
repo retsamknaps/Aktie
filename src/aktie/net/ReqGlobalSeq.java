@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 
 import aktie.GenericProcessor;
 import aktie.data.CObj;
-import aktie.data.IdentityData;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
@@ -25,7 +24,7 @@ public class ReqGlobalSeq extends GenericProcessor
         index = i;
     }
 
-    private void filterObjects ( CObjList seqobj, String scomid, String typ, long rn )
+    private void filterObjects ( CObjList seqobj, String scomid, String typ, long rn, long last )
     {
         long seqnum = -1;
         CObjList rlst = new CObjList();
@@ -133,11 +132,7 @@ public class ReqGlobalSeq extends GenericProcessor
 
         }
 
-        //If seqobj.size is greater than MAXGLOBALSEQUENCECOUNT, the sequence
-        //number would change during looping over the list so we would send a seq
-        //number, but the last sequence may not be complete, so do not send
-        //the remaining list.
-        if ( seqnum != -1 && seqobj.size() < IdentityData.MAXGLOBALSEQUENCECOUNT )
+        if ( seqnum != -1 && seqnum <= last )
         {
             if ( rlst.size() > 0 )
             {
@@ -220,7 +215,7 @@ public class ReqGlobalSeq extends GenericProcessor
                         log ( " REQ PUBS: " + publast + " sz: " + seqobj.size() );
                     }
 
-                    filterObjects ( seqobj, null, CObj.SEQNUM, publast );
+                    filterObjects ( seqobj, null, CObj.SEQNUM, publast, curseq );
 
                     //Get all objects at that sequence number.
                     seqobj = index.getGlobalMemSeqNumbers (
@@ -232,7 +227,7 @@ public class ReqGlobalSeq extends GenericProcessor
                         log ( " REQ MEM: " + memlast + " sz: " + seqobj.size() );
                     }
 
-                    filterObjects ( seqobj, null, CObj.MEMSEQNUM, memlast );
+                    filterObjects ( seqobj, null, CObj.MEMSEQNUM, memlast, curseq );
 
                     /*
                         //Get all objects at that sequence number.
@@ -262,7 +257,7 @@ public class ReqGlobalSeq extends GenericProcessor
                         log ( " REQ COMDATA: " + publast + " sz: " + seqobj.size() + " comid: " + comid );
                     }
 
-                    filterObjects ( seqobj, comid, CObj.SEQNUM, publast );
+                    filterObjects ( seqobj, comid, CObj.SEQNUM, publast, curseq );
                 }
 
             }

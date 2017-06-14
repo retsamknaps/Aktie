@@ -25,13 +25,15 @@ public class InDigProcessor extends GenericProcessor
     {
         if ( CObj.OBJDIG.equals ( b.getType() ) )
         {
+
             String d = b.getDig();
-            log.info ( "RCV DIG LIST: ME: " + conThread.getLocalDestination().getIdentity().getId() +
-                       " FROM: " + conThread.getEndDestination().getId() + " DIG: " + d );
 
             if ( d != null )
             {
                 CObj o = index.getByDig ( d );
+
+                log.info ( "RCV DIG LIST: ME: " + conThread.getLocalDestination().getIdentity().getId() +
+                           " FROM: " + conThread.getEndDestination().getId() + " DIG: " + d + " obj: " + o );
 
                 if ( o == null )
                 {

@@ -254,7 +254,7 @@ public class NewCommunityProcessor extends GenericProcessor
 
             if ( conMan != null )
             {
-                conMan.resetAllConnections();
+                conMan.updateAllConnections ( o );
             }
 
             guicallback.update ( o );

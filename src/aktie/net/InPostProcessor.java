@@ -51,6 +51,13 @@ public class InPostProcessor extends GenericProcessor
                 String comid = b.getString ( CObj.COMMUNITYID );
                 String creatorid = b.getString ( CObj.CREATOR );
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
+
+                if ( !subvalidator.canPost ( comid, creatorid ) )
+                {
+                    //Cannot post to blog not owner of
+                    return true;
+                }
+
                 CObj mysubid = subvalidator.isMyUserSubscribed ( comid, destIdent.getId() );
 
                 if ( comid != null && creatorid != null && mysubid != null && seqnum != null )

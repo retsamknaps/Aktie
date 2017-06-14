@@ -126,12 +126,50 @@ public class SpamTool
 
         CObj ident = index.getIdentity ( id );
 
-        if ( ident == null )
+        return check ( key, ident, c );
+    }
+
+    private boolean checkSpamEx ( CObj c )
+    {
+        //Check if user is trusted by exception
+        Long seq = c.getNumber ( CObj.SEQNUM );
+        String comid = c.getString ( CObj.COMMUNITYID );
+        String id = c.getString ( CObj.CREATOR );
+
+        if ( comid != null && !CObj.SUBSCRIPTION.equals ( c.getType() ) )
         {
-            return false;
+            id = HasFileCreator.getCommunityMemberId ( id, comid );
         }
 
-        return check ( key, ident, c );
+        CObj spex = index.getById ( EXSPAMPREFIX + id );
+
+        if ( spex != null && seq != null )
+        {
+            Long v = spex.getNumber ( c.getType() );
+
+            if ( v != null )
+            {
+                if ( v >= seq )
+                {
+                    return false;
+                }
+
+            }
+
+        }
+
+        return true;
+    }
+
+    public boolean checkPayment ( CObj c )
+    {
+        if ( !checkSpamEx ( c ) )
+        {
+            return true;
+        }
+
+        long target = Wrapper.getCheckPayment();
+        return c.checkPayment ( target );
     }
 
     public boolean check ( RSAKeyParameters key, CObj ident, CObj c )
@@ -144,53 +182,32 @@ public class SpamTool
             checkpayment = false;
         }
 
-        Long rnk = ident.getPrivateNumber ( CObj.PRV_USER_RANK );
-
-        if ( rnk != null && rnk > Wrapper.getPaymentRank() )
+        if ( ident != null )
         {
-            checkpayment = false;
+            Long rnk = ident.getPrivateNumber ( CObj.PRV_USER_RANK );
+
+            if ( rnk != null && rnk > Wrapper.getPaymentRank() )
+            {
+                checkpayment = false;
+            }
+
         }
 
         if ( checkpayment )
         {
-            //Check if user is trusted by exception
-            Long seq = c.getNumber ( CObj.SEQNUM );
-            String comid = c.getString ( CObj.COMMUNITYID );
-            String id = ident.getId();
-
-            if ( comid != null && !CObj.SUBSCRIPTION.equals ( c.getType() ) )
-            {
-                id = HasFileCreator.getCommunityMemberId ( id, comid );
-            }
-
-            CObj spex = index.getById ( EXSPAMPREFIX + id );
-
-            if ( spex != null && seq != null )
-            {
-                Long v = spex.getNumber ( c.getType() );
-
-                if ( v != null )
-                {
-                    if ( v >= seq )
-                    {
-                        checkpayment = false;
-                    }
-
-                }
-
-            }
-
+            checkpayment = checkSpamEx ( c );
         }
 
         if ( checkpayment )
         {
             long target = Wrapper.getCheckPayment();
 
-            if ( target == Wrapper.OLDPAYMENT_V0 )
-            {
-                boolean chkv = c.checkSignatureX_V0 ( key, target );
-                return chkv;
-            }
+            //V0 payment should never be used anymore
+            //if ( target == Wrapper.OLDPAYMENT_V0 )
+            //{
+            //    boolean chkv = c.checkSignatureX_V0 ( key, target );
+            //    return chkv;
+            //}
 
             boolean chkv = c.checkSignatureX ( key, target );
             return chkv;

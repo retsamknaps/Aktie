@@ -292,27 +292,6 @@ public class DestinationThread implements Runnable
 
     }
 
-    public void poke()
-    {
-
-        List<ConnectionThread> tl = new LinkedList<ConnectionThread>();
-
-        synchronized ( connections )
-        {
-            for ( List<ConnectionThread> l : connections.values() )
-            {
-                tl.addAll ( l );
-            }
-
-        }
-
-        for ( ConnectionThread t : tl )
-        {
-            t.poke();
-        }
-
-    }
-
     public boolean isConnected ( String id, boolean filemode )
     {
         synchronized ( connections )
