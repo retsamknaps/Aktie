@@ -50,7 +50,7 @@ public class SubscriptionValidator
         return myid;
     }
 
-    public CObj isUserSubscribed ( String comid, String creator )
+    public CObj isUserSubscribedNO ( String comid, String creator )
     {
         //Get the creator and make sure it is this user
         if ( creator == null )

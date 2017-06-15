@@ -32,6 +32,7 @@ import aktie.user.NewSubscriptionProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.user.ShareManager;
 import aktie.user.UsrCancelFileProcessor;
+import aktie.user.UsrReqComProcessor;
 import aktie.user.UsrReqFileProcessor;
 import aktie.user.UsrReqSetRankProcessor;
 import aktie.user.UsrReqShareProcessor;
@@ -112,7 +113,7 @@ public class Node
                 index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool );
         usdp.setTmpDir ( tmpDir );
         userQueue.addProcessor ( usdp );
-        //userQueue.addProcessor ( new UsrReqComProcessor ( identManager ) );
+        userQueue.addProcessor ( new UsrReqComProcessor ( identManager, index ) );
         userQueue.addProcessor ( new UsrReqFileProcessor ( requestHandler, usrCallback ) );
         //userQueue.addProcessor ( new UsrReqHasFileProcessor ( identManager ) );
         //userQueue.addProcessor ( new UsrReqIdentityProcessor ( identManager ) );

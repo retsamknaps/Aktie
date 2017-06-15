@@ -64,9 +64,7 @@ public class InPostProcessor extends GenericProcessor
                 {
                     boolean isnew = ( null == index.getByDig ( b.getDig() ) );
 
-                    CObj usub = subvalidator.isUserSubscribed ( comid, creatorid );
-
-                    if ( usub != null )
+                    if ( subvalidator.canSubscribe ( comid, creatorid ) )
                     {
 
                         try

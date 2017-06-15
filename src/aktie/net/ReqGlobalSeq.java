@@ -73,6 +73,14 @@ public class ReqGlobalSeq extends GenericProcessor
 
                     if ( comid != null )
                     {
+
+                        if ( Level.INFO.equals ( log.getLevel() ) )
+                        {
+                            log ( "SEND COM DAT: comid: " + comid + " contains: " +
+                                  conThread.getSubs().contains ( comid ) + " " +
+                                  conThread.getSubs() );
+                        }
+
                         if ( conThread.getSubs().contains ( comid ) )
                         {
                             sendDig ( rlst, o, rn, seqnum );
@@ -195,15 +203,15 @@ public class ReqGlobalSeq extends GenericProcessor
             long curseq = identManager.getMyLastGlobalSequenceNumber (
                               conThread.getLocalDestination().getIdentity().getId() );
 
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log ( " REQ GBL SEQ: " + publast + " " + memlast + " comid: " + comid ); //+ " " + sublast );
+            }
+
             if ( comid == null )
             {
                 if ( publast != null && memlast != null )  // && sublast != null )
                 {
-
-                    if ( Level.INFO.equals ( log.getLevel() ) )
-                    {
-                        log ( " REQ GBL SEQ: " + publast + " " + memlast ); //+ " " + sublast );
-                    }
 
                     //Get all objects at that sequence number.
                     CObjList seqobj = index.getGlobalPubSeqNumbers (

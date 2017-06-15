@@ -49,6 +49,8 @@ public class ConnectionThread implements Runnable, GuiCallback
     public static int MAXQUEUESIZE = 1000; //Long lists should be in CObjList each one could have open indexreader!
     public static long GUIUPDATEPERIOD = 10L * 1000L; // 10 seconds
     public static long MINGLOBALSEQDELAY = 1L * 60L * 1000L; //1 minute.
+    //This is added becuase of a bug in the streaming library.
+    public static long MAXOUTRATE = ( 1024L * 1024L ) / 1000L; //1MB per second
 
     private boolean stop;
     private boolean fileOnly;
@@ -1175,6 +1177,8 @@ public class ConnectionThread implements Runnable, GuiCallback
             outstream.flush();
         }
 
+        private long lastRateCheck = 0;
+        private long lastOutBytes = 0;
         private void sendCObjNoFlush ( CObj c ) throws IOException
         {
             lastSent = c.getType();
@@ -1185,6 +1189,41 @@ public class ConnectionThread implements Runnable, GuiCallback
             outBytes += ob.length;
             conListener.bytesSent ( ob.length );
             outstream.write ( ob );
+
+            //Bug in streaming code when connecting
+            //to local destination on same router
+            long ct = System.currentTimeMillis();
+            long ratedf = outBytes - lastOutBytes;
+            long timedf = ct - lastRateCheck;
+
+            if ( timedf > 0 )
+            {
+                long rate = ratedf / timedf;
+
+                if ( rate > MAXOUTRATE )
+                {
+                    lastOutBytes = outBytes;
+                    lastRateCheck = ct;
+
+                    if ( doLog() )
+                    {
+                        appendOutput ( "THROTTLING rate " + rate + " > " + MAXOUTRATE );
+                    }
+
+                    try
+                    {
+                        Thread.sleep ( 100 );
+                    }
+
+                    catch ( InterruptedException e )
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
         }
 
         private void seeIfUseless()

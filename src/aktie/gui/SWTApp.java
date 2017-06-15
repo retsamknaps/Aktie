@@ -934,22 +934,6 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    private void updateCommunity ( CObj cm )
-    {
-        if ( cm != null && cm.getDig() != null )
-        {
-            CObj u = new CObj();
-            u.setType ( CObj.USR_HASFILE_UPDATE );
-            u.pushString ( CObj.COMMUNITYID, cm.getDig() );
-            getNode().enqueue ( u );
-            u = new CObj();
-            u.setType ( CObj.USR_POST_UPDATE );
-            u.pushString ( CObj.COMMUNITYID, cm.getDig() );
-            getNode().enqueue ( u );
-        }
-
-    }
-
     private void generateSpamEx ( CObj devid, boolean save )
     {
         if ( devid != null )
@@ -964,56 +948,6 @@ public class SWTApp implements UpdateInterface
             }
 
             getNode().enqueue ( u );
-        }
-
-    }
-
-    private void updateAll()
-    {
-        CObj u = new CObj();
-        u.setType ( CObj.USR_IDENTITY_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_COMMUNITY_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_MEMBER_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_SUB_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_HASFILE_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_POST_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_PRVMSG_UPDATE );
-        getNode().enqueue ( u );
-
-        u = new CObj();
-        u.setType ( CObj.USR_SPAMEX_UPDATE );
-        getNode().enqueue ( u );
-    }
-
-    class ManualUpdate implements SelectionListener
-    {
-        @Override
-        public void widgetSelected ( SelectionEvent e )
-        {
-            updateAll();
-        }
-
-        @Override
-        public void widgetDefaultSelected ( SelectionEvent e )
-        {
         }
 
     }
@@ -2874,10 +2808,6 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        MenuItem mntmStartManualUpdate = new MenuItem ( menu_1, SWT.NONE );
-        mntmStartManualUpdate.setText ( "Legacy Update" );
-        mntmStartManualUpdate.addSelectionListener ( new ManualUpdate() );
-
         MenuItem mntmI2Popts = new MenuItem ( menu_1, SWT.NONE );
         mntmI2Popts.setText ( "I2P Options" );
         mntmI2Popts.addSelectionListener ( new SelectionListener()
@@ -3376,16 +3306,20 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-        MenuItem mntmRefCom = new MenuItem ( menu_2, SWT.NONE );
-        mntmRefCom.setText ( "Refresh Community" );
-        mntmRefCom.addSelectionListener ( new SelectionListener()
+        MenuItem mntmRefetch = new MenuItem ( menu_2, SWT.NONE );
+        mntmRefetch.setText ( "Re-Download All Data" );
+        mntmRefetch.addSelectionListener ( new SelectionListener()
         {
             @Override
             public void widgetSelected ( SelectionEvent e )
             {
                 if ( selectedIdentity != null && selectedCommunity != null )
                 {
-                    updateCommunity ( selectedCommunity );
+                    CObj co = new CObj();
+                    co.setType ( CObj.USR_COMMUNITY_UPDATE );
+                    co.pushString ( CObj.COMMUNITYID, selectedCommunity.getDig() );
+                    node.enqueue ( co );
+
                 }
 
             }
@@ -3757,27 +3691,6 @@ public class SWTApp implements UpdateInterface
                 else
                 {
                     advancedDialog.open ( selectedCommunity, selectedIdentity );
-                }
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        Button btnRefresh = new Button ( composite_7, SWT.NONE );
-        btnRefresh.setText ( "Refresh" );
-        btnRefresh.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                if ( selectedIdentity != null && selectedCommunity != null )
-                {
-                    updateCommunity ( selectedCommunity );
                 }
 
             }
@@ -4336,27 +4249,6 @@ public class SWTApp implements UpdateInterface
 
         } );
 
-
-        Button btnRefresh_1 = new Button ( composite_9, SWT.NONE );
-        btnRefresh_1.setText ( "Refresh" );
-        btnRefresh_1.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                if ( selectedIdentity != null && selectedCommunity != null )
-                {
-                    updateCommunity ( selectedCommunity );
-                }
-
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
 
         sashForm.setWeights ( new int[] {1, 4} );
 

@@ -210,9 +210,11 @@ public class NewSubscriptionProcessor extends GenericProcessor
                     try
                     {
                         CObj sb = clst.get ( c );
+
+                        String mine = sb.getPrivate ( CObj.MINE );
                         String sc = sb.getString ( CObj.CREATOR );
 
-                        if ( sc != null )
+                        if ( sc != null && ( !"true".equals ( mine ) ) )
                         {
                             identManager.updateIdentityCommunitySeqNumber ( sc, comid, 0, true );
                         }
