@@ -1081,12 +1081,6 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     }
 
     @Override
-    public IdentityCache getIdCache()
-    {
-        return app.getIdCache();
-    }
-
-    @Override
     public TableViewer getTableViewer()
     {
         return table.getTableViewer();

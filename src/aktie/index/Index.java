@@ -3,9 +3,11 @@ package aktie.index;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,11 +40,19 @@ public class Index implements Runnable
     private Analyzer analyzer;
     private IndexWriter writer;
     //private AktieSearcher searcher;
+    
+	/**
+	 * Lookup cache for identity names.
+	 */
+	private Map<String, String> idToIdentityNameMap;
+
+
 
     private File indexdir;
 
     public Index()
     {
+    	idToIdentityNameMap = new HashMap<String, String>();
     }
 
     public static List<CObj> list ( CObjList cl )
@@ -512,6 +522,41 @@ public class Index implements Runnable
 
         return search ( builder.build(), Integer.MAX_VALUE );
     }
+    
+	/**
+	 * Get the display name for an identity.
+	 * Queried names are cached to speed up further lookups.
+	 * 
+	 * @param identityID
+	 *            The ID of the identity.
+	 * @return The display name of the identity.
+	 */
+	public String getDisplayNameForIdentity(String identityID) {
+		String name = null;
+
+		synchronized (idToIdentityNameMap) {
+			name = idToIdentityNameMap.get(identityID);
+		}
+
+		if (name == null) {
+			CObj identity = getIdentity(identityID);
+
+			if (identity != null) {
+				name = identity.getDisplayName();
+
+				if (name != null) {
+					synchronized (idToIdentityNameMap) {
+						idToIdentityNameMap.put(identityID, name);
+					}
+
+				}
+
+			}
+
+		}
+
+		return name;
+	}
 
     public CObjList getZeroIdentities()
     {
@@ -832,6 +877,44 @@ public class Index implements Runnable
 
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
+    
+	/**
+	 * Queries all members of a community. Retrieves member identities as
+	 * {@code CObj} from {@code Index}.
+	 * 
+	 * @param communityID
+	 *            The ID of the community.
+	 * @param sort
+	 *            Lucene {@code Sort} specifying the sort order of the result
+	 *            list or {@code null} if no sorting is desired.
+	 * @return A {@code CObjList} referencing the queried members.
+	 */
+	public CObjList getMembers(String communityID, Sort sort) {
+		CObjList memberships = getMemberships(communityID, null);
+
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+		Term typeTerm = new Term(CObj.PARAM_TYPE, CObj.IDENTITY);
+		builder.add(new TermQuery(typeTerm), BooleanClause.Occur.MUST);
+
+		BooleanQuery.Builder idQuery = new BooleanQuery.Builder();
+
+		for (int i = 0; i < memberships.size(); i++) {
+			CObj membership;
+			try {
+				membership = memberships.get(i);
+			} catch (IOException e) {
+				e.printStackTrace();
+				continue;
+			}
+			String id = membership.getPrivate(CObj.MEMBERID);
+			Term idTerm = new Term(CObj.PARAM_ID, id);
+			idQuery.add(new TermQuery(idTerm), BooleanClause.Occur.SHOULD);
+		}
+		builder.add(idQuery.build(), BooleanClause.Occur.MUST);
+		memberships.close();
+		return search(builder.build(), Integer.MAX_VALUE, sort);
+	}
 
     public CObjList getMyMemberships ( Sort s )
     {
@@ -1492,6 +1575,43 @@ public class Index implements Runnable
 
         return search ( builder.build(), Integer.MAX_VALUE, s );
     }
+    
+	/**
+	 * Queries all subscribers of a community. Retrieves subscriber identities
+	 * as {@code CObj} from {@code Index}.
+	 * 
+	 * @param communityID
+	 *            The ID of the community.
+	 * @param sort
+	 *            Lucene {@code Sort} specifying the sort order of the result
+	 *            list or {@code null} if no sorting is desired.
+	 * @return A {@code CObjList} referencing the queried subscribers.
+	 */
+	public CObjList getSubscribers(String communityID, Sort sort) {
+		CObjList subscriptions = getSubscriptions(communityID, null);
+
+		BooleanQuery.Builder builder = new BooleanQuery.Builder();
+
+		Term typeTerm = new Term(CObj.PARAM_TYPE, CObj.IDENTITY);
+		builder.add(new TermQuery(typeTerm), BooleanClause.Occur.MUST);
+
+		BooleanQuery.Builder idQuery = new BooleanQuery.Builder();
+
+		for (int i = 0; i < subscriptions.size(); i++) {
+			CObj subscription;
+			try {
+				subscription = subscriptions.get(i);
+			} catch (IOException e) {
+				continue;
+			}
+			String id = subscription.getString(CObj.CREATOR);
+			Term idTerm = new Term(CObj.PARAM_ID, id);
+			idQuery.add(new TermQuery(idTerm), BooleanClause.Occur.SHOULD);
+		}
+		builder.add(idQuery.build(), BooleanClause.Occur.MUST);
+		subscriptions.close();
+		return search(builder.build(), Integer.MAX_VALUE, sort);
+	}
 
     public CObjList getSubsUnsubs ( String comid )
     {

@@ -104,8 +104,8 @@ public class PrivateMessageDialog extends Dialog
                     lblMsgTo != null && !lblMsgTo.isDisposed() &&
                     SubjectText != null && !SubjectText.isDisposed() )
             {
-                lblFrm.setText ( app.getIdCache().getName ( fromIdent ) );
-                lblMsgTo.setText ( app.getIdCache().getName ( toIdent ) );
+                lblFrm.setText ( app.getNode().getIndex().getDisplayNameForIdentity ( fromIdent ) );
+                lblMsgTo.setText ( app.getNode().getIndex().getDisplayNameForIdentity ( toIdent ) );
 
                 if ( replyToMessage != null )
                 {

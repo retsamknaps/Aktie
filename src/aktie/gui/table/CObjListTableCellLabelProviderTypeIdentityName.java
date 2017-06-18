@@ -4,18 +4,18 @@ import org.apache.lucene.search.SortField;
 
 import aktie.data.CObj;
 import aktie.gui.CObjListGetter;
-import aktie.gui.IdentityCache;
+import aktie.index.Index;
 
 public class CObjListTableCellLabelProviderTypeIdentityName extends CObjListTableCellLabelProvider
 {
 
-    private IdentityCache identityCache;
+    private Index index;
 
-    public CObjListTableCellLabelProviderTypeIdentityName ( String key, boolean privateAttribute, String highlightKey, IdentityCache idCache )
+    public CObjListTableCellLabelProviderTypeIdentityName ( String key, boolean privateAttribute, String highlightKey, Index index )
     {
         super ( key, privateAttribute, SortField.Type.STRING, highlightKey );
 
-        identityCache = idCache;
+        this.index = index;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class CObjListTableCellLabelProviderTypeIdentityName extends CObjListTabl
 
             else
             {
-                id = identityCache.getName ( id );
+                id = index.getDisplayNameForIdentity ( id );
             }
 
             return id;
