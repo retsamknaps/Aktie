@@ -1,16 +1,20 @@
 package aktie.utils;
 
 import aktie.crypto.Utils;
+import aktie.data.CObj;
+import aktie.index.CObjList;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.channels.FileChannel;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bouncycastle.crypto.digests.SHA256Digest;
+import org.json.JSONObject;
 
 public class FUtils
 {
@@ -181,6 +185,32 @@ public class FUtils
     {
         Matcher m = IS_FILE_EXT_PATTERN.matcher ( str );
         return m.matches();
+    }
+
+    public static void saveJSONFILE ( File f, CObjList ilst )
+    {
+        if ( ilst.size() == 0 ) { return; }
+
+        try
+        {
+            PrintWriter pw = new PrintWriter ( new FileOutputStream ( f ) );
+
+            for ( int c = 0; c < ilst.size(); c++ )
+            {
+                CObj i = ilst.get ( c );
+                JSONObject jo = i.getJSON();
+                jo.write ( pw );
+                pw.println();
+            }
+
+            pw.close();
+        }
+
+        catch ( Exception e )
+        {
+            e.printStackTrace();
+        }
+
     }
 
 }

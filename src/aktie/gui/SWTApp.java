@@ -614,28 +614,7 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
             if ( node != null && selected != null )
             {
-                try
-                {
-                    PrintWriter pw = new PrintWriter ( new FileOutputStream ( new File ( selected ) ) );
-                    CObjList ilst = node.getNode().getIndex().getIdentities();
-
-                    for ( int c = 0; c < ilst.size(); c++ )
-                    {
-                        CObj i = ilst.get ( c );
-                        JSONObject jo = i.getJSON();
-                        jo.write ( pw );
-                        pw.println();
-                    }
-
-                    ilst.close();
-                    pw.close();
-                }
-
-                catch ( Exception e )
-                {
-
-                }
-
+                node.saveSeeds ( new File ( selected ) );
             }
 
         }

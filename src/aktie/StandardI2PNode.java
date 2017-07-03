@@ -21,11 +21,13 @@ import aktie.net.ConnectionListener;
 import aktie.net.Net;
 import aktie.net.RawNet;
 import aktie.upgrade.UpgradeControllerCallback;
+import aktie.utils.FUtils;
 
 public class StandardI2PNode
 {
 
     public static boolean TESTNODE = false;
+    public static boolean TESTLOADDEFAULTS = false;
 
     private String nodeDir;
     private Node node;
@@ -108,7 +110,7 @@ public class StandardI2PNode
                 co.pushString ( CObj.NAME, "anon" );
                 node.enqueue ( co );
 
-                if ( !TESTNODE )
+                if ( !TESTNODE || TESTLOADDEFAULTS )
                 {
                     loadDefaults();
                 }
@@ -340,6 +342,20 @@ public class StandardI2PNode
 
         }
 
+    }
+
+    public void saveSeeds ( File f )
+    {
+        CObjList ilst = node.getIndex().getIdentities();
+        FUtils.saveJSONFILE ( f, ilst );
+        ilst.close();
+    }
+
+    public void saveValidCommunities ( File f )
+    {
+        CObjList ilst = node.getIndex().getValidCommunities();
+        FUtils.saveJSONFILE ( f, ilst );
+        ilst.close();
     }
 
     public void closeNode()

@@ -148,8 +148,7 @@ public class TestNode implements UpgradeControllerCallback
 
     }
 
-    @Test
-    public void testNode()
+    public static void setTestConsts()
     {
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
@@ -170,7 +169,12 @@ public class TestNode implements UpgradeControllerCallback
         IdentityData.MAXGLOBALSEQUENCECOUNT = 20;
         IdentityData.MAXGLOBALSEQUENCETIME = 1000L;
         ConnectionThread.MINGLOBALSEQDELAY = 1000L;
+    }
 
+    @Test
+    public void testNode()
+    {
+        setTestConsts();
 
         CallbackIntr cb0 = new CallbackIntr();
         CallbackIntr cb1 = new CallbackIntr();
