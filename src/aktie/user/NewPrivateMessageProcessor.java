@@ -11,11 +11,11 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.PrivateMsgIdentity;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -28,12 +28,12 @@ public class NewPrivateMessageProcessor extends GenericProcessor
 
     private Index index;
     private HH2Session session;
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private NewPushProcessor push;
     private SpamTool spamtool;
     private IdentityManager identManager;
 
-    public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, SpamTool st, GuiCallback gc )
+    public NewPrivateMessageProcessor ( HH2Session s, Index i, NewPushProcessor p, SpamTool st, UpdateCallback gc )
     {
         session = s;
         index = i;

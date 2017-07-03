@@ -7,21 +7,21 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.CObjProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 
 public class InFragProcessor implements CObjProcessor
 {
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
 
-    public InFragProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public InFragProcessor ( HH2Session s, Index i, UpdateCallback cb )
     {
         index = i;
         session = s;

@@ -2,13 +2,14 @@ package aktie.gui;
 
 import org.eclipse.jface.viewers.TableViewer;
 
+import aktie.IdentityCache;
 import aktie.data.CObj;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 public interface AddFieldInterface
 {
 
-    public Index getIndex();
+    public IndexInterface getIndex();
 
     public CObj getCommunity();
 

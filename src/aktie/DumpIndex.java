@@ -6,7 +6,6 @@ import java.io.IOException;
 import org.json.JSONObject;
 
 import aktie.data.CObj;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 

@@ -16,10 +16,10 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerDropAdapter;
 
+import aktie.IdentityCache;
 import aktie.data.CObj;
-import aktie.gui.IdentityCache;
 import aktie.index.CObjList;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 public class SubTreeModel implements ITreeContentProvider
 {
@@ -34,13 +34,13 @@ public class SubTreeModel implements ITreeContentProvider
     private Map<Long, CObj> fullObj;
     private Map<String, SubTreeEntity> idMap;
     private SubTreeEntityDBInterface db;
-    private Index index;
+    private IndexInterface index;
     private IdentityCache cache;
     private int type;
     private int treeId;
 
 
-    public SubTreeModel ( Index idx, SubTreeEntityDBInterface d, int t, int tid )
+    public SubTreeModel ( IndexInterface idx, SubTreeEntityDBInterface d, int t, int tid )
     {
         db = d;
         index = idx;

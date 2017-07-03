@@ -128,7 +128,7 @@ public class LauncherDialog extends Dialog
         table = new LauncherTable ( container, app );
         table.setLayoutData ( BorderLayout.CENTER );
 
-        model = new LauncherContentModel ( app.getNode().getSession() );
+        model = new LauncherContentModel ( app.getSession() );
 
         Menu menu_2 = new Menu ( table.getTable() );
         table.setMenu ( menu_2 );

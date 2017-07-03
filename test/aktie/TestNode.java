@@ -15,14 +15,13 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.net.ConnectionFileManager;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
 import aktie.net.RawNet;
+import aktie.upgrade.UpgradeControllerCallback;
 import aktie.user.ShareManager;
 import aktie.utils.FUtils;
 
@@ -31,10 +30,10 @@ import org.apache.lucene.search.SortedNumericSortField;
 import org.json.JSONObject;
 import org.junit.Test;
 
-public class TestNode
+public class TestNode implements UpgradeControllerCallback
 {
 
-    public class CallbackIntr implements GuiCallback
+    public class CallbackIntr implements UpdateCallback
     {
 
         public ConcurrentLinkedQueue<Object> oqueue = new ConcurrentLinkedQueue<Object>();
@@ -206,11 +205,11 @@ public class TestNode
             FUtils.deleteDir ( new File ( "testnode3" ) );
             FUtils.deleteDir ( new File ( "testnode4" ) );
 
-            Node n0 = new Node ( "testnode0", net0, cb0, cb0, cn0 );
-            Node n1 = new Node ( "testnode1", net1, cb1, cb1, cn1 );
-            Node n2 = new Node ( "testnode2", net2, cb2, cb2, cn2 );
-            Node n3 = new Node ( "testnode3", net3, cb3, cb3, cn3 );
-            Node n4 = new Node ( "testnode4", net4, cb4, cb4, cn4 );
+            Node n0 = new Node ( "testnode0", net0, cb0, cb0, cn0, this );
+            Node n1 = new Node ( "testnode1", net1, cb1, cb1, cn1, this );
+            Node n2 = new Node ( "testnode2", net2, cb2, cb2, cn2, this );
+            Node n3 = new Node ( "testnode3", net3, cb3, cb3, cn3, this );
+            Node n4 = new Node ( "testnode4", net4, cb4, cb4, cn4, this );
 
             System.out.println ( "CREATE IDENTIES.............................." );
             //CObj node0a =
@@ -261,7 +260,6 @@ public class TestNode
             n3dat = cb3.oqueue.poll();
             assertEquals ( "node3b", ( ( CObj ) n3dat ).getString ( CObj.NAME ) );
 
-            n0.getIndex().forceNewSearcher();
             CObjList clist = n0.getIndex().getMyIdentities();
 
             for ( int c = 0; c < clist.size(); c++ )
@@ -342,11 +340,6 @@ public class TestNode
             }
 
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             System.out.println ( "UPDATE NODES.............................." );
             CObj updateIdent = new CObj();
             updateIdent.setType ( CObj.USR_IDENTITY_UPDATE );
@@ -366,11 +359,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updateIdent );
 
             try
@@ -382,11 +370,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             CObjList clst = n0.getIndex().getIdentities();
             assertEquals ( 8, clst.size() );
@@ -589,11 +572,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n1.enqueue ( memupdate );
             n2.enqueue ( memupdate );
             n3.enqueue ( memupdate );
@@ -607,11 +585,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             clist = n1.getIndex().getMemberships ( n0seed.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clist.size() );
@@ -661,7 +634,6 @@ public class TestNode
             n0.enqueue ( sub0 );
 
             cb0.waitForUpdate();
-            n0.getIndex().forceNewSearcher();
             co = n0.getIndex().getSubscription ( com0n0.getDig(), n0seed.getId() );
             assertNotNull ( co );
             assertEquals ( com0n0.getDig(), co.getString ( CObj.COMMUNITYID ) );
@@ -685,11 +657,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.closeAllConnections();
             n1.closeAllConnections();
             n2.closeAllConnections();
@@ -710,11 +677,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
@@ -730,16 +692,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
@@ -754,17 +706,11 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             clist = n1.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
             clist.close();
 
-            n2.getIndex().forceNewSearcher();
             clist = n2.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 1, clist.size() );
             co = clist.get ( 0 );
@@ -772,7 +718,6 @@ public class TestNode
             assertEquals ( com0n0.getDig(), co.getString ( CObj.COMMUNITYID ) );
             clist.close();
 
-            n3.getIndex().forceNewSearcher();
             clist = n3.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
             clist.close();
@@ -801,7 +746,6 @@ public class TestNode
             n2.enqueue ( mem2 );
 
             cb2.waitForUpdate();
-            n2.getIndex().forceNewSearcher();
 
             clist = n2.getIndex().getMemberships ( com0n0.getDig(), null );
             System.out.println ( "N2*: " + clist.size() );
@@ -859,10 +803,6 @@ public class TestNode
                     e.printStackTrace();
                 }
 
-                n0.getIndex().forceNewSearcher();
-                n1.getIndex().forceNewSearcher();
-                n2.getIndex().forceNewSearcher();
-                n3.getIndex().forceNewSearcher();
             }
 
 
@@ -1011,11 +951,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             updatesubs = new CObj();
             updatesubs.setType ( CObj.USR_SUB_UPDATE );
             n1.enqueue ( updatesubs );
@@ -1031,11 +966,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             updatesubs = new CObj();
             updatesubs.setType ( CObj.USR_SUB_UPDATE );
@@ -1054,11 +984,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             updatesubs = new CObj();
             updatesubs.setType ( CObj.USR_SUB_UPDATE );
             n0.enqueue ( updatesubs );
@@ -1075,11 +1000,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             clist = n1.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
@@ -1110,11 +1030,6 @@ public class TestNode
 
             cb3.waitForUpdate();
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             co = n3.getIndex().getSubscription ( com0n0.getDig(), node3b.getId() );
             assertNotNull ( co );
             assertEquals ( com0n0.getDig(), co.getString ( CObj.COMMUNITYID ) );
@@ -1139,11 +1054,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
@@ -1159,11 +1069,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
@@ -1178,11 +1083,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
@@ -1199,11 +1099,6 @@ public class TestNode
                 e.printStackTrace();
             }
 
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
-
             n0.enqueue ( updatesubs );
             n1.enqueue ( updatesubs );
             n2.enqueue ( updatesubs );
@@ -1218,11 +1113,6 @@ public class TestNode
             {
                 e.printStackTrace();
             }
-
-            n0.getIndex().forceNewSearcher();
-            n1.getIndex().forceNewSearcher();
-            n2.getIndex().forceNewSearcher();
-            n3.getIndex().forceNewSearcher();
 
             clist = n0.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 2, clist.size() );
@@ -1870,9 +1760,6 @@ public class TestNode
                 e1.printStackTrace();
             }
 
-
-            n4.getIndex().forceNewSearcher();
-
             try
             {
                 Thread.sleep ( ConnectionManager2.ALLOWGLOBALAFTERSTARTUP / 3 );
@@ -2107,7 +1994,7 @@ public class TestNode
 
             FUtils.deleteDir ( new File ( "testnode0" ) );
             FUtils.deleteDir ( new File ( "testnode0restore" ) );
-            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0 );
+            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0, this );
             clst = n0.getIndex().getAllCObj();
             assertEquals ( 0, clst.size() );
             clst.close();
@@ -2118,7 +2005,7 @@ public class TestNode
             bres.loadIdentity ( new File ( "testnode0.backup.dat" ) );
             bres.close();
 
-            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0 );
+            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0, this );
 
             clst = n1.getIndex().getMyIdentities();
             assertTrue ( clst.size() > 0 );
@@ -2266,7 +2153,7 @@ public class TestNode
             rdb.rebuild ( "testnode3/h2", "testnode3/index" );
             rdb.close();
 
-            n3 = new Node ( "testnode3", net3, cb3, cb3, cn3 );
+            n3 = new Node ( "testnode3", net3, cb3, cb3, cn3, this );
             clst = n3.getIndex().getMyIdentities();
             assertEquals ( 2, clst.size() );
             strt0 = clst.get ( 0 );
@@ -2355,6 +2242,20 @@ public class TestNode
             System.out.println ( jo.toString ( 10 ) );
 
         }
+
+    }
+
+    @Override
+    public boolean doUpgrade()
+    {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void updateMessage ( String msg )
+    {
+        // TODO Auto-generated method stub
 
     }
 

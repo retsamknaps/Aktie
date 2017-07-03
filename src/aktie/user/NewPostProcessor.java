@@ -7,11 +7,11 @@ import java.util.logging.Logger;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -22,14 +22,14 @@ public class NewPostProcessor extends GenericProcessor
 
     Logger log = Logger.getLogger ( "aktie" );
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
     private SubscriptionValidator validator;
     private SpamTool spamtool;
     private IdentityManager identManager;
 
-    public NewPostProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public NewPostProcessor ( HH2Session s, Index i, SpamTool st, UpdateCallback cb )
     {
         session = s;
         index = i;

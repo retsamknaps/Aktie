@@ -2,7 +2,7 @@ package aktie.gui;
 
 import aktie.data.CObj;
 import aktie.index.CObjList;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -82,7 +82,7 @@ public class NewCommunityDialog extends Dialog
 
                 if ( a.getNode() != null )
                 {
-                    Index i = a.getNode().getIndex();
+                    IndexInterface i = a.getNode().getIndex();
                     CObjList idlst = i.getMyIdentities();
                     Object r[] = new Object[idlst.size()];
                     id = new String[idlst.size()];

@@ -1,9 +1,9 @@
 package aktie.user;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.net.InIdentityProcessor;
 
@@ -12,7 +12,7 @@ public class UsrSeed extends GenericProcessor
 
     private InIdentityProcessor identProcessor;
 
-    public UsrSeed ( HH2Session s, Index i, GuiCallback cb )
+    public UsrSeed ( HH2Session s, Index i, UpdateCallback cb )
     {
         identProcessor = new InIdentityProcessor ( s, i, null, null, cb );
     }

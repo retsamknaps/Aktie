@@ -15,18 +15,18 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.ProcessQueue;
+import aktie.Wrapper;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.FUtils;
 import aktie.utils.HasFileCreator;
 
-public class ShareManager implements Runnable
+public class ShareManager implements Runnable, ShareManagerInterface
 {
 
     Logger log = Logger.getLogger ( "aktie" );

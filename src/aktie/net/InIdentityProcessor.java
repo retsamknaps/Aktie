@@ -6,11 +6,11 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
 
@@ -19,13 +19,13 @@ public class InIdentityProcessor extends GenericProcessor
 
     public static long DEF_USER_RANK = 5;
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InIdentityProcessor ( HH2Session s, Index i, IdentityManager im, CObj mid, GuiCallback cb )
+    public InIdentityProcessor ( HH2Session s, Index i, IdentityManager im, CObj mid, UpdateCallback cb )
     {
         index = i;
         session = s;

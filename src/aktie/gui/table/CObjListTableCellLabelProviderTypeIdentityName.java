@@ -2,9 +2,9 @@ package aktie.gui.table;
 
 import org.apache.lucene.search.SortField;
 
+import aktie.IdentityCache;
 import aktie.data.CObj;
 import aktie.gui.CObjListGetter;
-import aktie.gui.IdentityCache;
 
 public class CObjListTableCellLabelProviderTypeIdentityName extends CObjListTableCellLabelProvider
 {

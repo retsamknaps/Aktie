@@ -10,6 +10,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Text;
+
+import aktie.Wrapper;
+
 import org.eclipse.swt.layout.GridData;
 
 public class SpamRankDialog extends Dialog

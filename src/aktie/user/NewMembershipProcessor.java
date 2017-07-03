@@ -8,11 +8,11 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.net.ConnectionManager2;
 import aktie.spam.SpamTool;
@@ -21,7 +21,7 @@ import aktie.utils.MembershipValidator;
 public class NewMembershipProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private MembershipValidator validator;
     private HH2Session session;
@@ -29,7 +29,7 @@ public class NewMembershipProcessor extends GenericProcessor
     private IdentityManager identManager;
     private ConnectionManager2 conMan;
 
-    public NewMembershipProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, GuiCallback cb )
+    public NewMembershipProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, UpdateCallback cb )
     {
         session = s;
         conMan = cm;

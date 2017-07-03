@@ -31,13 +31,15 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Text;
 
+import aktie.IdentityCache;
 import aktie.data.CObj;
 import aktie.gui.table.AktieTable;
 import aktie.gui.table.AktieTableViewerColumn;
 import aktie.gui.table.CObjListTableCellLabelProviderTypeAdvSearchFieldDescription;
 import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
 import aktie.index.CObjList;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
+
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.jface.viewers.TableViewer;
 
@@ -303,7 +305,6 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                         try
                         {
                             app.getNode().getIndex().delete ( c );
-                            app.getNode().getIndex().forceNewSearcher();
                             updateQueries();
                         }
 
@@ -793,7 +794,6 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
                     try
                     {
                         app.getNode().getIndex().index ( lastQuery );
-                        app.getNode().getIndex().forceNewSearcher();
                         updateQueries();
                     }
 
@@ -1069,7 +1069,7 @@ public class AdvancedSearchDialog extends Dialog implements AddFieldInterface
     }
 
     @Override
-    public Index getIndex()
+    public IndexInterface getIndex()
     {
         return app.getNode().getIndex();
     }

@@ -3,10 +3,10 @@ package aktie.net;
 import java.util.List;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.sequences.PostSequence;
 import aktie.spam.SpamTool;
@@ -17,7 +17,7 @@ import aktie.utils.SubscriptionValidator;
 public class InPostProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
@@ -26,7 +26,7 @@ public class InPostProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InPostProcessor ( CObj id, HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
+    public InPostProcessor ( CObj id, HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
     {
         destIdent = id;
         index = i;

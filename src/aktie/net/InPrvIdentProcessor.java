@@ -4,10 +4,10 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.PrivIdentSequence;
@@ -22,11 +22,11 @@ public class InPrvIdentProcessor extends GenericProcessor
     private DigestValidator validator;
     private Index index;
     private HH2Session session;
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InPrvIdentProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
+    public InPrvIdentProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
     {
         index = i;
         session = s;

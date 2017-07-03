@@ -8,8 +8,6 @@ import org.junit.Test;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -23,7 +21,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 
-public class ShareManagerTest implements GuiCallback
+public class ShareManagerTest implements UpdateCallback
 {
 
     @Test

@@ -333,7 +333,7 @@ public class I2PSettingsDialog extends Dialog
     protected void okPressed()
     {
         saveI2PProps();
-        app.setI2PProps ( i2pProps );
+        app.getStandardI2PNode().setI2PProps ( i2pProps );
         super.okPressed();
     }
 

@@ -20,7 +20,6 @@ import aktie.data.IdentityData;
 import aktie.data.PrivateMsgIdentity;
 import aktie.index.CObjList;
 import aktie.index.Index;
-import aktie.sequences.CommunitySequence;
 import aktie.sequences.FileSequence;
 import aktie.sequences.MemberSequence;
 import aktie.sequences.PostSequence;

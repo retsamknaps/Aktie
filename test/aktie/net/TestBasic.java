@@ -6,9 +6,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import aktie.Wrapper;
 import aktie.data.CObj;
 import aktie.data.RequestFile;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.utils.FUtils;
 

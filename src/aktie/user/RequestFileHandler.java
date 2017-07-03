@@ -20,7 +20,7 @@ import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.FUtils;
 
-public class RequestFileHandler
+public class RequestFileHandler implements RequestFileHandlerInterface
 {
     Logger log = Logger.getLogger ( "aktie" );
 

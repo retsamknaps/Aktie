@@ -397,7 +397,7 @@ public class PMTab extends Composite
     public void init()
     {
         identModel = new SubTreeModel ( app.getNode().getIndex(),
-                                        new SubTreeEntityDB ( app.getNode().getSession() ),
+                                        new SubTreeEntityDB ( app.getSession() ),
                                         SubTreeModel.MESSAGE_TREE, 1 );
         identModel.init();
         treeViewer.setContentProvider ( identModel );

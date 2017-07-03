@@ -3,6 +3,7 @@ package aktie;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
@@ -12,8 +13,6 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
-import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
@@ -33,7 +32,7 @@ import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.utils.FUtils;
 
-public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, DestinationListener
+public class UserTest implements UpdateCallback, GetSendData2, ConnectionListener, DestinationListener
 {
 
     @Test
@@ -381,6 +380,27 @@ public class UserTest implements GuiCallback, GetSendData2, ConnectionListener, 
     {
         // TODO Auto-generated method stub
 
+    }
+
+    @Override
+    public void closeConnection ( String localdest, String remotedest )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void toggleConnectionLogging ( String localdest, String remotedest )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public List<CObj> getConnectedIdentities()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

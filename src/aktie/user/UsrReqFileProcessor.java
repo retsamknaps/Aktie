@@ -1,17 +1,17 @@
 package aktie.user;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.RequestFile;
-import aktie.gui.GuiCallback;
 
 public class UsrReqFileProcessor extends GenericProcessor
 {
 
     private RequestFileHandler handler;
-    private GuiCallback callback;
+    private UpdateCallback callback;
 
-    public UsrReqFileProcessor ( RequestFileHandler h, GuiCallback cb )
+    public UsrReqFileProcessor ( RequestFileHandler h, UpdateCallback cb )
     {
         handler = h;
         callback = cb;

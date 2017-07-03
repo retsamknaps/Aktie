@@ -1,19 +1,18 @@
 package aktie.gui.table;
 
 import aktie.gui.CObjListIdentityElement;
-import aktie.index.Index;
-
+import aktie.index.IndexInterface;
 import aktie.index.CObjList;
 
 public class CObjListTableContentProviderTypeIdentityElement extends CObjListTableContentProvider<CObjListIdentityElement>
 {
     private CObjList list = null;
 
-    private Index index;
+    private IndexInterface index;
     private String identityKey;
     private boolean privateAttribute;
 
-    public CObjListTableContentProviderTypeIdentityElement ( Index index, String identityKey, boolean privateAttribute )
+    public CObjListTableContentProviderTypeIdentityElement ( IndexInterface index, String identityKey, boolean privateAttribute )
     {
         this.index = index;
         this.identityKey = identityKey;

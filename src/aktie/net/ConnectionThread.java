@@ -29,11 +29,11 @@ import org.hibernate.Session;
 import org.json.JSONObject;
 
 import aktie.BatchProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.json.CleanParser;
@@ -42,7 +42,7 @@ import aktie.user.IdentityManager;
 import aktie.user.RequestFileHandler;
 import aktie.utils.HasFileCreator;
 
-public class ConnectionThread implements Runnable, GuiCallback
+public class ConnectionThread implements Runnable, UpdateCallback
 {
     Logger log = Logger.getLogger ( "aktie" );
 
@@ -70,7 +70,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private DestinationThread dest;
     private Index index;
     private HH2Session session;
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private OutputStream outstream;
     private HasFileCreator hfc;
     private RequestFileHandler fileHandler;
@@ -95,7 +95,7 @@ public class ConnectionThread implements Runnable, GuiCallback
     private String fileDown;
     private File tmpDir;
 
-    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
+    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
     {
         This = this;
         fileOnly = fo;

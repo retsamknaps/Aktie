@@ -1,4 +1,4 @@
-package aktie.gui;
+package aktie;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -1043,7 +1043,7 @@ public class Wrapper
 
     public static long getCheckPayment()
     {
-        if ( SWTApp.TESTNODE )
+        if ( StandardI2PNode.TESTNODE )
         {
             return 0;
         }
@@ -1061,7 +1061,7 @@ public class Wrapper
 
     public static long getGenPayment()
     {
-        if ( SWTApp.TESTNODE )
+        if ( StandardI2PNode.TESTNODE )
         {
             return 0;
         }

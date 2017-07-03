@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.KeyParameter;
 
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
@@ -28,7 +29,6 @@ import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.RequestFile;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
@@ -61,7 +61,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
     private IdentityManager identityManager;
     private MembershipValidator memvalid;
     private boolean stop;
-    private GuiCallback callback;
+    private UpdateCallback callback;
     private ConnectionFileManager fileManager;
 
     //Digest -> Identities pushed to already.
@@ -93,7 +93,7 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
 
     public ConnectionManager2 ( HH2Session s, Index i, RequestFileHandler r, IdentityManager id,
-                                GuiCallback cb )
+                                UpdateCallback cb )
     {
         destinations = new HashMap<String, DestinationThread>();
         recentAttempts = new ConcurrentHashMap<String, Long>();

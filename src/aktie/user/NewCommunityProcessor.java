@@ -8,12 +8,12 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.net.ConnectionManager2;
 import aktie.spam.SpamTool;
@@ -22,14 +22,14 @@ public class NewCommunityProcessor extends GenericProcessor
 {
     Logger log = Logger.getLogger ( "aktie" );
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private ConnectionManager2 conMan;
     private Index index;
     private HH2Session session;
     private SpamTool spamtool;
     private IdentityManager identManager;
 
-    public NewCommunityProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, GuiCallback cb )
+    public NewCommunityProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, UpdateCallback cb )
     {
         session = s;
         conMan = cm;

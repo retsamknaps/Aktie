@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.user.RequestFileHandler;
@@ -23,7 +23,7 @@ public class DestinationThread implements Runnable
 
     private Index index;
     private HH2Session session;
-    private GuiCallback callback;
+    private UpdateCallback callback;
     private SpamTool spamtool;
 
     public static void stopAll()
@@ -48,7 +48,7 @@ public class DestinationThread implements Runnable
     private RequestFileHandler fileHandler;
     private File tmpDir;
 
-    public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i, GuiCallback cb, ConnectionListener cl, RequestFileHandler rf, SpamTool st )
+    public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf, SpamTool st )
     {
         fileHandler = rf;
         conListener = cl;

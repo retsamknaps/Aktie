@@ -8,14 +8,14 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import aktie.data.CObj;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 public class IdentitySubTreeModel
 {
 
     private SortedMap<String, CObj> identities;
     private SortedMap<String, SortedMap<String, CObj>> subCommunities;
-    private Index index;
+    private IndexInterface index;
     private SWTApp app;
 
 
@@ -249,7 +249,7 @@ public class IdentitySubTreeModel
         return subCommunities;
     }
 
-    public Index getIndex()
+    public IndexInterface getIndex()
     {
         return index;
     }

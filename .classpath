@@ -40,5 +40,6 @@
 	<classpathentry kind="lib" path="lib/lucene-core-5.5.4.jar"/>
 	<classpathentry kind="lib" path="lib/lucene-misc-5.5.4.jar"/>
 	<classpathentry kind="lib" path="lib/lucene-queryparser-5.5.4.jar"/>
+	<classpathentry kind="lib" path="lib/java_websocket.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

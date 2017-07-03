@@ -5,7 +5,7 @@ import java.lang.ref.SoftReference;
 
 import aktie.data.CObj;
 import aktie.index.CObjList;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 public class CObjListIdentityElement implements CObjListGetter
 {
@@ -13,11 +13,11 @@ public class CObjListIdentityElement implements CObjListGetter
     private int listIndex;
     private CObjList list;
     private SoftReference<CObj> softCObj;
-    private Index index;
+    private IndexInterface index;
     private String identityKey;
     private boolean privateAttribute;
 
-    public CObjListIdentityElement ( Index index, CObjList list, int listIndex, String identityKey, boolean privateAttribute )
+    public CObjListIdentityElement ( IndexInterface index, CObjList list, int listIndex, String identityKey, boolean privateAttribute )
     {
         this.listIndex = listIndex;
         this.list = list;

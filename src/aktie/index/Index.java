@@ -30,7 +30,7 @@ import org.apache.lucene.document.Document;
 import aktie.data.CObj;
 import aktie.data.IdentityData;
 
-public class Index implements Runnable
+public class Index implements Runnable, IndexInterface
 {
 
     // * NOTE *

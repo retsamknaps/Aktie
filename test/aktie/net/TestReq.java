@@ -1,7 +1,10 @@
 package aktie.net;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import aktie.data.CObj;
 import aktie.data.RequestFile;
 
 import static org.junit.Assert.*;
@@ -78,6 +81,27 @@ public class TestReq implements GetSendData2
     public long getLastFileUpdate()
     {
         return ++lastupdate;
+    }
+
+    @Override
+    public void closeConnection ( String localdest, String remotedest )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void toggleConnectionLogging ( String localdest, String remotedest )
+    {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public List<CObj> getConnectedIdentities()
+    {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

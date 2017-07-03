@@ -3,8 +3,8 @@ package aktie.spam;
 import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 
+import aktie.Wrapper;
 import aktie.data.CObj;
-import aktie.gui.Wrapper;
 import aktie.index.Index;
 import aktie.utils.HasFileCreator;
 

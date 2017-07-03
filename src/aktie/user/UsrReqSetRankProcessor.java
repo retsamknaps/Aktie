@@ -1,8 +1,8 @@
 package aktie.user;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.data.CObj;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.HasFileCreator;
@@ -12,9 +12,9 @@ public class UsrReqSetRankProcessor extends GenericProcessor
 
     private Index index;
     private HasFileCreator hfc;
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
 
-    public UsrReqSetRankProcessor ( Index i, HasFileCreator c, GuiCallback cb )
+    public UsrReqSetRankProcessor ( Index i, HasFileCreator c, UpdateCallback cb )
     {
         index = i;
         hfc = c;

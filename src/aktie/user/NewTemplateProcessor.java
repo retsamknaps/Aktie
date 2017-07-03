@@ -1,9 +1,9 @@
 package aktie.user;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 
 public class NewTemplateProcessor extends GenericProcessor
@@ -13,7 +13,7 @@ public class NewTemplateProcessor extends GenericProcessor
     //private Index index;
     //private HH2Session session;
 
-    public NewTemplateProcessor ( HH2Session s, Index i, GuiCallback cb )
+    public NewTemplateProcessor ( HH2Session s, Index i, UpdateCallback cb )
     {
         //guicallback = cb;
         //index = i;

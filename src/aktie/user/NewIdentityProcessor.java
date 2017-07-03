@@ -11,11 +11,11 @@ import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.Destination;
@@ -32,8 +32,8 @@ public class NewIdentityProcessor extends GenericProcessor
     public static long DEF_USER_RANK = 4;
 
     private Net net;
-    private GuiCallback guicallback;
-    private GuiCallback netcallback;
+    private UpdateCallback guicallback;
+    private UpdateCallback netcallback;
     private Index index;
     private HH2Session session;
     private GetSendData2 conMan;
@@ -44,7 +44,7 @@ public class NewIdentityProcessor extends GenericProcessor
     private IdentityManager identManager;
     private File tmpDir;
 
-    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, GuiCallback g, GuiCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
+    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, UpdateCallback g, UpdateCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
     {
         fileHandler = rf;
         connectionMan = cm;

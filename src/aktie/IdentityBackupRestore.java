@@ -22,8 +22,6 @@ import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
 import aktie.data.PrivateMsgIdentity;
-import aktie.gui.SWTApp;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.user.IdentityManager;
@@ -47,7 +45,7 @@ public class IdentityBackupRestore
             File bak = new File ( "aktie_identity_backup.dat" );
             String dest = Wrapper.NODEDIR + File.separator + "i2p";
 
-            if ( SWTApp.TESTNODE )
+            if ( StandardI2PNode.TESTNODE )
             {
                 dest = Wrapper.NODEDIR;
             }

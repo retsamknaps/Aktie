@@ -8,15 +8,17 @@ import java.util.TimerTask;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
+import aktie.index.IndexInterface;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
+import aktie.net.GetSendData2;
 import aktie.net.InSpamExProcessor;
 import aktie.net.Net;
 import aktie.spam.SpamTool;
+import aktie.upgrade.NodeUpgrader;
+import aktie.upgrade.UpgradeControllerCallback;
 import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
@@ -30,7 +32,9 @@ import aktie.user.NewQueryProcessor;
 import aktie.user.NewSpamExProcessor;
 import aktie.user.NewSubscriptionProcessor;
 import aktie.user.RequestFileHandler;
+import aktie.user.RequestFileHandlerInterface;
 import aktie.user.ShareManager;
+import aktie.user.ShareManagerInterface;
 import aktie.user.UsrCancelFileProcessor;
 import aktie.user.UsrReqComProcessor;
 import aktie.user.UsrReqFileProcessor;
@@ -42,7 +46,7 @@ import aktie.user.UsrSeedCommunity;
 import aktie.user.UsrStartDestinationProcessor;
 import aktie.utils.HasFileCreator;
 
-public class Node
+public class Node implements NodeInterface
 {
 
     private Net network;
@@ -50,8 +54,8 @@ public class Node
     private HH2Session session;
     private ProcessQueue userQueue;
     private IdentityManager identManager;
-    private GuiCallback usrCallback;
-    private GuiCallback netCallback;
+    private UpdateDispatcher usrCallback;
+    private UpdateDispatcher netCallback;
     private ConnectionListener conCallback;
     private ConnectionManager2 conMan;
     private RequestFileHandler requestHandler;
@@ -60,12 +64,19 @@ public class Node
     private HasFileCreator hasFileCreator;
     private SpamTool spamtool;
     private File tmpDir;
+    private NodeUpgrader upgrader;
 
-    public Node ( String nodedir, Net net, GuiCallback uc,
-                  GuiCallback nc, ConnectionListener cc ) throws IOException
+    public Node ( String nodedir, Net net, UpdateCallback uc,
+                  UpdateCallback nc, ConnectionListener cc,
+                  UpgradeControllerCallback ug ) throws IOException
     {
-        usrCallback = uc;
-        netCallback = nc;
+        usrCallback = new UpdateDispatcher(); // uc;
+        netCallback = new UpdateDispatcher(); // nc;
+        usrCallback.addUpdateListener ( uc );
+        netCallback.addUpdateListener ( nc );
+        upgrader = new NodeUpgrader ( this, nodedir, ug );
+        usrCallback.addUpdateListener ( upgrader );
+        netCallback.addUpdateListener ( upgrader );
         conCallback = cc;
         network = net;
         settings = new Settings ( nodedir );
@@ -130,6 +141,21 @@ public class Node
         userQueue.addProcessor ( pusher );
 
         doUpdate();
+    }
+
+    public NodeUpgrader getUpgrader()
+    {
+        return upgrader;
+    }
+
+    public UpdateCallback getUsrCallback()
+    {
+        return usrCallback;
+    }
+
+    public UpdateCallback getNetCallback()
+    {
+        return netCallback;
     }
 
     public HasFileCreator getHasFileCreator()
@@ -219,32 +245,25 @@ public class Node
         return spamtool;
     }
 
-    public Index getIndex()
+    public IndexInterface getIndex()
     {
         return index;
     }
 
-    public ConnectionManager2 getConnectionManager()
+    public GetSendData2 getConnectionManager()
     {
         return conMan;
     }
 
-    public HH2Session getSession()
-    {
-        return session;
-    }
-
-    public RequestFileHandler getFileHandler()
+    public RequestFileHandlerInterface getFileHandler()
     {
         return requestHandler;
     }
 
-    public ShareManager getShareManager()
+    public ShareManagerInterface getShareManager()
     {
         return shareManager;
     }
-
-    //public
 
     public void closeDestinationConnections ( CObj id )
     {

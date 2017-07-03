@@ -9,10 +9,10 @@ import org.bouncycastle.crypto.digests.RIPEMD256Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.utils.HasFileCreator;
@@ -20,11 +20,11 @@ import aktie.utils.HasFileCreator;
 public class NewFileProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HasFileCreator hsc;
 
-    public NewFileProcessor ( HH2Session s, Index i, SpamTool st, GuiCallback cb )
+    public NewFileProcessor ( HH2Session s, Index i, SpamTool st, UpdateCallback cb )
     {
         index = i;
         guicallback = cb;
@@ -212,7 +212,7 @@ public class NewFileProcessor extends GenericProcessor
     }
 
 
-    public GuiCallback getGuiCallback()
+    public UpdateCallback getGuiCallback()
     {
         return guicallback;
     }

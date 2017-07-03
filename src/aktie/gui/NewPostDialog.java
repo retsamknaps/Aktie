@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import aktie.IdentityCache;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.gui.table.AktieTable;
@@ -14,7 +15,7 @@ import aktie.gui.table.AktieTableViewerColumn;
 import aktie.gui.table.CObjListTableCellLabelProviderTypeAdvSearchFieldDescription;
 import aktie.gui.table.CObjListTableCellLabelProviderTypeString;
 import aktie.index.CObjList;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -998,7 +999,7 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
     }
 
     @Override
-    public Index getIndex()
+    public IndexInterface getIndex()
     {
         return app.getNode().getIndex();
     }

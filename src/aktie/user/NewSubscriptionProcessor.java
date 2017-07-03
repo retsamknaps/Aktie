@@ -5,11 +5,11 @@ import java.util.logging.Logger;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.data.IdentityData;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.net.ConnectionManager2;
@@ -21,7 +21,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
 
     Logger log = Logger.getLogger ( "aktie" );
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
     private SubscriptionValidator validator;
@@ -29,7 +29,7 @@ public class NewSubscriptionProcessor extends GenericProcessor
     private IdentityManager identManager;
     private ConnectionManager2 conMan;
 
-    public NewSubscriptionProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, GuiCallback cb )
+    public NewSubscriptionProcessor ( HH2Session s, ConnectionManager2 cm, Index i, SpamTool st, UpdateCallback cb )
     {
         session = s;
         conMan = cm;

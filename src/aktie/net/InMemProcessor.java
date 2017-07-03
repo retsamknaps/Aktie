@@ -5,11 +5,11 @@ import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMyMember;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.sequences.MemberSequence;
@@ -21,14 +21,14 @@ import aktie.utils.SymDecoder;
 public class InMemProcessor extends GenericProcessor
 {
 
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private Index index;
     private HH2Session session;
     private DigestValidator validator;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InMemProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
+    public InMemProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
     {
         index = i;
         session = s;

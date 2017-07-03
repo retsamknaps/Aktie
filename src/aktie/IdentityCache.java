@@ -1,18 +1,18 @@
-package aktie.gui;
+package aktie;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import aktie.data.CObj;
-import aktie.index.Index;
+import aktie.index.IndexInterface;
 
 public class IdentityCache
 {
 
-    private Index index;
+    private IndexInterface index;
     private Map<String, String> nameMap;
 
-    public IdentityCache ( Index i )
+    public IdentityCache ( IndexInterface i )
     {
         index = i;
         nameMap = new HashMap<String, String>();

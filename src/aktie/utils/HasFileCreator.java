@@ -2,8 +2,6 @@ package aktie.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,8 +13,6 @@ import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.CommunityMember;
 import aktie.data.HH2Session;
-import aktie.gui.UpdateInterface;
-import aktie.gui.Wrapper;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
@@ -205,118 +201,6 @@ public class HasFileCreator
     {
         String id = getCommunityMemberId ( creator, comid );
         return getHasFileId ( id, digofdigs, wholedig );
-    }
-
-    public void updateHasFile()
-    {
-        updateHasFile ( null );
-    }
-
-    public void updateHasFile ( UpdateInterface up )
-    {
-        CObjList hflst = index.getAllHasFiles();
-
-        for ( int c = 0; c < hflst.size(); c++ )
-        {
-            try
-            {
-                if ( c % 10 == 0 && up != null )
-                {
-                    long percent = ( c * 100 ) / hflst.size();
-                    StringBuilder sb = new StringBuilder();
-                    sb.append ( "Update to " );
-                    sb.append ( Wrapper.VERSION );
-                    sb.append ( "    " );
-                    sb.append ( percent );
-                    sb.append ( "% complete." );
-                    up.updateStatus ( sb.toString() );
-                }
-
-                CObj b = hflst.get ( c );
-
-                String creatorid = b.getString ( CObj.CREATOR );
-                String comid = b.getString ( CObj.COMMUNITYID );
-                String wdig = b.getString ( CObj.FILEDIGEST );
-                String ddig = b.getString ( CObj.FRAGDIGEST );
-
-                if ( creatorid != null && comid != null &&
-                        wdig != null && ddig != null )
-                {
-
-                    String id = HasFileCreator.getCommunityMemberId ( creatorid, comid );
-
-                    //Hasfileid is an upgrade.  We just set it here to what it is supposed to
-                    //be.  If the signature does not match with the id value set.  DigestValidator
-                    //has been upgraded to check the signature with a null id value for
-                    //hasfile records. All new hasfile records should have the proper id value
-                    //set so this does nothing.
-                    String hasfileid = HasFileCreator.getHasFileId ( id, ddig, wdig );
-
-                    index.delete ( b );
-                    b.setId ( hasfileid );
-                    index.index ( b );
-                    updateFileInfo ( b );
-                }
-
-            }
-
-            catch ( Exception e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        hflst.close();
-
-    }
-
-    public void updateOnlyHasFile ( UpdateInterface up )
-    {
-        Set<String> doneset = new HashSet<String>();
-        CObjList hflst = index.getAllHasFiles();
-
-        for ( int c = 0; c < hflst.size(); c++ )
-        {
-            try
-            {
-                if ( c % 10 == 0 && up != null )
-                {
-                    long percent = ( c * 100 ) / hflst.size();
-                    StringBuilder sb = new StringBuilder();
-                    sb.append ( "Update to " );
-                    sb.append ( Wrapper.VERSION );
-                    sb.append ( "    " );
-                    sb.append ( percent );
-                    sb.append ( "% complete." );
-                    up.updateStatus ( sb.toString() );
-                }
-
-                CObj b = hflst.get ( c );
-
-                String creatorid = b.getString ( CObj.CREATOR );
-                String comid = b.getString ( CObj.COMMUNITYID );
-                String wdig = b.getString ( CObj.FILEDIGEST );
-                String ddig = b.getString ( CObj.FRAGDIGEST );
-
-                if ( creatorid != null && comid != null &&
-                        wdig != null && ddig != null && !doneset.contains ( ddig ) )
-                {
-                    doneset.add ( ddig );
-                    updateFileInfo ( b );
-                }
-
-            }
-
-            catch ( Exception e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        hflst.close();
-
     }
 
     public static void wtfHasFileWithoutfile ( CObj o )

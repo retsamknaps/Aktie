@@ -6,10 +6,10 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import aktie.UpdateCallback;
 import aktie.ProcessQueue;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.user.NewCommunityProcessor;
@@ -23,7 +23,7 @@ import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.utils.FUtils;
 
-public class TestNode implements GuiCallback, ConnectionListener, DestinationListener
+public class TestNode implements UpdateCallback, ConnectionListener, DestinationListener
 {
 
     private CObj nodeData;

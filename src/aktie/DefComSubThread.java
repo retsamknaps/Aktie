@@ -1,18 +1,17 @@
-package aktie.gui;
+package aktie;
 
 import java.util.List;
 
-import aktie.Node;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 
 public class DefComSubThread implements Runnable
 {
 
-    private Node node;
+    private NodeInterface node;
     private List<CObj> seedCommunity;
 
-    public DefComSubThread ( Node n, List<CObj> defsub )
+    public DefComSubThread ( NodeInterface n, List<CObj> defsub )
     {
         node = n;
         seedCommunity = defsub;

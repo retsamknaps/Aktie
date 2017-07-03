@@ -3,10 +3,10 @@ package aktie.net;
 import org.bouncycastle.crypto.params.KeyParameter;
 
 import aktie.GenericProcessor;
+import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
-import aktie.gui.GuiCallback;
 import aktie.index.Index;
 import aktie.sequences.PrivMsgSequence;
 import aktie.spam.SpamTool;
@@ -20,11 +20,11 @@ public class InPrvMsgProcessor extends GenericProcessor
     private DigestValidator validator;
     private Index index;
     private HH2Session session;
-    private GuiCallback guicallback;
+    private UpdateCallback guicallback;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, GuiCallback cb )
+    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
     {
         index = i;
         session = s;

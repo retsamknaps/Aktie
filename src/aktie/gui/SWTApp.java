@@ -1,10 +1,7 @@
 package aktie.gui;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
@@ -22,10 +19,15 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import aktie.UpdateCallback;
+import aktie.Wrapper;
 import aktie.IdentityBackupRestore;
+import aktie.IdentityCache;
 import aktie.Node;
+import aktie.StandardI2PNode;
 import aktie.data.CObj;
 import aktie.data.DirectoryShare;
+import aktie.data.HH2Session;
 import aktie.data.RequestFile;
 import aktie.gui.launchers.LauncherDialog;
 import aktie.gui.pm.PMTab;
@@ -38,18 +40,12 @@ import aktie.gui.subtree.SubTreeLabelProvider;
 import aktie.gui.subtree.SubTreeListener;
 import aktie.gui.subtree.SubTreeModel;
 import aktie.gui.subtree.SubTreeSorter;
-import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
-import aktie.index.Upgrade0301;
-import aktie.index.Upgrade0405;
-import aktie.index.Upgrade0506;
 import aktie.net.ConnectionElement;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
-import aktie.net.Net;
-import aktie.net.RawNet;
+import aktie.upgrade.UpgradeControllerCallback;
 import aktie.user.ShareListener;
-import aktie.utils.FUtils;
 
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -99,13 +95,11 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Label;
 import org.json.JSONObject;
-import org.json.JSONTokener;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.jface.viewers.ComboViewer;
 
-public class SWTApp implements UpdateInterface
+public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 {
-    public static boolean TESTNODE = false;
 
     Logger log = Logger.getLogger ( "aktie" );
 
@@ -216,175 +210,12 @@ public class SWTApp implements UpdateInterface
 
     private NetCallback netcallback = new NetCallback();
 
-    /*
-        ========================================================================
-        this dumb  why would you do this here
-        ========================================================================
-    */
-    private void checkDownloadUpgrade ( CObj co )
-    {
-        String creator = co.getString ( CObj.CREATOR );
-
-        if ( creator != null &&
-                developerIdentities.contains ( creator ) )
-        {
-
-            Long createdon = co.getNumber ( CObj.CREATEDON );
-
-            if ( createdon != null && createdon > Wrapper.RELEASETIME )
-            {
-                String update = co.getString ( CObj.UPGRADEFLAG );
-                String fname = co.getString ( CObj.NAME );
-                String comid = co.getString ( CObj.COMMUNITYID );
-                String stillhasfile = co.getString ( CObj.STILLHASFILE );
-
-                if ( "true".equals ( update ) && "true".equals ( stillhasfile ) )
-                {
-                    if ( doUpgrade )
-                    {
-
-                        File nodedir = new File ( nodeDir );
-                        String parent = nodedir.getParent();
-
-                        //check current version
-                        String libf = parent +
-                                      File.separator + "lib" +
-                                      File.separator + fname;
-                        File cf = new File ( libf );
-                        //do upgrade if current digest does not match the upgrade file
-                        boolean doup = true;
-                        String ndig = co.getString ( CObj.FILEDIGEST );
-                        Long flen = co.getNumber ( CObj.FILESIZE );
-
-                        if ( cf.exists() )
-                        {
-                            String wdig = FUtils.digWholeFile ( libf );
-                            doup = !wdig.equals ( ndig );
-                        }
-
-                        if ( doup && flen != null )
-                        {
-                            String upfile = parent +
-                                            File.separator + "upgrade" +
-                                            File.separator + fname;
-
-                            Wrapper.saveUpdateLength ( fname, Long.toString ( flen ) );
-
-                            File f = new File ( upfile );
-
-                            if ( f.exists() ) { f.delete(); }
-
-                            co.pushPrivate ( CObj.LOCALFILE, upfile );
-                            co.pushPrivate ( CObj.UPGRADEFLAG, "true" ); //confirm upgrade
-                            co.setType ( CObj.USR_DOWNLOAD_FILE );
-                            //the user to restart his node.
-                            //find a member of this group
-                            CObjList mysubs = getNode().getIndex().getMySubscriptions ( comid );
-                            String selid = null;
-
-                            //At least one connected id should be subscribed to
-                            //the correct community or we would not have gotten
-                            //the update just now
-                            List<CObj> conids = getNode().getConnectionManager().getConnectedIdentities();
-                            Set<String> conset = new HashSet<String>();
-
-                            for ( CObj cc : conids )
-                            {
-                                conset.add ( cc.getId() );
-                            }
-
-                            for ( int c = 0; c < mysubs.size() && selid == null; c++ )
-                            {
-                                try
-                                {
-                                    CObj ss = mysubs.get ( c );
-                                    selid = ss.getString ( CObj.CREATOR );
-
-                                    if ( conset.contains ( selid ) )
-                                    {
-                                        CObj dl = co.clone();
-                                        dl.pushString ( CObj.CREATOR, selid );
-                                        node.enqueue ( dl );
-                                    }
-
-                                    else
-                                    {
-                                        selid = null;
-                                    }
-
-                                }
-
-                                catch ( Exception e )
-                                {
-                                    e.printStackTrace();
-                                }
-
-                            }
-
-                            mysubs.close();
-
-                            if ( selid != null )
-                            {
-
-                                Display.getDefault().asyncExec ( new Runnable()
-                                {
-                                    @Override
-                                    public void run()
-                                    {
-                                        lblVersion.setText ( Wrapper.VERSION + "  Update downloading.." );
-                                    }
-
-                                } );
-
-                            }
-
-                            else
-                            {
-                                log.warning ( "No subscription matching community of update" );
-                            }
-
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-    private void checkUpgradeDownloadComplete ( CObj co )
-    {
-        // *Private* UPGRADEFLAG is set for our own HASFILE once
-        //we complete the download.
-        String upf = co.getPrivate ( CObj.UPGRADEFLAG );
-        String shf = co.getString ( CObj.STILLHASFILE );
-
-        if ( "true".equals ( upf ) && "true".equals ( shf ) )
-        {
-            log.info ( "Upgrade download completed." );
-            Display.getDefault().asyncExec ( new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    lblVersion.setText ( Wrapper.VERSION + "   Update downloaded.  Please restart." );
-                }
-
-            } );
-
-        }
-
-    }
-
     private void updateBanner ( CObj co )
     {
         String creator = co.getString ( CObj.CREATOR );
 
         if ( creator != null &&
-                developerIdentities.contains ( creator ) )
+                node.getNode().getUpgrader().getDeveloperIdentities().contains ( creator ) )
         {
 
             //Update subject line
@@ -414,7 +245,7 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    class NetCallback implements GuiCallback
+    class NetCallback implements UpdateCallback
     {
         @Override
         public void update ( Object o )
@@ -428,7 +259,8 @@ public class SWTApp implements UpdateInterface
                         @Override
                         public void run()
                         {
-                            downloadsTable.getTableViewer().setInput ( SWTApp.this.node.getFileHandler() );
+                            downloadsTable.getTableViewer().setInput (
+                                SWTApp.this.node.getNode().getFileHandler() );
                         }
 
                     } );
@@ -528,9 +360,6 @@ public class SWTApp implements UpdateInterface
 
                             }
 
-                            checkUpgradeDownloadComplete ( co );
-                            checkDownloadUpgrade ( co );
-
                         }
 
                         if ( CObj.PRIVIDENTIFIER.equals ( co.getType() ) ||
@@ -565,7 +394,7 @@ public class SWTApp implements UpdateInterface
 
     private UsrCallback usrcallback = new UsrCallback();
 
-    class UsrCallback implements GuiCallback
+    class UsrCallback implements UpdateCallback
     {
         @Override
         public void update ( Object o )
@@ -579,7 +408,8 @@ public class SWTApp implements UpdateInterface
                         @Override
                         public void run()
                         {
-                            downloadsTable.getTableViewer().setInput ( SWTApp.this.node.getFileHandler() );
+                            downloadsTable.getTableViewer().setInput (
+                                SWTApp.this.node.getNode().getFileHandler() );
                         }
 
                     } );
@@ -651,7 +481,7 @@ public class SWTApp implements UpdateInterface
                         sub.pushString ( CObj.CREATOR, co.getString ( CObj.CREATOR ) );
                         sub.pushString ( CObj.COMMUNITYID, co.getDig() );
                         sub.pushString ( CObj.SUBSCRIBED, "true" );
-                        getNode().enqueue ( sub );
+                        node.getNode().enqueue ( sub );
                     }
 
                     if ( CObj.SUBSCRIPTION.equals ( co.getType() ) )
@@ -728,8 +558,6 @@ public class SWTApp implements UpdateInterface
                     {
 
                         checkPendingPosts ( co );
-                        checkDownloadUpgrade ( co );
-                        checkUpgradeDownloadComplete ( co );
 
                         if ( selectedCommunity != null && comid != null && comid.equals ( selectedCommunity.getDig() ) )
                         {
@@ -789,7 +617,7 @@ public class SWTApp implements UpdateInterface
                 try
                 {
                     PrintWriter pw = new PrintWriter ( new FileOutputStream ( new File ( selected ) ) );
-                    CObjList ilst = node.getIndex().getIdentities();
+                    CObjList ilst = node.getNode().getIndex().getIdentities();
 
                     for ( int c = 0; c < ilst.size(); c++ )
                     {
@@ -834,7 +662,7 @@ public class SWTApp implements UpdateInterface
 
             if ( selected != null && node != null )
             {
-                loadSeed ( new File ( selected ) );
+                node.loadSeed ( new File ( selected ) );
             }
 
         }
@@ -893,7 +721,7 @@ public class SWTApp implements UpdateInterface
 
                             boolean isupgrade = false;
 
-                            if ( developerIdentities.contains ( selectedIdentity.getId() ) )
+                            if ( node.getNode().getUpgrader().getDeveloperIdentities().contains ( selectedIdentity.getId() ) )
                             {
                                 isupgrade = MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" );
                             }
@@ -911,7 +739,7 @@ public class SWTApp implements UpdateInterface
                                 nf.pushPrivate ( CObj.UPGRADEFLAG, "true" );
                             }
 
-                            node.enqueue ( nf );
+                            node.getNode().enqueue ( nf );
                         }
 
                     }
@@ -947,7 +775,7 @@ public class SWTApp implements UpdateInterface
                 u.pushPrivate ( CObj.STATUS, "save" );
             }
 
-            getNode().enqueue ( u );
+            node.getNode().enqueue ( u );
         }
 
     }
@@ -986,7 +814,7 @@ public class SWTApp implements UpdateInterface
     //private IdentitySubTreeModel identSubTreeModel;
     private SubTreeModel identModel;
 
-    private Node node;
+    private StandardI2PNode node;
     private String nodeDir;
 
     private CObj selectedIdentity;
@@ -999,7 +827,6 @@ public class SWTApp implements UpdateInterface
     private FilesTable filesTable;
     private DownloadsTable downloadsTable;
     private String exportCommunitiesFile;
-    private List<String> developerIdentities = new LinkedList<String>();
     private Map<String, List<CObj>> pendingPosts = new HashMap<String, List<CObj>>();
     private CObj advQuery;
 
@@ -1051,7 +878,7 @@ public class SWTApp implements UpdateInterface
                                   ( pvname != null && pst.getString ( CObj.PRV_FILEDIGEST ) != null ) ) )
                         {
                             i.remove();
-                            getNode().enqueue ( pst );
+                            node.getNode().enqueue ( pst );
                         }
 
                     }
@@ -1120,12 +947,10 @@ public class SWTApp implements UpdateInterface
         return selectedIdentity;
     }
 
-    public Node getNode()
+    public HH2Session getSession()
     {
-        return node;
+        return session;
     }
-
-
 
     private void setBlogMode ( CObj id, CObj comid )
     {
@@ -1197,6 +1022,21 @@ public class SWTApp implements UpdateInterface
     public void setSevere()
     {
         log.setLevel ( Level.SEVERE );
+    }
+
+    public IdentityCache getIdCache()
+    {
+        return node.getIdCache();
+    }
+
+    public  Node getNode()
+    {
+        return node.getNode();
+    }
+
+    public StandardI2PNode getStandardI2PNode()
+    {
+        return node;
     }
 
     /**
@@ -1285,55 +1125,78 @@ public class SWTApp implements UpdateInterface
 
     }
 
-    public void setI2PProps ( Properties p )
+    private void startNodeThread ( final Properties p )
     {
-        if ( i2pnet != null )
+        final SWTApp app = this;
+        Thread t = new Thread ( new Runnable()
         {
-            i2pnet.setProperties ( p );
-            List<CObj> myonlist = new LinkedList<CObj>();
-            CObjList myids = node.getIndex().getMyIdentities();
-
-            for ( int c = 0; c < myids.size(); c++ )
+            @Override
+            public void run()
             {
-                try
-                {
-                    CObj ido = myids.get ( c );
+                node = new StandardI2PNode();
+                node.bootNode ( nodeDir, p, usrcallback,
+                                netcallback, concallback, app );
 
-                    if ( ido.getPrivateNumber ( CObj.PRV_DEST_OPEN ) == null ||
-                            ido.getPrivateNumber ( CObj.PRV_DEST_OPEN ) == 1L )
+                node.getNode().getShareManager().setShareListener ( new ShareListener()
+                {
+
+                    @Override
+                    public void shareManagerRunning ( final boolean running )
                     {
-                        myonlist.add ( ido );
+                        Display.getDefault().asyncExec ( new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                if ( running )
+                                {
+                                    lblNotRunning.setText ( "Share Manager is running" );
+                                }
+
+                                else
+                                {
+                                    lblNotRunning.setText ( "Share Manager" );
+                                }
+
+                            }
+
+                        } );
+
                     }
 
-                }
+                } );
 
-                catch ( Exception e )
+                final boolean en = Wrapper.getEnabledShareManager();
+                node.getNode().getShareManager().setEnabled ( en );
+
+                Display.getDefault().asyncExec ( new Runnable()
                 {
-                    e.printStackTrace();
-                }
+                    @Override
+                    public void run()
+                    {
+                        startedSuccessfully();
+
+                        if ( node.getNode().getShareManager().isRunning() )
+                        {
+                            lblNotRunning.setText ( "The share manager is RUNNING" );
+                        }
+
+                        else
+                        {
+                            lblNotRunning.setText ( "The share manager is not running" );
+                        }
+
+                        btnEnableShareManager.setSelection ( en );
+
+                    }
+
+                } );
 
             }
 
-            myids.close();
+        }, "Node start thread" );
 
-            for ( CObj mid : myonlist )
-            {
-                CObj off = mid.clone();
-                off.setType ( CObj.USR_START_DEST );
-                off.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 0L );
-                node.enqueue ( off );
-            }
-
-            for ( CObj mid : myonlist )
-            {
-                CObj on = mid.clone();
-                on.setType ( CObj.USR_START_DEST );
-                on.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
-                node.enqueue ( on );
-            }
-
-        }
-
+        t.start();
     }
 
     private Properties getI2PReady()
@@ -1343,112 +1206,6 @@ public class SWTApp implements UpdateInterface
         i2pDialog.create();
 
         return i2pDialog.getI2PProps();
-    }
-
-    private IdentityCache idCache;
-    public IdentityCache getIdCache()
-    {
-        return idCache;
-    }
-
-    private void startNodeThread ( final Properties p )
-    {
-        Thread t = new Thread ( new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                Net net = null;
-
-                if ( !TESTNODE )
-                {
-                    i2pnet = new I2PNet ( nodeDir, p );
-                    i2pnet.waitUntilReady();
-                    net = i2pnet;
-                }
-
-                else
-                {
-                    net = new RawNet ( new File ( nodeDir ) );
-                }
-
-                try
-                {
-                    node = new Node ( nodeDir, net, usrcallback,
-                                      netcallback, concallback );
-
-                    updateAfterNodeStart();
-
-                    idCache = new IdentityCache ( node.getIndex() );
-
-                    node.getShareManager().setShareListener ( new ShareListener()
-                    {
-
-                        @Override
-                        public void shareManagerRunning ( final boolean running )
-                        {
-                            Display.getDefault().asyncExec ( new Runnable()
-                            {
-                                @Override
-                                public void run()
-                                {
-                                    if ( running )
-                                    {
-                                        lblNotRunning.setText ( "Share Manager is running" );
-                                    }
-
-                                    else
-                                    {
-                                        lblNotRunning.setText ( "Share Manager" );
-                                    }
-
-                                }
-
-                            } );
-
-                        }
-
-                    } );
-
-                    final boolean en = Wrapper.getEnabledShareManager();
-                    node.getShareManager().setEnabled ( en );
-
-                    Display.getDefault().asyncExec ( new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            startedSuccessfully();
-
-                            if ( node.getShareManager().isRunning() )
-                            {
-                                lblNotRunning.setText ( "The share manager is RUNNING" );
-                            }
-
-                            else
-                            {
-                                lblNotRunning.setText ( "The share manager is not running" );
-                            }
-
-                            btnEnableShareManager.setSelection ( en );
-
-                        }
-
-                    } );
-
-                }
-
-                catch ( IOException e )
-                {
-                    e.printStackTrace();
-                    failedToStart();
-                }
-
-            }
-
-        }, "Node start thread" );
-
-        t.start();
     }
 
     public SubTreeModel getIdentModel()
@@ -1463,33 +1220,6 @@ public class SWTApp implements UpdateInterface
         identModel.setCollaspseState ( identTreeViewer );
     }
 
-    private void loadDefaults()
-    {
-        //Load default seed file.
-        File defseedfile = new File ( nodeDir + File.separator + "defseed.dat" );
-
-        if ( defseedfile.exists() )
-        {
-            loadSeed ( defseedfile );
-        }
-
-        File spamex = new File ( nodeDir + File.separator + "spamex.dat" );
-
-        if ( spamex.exists() )
-        {
-            loadSpamEx ( spamex );
-        }
-
-        //Load default communities and subscribe.
-        File defcomfile = new File ( nodeDir + File.separator + "defcom.dat" );
-
-        if ( defcomfile.exists() )
-        {
-            loadDefCommunitySubs ( defcomfile );
-        }
-
-    }
-
     private void startedSuccessfully()
     {
 
@@ -1497,8 +1227,8 @@ public class SWTApp implements UpdateInterface
         //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
         // Post tree must be id 0, the default for the new treeid value is 0 so
         // existing entitys for the posts tree will get id 0
-        identModel = new SubTreeModel ( node.getIndex(),
-                                        new SubTreeEntityDB ( node.getSession() ),
+        identModel = new SubTreeModel ( node.getNode().getIndex(),
+                                        new SubTreeEntityDB ( session ),
                                         SubTreeModel.POST_TREE, 0 );
         identModel.init();
         identTreeViewer.setContentProvider ( identModel );
@@ -1524,121 +1254,22 @@ public class SWTApp implements UpdateInterface
 
         pmTab.init();
 
-        try
-        {
-            CObjList mlst = node.getIndex().getMyIdentities();
+        node.nodeStarted();
 
-            if ( mlst.size() == 0 )
-            {
-                CObj co = new CObj();
-                co.setType ( CObj.IDENTITY );
-                co.pushString ( CObj.NAME, "anon" );
-                node.enqueue ( co );
-
-                if ( !TESTNODE )
-                {
-                    loadDefaults();
-                }
-
-            }
-
-            else
-            {
-                for ( int c = 0; c < mlst.size(); c++ )
-                {
-                    CObj mc = mlst.get ( c );
-                    usrcallback.update ( mc );
-                }
-
-            }
-
-            mlst.close();
-
-            if ( !TESTNODE )
-            {
-                File devid = new File ( nodeDir + File.separator + "developerid.dat" );
-
-                if ( devid.exists() )
-                {
-                    loadDeveloperIdentity ( devid );
-                }
-
-            }
-
-            mlst = node.getIndex().getMySubscriptions();
-
-            for ( int c = 0; c < mlst.size(); c++ )
-            {
-                usrcallback.update ( mlst.get ( c ) );
-            }
-
-            mlst.close();
-
-            pmTab.updateMessages();
-
-            if ( Wrapper.getStartDestinationsOnStartup() )
-            {
-                node.startDestinations ( Wrapper.getStartDestinationDelay() );
-            }
-
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-        }
+        pmTab.updateMessages();
 
         createDialogs();
         exportCommunities();
 
-        saveVersionFile();
+        //      saveVersionFile();
         startNetUpdateStatusTimer();
-
-        CObj u = new CObj();
-        u.setType ( CObj.USR_SPAMEX_UPDATE );
-        getNode().enqueue ( u );
-
-    }
-
-    private void failedToStart()
-    {
-        System.exit ( 1 );
-    }
-
-
-    private I2PNet i2pnet;
-
-    private void startNode()
-    {
-
-        String lastversion = lastVersion();
-
-        if ( lastversion != null )
-        {
-            upgrade0301 ( lastversion );
-            upgrade0405 ( lastversion );
-            upgrade0418 ( lastversion );
-        }
-
-        // new RawNet ( new File ( nodeDir ) )
-        Properties p = getI2PReady();
-
-        startNodeThread ( p );
+        //
+        //      CObj u = new CObj();
+        //      u.setType ( CObj.USR_SPAMEX_UPDATE );
+        //      getNode().enqueue ( u );
 
     }
 
-    public void updateAfterNodeStart()
-    {
-        String lastversion = lastVersion();
-
-        if ( lastversion != null )
-        {
-            upgrade0115 ( lastversion );
-            upgrade0505 ( lastversion );
-            upgrade0506 ( lastversion );
-        }
-
-    }
 
     private boolean pendingClear = false;
 
@@ -1689,11 +1320,11 @@ public class SWTApp implements UpdateInterface
     {
         String netstat = "";
 
-        if ( getNode() != null )
+        if ( node.getNode() != null )
         {
-            if ( getNode().getNet() != null )
+            if ( node.getNode().getNet() != null )
             {
-                netstat = getNode().getNet().getStatus();
+                netstat = node.getNode().getNet().getStatus();
             }
 
         }
@@ -1728,79 +1359,6 @@ public class SWTApp implements UpdateInterface
     }
 
 
-    public void closeNode()
-    {
-        node.close();
-
-        if ( i2pnet != null )
-        {
-            i2pnet.exit();
-        }
-
-    }
-
-    public String lastVersion()
-    {
-        File vf = new File ( nodeDir + File.separator + Wrapper.VERSION_FILE );
-
-        if ( vf.exists() )
-        {
-            try
-            {
-                FileReader fr = new FileReader ( vf );
-                BufferedReader br = new BufferedReader ( fr );
-                String vl = br.readLine();
-                br.close();
-
-                return vl;
-            }
-
-            catch ( Exception e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        return null;
-    }
-
-    private void upgrade0115 ( String lastversion )
-    {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0115 ) < 0 )
-        {
-            node.getHasFileCreator().updateHasFile ( this );
-        }
-
-    }
-
-    private void upgrade0301 ( String lastversion )
-    {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0403 ) < 0 )
-        {
-            Upgrade0301.upgrade ( nodeDir + File.separator + "index" );
-        }
-
-    }
-
-    private void upgrade0405 ( String lastversion )
-    {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0405 ) < 0 )
-        {
-            Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
-        }
-
-    }
-
-    private void upgrade0418 ( String lastversion )
-    {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0418 ) < 0 )
-        {
-            Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
-        }
-
-    }
-
     @Override
     public void updateStatus ( String st )
     {
@@ -1816,73 +1374,6 @@ public class SWTApp implements UpdateInterface
                 e.printStackTrace();
             }
 
-        }
-
-    }
-
-    private void upgrade0505 ( String lastversion )
-    {
-        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0505 ) < 0 )
-        {
-            node.getHasFileCreator().updateOnlyHasFile ( this );
-        }
-
-    }
-
-    private void upgrade0506 ( String lastversion )
-    {
-        //Note, upgrading to 0.5.6 will take some time
-        //because new subscriptions have to be generated, so we run it
-        //in a background thread whenever we start 0.5.6.
-        //We're assuming when we make the next release everyone's
-        //subscription sequences will be updated.
-        if ( Wrapper.VERSION.equals ( Wrapper.VERSION_0506 ) )
-        {
-            Upgrade0506 up = new Upgrade0506 ( node );
-            Thread t = new Thread ( up );
-            t.start();
-        }
-
-    }
-
-    private boolean isSameOrNewer()
-    {
-        String vl = lastVersion();
-
-        if ( Wrapper.compareVersions ( vl, Wrapper.VERSION ) > 0 )
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private void deleteVersionAndExit()
-    {
-        File vf = new File ( nodeDir + File.separator + Wrapper.VERSION_FILE );
-
-        if ( vf.exists() )
-        {
-            vf.delete();
-        }
-
-        System.exit ( Wrapper.RESTART_RC );
-    }
-
-    private void saveVersionFile()
-    {
-        try
-        {
-            File vf = new File ( nodeDir + File.separator + Wrapper.VERSION_FILE );
-            FileOutputStream fos = new FileOutputStream ( vf );
-            PrintWriter pw = new PrintWriter ( fos );
-            pw.println ( Wrapper.VERSION );
-            pw.close();
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
         }
 
     }
@@ -1960,18 +1451,20 @@ public class SWTApp implements UpdateInterface
     }
 
 
+    public void startNode()
+    {
+        // new RawNet ( new File ( nodeDir ) )
+        Properties p = getI2PReady();
+
+        startNodeThread ( p );
+
+    }
 
     /**
         Open the window.
     */
     public void open()
     {
-        if ( !isSameOrNewer() )
-        {
-            //Something went wrong on upgrade
-            deleteVersionAndExit();
-        }
-
         Display.setAppName ( "aktie" );
         Display display = Display.getDefault();
 
@@ -2043,7 +1536,7 @@ public class SWTApp implements UpdateInterface
         saveWindowIsMaximized ( windowMaximized );
 
         System.out.println ( "CLOSING NODE" );
-        closeNode();
+        node.closeNode();
     }
 
     private void addData ( CObj co )
@@ -2077,7 +1570,7 @@ public class SWTApp implements UpdateInterface
 
     private void setShares ( String comid, String memid )
     {
-        List<DirectoryShare> lst = getNode().getShareManager().listShares ( comid, memid );
+        List<DirectoryShare> lst = node.getNode().getShareManager().listShares ( comid, memid );
         downloadToShareDialog.setShares ( lst );
         List<DirectoryShare> plst = new LinkedList<DirectoryShare>();
         DirectoryShare alls = new DirectoryShare();
@@ -2127,7 +1620,7 @@ public class SWTApp implements UpdateInterface
     {
         if ( selectedShare != null )
         {
-            DirectoryShare ds = getNode().getShareManager().getShare ( selectedShare.getId() );
+            DirectoryShare ds = node.getNode().getShareManager().getShare ( selectedShare.getId() );
             textNumberFiles.setText ( Long.toString ( ds.getNumberFiles() ) );
             textNumberSubDirs.setText ( Long.toString ( ds.getNumberSubFolders() ) );
             textShareName.setText ( ds.getShareName() );
@@ -2150,246 +1643,6 @@ public class SWTApp implements UpdateInterface
         membershipsTable.searchAndSort();
     }
 
-    private void loadSeed ( File f )
-    {
-        BufferedReader br = null;
-
-        try
-        {
-            br = new BufferedReader ( new FileReader ( f ) );
-            JSONTokener p = new JSONTokener ( br );
-            JSONObject o = new JSONObject ( p );
-            CObjList uplst = new CObjList();
-
-            while ( o != null )
-            {
-                CObj co = new CObj();
-                co.loadJSON ( o );
-
-                if ( CObj.IDENTITY.equals ( co.getType() ) )
-                {
-                    co.setType ( CObj.USR_SEED );
-                    uplst.add ( co );
-                }
-
-                try
-                {
-                    o = new JSONObject ( p );
-                }
-
-                catch ( Exception xr )
-                {
-                    o = null;
-                }
-
-            }
-
-            br.close();
-            node.enqueue ( uplst );
-            CObj ns = new CObj();
-            ns.setType ( CObj.USR_FORCE_SEARCHER );
-            node.enqueue ( ns );
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-
-            if ( br != null )
-            {
-                try
-                {
-                    br.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-    }
-
-    private void loadDeveloperIdentity ( File f )
-    {
-        BufferedReader br = null;
-
-        try
-        {
-            br = new BufferedReader ( new FileReader ( f ) );
-            JSONTokener p = new JSONTokener ( br );
-            JSONObject o = new JSONObject ( p );
-
-            while ( o != null )
-            {
-                CObj co = new CObj();
-                co.loadJSON ( o );
-                developerIdentities.add ( co.getId() );
-                node.newDeveloperIdentity ( co.getId() );
-
-                try
-                {
-                    o = new JSONObject ( p );
-                }
-
-                catch ( Exception xr )
-                {
-                    o = null;
-                }
-
-            }
-
-            br.close();
-        }
-
-        catch ( Exception e )
-        {
-            if ( br != null )
-            {
-                try
-                {
-                    br.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-    }
-
-    private void loadSpamEx ( File f )
-    {
-        BufferedReader br = null;
-
-        try
-        {
-            br = new BufferedReader ( new FileReader ( f ) );
-            JSONTokener p = new JSONTokener ( br );
-            JSONObject o = new JSONObject ( p );
-
-            CObjList uplst = new CObjList();
-
-            while ( o != null )
-            {
-                CObj co = new CObj();
-                co.loadJSON ( o );
-
-                if ( CObj.SPAMEXCEPTION.equals ( co.getType() ) )
-                {
-                    co.setType ( CObj.USR_SPAMEX );
-                    uplst.add ( co );
-                }
-
-                try
-                {
-                    o = new JSONObject ( p );
-                }
-
-                catch ( Exception xr )
-                {
-                    o = null;
-                }
-
-            }
-
-            br.close();
-            node.enqueue ( uplst );
-            CObj ns = new CObj();
-            ns.setType ( CObj.USR_FORCE_SEARCHER );
-            node.enqueue ( ns );
-        }
-
-        catch ( Exception e )
-        {
-            e.printStackTrace();
-
-            if ( br != null )
-            {
-                try
-                {
-                    br.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-    }
-
-    private void loadDefCommunitySubs ( File f )
-    {
-        BufferedReader br = null;
-        List<CObj> comlst = new LinkedList<CObj>();
-
-        try
-        {
-            br = new BufferedReader ( new FileReader ( f ) );
-            JSONTokener p = new JSONTokener ( br );
-            JSONObject o = new JSONObject ( p );
-            CObjList colst = new CObjList();
-
-            while ( o != null )
-            {
-                CObj co = new CObj();
-                co.loadJSON ( o );
-
-                if ( CObj.COMMUNITY.equals ( co.getType() ) )
-                {
-                    co.setType ( CObj.USR_COMMUNITY );
-                    comlst.add ( co );
-                    colst.add ( co );
-                }
-
-                try
-                {
-                    o = new JSONObject ( p );
-                }
-
-                catch ( Exception re )
-                {
-                    o = null;
-                }
-
-            }
-
-            br.close();
-            node.enqueue ( colst );
-        }
-
-        catch ( Exception e )
-        {
-            if ( br != null )
-            {
-                try
-                {
-                    br.close();
-                }
-
-                catch ( Exception e2 )
-                {
-                }
-
-            }
-
-        }
-
-        if ( comlst.size() > 0 )
-        {
-            new DefComSubThread ( node, comlst );
-        }
-
-    }
-
     protected void createDialogs()
     {
         newCommunityDialog = new NewCommunityDialog ( shell, this );
@@ -2404,7 +1657,7 @@ public class SWTApp implements UpdateInterface
         newPostDialog.create();
         downloadPriorityDialog = new DownloadPriorityDialog ( shell, this );
         downloadPriorityDialog.create();
-        downloadsTable.getTableViewer().setInput ( node.getFileHandler() );
+        downloadsTable.getTableViewer().setInput ( node.getNode().getFileHandler() );
         membersDialog = new ShowMembersDialog ( shell, this );
         membersDialog.create();
         privComDialog = new ShowPrivateCommunityDialog ( shell, this );
@@ -2443,7 +1696,7 @@ public class SWTApp implements UpdateInterface
             try
             {
                 File exf = new File ( exportCommunitiesFile );
-                CObjList pubcoms = node.getIndex().getPublicCommunities();
+                CObjList pubcoms = node.getNode().getIndex().getPublicCommunities();
                 PrintWriter pw = new PrintWriter ( new FileOutputStream ( exf ) );
 
                 for ( int c = 0; c < pubcoms.size(); c++ )
@@ -2470,6 +1723,7 @@ public class SWTApp implements UpdateInterface
     public static int MAXIMGWIDTH = 400;
     private boolean previewResize = true;
 
+    private HH2Session session;
 
     private Composite composite_6;
     private MembershipsTable membershipsTable;
@@ -2514,7 +1768,7 @@ public class SWTApp implements UpdateInterface
             p.pushNumber ( CObj.FRAGNUMBER, c.getNumber ( CObj.FRAGNUMBER ) );
             p.pushString ( CObj.FILEDIGEST, c.getString ( CObj.FILEDIGEST ) );
             p.pushString ( CObj.SHARE_NAME, c.getString ( CObj.SHARE_NAME ) );
-            getNode().enqueue ( p );
+            node.getNode().enqueue ( p );
             return true;
         }
 
@@ -2538,7 +1792,7 @@ public class SWTApp implements UpdateInterface
             p.pushNumber ( CObj.FRAGNUMBER, c.getNumber ( CObj.PRV_FRAGNUMBER ) );
             p.pushString ( CObj.FILEDIGEST, c.getString ( CObj.PRV_FILEDIGEST ) );
             p.pushString ( CObj.SHARE_NAME, c.getString ( CObj.SHARE_NAME ) );
-            getNode().enqueue ( p );
+            node.getNode().enqueue ( p );
             return true;
         }
 
@@ -2796,7 +2050,7 @@ public class SWTApp implements UpdateInterface
 
                 if ( selected != null && node != null )
                 {
-                    loadSpamEx ( new File ( selected ) );
+                    node.loadSpamEx ( new File ( selected ) );
                 }
 
             }
@@ -2909,7 +2163,7 @@ public class SWTApp implements UpdateInterface
                             try
                             {
                                 PrintWriter pw = new PrintWriter ( new FileOutputStream ( new File ( selected ) ) );
-                                CObjList ilst = node.getIndex().getSpamEx ( selectedIdentity.getId(),
+                                CObjList ilst = node.getNode().getIndex().getSpamEx ( selectedIdentity.getId(),
                                                 0L, Long.MAX_VALUE );
 
                                 for ( int c = 0; c < ilst.size(); c++ )
@@ -2981,7 +2235,7 @@ public class SWTApp implements UpdateInterface
                 //ce.pushString(CObj.ENABLED, Boolean.toString(en));
                 //node.enqueue(ce);
                 Wrapper.saveEnabledShareManager ( en );
-                node.getShareManager().setEnabled ( en );
+                node.getNode().getShareManager().setEnabled ( en );
             }
 
             @Override
@@ -3127,7 +2381,7 @@ public class SWTApp implements UpdateInterface
                                 unsub.pushString ( CObj.COMMUNITYID, comid );
                                 unsub.pushString ( CObj.CREATOR, identid );
                                 unsub.pushString ( CObj.SUBSCRIBED, "false" );
-                                getNode().enqueue ( unsub );
+                                node.getNode().enqueue ( unsub );
                             }
 
                         }
@@ -3318,7 +2572,7 @@ public class SWTApp implements UpdateInterface
                     CObj co = new CObj();
                     co.setType ( CObj.USR_COMMUNITY_UPDATE );
                     co.pushString ( CObj.COMMUNITYID, selectedCommunity.getDig() );
-                    node.enqueue ( co );
+                    node.getNode().enqueue ( co );
 
                 }
 
@@ -3363,7 +2617,7 @@ public class SWTApp implements UpdateInterface
 
                     if ( node != null )
                     {
-                        node.priorityEnqueue ( cl );
+                        node.getNode().priorityEnqueue ( cl );
                     }
 
                 }
@@ -3410,7 +2664,7 @@ public class SWTApp implements UpdateInterface
 
                     if ( node != null )
                     {
-                        node.priorityEnqueue ( cl );
+                        node.getNode().priorityEnqueue ( cl );
                     }
 
                 }
@@ -3455,7 +2709,7 @@ public class SWTApp implements UpdateInterface
                             String memid = null;
                             String comid = fr.getDig();
                             String creator = fr.getString ( CObj.CREATOR );
-                            CObjList idlst = getNode().getIndex().getMyIdentities();
+                            CObjList idlst = node.getNode().getIndex().getMyIdentities();
 
                             for ( int c = 0; c < idlst.size() && memid == null; c++ )
                             {
@@ -3481,7 +2735,7 @@ public class SWTApp implements UpdateInterface
 
                             if ( memid == null )
                             {
-                                CObjList mlst = getNode().getIndex().getMyMemberships ( comid );
+                                CObjList mlst = node.getNode().getIndex().getMyMemberships ( comid );
 
                                 if ( mlst.size() > 0 )
                                 {
@@ -3508,7 +2762,7 @@ public class SWTApp implements UpdateInterface
                                 sub.pushString ( CObj.CREATOR, memid );
                                 sub.pushString ( CObj.COMMUNITYID, comid );
                                 sub.pushString ( CObj.SUBSCRIBED, "true" );
-                                getNode().enqueue ( sub );
+                                node.getNode().enqueue ( sub );
 
                             }
 
@@ -3951,7 +3205,7 @@ public class SWTApp implements UpdateInterface
 
                     for ( String id : userids )
                     {
-                        CObj u = node.getIndex().getIdentity ( id );
+                        CObj u = node.getNode().getIndex().getIdentity ( id );
                         users.add ( u );
                     }
 
@@ -4326,7 +3580,7 @@ public class SWTApp implements UpdateInterface
                             CObj fr = ae.getCObj();
                             fr.setType ( CObj.USR_DOWNLOAD_FILE );
                             fr.pushString ( CObj.CREATOR, selectedIdentity.getId() );
-                            getNode().enqueue ( fr );
+                            node.getNode().enqueue ( fr );
                         }
 
                     }
@@ -4581,7 +3835,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedShare != null )
                 {
-                    getNode().getShareManager().addShare (
+                    node.getNode().getShareManager().addShare (
                         selectedShare.getCommunityId(),
                         selectedShare.getMemberId(),
                         selectedShare.getShareName(),
@@ -4611,7 +3865,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedShare != null )
                 {
-                    getNode().getShareManager().addShare (
+                    node.getNode().getShareManager().addShare (
                         selectedShare.getCommunityId(),
                         selectedShare.getMemberId(),
                         selectedShare.getShareName(),
@@ -4640,7 +3894,7 @@ public class SWTApp implements UpdateInterface
             {
                 if ( selectedShare != null )
                 {
-                    getNode().getShareManager().deleteShare ( selectedShare.getCommunityId(),
+                    node.getNode().getShareManager().deleteShare ( selectedShare.getCommunityId(),
                             selectedShare.getMemberId(), selectedShare.getShareName() );
 
                     if ( selectedCommunity != null && selectedIdentity != null )
@@ -4826,6 +4080,27 @@ public class SWTApp implements UpdateInterface
     public void setPreviewResize ( boolean b )
     {
         previewResize = b;
+    }
+
+    @Override
+    public boolean doUpgrade()
+    {
+        return doUpgrade;
+    }
+
+    @Override
+    public void updateMessage ( final String msg )
+    {
+        Display.getDefault().asyncExec ( new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                lblVersion.setText ( msg );
+            }
+
+        } );
+
     }
 
 }
