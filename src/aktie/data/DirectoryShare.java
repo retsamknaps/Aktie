@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class DirectoryShare
 {
@@ -159,5 +161,11 @@ public class DirectoryShare
     {
         this.skipSpam = skipSpam;
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }

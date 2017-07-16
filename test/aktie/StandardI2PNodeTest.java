@@ -22,11 +22,14 @@ public class StandardI2PNodeTest
     class NodeListener  implements UpdateCallback, ConnectionListener, UpgradeControllerCallback
     {
 
+    	public boolean doupgrade = false;
+    	public boolean hascheckeddoupgrade = false;
+    	
         @Override
         public boolean doUpgrade()
         {
-            // TODO Auto-generated method stub
-            return false;
+        	hascheckeddoupgrade = true;
+            return doupgrade;
         }
 
         @Override
@@ -125,6 +128,7 @@ public class StandardI2PNodeTest
             FUtils.deleteDir ( tmpdir );
 
             NodeListener masterlistener = new NodeListener();
+            masterlistener.doupgrade = true;
 
             StandardI2PNode nd = new StandardI2PNode();
             Properties p = new Properties();
@@ -147,6 +151,20 @@ public class StandardI2PNodeTest
             nd.getNode().enqueue ( com );
 
             pause ( 5 );
+            
+            CObjList nlst = nd.getNode().getIndex().getPublicCommunities();
+            assertEquals(1, nlst.size());
+            CObj pubcom = nlst.get(0);
+            nlst.close();
+            
+            CObj sub0 = new CObj();
+            sub0.setType ( CObj.SUBSCRIPTION );
+            sub0.pushString ( CObj.CREATOR, myid.getId() );
+            sub0.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            sub0.pushString ( CObj.SUBSCRIBED, "true" );
+            nd.getNode().enqueue ( sub0 );
+            
+            pause ( 5 );
 
             File testseeds = new File ( masterDir + File.separator + "defseed.dat" );
             nd.saveSeeds ( testseeds );
@@ -155,6 +173,7 @@ public class StandardI2PNodeTest
             File devfile = new File ( masterDir + File.separator + "developerid.dat" );
             nd.saveSeeds ( devfile );
             assertTrue ( devfile.exists() );
+            nd.loadDeveloperIdentity(devfile);
 
             File testcom = new File ( masterDir + File.separator + "defcom.dat" );
             nd.saveValidCommunities ( testcom );
@@ -166,15 +185,15 @@ public class StandardI2PNodeTest
             NodeListener snl00 = new NodeListener();
             prepareNode ( masterDir, "stdnode001", sn00, snl00 );
 
-            pause ( 120 );
+            pause ( 60 );
 
-            CObjList nlst = sn00.getNode().getIndex().getIdentities();
+            nlst = sn00.getNode().getIndex().getIdentities();
             assertEquals ( 2, nlst.size() );
             nlst.close();
 
-            //nlst = sn00.getNode().getIndex().getAllSubscriptions();
-            //assertEquals(2, nlst.size());
-            //nlst.close();
+            nlst = sn00.getNode().getIndex().getAllSubscriptions();
+            assertEquals(2, nlst.size());
+            nlst.close();
 
             nlst = nd.getNode().getIndex().getIdentities();
             assertEquals ( 2, nlst.size() );
@@ -183,7 +202,23 @@ public class StandardI2PNodeTest
             nlst = nd.getNode().getIndex().getAllSubscriptions();
             assertEquals ( 2, nlst.size() );
             nlst.close();
-
+            
+            //Post update file
+            File f = new File("aktie.jar");
+            assertTrue(f.exists());
+            
+            CObj co = new CObj();
+            co.setType(CObj.HASFILE);
+            co.pushString ( CObj.COMMUNITYID, pubcom.getDig() );
+            co.pushString ( CObj.CREATOR, myid.getId() );
+            co.pushPrivate ( CObj.LOCALFILE, f.getPath() );
+            co.pushString(CObj.UPGRADEFLAG, "true");
+            nd.getNode().enqueue ( co );
+            
+            pause(5);
+            
+            assertTrue(masterlistener.hascheckeddoupgrade);
+            
         }
 
         catch ( Exception e )

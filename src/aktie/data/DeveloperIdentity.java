@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class DeveloperIdentity
 {
@@ -104,6 +106,11 @@ public class DeveloperIdentity
     public void setSpamExUpdateCycle ( int spamExUpdateCycle )
     {
         this.spamExUpdateCycle = spamExUpdateCycle;
+    }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
     }
 
 

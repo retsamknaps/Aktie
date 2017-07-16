@@ -555,7 +555,7 @@ public class StandardI2PNode
 
     }
 
-    private void loadDeveloperIdentity ( File f )
+    public void loadDeveloperIdentity ( File f )
     {
         BufferedReader br = null;
 

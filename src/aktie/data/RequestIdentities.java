@@ -3,6 +3,8 @@ package aktie.data;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 /**
     Request identity information from another node
 
@@ -50,5 +52,11 @@ public class RequestIdentities
     {
         this.lastRequest = lastRequest;
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }

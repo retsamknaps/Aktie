@@ -67,10 +67,11 @@ public class InHasFileProcessor extends GenericProcessor
                 String comid = b.getString ( CObj.COMMUNITYID );
                 String wdig = b.getString ( CObj.FILEDIGEST );
                 String ddig = b.getString ( CObj.FRAGDIGEST );
+                String upgrade = b.getString(CObj.UPGRADEFLAG);
 
                 if ( Level.INFO.equals ( log.getLevel() ) )
                 {
-                    logIt ( "IS VALID: isnew: " + isnew + " creator: " +
+                    logIt ( "IS VALID: isnew: " + isnew + " creator: " + " upgrade " + upgrade +
                             creatorid + " comid: " + comid + " wdig: " + wdig + " seq: " + seqnum );
                 }
 

@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 
 /**
     Internal information about identity not shared with others
@@ -536,5 +538,11 @@ public class IdentityData
     {
         this.lastPubGlobalSequence = lastPubGlobalSequence;
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }

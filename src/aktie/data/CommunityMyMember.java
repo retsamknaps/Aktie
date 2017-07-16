@@ -3,6 +3,8 @@ package aktie.data;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class CommunityMyMember
 {
@@ -68,5 +70,11 @@ public class CommunityMyMember
     {
         this.key = key;
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }

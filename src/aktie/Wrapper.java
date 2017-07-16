@@ -142,6 +142,7 @@ public class Wrapper
         boolean restore = false;
         boolean rebuild = false;
         boolean dumpindex = false;
+        boolean dumpdb = false;
 
         for ( int ct = 0; ct < args.length; ct++ )
         {
@@ -175,11 +176,15 @@ public class Wrapper
                 dumpindex = true;
             }
 
+            if ( "-dumpdb".equals ( args[ct] ) )
+            {
+                dumpdb = true;
+            }
+
         }
 
         //Test if rundir exists.
         File f = new File ( RUNDIR );
-
         if ( !f.exists() || isNewer() )
         {
 
@@ -352,7 +357,12 @@ public class Wrapper
         {
             cmd.add ( "aktie.DumpIndex" );
         }
-
+        
+        else if ( dumpdb )
+        {
+        	cmd.add ( "aktie.DumpDB" );
+        }
+        
         else
         {
             cmd.add ( "aktie.gui.SWTApp" );
@@ -484,6 +494,7 @@ public class Wrapper
     {
         File vf = new File ( NODEDIR + File.separator + VERSION_FILE );
 
+        System.out.println("HERE! " + vf);
         if ( vf.exists() )
         {
             try

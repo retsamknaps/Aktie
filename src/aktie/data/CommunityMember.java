@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class CommunityMember
 {
@@ -343,6 +345,11 @@ public class CommunityMember
     public void setLastGlobalSequence ( long lastGlobalSequence )
     {
         this.lastGlobalSequence = lastGlobalSequence;
+    }
+    
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
     }
 
 }

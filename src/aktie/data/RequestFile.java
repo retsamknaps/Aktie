@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 /**
     Request a file for download
 
@@ -257,5 +259,11 @@ public class RequestFile
         RequestFile rf = ( RequestFile ) o;
         return id == rf.getId();
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }

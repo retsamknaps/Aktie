@@ -49,10 +49,10 @@
     		<!-- fileset dir="${lib}"/>
     		<fileset dir="${swt}"/>
     		<fileset dir="${aktie_node}"/ -->
-    		<fileset dir="${bin}" includes="aktie/gui/Wrapper.class,aktie/crypto/Utils.class,aktie/utils/FUtils.class"/>
+    		<fileset dir="${bin}" includes="aktie/Wrapper.class,aktie/crypto/Utils.class,aktie/utils/FUtils.class"/>
     	    <manifest>
     	      <attribute name="Main-Class"
-    	            value="aktie.gui.Wrapper"/>
+    	            value="aktie.Wrapper"/>
     	    </manifest>
     	</jar>
   	</target>

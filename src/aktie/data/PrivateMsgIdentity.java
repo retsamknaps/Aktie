@@ -3,6 +3,8 @@ package aktie.data;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class PrivateMsgIdentity
 {
@@ -191,5 +193,11 @@ public class PrivateMsgIdentity
     {
         this.identUpdateCycle = identUpdateCycle;
     }
+
+    public String toString() {
+    	JSONObject o = new JSONObject(this);
+    	return o.toString(4);
+    }
+
 
 }
