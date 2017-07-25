@@ -539,9 +539,10 @@ public class IdentityData
         this.lastPubGlobalSequence = lastPubGlobalSequence;
     }
 
-    public String toString() {
-    	JSONObject o = new JSONObject(this);
-    	return o.toString(4);
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
 

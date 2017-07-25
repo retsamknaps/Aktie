@@ -71,9 +71,10 @@ public class CommunityMyMember
         this.key = key;
     }
 
-    public String toString() {
-    	JSONObject o = new JSONObject(this);
-    	return o.toString(4);
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
 

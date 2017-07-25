@@ -1157,12 +1157,12 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
                         if ( node.getNode().getShareManager().isRunning() )
                         {
-                            lblNotRunning.setText ( "The share manager is RUNNING" );
+                            lblNotRunning.setText ( "Share Manager is running" );
                         }
 
                         else
                         {
-                            lblNotRunning.setText ( "The share manager is not running" );
+                            lblNotRunning.setText ( "Share Manager" );
                         }
 
                         btnEnableShareManager.setSelection ( en );
@@ -1206,6 +1206,9 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
         //identTreeViewer.setContentProvider ( new IdentitySubTreeProvider() );
         // Post tree must be id 0, the default for the new treeid value is 0 so
         // existing entitys for the posts tree will get id 0
+        session = new HH2Session();
+        session.init ( nodeDir + File.separator + "h2gui" );
+
         identModel = new SubTreeModel ( node.getNode().getIndex(),
                                         new SubTreeEntityDB ( session ),
                                         SubTreeModel.POST_TREE, 0 );
@@ -1444,6 +1447,8 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
     */
     public void open()
     {
+        startNode();
+
         Display.setAppName ( "aktie" );
         Display display = Display.getDefault();
 
@@ -1488,7 +1493,7 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
         shell.setVisible ( true );
 
         splash = new SWTSplash ( shell );
-        startNode();
+        //startNode();
         splash.open();
         splash.setVersion ( Wrapper.VERSION );
 

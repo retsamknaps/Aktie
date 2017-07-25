@@ -20,13 +20,13 @@ import aktie.index.Upgrade0405;
 import aktie.net.ConnectionListener;
 import aktie.net.Net;
 import aktie.net.RawNet;
+import aktie.upgrade.Upgrade0518;
 import aktie.upgrade.UpgradeControllerCallback;
 import aktie.utils.FUtils;
 
 public class StandardI2PNode
 {
 
-    public static boolean TESTNODE = false;
     public static boolean TESTLOADDEFAULTS = false;
 
     private String nodeDir;
@@ -63,7 +63,7 @@ public class StandardI2PNode
 
         try
         {
-            if ( !TESTNODE )
+            if ( !Wrapper.TESTNODE )
             {
                 i2pnet = new I2PNet ( nodeDir, p );
                 i2pnet.waitUntilReady();
@@ -110,7 +110,7 @@ public class StandardI2PNode
                 co.pushString ( CObj.NAME, "anon" );
                 node.enqueue ( co );
 
-                if ( !TESTNODE || TESTLOADDEFAULTS )
+                if ( !Wrapper.TESTNODE || TESTLOADDEFAULTS )
                 {
                     loadDefaults();
                 }
@@ -129,7 +129,7 @@ public class StandardI2PNode
 
             mlst.close();
 
-            if ( !TESTNODE )
+            if ( !Wrapper.TESTNODE )
             {
                 File devid = new File ( nodeDir + File.separator + "developerid.dat" );
 
@@ -379,6 +379,7 @@ public class StandardI2PNode
             upgrade0301 ( lastversion );
             upgrade0405 ( lastversion );
             upgrade0418 ( lastversion );
+            upgrade0518 ( lastversion );
         }
 
     }
@@ -442,6 +443,15 @@ public class StandardI2PNode
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0418 ) < 0 )
         {
             Upgrade0405.upgrade ( nodeDir + File.separator + "index" );
+        }
+
+    }
+
+    private void upgrade0518 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0518 ) < 0 )
+        {
+            Upgrade0518.upgrade ( nodeDir );
         }
 
     }

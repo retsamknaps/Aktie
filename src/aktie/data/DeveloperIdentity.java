@@ -108,9 +108,10 @@ public class DeveloperIdentity
         this.spamExUpdateCycle = spamExUpdateCycle;
     }
 
-    public String toString() {
-    	JSONObject o = new JSONObject(this);
-    	return o.toString(4);
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
 

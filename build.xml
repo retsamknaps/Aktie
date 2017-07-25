@@ -7,6 +7,7 @@
 	<property name="lib" location="lib"/>
 	<property name="swt" location="swt"/>
 	<property name="aktie_node" location="aktie_node"/>
+	<property name="aktie_test_node" location="aktie_test_node"/>
   	<property name="bin" location="bin"/>
 	<property name="images" location="images"/>
 
@@ -44,7 +45,7 @@
  	<target name="dist" depends="aktieapp"
         	description="generate the distribution" >
     	<jar jarfile="aktie.jar" >
-    		<fileset dir="." includes="lib/**, swt/**, aktie_node/**"/>
+    		<fileset dir="." includes="lib/**, swt/**, aktie_node/**, aktie_test_node/**"/>
     		
     		<!-- fileset dir="${lib}"/>
     		<fileset dir="${swt}"/>

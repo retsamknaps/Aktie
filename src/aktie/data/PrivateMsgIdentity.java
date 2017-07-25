@@ -194,9 +194,10 @@ public class PrivateMsgIdentity
         this.identUpdateCycle = identUpdateCycle;
     }
 
-    public String toString() {
-    	JSONObject o = new JSONObject(this);
-    	return o.toString(4);
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
 

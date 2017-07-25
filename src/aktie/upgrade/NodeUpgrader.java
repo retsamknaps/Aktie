@@ -72,13 +72,14 @@ public class NodeUpgrader implements UpdateCallback
         {
 
             Long createdon = co.getNumber ( CObj.CREATEDON );
+
             if ( createdon != null && createdon > Wrapper.RELEASETIME )
             {
                 String update = co.getString ( CObj.UPGRADEFLAG );
                 String fname = co.getString ( CObj.NAME );
                 String comid = co.getString ( CObj.COMMUNITYID );
                 String stillhasfile = co.getString ( CObj.STILLHASFILE );
-                
+
                 if ( "true".equals ( update ) && "true".equals ( stillhasfile ) )
                 {
                     if ( controller.doUpgrade() )

@@ -45,7 +45,7 @@ public class IdentityBackupRestore
             File bak = new File ( "aktie_identity_backup.dat" );
             String dest = Wrapper.NODEDIR + File.separator + "i2p";
 
-            if ( StandardI2PNode.TESTNODE )
+            if ( Wrapper.TESTNODE )
             {
                 dest = Wrapper.NODEDIR;
             }

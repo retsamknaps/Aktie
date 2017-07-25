@@ -25,6 +25,8 @@ import aktie.utils.FUtils;
 public class Wrapper
 {
 
+    public static boolean TESTNODE = false;
+
     public static int RESTART_RC = 7;
 
     public static String VERSION_0115 = "version 0.1.15";
@@ -33,9 +35,9 @@ public class Wrapper
     public static String VERSION_0418 = "version 0.4.18";
     public static String VERSION_0505 = "version 0.5.5";
     public static String VERSION_0506 = "version 0.5.6";
-    public static String VERSION_0517 = "version 0.5.17";
+    public static String VERSION_0518 = "version 0.5.18";
 
-    public static String VERSION = VERSION_0517;
+    public static String VERSION = VERSION_0518;
 
     public static String VERSION_FILE = "version.txt";
 
@@ -64,7 +66,7 @@ public class Wrapper
     public static int PAYMENTTHREADS = 4;
 
     public static String RUNDIR = "aktie_run_dir";
-    public static String NODEDIR = RUNDIR + File.separator + "aktie_node";
+    public static String NODEDIR = TESTNODE ? RUNDIR + File.separator + "aktie_test_node" : RUNDIR + File.separator + "aktie_node";
     public static String LIBDIR = RUNDIR + File.separator + "lib";
     public static String DLDIR = NODEDIR + File.separator + "downloads";
 
@@ -185,6 +187,7 @@ public class Wrapper
 
         //Test if rundir exists.
         File f = new File ( RUNDIR );
+
         if ( !f.exists() || isNewer() )
         {
 
@@ -357,12 +360,12 @@ public class Wrapper
         {
             cmd.add ( "aktie.DumpIndex" );
         }
-        
+
         else if ( dumpdb )
         {
-        	cmd.add ( "aktie.DumpDB" );
+            cmd.add ( "aktie.DumpDB" );
         }
-        
+
         else
         {
             cmd.add ( "aktie.gui.SWTApp" );
@@ -494,7 +497,8 @@ public class Wrapper
     {
         File vf = new File ( NODEDIR + File.separator + VERSION_FILE );
 
-        System.out.println("HERE! " + vf);
+        System.out.println ( "HERE! " + vf );
+
         if ( vf.exists() )
         {
             try
@@ -1054,7 +1058,7 @@ public class Wrapper
 
     public static long getCheckPayment()
     {
-        if ( StandardI2PNode.TESTNODE )
+        if ( TESTNODE )
         {
             return 0;
         }
@@ -1072,7 +1076,7 @@ public class Wrapper
 
     public static long getGenPayment()
     {
-        if ( StandardI2PNode.TESTNODE )
+        if ( TESTNODE )
         {
             return 0;
         }

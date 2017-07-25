@@ -33,9 +33,10 @@ public class Launcher
         this.path = path;
     }
 
-    public String toString() {
-    	JSONObject o = new JSONObject(this);
-    	return o.toString(4);
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
 
