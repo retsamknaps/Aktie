@@ -497,8 +497,6 @@ public class Wrapper
     {
         File vf = new File ( NODEDIR + File.separator + VERSION_FILE );
 
-        System.out.println ( "HERE! " + vf );
-
         if ( vf.exists() )
         {
             try

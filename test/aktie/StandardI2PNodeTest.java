@@ -215,10 +215,14 @@ public class StandardI2PNodeTest
             co.pushString ( CObj.UPGRADEFLAG, "true" );
             nd.getNode().enqueue ( co );
 
-            pause ( 5 );
+            pause ( 20 );
 
             assertTrue ( masterlistener.hascheckeddoupgrade );
 
+            nd.closeNode();
+            sn00.closeNode();
+
+            TestNode.restoreConsts();
         }
 
         catch ( Exception e )

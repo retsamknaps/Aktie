@@ -31,11 +31,15 @@ public class WebSocketTest
         @Override
         public void onClose ( int i, String s, boolean b )
         {
+            System.out.println ( "MClient onClose!-------------------------------" );
+            Thread.dumpStack();
         }
 
         @Override
         public void onError ( Exception e )
         {
+            System.out.println ( "MClient onError!-------------------------------" );
+            e.printStackTrace();
         }
 
         @Override
@@ -49,7 +53,7 @@ public class WebSocketTest
 
         public synchronized boolean waitUntilOpen()
         {
-            int timeout = 10;
+            int timeout = 60;
 
             while ( !isopen && timeout > 0 )
             {
@@ -111,11 +115,15 @@ public class WebSocketTest
         @Override
         public void onClose ( WebSocket ws, int i, String s, boolean b )
         {
+            System.out.println ( "MServer onClose!--------------------------" );
+            Thread.dumpStack();
         }
 
         @Override
         public void onError ( WebSocket ws, Exception e )
         {
+            System.out.println ( "MServer onError!--------------------------" );
+            e.printStackTrace();
         }
 
         @Override
@@ -128,6 +136,7 @@ public class WebSocketTest
         @Override
         public void onStart()
         {
+            System.out.println ( "WServer onStart!----------------------" );
         }
 
         @Override

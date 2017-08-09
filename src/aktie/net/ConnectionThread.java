@@ -785,6 +785,13 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
     public void stop()
     {
+        if ( doLog() )
+        {
+            log.info ( "Closing connection ME: " +
+                       getLocalDestination() + " to: " + getEndDestination() );
+            Thread.dumpStack();
+        }
+
         boolean wasstopped = stop;
         stop = true;
         outproc.go();

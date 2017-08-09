@@ -148,14 +148,61 @@ public class TestNode implements UpgradeControllerCallback
 
     }
 
+    private static long RST_OLDPAYMENT;
+    private static long RST_NEWPAYMENT;
+    private static long RST_MIN_TIME_TO_NEW_CONNECTIONL;
+    private static long RST_MAX_CONNECTION_TIME;
+    private static long RST_DECODE_AND_NEW_CONNECTION_DELAY;
+    private static long RST_REQUEST_UPDATE_DELAY;
+    private static long RST_ALLOWGLOBALAFTERSTARTUP;
+    private static long RST_REREQUESTFRAGSAFTER;
+    private static long RST_REREQUESTLISTAFTER;
+    private static long RST_CHECKHASFILE_DELAY;
+    private static long RST_SHARE_DELAY;
+    private static long RST_MAXGLOBALSEQUENCECOUNT;
+    private static long RST_MAXGLOBALSEQUENCETIME;
+    private static long RST_MINGLOBALSEQDELAY;
+
+    public static void restoreConsts()
+    {
+        Wrapper.OLDPAYMENT                                  = RST_OLDPAYMENT                        ;
+        Wrapper.NEWPAYMENT                                  = RST_NEWPAYMENT                        ;
+        ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION       = RST_MIN_TIME_TO_NEW_CONNECTIONL       ;
+        ConnectionManager2.MAX_CONNECTION_TIME              = RST_MAX_CONNECTION_TIME               ;
+        ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY  = RST_DECODE_AND_NEW_CONNECTION_DELAY   ;
+        ConnectionManager2.REQUEST_UPDATE_DELAY             = RST_REQUEST_UPDATE_DELAY              ;
+        ConnectionManager2.ALLOWGLOBALAFTERSTARTUP          = RST_ALLOWGLOBALAFTERSTARTUP           ;
+        ConnectionFileManager.REREQUESTFRAGSAFTER           = RST_REREQUESTFRAGSAFTER               ;
+        ConnectionFileManager.REREQUESTLISTAFTER            = RST_REREQUESTLISTAFTER                ;
+        ShareManager.CHECKHASFILE_DELAY                     = RST_CHECKHASFILE_DELAY                ;
+        ShareManager.SHARE_DELAY                            = RST_SHARE_DELAY                       ;
+        IdentityData.MAXGLOBALSEQUENCECOUNT                 = RST_MAXGLOBALSEQUENCECOUNT            ;
+        IdentityData.MAXGLOBALSEQUENCETIME                  = RST_MAXGLOBALSEQUENCETIME             ;
+        ConnectionThread.MINGLOBALSEQDELAY                  = RST_MINGLOBALSEQDELAY                 ;
+    }
+
     public static void setTestConsts()
     {
-        Wrapper.OLDPAYMENT = 0;
-        Wrapper.NEWPAYMENT = 0x0400004000000000L;
-
         Logger log = Logger.getLogger ( "aktie" );
         log.setLevel ( Level.INFO );
 
+        RST_OLDPAYMENT                      = Wrapper.OLDPAYMENT                                    ;
+        RST_NEWPAYMENT                      = Wrapper.NEWPAYMENT                                    ;
+        RST_MIN_TIME_TO_NEW_CONNECTIONL     = ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION         ;
+        RST_MAX_CONNECTION_TIME             = ConnectionManager2.MAX_CONNECTION_TIME                ;
+        RST_DECODE_AND_NEW_CONNECTION_DELAY = ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY    ;
+        RST_REQUEST_UPDATE_DELAY            = ConnectionManager2.REQUEST_UPDATE_DELAY               ;
+        RST_ALLOWGLOBALAFTERSTARTUP         = ConnectionManager2.ALLOWGLOBALAFTERSTARTUP            ;
+        RST_REREQUESTFRAGSAFTER             = ConnectionFileManager.REREQUESTFRAGSAFTER             ;
+        RST_REREQUESTLISTAFTER              = ConnectionFileManager.REREQUESTLISTAFTER              ;
+        RST_CHECKHASFILE_DELAY              = ShareManager.CHECKHASFILE_DELAY                       ;
+        RST_SHARE_DELAY                     = ShareManager.SHARE_DELAY                              ;
+        RST_MAXGLOBALSEQUENCECOUNT          = IdentityData.MAXGLOBALSEQUENCECOUNT                   ;
+        RST_MAXGLOBALSEQUENCETIME           = IdentityData.MAXGLOBALSEQUENCETIME                    ;
+        RST_MINGLOBALSEQDELAY               = ConnectionThread.MINGLOBALSEQDELAY                    ;
+
+        Wrapper.OLDPAYMENT = 0;
+        Wrapper.NEWPAYMENT = 0x0400004000000000L;
         ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 13L * 1000L;
         ConnectionManager2.MAX_CONNECTION_TIME = 10L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
@@ -163,7 +210,6 @@ public class TestNode implements UpgradeControllerCallback
         ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 120L * 1000L;
         ConnectionFileManager.REREQUESTFRAGSAFTER = 1L * 60L * 1000L;
         ConnectionFileManager.REREQUESTLISTAFTER = 1L * 60L * 1000L;
-        //ConnectionManager2.
         ShareManager.CHECKHASFILE_DELAY = 2000L;
         ShareManager.SHARE_DELAY = 2000L;
         IdentityData.MAXGLOBALSEQUENCECOUNT = 20;
@@ -487,7 +533,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 20L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -673,7 +719,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 30000 );
             }
 
             catch ( InterruptedException e )
@@ -2203,6 +2249,8 @@ public class TestNode implements UpgradeControllerCallback
             n2.close();
             n3.close();
             n4.close();
+
+            restoreConsts();
 
         }
 

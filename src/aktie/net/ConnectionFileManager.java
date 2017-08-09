@@ -439,46 +439,21 @@ public class ConnectionFileManager implements Runnable
     @Override
     public void run()
     {
-        if ( log.isLoggable ( Level.INFO ) )
-        {
-            log.info ( "STARTING CONNECTION FILEMANAGER" );
-        }
 
         while ( !stop )
         {
-            if ( log.isLoggable ( Level.INFO ) )
-            {
-                log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 0" );
-            }
 
             if ( !stop )
             {
                 removeStale();
 
-                if ( log.isLoggable ( Level.INFO ) )
-                {
-                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 1" );
-                }
-
                 procFileQueue();
 
-                if ( log.isLoggable ( Level.INFO ) )
-                {
-                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 2" );
-                }
-
                 delay();
-
-                if ( log.isLoggable ( Level.INFO ) )
-                {
-                    log.info ( "FILEMANAGER LOOP!!!!!!!!!!!!!!!!! 6" );
-                }
 
             }
 
         }
-
-        log.info ( "FILEMANAGER EXIT" );
 
     }
 

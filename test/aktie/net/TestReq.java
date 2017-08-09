@@ -17,6 +17,10 @@ public class TestReq implements GetSendData2
     private String expLocalDest;
     private String expRemoteDest;
 
+    public TestReq()
+    {
+    }
+
     public void enqueue ( Object o )
     {
         queue.add ( o );

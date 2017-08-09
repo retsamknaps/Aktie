@@ -13,6 +13,7 @@ import aktie.index.CObjList;
 import aktie.utils.FUtils;
 
 import org.hibernate.Session;
+import org.json.JSONObject;
 import org.junit.Test;
 
 public class TestBasic
@@ -54,6 +55,32 @@ public class TestBasic
         assertNotNull ( cn0.getId() );
 
         return n0;
+    }
+
+    public void dumpindex ( TestNode n )
+    {
+        CObjList lst = n.getIndex().getAllCObj();
+
+        for ( int c = 0; c < lst.size(); c++ )
+        {
+            try
+            {
+                CObj co = lst.get ( c );
+                JSONObject jo = co.GETPRIVATEJSON();
+                System.out.println ( jo.toString ( 4 ) );
+                System.out.println ( "NAME: " + co.getString ( CObj.NAME ) + " payment: " +
+                                     co.checkPayment ( Wrapper.NEWPAYMENT ) );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+        lst.close();
+
     }
 
     public int getPort ( String dest )
@@ -346,7 +373,7 @@ public class TestBasic
 
         try
         {
-            Thread.sleep ( 60000 );
+            Thread.sleep ( 2000L );
         }
 
         catch ( InterruptedException e2 )
@@ -357,7 +384,7 @@ public class TestBasic
         assertNull ( Tn1.pollGuiQueue() );
         System.out.println ( "2MSG REQ DONE--------------------" );
 
-
+        //-----------------------------------------------------
         //Ok, now update private identifiers
         CObj reqprvident0 = new CObj();
         reqprvident0.setType ( CObj.CON_REQ_PRVIDENT );
@@ -367,6 +394,16 @@ public class TestBasic
         Tn1.getTestReq().enqueue ( reqprvident0 );
 
         o0 = pollForData ( Tn1 );
+
+        if ( o0 == null )
+        {
+            System.out.println ( "Tn0:----------------------------------------" );
+            dumpindex ( Tn0 );
+            System.out.println ( "Tn1:----------------------------------------" );
+            dumpindex ( Tn1 );
+            System.out.println ( "END OF TESTBASIC!" );
+        }
+
         assertNotNull ( o0 );
         assertTrue ( o0 instanceof CObj );
         oc0 = ( CObj ) o0;
