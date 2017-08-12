@@ -177,7 +177,8 @@ public class SpamTool
         boolean checkpayment = true;
 
         //Check if user is trusted by rank
-        if ( CObj.SPAMEXCEPTION.equals ( c.getType() ) )
+        if ( CObj.SPAMEXCEPTION.equals ( c.getType() ) ||
+        		CObj.DEVELOPER.equals(c.getType()))
         {
             checkpayment = false;
         }

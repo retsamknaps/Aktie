@@ -1,6 +1,7 @@
 package aktie;
 
 import aktie.data.CObj;
+import aktie.data.DeveloperIdentity;
 import aktie.index.CObjList;
 import aktie.index.IndexInterface;
 import aktie.net.GetSendData2;
@@ -35,5 +36,7 @@ public interface NodeInterface
     public NodeUpgrader getUpgrader();
 
     public void close();
+    
+    public DeveloperIdentity getDeveloper(String id);
 
 }

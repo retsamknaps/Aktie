@@ -1,32 +1,31 @@
 package aktie.net;
 
+import java.util.logging.Logger;
+
 import aktie.GenericProcessor;
 import aktie.data.CObj;
 import aktie.data.DeveloperIdentity;
-import aktie.data.HH2Session;
 import aktie.index.Index;
-import aktie.sequences.SpamSequence;
 import aktie.spam.SpamTool;
 import aktie.user.IdentityManager;
 import aktie.utils.DigestValidator;
 
-public class InSpamExProcessor extends GenericProcessor
-{
+public class InDeveloperProcessor extends GenericProcessor {
+
+    Logger log = Logger.getLogger ( "aktie" );
 
     private Index index;
-    private HH2Session session;
     private DigestValidator validator;
     private ConnectionThread connection;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InSpamExProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
+    public InDeveloperProcessor ( Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
     {
         index = i;
-        session = s;
         connection = ct;
         identManager = im;
-
+        
         if ( connection != null )
         {
             ConId = connection.getLocalDestination().getIdentity();
@@ -40,35 +39,29 @@ public class InSpamExProcessor extends GenericProcessor
     {
         String type = b.getType();
 
-        if ( CObj.SPAMEXCEPTION.equals ( type ) || CObj.USR_SPAMEX.equals ( type ) )
+        if ( CObj.DEVELOPER.equals ( type ) )
         {
-            b.setType ( CObj.SPAMEXCEPTION );
-
+        	log.info("NEW DEVELOPER ID: " + b.getString(CObj.IDENTITY) + " dig: " + b.getDig());
             if ( validator.valid ( b ) )
             {
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );
 
                 //Update creator's ident index
                 String creator = b.getString ( CObj.CREATOR );
-                Long seqnum = b.getNumber ( CObj.SEQNUM );
+                String devid = b.getString(CObj.IDENTITY);
 
-                if ( creator != null && seqnum != null )
+            	log.info("NEW DEVELOPER ID valid: " + b.getString(CObj.IDENTITY) + " dig: " + b.getDig() + 
+            			" creator: " + creator + " devid: " + devid);
+                if ( creator != null && devid != null )
                 {
-                	
-                	DeveloperIdentity di = null;
-                	if (identManager != null) {
-                		di = identManager.getDeveloperIdentity(creator);
-                	}
-                	if (di != null || identManager == null) {
 
+                	DeveloperIdentity di = identManager.getDeveloperIdentity(creator);
+
+                	if (di != null) {
                 		try
                 		{
-                			SpamSequence sseq = new SpamSequence ( session );
-                			sseq.setId ( creator );
-                			sseq.updateSequence ( b );
-
                 			//sseq.getObj() is only set if a prior developer identity was added
-                			if ( sseq.getObj() != null && isnew )
+                			if ( isnew )
                 			{
                 				if ( identManager != null && ConId != null )
                 				{
@@ -76,7 +69,10 @@ public class InSpamExProcessor extends GenericProcessor
                 					b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
                 				}
 
-                				index.index ( b );
+                            	log.info("NEW DEVELOPER ID INDEX: " + b.getString(CObj.IDENTITY) + " dig: " + b.getDig());
+
+                            	index.index ( b );
+                				identManager.newDeveloperIdentity( devid );
                 			}
 
                 		}
@@ -87,7 +83,6 @@ public class InSpamExProcessor extends GenericProcessor
 
                 		}
                 	}
-
                 }
 
             }

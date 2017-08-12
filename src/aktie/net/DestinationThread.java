@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
@@ -25,6 +26,7 @@ public class DestinationThread implements Runnable
     private HH2Session session;
     private UpdateCallback callback;
     private SpamTool spamtool;
+    private ProcessQueue downloadQueue;
 
     public static void stopAll()
     {
@@ -48,10 +50,13 @@ public class DestinationThread implements Runnable
     private RequestFileHandler fileHandler;
     private File tmpDir;
 
-    public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf, SpamTool st )
+    public DestinationThread ( Destination d, GetSendData2 sd, HH2Session s, Index i,
+                               UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf, SpamTool st,
+                               ProcessQueue dl )
     {
         fileHandler = rf;
         conListener = cl;
+        downloadQueue = dl;
         index = i;
         session = s;
         callback = cb;
@@ -350,7 +355,8 @@ public class DestinationThread implements Runnable
 
         else
         {
-            ConnectionThread ct = new ConnectionThread ( this, session, index, c, conMan, callback, conListener, fileHandler, filemode, spamtool );
+            ConnectionThread ct = new ConnectionThread ( this, session, index, c, conMan,
+                    callback, conListener, fileHandler, filemode, spamtool, downloadQueue );
             ct.setTempDir ( tmpDir );
             ct.enqueue ( identity );
         }

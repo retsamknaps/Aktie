@@ -29,6 +29,7 @@ import org.hibernate.Session;
 import org.json.JSONObject;
 
 import aktie.BatchProcessor;
+import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -94,10 +95,14 @@ public class ConnectionThread implements Runnable, UpdateCallback
     private String fileUp;
     private String fileDown;
     private File tmpDir;
+    private ProcessQueue downloadQueue;
 
-    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c, GetSendData2 sd, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf, boolean fo, SpamTool st )
+    public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c,
+                              GetSendData2 sd, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf,
+                              boolean fo, SpamTool st, ProcessQueue dl )
     {
         This = this;
+        downloadQueue = dl;
         fileOnly = fo;
         conListener = cl;
         guicallback = cb;
@@ -147,6 +152,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
         preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, IdentManager, dest.getIdentity(), this ) );
         preprocProcessor.addProcessor ( new InSubProcessor ( session, conMan, index, st, IdentManager, this ) );
         preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, IdentManager, this ) );
+        preprocProcessor.addProcessor ( new InDeveloperProcessor ( index, st, IdentManager, this ) );
         //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
         //Otherwise requests from the other node will not be processed.
         preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );
@@ -789,7 +795,6 @@ public class ConnectionThread implements Runnable, UpdateCallback
         {
             log.info ( "Closing connection ME: " +
                        getLocalDestination() + " to: " + getEndDestination() );
-            Thread.dumpStack();
         }
 
         boolean wasstopped = stop;
@@ -1761,8 +1766,9 @@ public class ConnectionThread implements Runnable, UpdateCallback
                                     hf.pushPrivate ( CObj.LOCALFILE, rf.getLocalFile() );
                                     hf.pushPrivate ( CObj.UPGRADEFLAG, rf.isUpgrade() ? "true" : "false" );
                                     hf.pushString ( CObj.SHARE_NAME, rf.getShareName() );
-                                    hfc.createHasFile ( hf );
-                                    hfc.updateFileInfo ( hf );
+                                    //hfc.createHasFile ( hf );
+                                    //hfc.updateFileInfo ( hf );
+                                    downloadQueue.enqueue ( hf );
                                     update ( hf );
 
                                 }

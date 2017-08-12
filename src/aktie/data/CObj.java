@@ -59,6 +59,7 @@ public class CObj
     public static String CHECKMEM = "chkmem";
     public static String CHECKSUB = "chksub";
     public static String CHECKCOMP = "chkcomp";
+    public static String DEVELOPER = "dev";
 
     //Types - no indexed.
     public static String INDEX_QUERY = "index_query";

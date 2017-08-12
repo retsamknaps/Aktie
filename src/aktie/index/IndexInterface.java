@@ -107,4 +107,6 @@ public interface IndexInterface
     public void index ( List<CObj> l, boolean onlynew ) throws IOException;
     public void index ( CObj o ) throws IOException;
     public void index ( List<CObj> l ) throws IOException;
+    public CObjList getAllSpamEx ( String creator );
+
 }

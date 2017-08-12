@@ -575,6 +575,11 @@ public class NewPostDialog extends Dialog implements AddFieldInterface
                     newStringDialog.open();
                 }
 
+                if ( "Boolean".equals ( s ) )
+                {
+                    newBooleanDialog.open();
+                }
+
             }
 
             @Override

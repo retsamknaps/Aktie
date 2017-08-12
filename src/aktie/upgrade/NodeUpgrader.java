@@ -2,7 +2,6 @@ package aktie.upgrade;
 
 import java.io.File;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -11,6 +10,7 @@ import aktie.Node;
 import aktie.UpdateCallback;
 import aktie.Wrapper;
 import aktie.data.CObj;
+import aktie.data.DeveloperIdentity;
 import aktie.index.CObjList;
 import aktie.utils.FUtils;
 
@@ -19,7 +19,6 @@ public class NodeUpgrader implements UpdateCallback
 
     Logger log = Logger.getLogger ( "aktie" );
 
-    private List<String> developerIdentities = new LinkedList<String>();
     private UpgradeControllerCallback controller;
     private String nodeDir;
     private Node node;
@@ -53,22 +52,16 @@ public class NodeUpgrader implements UpdateCallback
 
     }
 
-    public void addDeveloperId ( String id )
-    {
-        developerIdentities.add ( id );
-    }
-
-    public List<String> getDeveloperIdentities()
-    {
-        return developerIdentities;
-    }
-
     private void checkDownloadUpgrade ( CObj co )
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        if ( creator != null &&
-                developerIdentities.contains ( creator ) )
+        DeveloperIdentity di = null; 
+        if (creator != null) {
+        	di = node.getDeveloper(creator);
+        }
+        
+        if ( di != null )
         {
 
             Long createdon = co.getNumber ( CObj.CREATEDON );
@@ -88,6 +81,11 @@ public class NodeUpgrader implements UpdateCallback
                         File nodedir = new File ( nodeDir );
                         String parent = nodedir.getParent();
 
+                        if ( parent == null )
+                        {
+                            parent = nodeDir;
+                        }
+
                         //check current version
                         String libf = parent +
                                       File.separator + "lib" +
@@ -106,8 +104,16 @@ public class NodeUpgrader implements UpdateCallback
 
                         if ( doup && flen != null )
                         {
-                            String upfile = parent +
-                                            File.separator + "upgrade" +
+                            String updir = parent +
+                                           File.separator + "upgrade";
+                            File uf = new File ( updir );
+
+                            if ( !uf.exists() )
+                            {
+                                uf.mkdirs();
+                            }
+
+                            String upfile = uf.getPath() +
                                             File.separator + fname;
 
                             Wrapper.saveUpdateLength ( fname, Long.toString ( flen ) );
@@ -194,8 +200,9 @@ public class NodeUpgrader implements UpdateCallback
         //we complete the download.
         String upf = co.getPrivate ( CObj.UPGRADEFLAG );
         String shf = co.getString ( CObj.STILLHASFILE );
+        String mine = co.getPrivate ( CObj.MINE );
 
-        if ( "true".equals ( upf ) && "true".equals ( shf ) )
+        if ( "true".equals ( upf ) && "true".equals ( shf ) && "true".equals ( mine ) )
         {
             log.info ( "Upgrade download completed." );
             controller.updateMessage ( Wrapper.VERSION + "   Update downloaded.  Please restart." );

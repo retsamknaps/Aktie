@@ -7,6 +7,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 
 import aktie.data.HH2Session;
+import aktie.data.Launcher;
 import aktie.gui.subtree.SubTreeEntity;
 
 public class Upgrade0518
@@ -26,7 +27,6 @@ public class Upgrade0518
 
         try
         {
-            s.getTransaction().begin();
             gs.getTransaction().begin();
 
             Query q = s.createQuery ( "SELECT x FROM SubTreeEntity x" );
@@ -34,10 +34,21 @@ public class Upgrade0518
 
             for ( SubTreeEntity e : r )
             {
-                gs.update ( e );
+                e.setId ( 0 );
+                gs.merge ( e );
             }
 
-            s.getTransaction().commit();
+            gs.getTransaction().commit();
+            gs.getTransaction().begin();
+
+            q = s.createQuery ( "SELECT x FROM Launcher x" );
+            List<Launcher> rl = q.list();
+
+            for ( Launcher e : rl )
+            {
+                gs.merge ( e );
+            }
+
             gs.getTransaction().commit();
         }
 

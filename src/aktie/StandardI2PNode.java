@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import aktie.data.CObj;
+import aktie.data.DeveloperIdentity;
 import aktie.i2p.I2PNet;
 import aktie.index.CObjList;
 import aktie.index.Upgrade0301;
@@ -129,9 +130,10 @@ public class StandardI2PNode
 
             mlst.close();
 
-            if ( !Wrapper.TESTNODE )
+            File devid = new File ( nodeDir + File.separator + "developerid.dat" );
+
+            if ( !Wrapper.TESTNODE || StandardI2PNode.TESTLOADDEFAULTS )
             {
-                File devid = new File ( nodeDir + File.separator + "developerid.dat" );
 
                 if ( devid.exists() )
                 {
@@ -368,6 +370,10 @@ public class StandardI2PNode
         }
 
     }
+    
+    public DeveloperIdentity getDeveloper(String id) {
+    	return node.getDeveloper(id);
+    }
 
     private void preStartUpdate()
     {
@@ -479,14 +485,14 @@ public class StandardI2PNode
         //Load default seed file.
         File defseedfile = new File ( nodeDir + File.separator + "defseed.dat" );
 
-        if ( defseedfile.exists() )
+        if ( defseedfile.exists() && defseedfile.length() > 0 )
         {
             loadSeed ( defseedfile );
         }
 
         File spamex = new File ( nodeDir + File.separator + "spamex.dat" );
 
-        if ( spamex.exists() )
+        if ( spamex.exists() && spamex.length() > 0 )
         {
             loadSpamEx ( spamex );
         }
@@ -494,7 +500,7 @@ public class StandardI2PNode
         //Load default communities and subscribe.
         File defcomfile = new File ( nodeDir + File.separator + "defcom.dat" );
 
-        if ( defcomfile.exists() )
+        if ( defcomfile.exists() && defcomfile.length() > 0 )
         {
             loadDefCommunitySubs ( defcomfile );
         }
@@ -579,7 +585,6 @@ public class StandardI2PNode
             {
                 CObj co = new CObj();
                 co.loadJSON ( o );
-                node.getUpgrader().addDeveloperId ( co.getId() );
                 node.newDeveloperIdentity ( co.getId() );
 
                 try

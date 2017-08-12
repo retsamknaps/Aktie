@@ -25,7 +25,7 @@ public class ProcessQueue implements Runnable
         queue = new ConcurrentLinkedDeque<Object>();
         processor = new BatchProcessor();
         name = n;
-        Thread t = new Thread ( this, "Process Queue Thread" );
+        Thread t = new Thread ( this, name );
         t.start();
     }
 

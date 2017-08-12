@@ -3,6 +3,7 @@ package aktie.user;
 import java.io.File;
 
 import aktie.GenericProcessor;
+import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
@@ -30,10 +31,14 @@ public class UsrStartDestinationProcessor extends GenericProcessor
     private RequestFileHandler fileHandler;
     private SpamTool spamtool;
     private File tmpDir;
+    private ProcessQueue downloadQueue;
 
-    public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i, UpdateCallback g, UpdateCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
+    public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i,
+                                          UpdateCallback g, UpdateCallback nc, ConnectionListener cl, DestinationListener cm,
+                                          RequestFileHandler rf, SpamTool st, ProcessQueue dl )
     {
         fileHandler = rf;
+        downloadQueue = dl;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
@@ -93,7 +98,8 @@ public class UsrStartDestinationProcessor extends GenericProcessor
 
                     if ( d != null )
                     {
-                        DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
+                        DestinationThread dt = new DestinationThread ( d, conMan, session, index,
+                                netcallback, conListener, fileHandler, spamtool, downloadQueue );
                         dt.setTmpDir ( tmpDir );
                         dt.setIdentity ( o );
                         connectionMan.addDestination ( dt );

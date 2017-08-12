@@ -124,10 +124,11 @@ public class ReqGlobalSeq extends GenericProcessor
                         CObj.PRIVMESSAGE.equals ( o.getType() ) ||
                         CObj.COMMUNITY.equals ( o.getType() ) ||
                         CObj.IDENTITY.equals ( o.getType() ) ||
-                        CObj.SPAMEXCEPTION.equals ( o.getType() ) )
+                        CObj.SPAMEXCEPTION.equals ( o.getType() ) ||
+                        CObj.DEVELOPER.equals(o.getType()) )
                 {
                     //ANYONE: MEMBERSHIP, PRIVIDENT,
-                    //        PRIVMESSAGE, COMMUNITY, IDENTITY, SPAMEXCEPTION
+                    //        PRIVMESSAGE, COMMUNITY, IDENTITY, SPAMEXCEPTION, DEVELOPER
                     sendDig ( rlst, o, rn, seqnum );
                 }
 

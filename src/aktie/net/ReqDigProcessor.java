@@ -131,7 +131,8 @@ public class ReqDigProcessor extends GenericProcessor
                             CObj.PRIVMESSAGE.equals ( o.getType() ) ||
                             CObj.COMMUNITY.equals ( o.getType() ) ||
                             CObj.IDENTITY.equals ( o.getType() ) ||
-                            CObj.SPAMEXCEPTION.equals ( o.getType() ) )
+                            CObj.SPAMEXCEPTION.equals ( o.getType() ) || 
+                            CObj.DEVELOPER.equals(o.getType()) )
                     {
                         log ( "SND PBLC: " + d );
                         conThread.enqueue ( o );

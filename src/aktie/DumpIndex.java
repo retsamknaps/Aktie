@@ -3,10 +3,7 @@ package aktie;
 import java.io.File;
 import java.io.IOException;
 
-import org.json.JSONObject;
-
-import aktie.data.CObj;
-import aktie.index.CObjList;
+import aktie.index.DumpIndexUtil;
 import aktie.index.Index;
 
 public class DumpIndex
@@ -36,27 +33,9 @@ public class DumpIndex
             System.exit ( 1 );
         }
 
-        CObjList lst = index.getAllCObj();
+        DumpIndexUtil.dumpIndex ( index );
+        index.close();
 
-        for ( int c = 0; c < lst.size(); c++ )
-        {
-            try
-            {
-                CObj co = lst.get ( c );
-                JSONObject jo = co.GETPRIVATEJSON();
-                System.out.println ( jo.toString ( 4 ) );
-                System.out.println ( "NAME: " + co.getString ( CObj.NAME ) + " payment: " +
-                                     co.checkPayment ( Wrapper.NEWPAYMENT ) );
-            }
-
-            catch ( IOException e )
-            {
-                e.printStackTrace();
-            }
-
-        }
-
-        lst.close();
     }
 
 }

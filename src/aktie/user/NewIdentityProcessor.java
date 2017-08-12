@@ -11,6 +11,7 @@ import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.hibernate.Session;
 
 import aktie.GenericProcessor;
+import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -43,10 +44,14 @@ public class NewIdentityProcessor extends GenericProcessor
     private SpamTool spamtool;
     private IdentityManager identManager;
     private File tmpDir;
+    private ProcessQueue downloadQueue;
 
-    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, UpdateCallback g, UpdateCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf, SpamTool st )
+    public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, UpdateCallback g,
+                                  UpdateCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf,
+                                  SpamTool st, ProcessQueue dl )
     {
         fileHandler = rf;
+        downloadQueue = dl;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
@@ -96,7 +101,8 @@ public class NewIdentityProcessor extends GenericProcessor
                 o.pushString ( CObj.KEY, Utils.stringFromPublicKey (
                                    ( RSAKeyParameters ) pair.getPublic() ) );
                 Destination d = net.getNewDestination();
-                DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback, conListener, fileHandler, spamtool );
+                DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback,
+                        conListener, fileHandler, spamtool, downloadQueue );
                 dt.setTmpDir ( tmpDir );
                 File df = d.savePrivateDestinationInfo();
                 o.pushPrivate ( CObj.DEST, df.getPath() );

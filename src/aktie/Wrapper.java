@@ -46,7 +46,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1497499414L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1502555389L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     //Process for updating payment: Only increase payment value.
@@ -265,6 +265,7 @@ public class Wrapper
         File uplst[] = updir.listFiles();
         System.out.println ( "Upgrade list: " + uplst.length );
 
+        File upgradefile = null;
         for ( int c = 0; c < uplst.length; c++ )
         {
             File uf = uplst[c];
@@ -278,11 +279,20 @@ public class Wrapper
 
             if ( len != null && len.equals ( rlen ) )
             {
-                unZipUpgrade ( uf );
+            	if (upgradefile == null || upgradefile.lastModified() > uf.lastModified() ) {
+            		upgradefile = uf;
+            	}
 
             }
 
-            saveUpdateLength ( ufn, "-1" );
+        }
+        
+        if (upgradefile != null) 
+        {
+        	System.out.println("Upgrading from file: " + upgradefile);
+            unZipUpgrade ( upgradefile );
+            saveUpdateLength ( upgradefile.getName(), "-1" );
+
         }
 
         //Just run it!

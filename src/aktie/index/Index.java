@@ -258,6 +258,8 @@ public class Index implements Runnable, IndexInterface
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
         builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.DEVELOPER );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
 
         NumericRangeQuery<Long> nrq = NumericRangeQuery.newLongRange (
                                           CObj.docPrivateNumber ( CObj.getGlobalSeq ( ident ) ),
@@ -360,6 +362,8 @@ public class Index implements Runnable, IndexInterface
         typterm = new Term ( CObj.PARAM_TYPE, CObj.IDENTITY );
         sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
+        typterm = new Term ( CObj.PARAM_TYPE, CObj.DEVELOPER );
         sb.add ( new TermQuery ( typterm ), BooleanClause.Occur.SHOULD );
         builder.add ( sb.build(), BooleanClause.Occur.MUST );
 
@@ -668,6 +672,18 @@ public class Index implements Runnable, IndexInterface
         lst.close();
 
         return r;
+    }
+    
+    public CObjList getAllSpamEx ( String creator ) {
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        //BooleanQuery bq = new BooleanQuery();
+        Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );
+        builder.add ( new TermQuery ( typterm ), BooleanClause.Occur.MUST );
+
+        Term memterm = new Term ( CObj.docString ( CObj.CREATOR ), creator );
+        builder.add ( new TermQuery ( memterm ), BooleanClause.Occur.MUST );
+
+        return search ( builder.build(), Integer.MAX_VALUE );
     }
 
     public CObjList getSpamEx ( String creator, long first, long last )

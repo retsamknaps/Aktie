@@ -26,6 +26,7 @@ import aktie.IdentityCache;
 import aktie.Node;
 import aktie.StandardI2PNode;
 import aktie.data.CObj;
+import aktie.data.DeveloperIdentity;
 import aktie.data.DirectoryShare;
 import aktie.data.HH2Session;
 import aktie.data.RequestFile;
@@ -214,8 +215,12 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        if ( creator != null &&
-                node.getNode().getUpgrader().getDeveloperIdentities().contains ( creator ) )
+        DeveloperIdentity di = null; 
+        if (creator != null) {
+        	di = node.getDeveloper(creator);
+        }
+        
+        if ( di != null )
         {
 
             //Update subject line
@@ -698,27 +703,29 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
                         if ( f.isFile() )
                         {
 
-                            boolean isupgrade = false;
-
-                            if ( node.getNode().getUpgrader().getDeveloperIdentities().contains ( selectedIdentity.getId() ) )
-                            {
-                                isupgrade = MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" );
-                            }
-
+                            DeveloperIdentity di = node.getDeveloper(selectedIdentity.getId());
+                            
                             CObj nf = new CObj();
                             nf.setType ( CObj.HASFILE );
                             nf.pushString ( CObj.COMMUNITYID, selectedCommunity.getDig() );
                             nf.pushString ( CObj.CREATOR, selectedIdentity.getId() );
                             nf.pushPrivate ( CObj.LOCALFILE, f.getPath() );
 
-                            if ( isupgrade )
+                            if ( di != null )
                             {
-                                nf.pushString ( CObj.UPGRADEFLAG, "true" );
-                                //Set private value too so that we say we have it for ourself.
-                                nf.pushPrivate ( CObj.UPGRADEFLAG, "true" );
+                            	if (MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" )) {
+                            		nf.pushString ( CObj.UPGRADEFLAG, "true" );
+                            		//Set private value too so that we say we have it for ourself.
+                            		nf.pushPrivate ( CObj.UPGRADEFLAG, "true" );
+                            		node.getNode().enqueue ( nf );
+                            	}
                             }
 
-                            node.getNode().enqueue ( nf );
+                            else
+                            {
+                                node.getNode().enqueue ( nf );
+                            }
+
                         }
 
                     }
@@ -784,6 +791,7 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
     private SetUserRankDialog userRankDialog;
     private ZeroIdentityDialog zeroDialog;
     private SpamRankDialog spamDialog;
+    private PaymentThreadsDialog threadDialog;
     private PrivateMessageDialog prvMsgDialog;
     private LauncherDialog launcherDialog;
     private ConnectionDialog connectionDialog;
@@ -1662,6 +1670,8 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
         zeroDialog.create();
         spamDialog = new SpamRankDialog ( shell );
         spamDialog.create();
+        threadDialog = new PaymentThreadsDialog ( shell );
+        threadDialog.create();
         prvMsgDialog = new PrivateMessageDialog ( this );
         prvMsgDialog.create();
         pmTab.setMessageDialog ( prvMsgDialog );
@@ -1998,7 +2008,23 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
         } );
 
-        //zeroDialog
+        MenuItem mntmThread = new MenuItem ( menu_1, SWT.NONE );
+        mntmThread.setText ( "Set Threads for Spam Payment" );
+        mntmThread.addSelectionListener ( new SelectionListener()
+        {
+            @Override
+            public void widgetSelected ( SelectionEvent e )
+            {
+                threadDialog.open();
+            }
+
+            @Override
+            public void widgetDefaultSelected ( SelectionEvent e )
+            {
+            }
+
+        } );
+
         MenuItem mntmSpam = new MenuItem ( menu_1, SWT.NONE );
         mntmSpam.setText ( "Set 'Not Spam' Rank" );
         mntmSpam.addSelectionListener ( new SelectionListener()
@@ -2147,8 +2173,7 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
                             try
                             {
                                 PrintWriter pw = new PrintWriter ( new FileOutputStream ( new File ( selected ) ) );
-                                CObjList ilst = node.getNode().getIndex().getSpamEx ( selectedIdentity.getId(),
-                                                0L, Long.MAX_VALUE );
+                                CObjList ilst = node.getNode().getIndex().getAllSpamEx ( selectedIdentity.getId() );
 
                                 for ( int c = 0; c < ilst.size(); c++ )
                                 {

@@ -7,12 +7,14 @@ import java.util.TimerTask;
 
 import aktie.crypto.Utils;
 import aktie.data.CObj;
+import aktie.data.DeveloperIdentity;
 import aktie.data.HH2Session;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.index.IndexInterface;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
+import aktie.net.DownloadFileProcessor;
 import aktie.net.GetSendData2;
 import aktie.net.InSpamExProcessor;
 import aktie.net.Net;
@@ -21,6 +23,7 @@ import aktie.upgrade.NodeUpgrader;
 import aktie.upgrade.UpgradeControllerCallback;
 import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
+import aktie.user.NewDeveloperProcessor;
 import aktie.user.NewFileProcessor;
 import aktie.user.NewForceSearcher;
 import aktie.user.NewIdentityProcessor;
@@ -103,12 +106,15 @@ public class Node implements NodeInterface
         shareManager = new ShareManager ( session, requestHandler, index,
                                           hasFileCreator, nfp, userQueue );
 
+        ProcessQueue dlQueue = new ProcessQueue ( "downloadQueue" );
+        dlQueue.addProcessor ( new DownloadFileProcessor ( hasFileCreator ) );
+
         NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
         userQueue.addProcessor ( new NewCommunityProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( nfp );
         NewIdentityProcessor nip = new NewIdentityProcessor ( network, conMan, session,
-                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool );
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool, dlQueue );
         nip.setTmpDir ( tmpDir );
         userQueue.addProcessor ( nip );
         userQueue.addProcessor ( new NewMembershipProcessor ( session, conMan, index, spamtool, usrCallback ) );
@@ -117,11 +123,12 @@ public class Node implements NodeInterface
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
+        userQueue.addProcessor(new NewDeveloperProcessor(index, identManager, usrCallback));
         userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
         UsrStartDestinationProcessor usdp = new UsrStartDestinationProcessor ( network, conMan, session,
-                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool );
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool, dlQueue );
         usdp.setTmpDir ( tmpDir );
         userQueue.addProcessor ( usdp );
         userQueue.addProcessor ( new UsrReqComProcessor ( identManager, index ) );
@@ -215,6 +222,11 @@ public class Node implements NodeInterface
     public void newDeveloperIdentity ( String id )
     {
         identManager.newDeveloperIdentity ( id );
+    }
+    
+    public DeveloperIdentity getDeveloper(String id) 
+    {
+    	return identManager.getDeveloperIdentity(id);
     }
 
     public void priorityEnqueue ( CObj o )
