@@ -673,8 +673,9 @@ public class Index implements Runnable, IndexInterface
 
         return r;
     }
-    
-    public CObjList getAllSpamEx ( String creator ) {
+
+    public CObjList getAllSpamEx ( String creator )
+    {
         BooleanQuery.Builder builder = new BooleanQuery.Builder();
         //BooleanQuery bq = new BooleanQuery();
         Term typterm = new Term ( CObj.PARAM_TYPE, CObj.SPAMEXCEPTION );

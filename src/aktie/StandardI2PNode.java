@@ -370,9 +370,10 @@ public class StandardI2PNode
         }
 
     }
-    
-    public DeveloperIdentity getDeveloper(String id) {
-    	return node.getDeveloper(id);
+
+    public DeveloperIdentity getDeveloper ( String id )
+    {
+        return node.getDeveloper ( id );
     }
 
     private void preStartUpdate()

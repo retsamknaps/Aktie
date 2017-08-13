@@ -215,11 +215,13 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        DeveloperIdentity di = null; 
-        if (creator != null) {
-        	di = node.getDeveloper(creator);
+        DeveloperIdentity di = null;
+
+        if ( creator != null )
+        {
+            di = node.getDeveloper ( creator );
         }
-        
+
         if ( di != null )
         {
 
@@ -703,8 +705,8 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
                         if ( f.isFile() )
                         {
 
-                            DeveloperIdentity di = node.getDeveloper(selectedIdentity.getId());
-                            
+                            DeveloperIdentity di = node.getDeveloper ( selectedIdentity.getId() );
+
                             CObj nf = new CObj();
                             nf.setType ( CObj.HASFILE );
                             nf.pushString ( CObj.COMMUNITYID, selectedCommunity.getDig() );
@@ -713,12 +715,14 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
                             if ( di != null )
                             {
-                            	if (MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" )) {
-                            		nf.pushString ( CObj.UPGRADEFLAG, "true" );
-                            		//Set private value too so that we say we have it for ourself.
-                            		nf.pushPrivate ( CObj.UPGRADEFLAG, "true" );
-                            		node.getNode().enqueue ( nf );
-                            	}
+                                if ( MessageDialog.openConfirm ( shell, "Update", "Are you sure you want this to be an update file?" ) )
+                                {
+                                    nf.pushString ( CObj.UPGRADEFLAG, "true" );
+                                    //Set private value too so that we say we have it for ourself.
+                                    nf.pushPrivate ( CObj.UPGRADEFLAG, "true" );
+                                    node.getNode().enqueue ( nf );
+                                }
+
                             }
 
                             else
@@ -1241,6 +1245,8 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
                                     new SubTreeLabelProvider ( identModel ) ) );
         //tvc1.setLabelProvider ( new DelegatingStyledCellLabelProvider (
         //                            new IdentitySubTreeLabelProvider() ) );
+
+        identTreeViewer.refresh();
 
         pmTab.init();
 

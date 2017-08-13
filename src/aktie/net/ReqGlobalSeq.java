@@ -125,7 +125,7 @@ public class ReqGlobalSeq extends GenericProcessor
                         CObj.COMMUNITY.equals ( o.getType() ) ||
                         CObj.IDENTITY.equals ( o.getType() ) ||
                         CObj.SPAMEXCEPTION.equals ( o.getType() ) ||
-                        CObj.DEVELOPER.equals(o.getType()) )
+                        CObj.DEVELOPER.equals ( o.getType() ) )
                 {
                     //ANYONE: MEMBERSHIP, PRIVIDENT,
                     //        PRIVMESSAGE, COMMUNITY, IDENTITY, SPAMEXCEPTION, DEVELOPER

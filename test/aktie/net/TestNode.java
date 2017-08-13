@@ -22,6 +22,7 @@ import aktie.user.NewSubscriptionProcessor;
 import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.utils.FUtils;
+import aktie.utils.HasFileCreator;
 
 public class TestNode implements UpdateCallback, ConnectionListener, DestinationListener
 {
@@ -59,9 +60,13 @@ public class TestNode implements UpdateCallback, ConnectionListener, Destination
 
             RequestFileHandler fileHandler = new RequestFileHandler ( session, "tndl", null, null );
 
+            ProcessQueue dl = new ProcessQueue ( "downloadFile" );
+            dl.addProcessor ( new DownloadFileProcessor ( new HasFileCreator ( session, index, st ) ) );
+
             userQueue.addProcessor ( new NewCommunityProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( nfp );
-            userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index, this, this, this, this, fileHandler, st ) );
+            userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index,
+                                     this, this, this, this, fileHandler, st, dl ) );
             userQueue.addProcessor ( new NewMembershipProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( new NewPostProcessor ( session, index, st, this ) );
             userQueue.addProcessor ( new NewSubscriptionProcessor ( session, null, index, st, this ) );

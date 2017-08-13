@@ -36,7 +36,7 @@ public interface NodeInterface
     public NodeUpgrader getUpgrader();
 
     public void close();
-    
-    public DeveloperIdentity getDeveloper(String id);
+
+    public DeveloperIdentity getDeveloper ( String id );
 
 }

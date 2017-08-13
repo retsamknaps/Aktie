@@ -54,39 +54,44 @@ public class InSpamExProcessor extends GenericProcessor
 
                 if ( creator != null && seqnum != null )
                 {
-                	
-                	DeveloperIdentity di = null;
-                	if (identManager != null) {
-                		di = identManager.getDeveloperIdentity(creator);
-                	}
-                	if (di != null || identManager == null) {
 
-                		try
-                		{
-                			SpamSequence sseq = new SpamSequence ( session );
-                			sseq.setId ( creator );
-                			sseq.updateSequence ( b );
+                    DeveloperIdentity di = null;
 
-                			//sseq.getObj() is only set if a prior developer identity was added
-                			if ( sseq.getObj() != null && isnew )
-                			{
-                				if ( identManager != null && ConId != null )
-                				{
-                					long gseq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
-                					b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
-                				}
+                    if ( identManager != null )
+                    {
+                        di = identManager.getDeveloperIdentity ( creator );
+                    }
 
-                				index.index ( b );
-                			}
+                    if ( di != null || identManager == null )
+                    {
 
-                		}
+                        try
+                        {
+                            SpamSequence sseq = new SpamSequence ( session );
+                            sseq.setId ( creator );
+                            sseq.updateSequence ( b );
 
-                		catch ( Exception e )
-                		{
-                			e.printStackTrace();
+                            //sseq.getObj() is only set if a prior developer identity was added
+                            if ( sseq.getObj() != null && isnew )
+                            {
+                                if ( identManager != null && ConId != null )
+                                {
+                                    long gseq = identManager.getGlobalSequenceNumber ( ConId.getId(), false );
+                                    b.pushPrivateNumber ( CObj.getGlobalSeq ( ConId.getId() ), gseq );
+                                }
 
-                		}
-                	}
+                                index.index ( b );
+                            }
+
+                        }
+
+                        catch ( Exception e )
+                        {
+                            e.printStackTrace();
+
+                        }
+
+                    }
 
                 }
 

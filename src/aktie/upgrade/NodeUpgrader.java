@@ -56,11 +56,13 @@ public class NodeUpgrader implements UpdateCallback
     {
         String creator = co.getString ( CObj.CREATOR );
 
-        DeveloperIdentity di = null; 
-        if (creator != null) {
-        	di = node.getDeveloper(creator);
+        DeveloperIdentity di = null;
+
+        if ( creator != null )
+        {
+            di = node.getDeveloper ( creator );
         }
-        
+
         if ( di != null )
         {
 

@@ -53,7 +53,7 @@ public class WebSocketTest
 
         public synchronized boolean waitUntilOpen()
         {
-            int timeout = 60;
+            int timeout = 120;
 
             while ( !isopen && timeout > 0 )
             {

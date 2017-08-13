@@ -12,9 +12,10 @@ import aktie.data.CObj;
 import aktie.data.DeveloperIdentity;
 import aktie.index.Index;
 
-public class NewDeveloperProcessor extends GenericProcessor {
+public class NewDeveloperProcessor extends GenericProcessor
+{
 
-	Logger log = Logger.getLogger ( "aktie" );
+    Logger log = Logger.getLogger ( "aktie" );
 
     private Index index;
     private IdentityManager identManager;
@@ -69,17 +70,21 @@ public class NewDeveloperProcessor extends GenericProcessor {
                 callback.update ( o );
                 return true;
             }
-            
-            String newdevid = o.getString(CObj.IDENTITY);
-            if (newdevid == null) {
-            	o.pushString(CObj.ERROR,  "Developer id was not specified!");
+
+            String newdevid = o.getString ( CObj.IDENTITY );
+
+            if ( newdevid == null )
+            {
+                o.pushString ( CObj.ERROR,  "Developer id was not specified!" );
                 callback.update ( o );
                 return true;
             }
-            
-            CObj co = index.getIdentity(newdevid);
-            if (co == null) {
-            	o.pushString(CObj.ERROR,  "Developer id does not seem valid!");
+
+            CObj co = index.getIdentity ( newdevid );
+
+            if ( co == null )
+            {
+                o.pushString ( CObj.ERROR,  "Developer id does not seem valid!" );
                 callback.update ( o );
                 return true;
             }
@@ -90,16 +95,24 @@ public class NewDeveloperProcessor extends GenericProcessor {
 
             long gseq = identManager.getGlobalSequenceNumber ( creator, false );
             o.pushPrivateNumber ( CObj.getGlobalSeq ( creator ), gseq );
-  
-            log.info("CREATING DEVELOPER: creator: " + creator + " new dev: " + newdevid + " dig: " + o.getDig());
-            try {
-				index.index ( o );
-	            identManager.newDeveloperIdentity( co.getId() );
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+
+            log.info ( "CREATING DEVELOPER: creator: " + creator + " new dev: " + newdevid + " dig: " + o.getDig() );
+
+            try
+            {
+                index.index ( o );
+                identManager.newDeveloperIdentity ( co.getId() );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
             return true;
         }
+
         return false;
     }
+
 }

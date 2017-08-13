@@ -19,6 +19,7 @@ import aktie.net.ConnectionListener;
 import aktie.net.ConnectionThread;
 import aktie.net.DestinationListener;
 import aktie.net.DestinationThread;
+import aktie.net.DownloadFileProcessor;
 import aktie.net.GetSendData2;
 import aktie.net.RawNet;
 import aktie.spam.SpamTool;
@@ -31,6 +32,7 @@ import aktie.user.NewSubscriptionProcessor;
 import aktie.user.NewTemplateProcessor;
 import aktie.user.RequestFileHandler;
 import aktie.utils.FUtils;
+import aktie.utils.HasFileCreator;
 
 public class UserTest implements UpdateCallback, GetSendData2, ConnectionListener, DestinationListener
 {
@@ -59,9 +61,11 @@ public class UserTest implements UpdateCallback, GetSendData2, ConnectionListene
             SpamTool st = new SpamTool ( i );
             RawNet net = new RawNet ( id );
             ProcessQueue q = new ProcessQueue ( "testQueue" );
+            ProcessQueue dl = new ProcessQueue ( "downloadFile" );
+            dl.addProcessor ( new DownloadFileProcessor ( new HasFileCreator ( sf, i, st ) ) );
             q.addProcessor ( new NewCommunityProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewFileProcessor ( sf, i, st, this ) );
-            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st ) );
+            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st, dl ) );
             q.addProcessor ( new NewMembershipProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewPostProcessor ( sf, i, st, this ) );
             q.addProcessor ( new NewSubscriptionProcessor ( sf, null, i, st, this ) );

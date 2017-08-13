@@ -6,10 +6,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
+import org.junit.AfterClass;
 import org.junit.Test;
 
 import aktie.data.CObj;
 import aktie.index.CObjList;
+import aktie.index.DumpIndexUtil;
+import aktie.index.Index;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
@@ -24,6 +27,7 @@ public class StandardI2PNodeTest
 
         public boolean doupgrade = false;
         public boolean hascheckeddoupgrade = false;
+        public String updateMessage = null;
 
         @Override
         public boolean doUpgrade()
@@ -35,8 +39,8 @@ public class StandardI2PNodeTest
         @Override
         public void updateMessage ( String msg )
         {
-            // TODO Auto-generated method stub
-
+            System.out.println ( "updateMessage: " + msg );
+            updateMessage = msg;
         }
 
         @Override
@@ -113,6 +117,27 @@ public class StandardI2PNodeTest
 
     }
 
+    private static StandardI2PNode nd;
+    private static StandardI2PNode sn00;
+
+    @AfterClass
+    public static void clearnup()
+    {
+        System.out.println ( "StandardI2PNode closing nodes" );
+
+        if ( nd !=  null )
+        {
+            nd.closeNode();
+        }
+
+        if ( sn00 != null )
+        {
+            sn00.closeNode();
+        }
+
+        TestNode.restoreConsts();
+    }
+
     @Test
     public void startNode()
     {
@@ -128,9 +153,9 @@ public class StandardI2PNodeTest
             FUtils.deleteDir ( tmpdir );
 
             NodeListener masterlistener = new NodeListener();
-            masterlistener.doupgrade = true;
+            masterlistener.doupgrade = false;
 
-            StandardI2PNode nd = new StandardI2PNode();
+            nd = new StandardI2PNode();
             Properties p = new Properties();
             nd.bootNode ( masterDir, p, masterlistener, masterlistener, masterlistener, masterlistener );
             nd.nodeStarted();
@@ -181,8 +206,9 @@ public class StandardI2PNodeTest
 
             StandardI2PNode.TESTLOADDEFAULTS = true;
 
-            StandardI2PNode sn00 = new StandardI2PNode();
+            sn00 = new StandardI2PNode();
             NodeListener snl00 = new NodeListener();
+            snl00.doupgrade = true;
             prepareNode ( masterDir, "stdnode001", sn00, snl00 );
 
             pause ( 60 );
@@ -215,14 +241,20 @@ public class StandardI2PNodeTest
             co.pushString ( CObj.UPGRADEFLAG, "true" );
             nd.getNode().enqueue ( co );
 
-            pause ( 20 );
+            pause ( 180 );
+
+            System.out.println ( "ND INDEX---------------------------------------------------" );
+            DumpIndexUtil.dumpIndex ( ( Index ) nd.getNode().getIndex() );
+            System.out.println ( "SN00 INDEX-------------------------------------------------" );
+            DumpIndexUtil.dumpIndex ( ( Index ) sn00.getNode().getIndex() );
+            System.out.println ( "-----------------------------------------------------------" );
+
+            File upfile = new File ( "stdnode001/upgrade/aktie.jar" );
+            assertTrue ( FUtils.diff ( upfile, f ) );
 
             assertTrue ( masterlistener.hascheckeddoupgrade );
+            assertTrue ( snl00.hascheckeddoupgrade );
 
-            nd.closeNode();
-            sn00.closeNode();
-
-            TestNode.restoreConsts();
         }
 
         catch ( Exception e )

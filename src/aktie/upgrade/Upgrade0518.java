@@ -34,7 +34,6 @@ public class Upgrade0518
 
             for ( SubTreeEntity e : r )
             {
-                e.setId ( 0 );
                 gs.merge ( e );
             }
 

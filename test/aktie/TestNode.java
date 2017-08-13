@@ -207,7 +207,7 @@ public class TestNode implements UpgradeControllerCallback
         ConnectionManager2.MAX_CONNECTION_TIME = 10L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
         ConnectionManager2.REQUEST_UPDATE_DELAY = 200L;
-        ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 120L * 1000L;
+        ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 30L * 1000L;
         ConnectionFileManager.REREQUESTFRAGSAFTER = 1L * 60L * 1000L;
         ConnectionFileManager.REREQUESTLISTAFTER = 1L * 60L * 1000L;
         ShareManager.CHECKHASFILE_DELAY = 2000L;
@@ -509,6 +509,33 @@ public class TestNode implements UpgradeControllerCallback
             n3.newDeveloperIdentity ( n0seed.getId() );
             n4.newDeveloperIdentity ( n0seed.getId() );
 
+            System.out.println ( "ADD NEW DEVELOPER..............................." );
+            CObj nd = new CObj();
+            nd.setType ( CObj.DEVELOPER );
+            nd.pushString ( CObj.IDENTITY, node2a.getId() );
+            nd.pushString ( CObj.CREATOR, n0seed.getId() );
+            n0.enqueue ( nd );
+
+            try
+            {
+                Thread.sleep ( 60000L );
+            }
+
+            catch ( InterruptedException e3 )
+            {
+                e3.printStackTrace();
+            }
+
+            assertNotNull ( n0.getDeveloper ( n0seed.getId() ) );
+            assertNotNull ( n1.getDeveloper ( n0seed.getId() ) );
+            assertNotNull ( n2.getDeveloper ( n0seed.getId() ) );
+            assertNotNull ( n3.getDeveloper ( n0seed.getId() ) );
+            assertNotNull ( n4.getDeveloper ( n0seed.getId() ) );
+
+            assertNotNull ( n0.getDeveloper ( node2a.getId() ) );
+            assertNotNull ( n1.getDeveloper ( node2a.getId() ) );
+            assertNotNull ( n2.getDeveloper ( node2a.getId() ) );
+            assertNotNull ( n3.getDeveloper ( node2a.getId() ) );
 
             System.out.println ( "CREATE COMMUNITY.............................." );
             cb0.oqueue.clear();
@@ -699,7 +726,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 30000 );
+                Thread.sleep ( 120000 );
             }
 
             catch ( InterruptedException e )
@@ -707,55 +734,6 @@ public class TestNode implements UpgradeControllerCallback
                 e.printStackTrace();
             }
 
-            n0.closeAllConnections();
-            n1.closeAllConnections();
-            n2.closeAllConnections();
-            n3.closeAllConnections();
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 30000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
 
             clist = n1.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
@@ -993,7 +971,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 30000 );
+                Thread.sleep ( 90000 );
             }
 
             catch ( InterruptedException e )
@@ -1001,55 +979,6 @@ public class TestNode implements UpgradeControllerCallback
                 e.printStackTrace();
             }
 
-            updatesubs = new CObj();
-            updatesubs.setType ( CObj.USR_SUB_UPDATE );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            updatesubs = new CObj();
-            updatesubs.setType ( CObj.USR_SUB_UPDATE );
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            updatesubs = new CObj();
-            updatesubs.setType ( CObj.USR_SUB_UPDATE );
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
 
             clist = n1.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 0, clist.size() );
@@ -1096,7 +1025,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10000 );
+                Thread.sleep ( 90000 );
             }
 
             catch ( InterruptedException e )
@@ -1104,65 +1033,6 @@ public class TestNode implements UpgradeControllerCallback
                 e.printStackTrace();
             }
 
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 30000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
-
-            n0.enqueue ( updatesubs );
-            n1.enqueue ( updatesubs );
-            n2.enqueue ( updatesubs );
-            n3.enqueue ( updatesubs );
-
-            try
-            {
-                Thread.sleep ( 10000 );
-            }
-
-            catch ( InterruptedException e )
-            {
-                e.printStackTrace();
-            }
 
             clist = n0.getIndex().getSubscriptions ( com0n0.getDig(), null );
             assertEquals ( 2, clist.size() );
@@ -1779,6 +1649,7 @@ public class TestNode implements UpgradeControllerCallback
             Wrapper.NEWPAYMENT = 0x0000084000000000L;
             Wrapper.CHECKNEWPAYMENTAFTER = 0;
 
+            ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 120L * 1000L;
             CObj n4ident = createIdentity ( n4, "node4a" );
 
             while ( n4ident.getId() == null )
@@ -1924,6 +1795,8 @@ public class TestNode implements UpgradeControllerCallback
             comlst = n4.getIndex().getSpamEx ( n0seed.getId(), 0, Long.MAX_VALUE );
             assertEquals ( expsize, comlst.size() );
             comlst.close();
+
+            assertNotNull ( n4.getDeveloper ( node2a.getId() ) );
 
             n4.enqueue ( comupdate );
 

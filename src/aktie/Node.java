@@ -123,7 +123,7 @@ public class Node implements NodeInterface
         userQueue.addProcessor ( new NewPrivateMessageProcessor ( session, index, pusher, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
-        userQueue.addProcessor(new NewDeveloperProcessor(index, identManager, usrCallback));
+        userQueue.addProcessor ( new NewDeveloperProcessor ( index, identManager, usrCallback ) );
         userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
@@ -223,10 +223,10 @@ public class Node implements NodeInterface
     {
         identManager.newDeveloperIdentity ( id );
     }
-    
-    public DeveloperIdentity getDeveloper(String id) 
+
+    public DeveloperIdentity getDeveloper ( String id )
     {
-    	return identManager.getDeveloperIdentity(id);
+        return identManager.getDeveloperIdentity ( id );
     }
 
     public void priorityEnqueue ( CObj o )
