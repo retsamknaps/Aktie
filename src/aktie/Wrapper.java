@@ -27,7 +27,7 @@ public class Wrapper
 
     public static boolean TESTNODE = false;
 
-    public static int RESTART_RC = 7;
+    public static int RESTART_RC =  7;
 
     public static String VERSION_0115 = "version 0.1.15";
     public static String VERSION_0403 = "version 0.4.3";
@@ -36,8 +36,9 @@ public class Wrapper
     public static String VERSION_0505 = "version 0.5.5";
     public static String VERSION_0506 = "version 0.5.6";
     public static String VERSION_0518 = "version 0.5.18";
+    public static String VERSION_0519 = "version 0.5.19";
 
-    public static String VERSION = VERSION_0518;
+    public static String VERSION = VERSION_0519;
 
     public static String VERSION_FILE = "version.txt";
 
@@ -46,7 +47,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1502594695L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1502668084L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     //Process for updating payment: Only increase payment value.

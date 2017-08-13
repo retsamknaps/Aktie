@@ -22,6 +22,7 @@ import aktie.net.ConnectionListener;
 import aktie.net.Net;
 import aktie.net.RawNet;
 import aktie.upgrade.Upgrade0518;
+import aktie.upgrade.Upgrade0519;
 import aktie.upgrade.UpgradeControllerCallback;
 import aktie.utils.FUtils;
 
@@ -387,6 +388,7 @@ public class StandardI2PNode
             upgrade0405 ( lastversion );
             upgrade0418 ( lastversion );
             upgrade0518 ( lastversion );
+            upgrade0519 ( lastversion );
         }
 
     }
@@ -459,6 +461,15 @@ public class StandardI2PNode
         if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0518 ) < 0 )
         {
             Upgrade0518.upgrade ( nodeDir );
+        }
+
+    }
+
+    private void upgrade0519 ( String lastversion )
+    {
+        if ( Wrapper.compareVersions ( lastversion, Wrapper.VERSION_0519 ) < 0 )
+        {
+            Upgrade0519.upgrade ( nodeDir );
         }
 
     }

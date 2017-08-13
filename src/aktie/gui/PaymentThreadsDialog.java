@@ -100,6 +100,7 @@ public class PaymentThreadsDialog extends Dialog
             e.printStackTrace();
         }
 
+        super.okPressed();
     }
 
     /**
