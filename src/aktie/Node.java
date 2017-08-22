@@ -56,6 +56,7 @@ public class Node implements NodeInterface
     private Index index;
     private HH2Session session;
     private ProcessQueue userQueue;
+    private ProcessQueue dlQueue;
     private IdentityManager identManager;
     private UpdateDispatcher usrCallback;
     private UpdateDispatcher netCallback;
@@ -106,7 +107,7 @@ public class Node implements NodeInterface
         shareManager = new ShareManager ( session, requestHandler, index,
                                           hasFileCreator, nfp, userQueue );
 
-        ProcessQueue dlQueue = new ProcessQueue ( "downloadQueue" );
+        dlQueue = new ProcessQueue ( "downloadQueue" );
         dlQueue.addProcessor ( new DownloadFileProcessor ( hasFileCreator ) );
 
         NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
@@ -212,6 +213,7 @@ public class Node implements NodeInterface
 
     public void close()
     {
+        dlQueue.stop();
         shareManager.stop();
         conMan.stop();
         userQueue.stop();

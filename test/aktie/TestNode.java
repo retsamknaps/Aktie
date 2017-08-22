@@ -22,6 +22,7 @@ import aktie.net.ConnectionManager2;
 import aktie.net.ConnectionThread;
 import aktie.net.RawNet;
 import aktie.upgrade.UpgradeControllerCallback;
+import aktie.user.NewDeveloperProcessor;
 import aktie.user.ShareManager;
 import aktie.utils.FUtils;
 
@@ -265,10 +266,10 @@ public class TestNode implements UpgradeControllerCallback
             //CObj node0a =
             createIdentity ( n0, "node0a" );
             //CObj node1a =
-            createIdentity ( n1, "node1a" );
+            CObj node1a = createIdentity ( n1, "node1a" );
             CObj node2a = createIdentity ( n2, "node2a" );
             //CObj node3a =
-            createIdentity ( n3, "node3a" );
+            CObj node3a = createIdentity ( n3, "node3a" );
 
             cb0.waitForUpdate();
             Object n0dat = cb0.oqueue.poll();
@@ -516,6 +517,14 @@ public class TestNode implements UpgradeControllerCallback
             nd.pushString ( CObj.CREATOR, n0seed.getId() );
             n0.enqueue ( nd );
 
+            NewDeveloperProcessor.TESTEVILDEV = true;
+
+            nd = new CObj();
+            nd.setType ( CObj.DEVELOPER );
+            nd.pushString ( CObj.IDENTITY, node3a.getId() );
+            nd.pushString ( CObj.CREATOR, node1a.getId() );
+            n1.enqueue ( nd );
+
             try
             {
                 Thread.sleep ( 60000L );
@@ -536,6 +545,11 @@ public class TestNode implements UpgradeControllerCallback
             assertNotNull ( n1.getDeveloper ( node2a.getId() ) );
             assertNotNull ( n2.getDeveloper ( node2a.getId() ) );
             assertNotNull ( n3.getDeveloper ( node2a.getId() ) );
+
+            assertNull ( n0.getDeveloper ( node3a.getId() ) );
+            assertNotNull ( n1.getDeveloper ( node3a.getId() ) );
+            assertNull ( n2.getDeveloper ( node3a.getId() ) );
+            assertNull ( n3.getDeveloper ( node3a.getId() ) );
 
             System.out.println ( "CREATE COMMUNITY.............................." );
             cb0.oqueue.clear();

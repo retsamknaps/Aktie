@@ -152,9 +152,10 @@ public class NewDirectoryShareDialog extends Dialog
 
         text_2 = new Text ( container, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL );
         text_2.setEditable ( false );
-        text_2.setText ( "All files in a share directory are shared with the community.\n" +
-                         "Including all files in all subdirectories.  All files are\n" +
-                         "tagged with the share name." );
+        text_2.setText ( "All files are tagged with the share name.\n" +
+                         "All files in a share directory " +
+                         "are shared with the community.\n" +
+                         "Including all files in all subdirectories."  );
         text_2.setLayoutData ( new GridData ( SWT.FILL, SWT.CENTER, true, false, 1, 1 ) );
         new Label ( container, SWT.NONE );
 

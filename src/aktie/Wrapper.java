@@ -37,8 +37,9 @@ public class Wrapper
     public static String VERSION_0506 = "version 0.5.6";
     public static String VERSION_0518 = "version 0.5.18";
     public static String VERSION_0519 = "version 0.5.19";
+    public static String VERSION_0520 = "version 0.5.20";
 
-    public static String VERSION = VERSION_0519;
+    public static String VERSION = VERSION_0520;
 
     public static String VERSION_FILE = "version.txt";
 
@@ -47,7 +48,7 @@ public class Wrapper
     //the upgrade file added to the network by the developer account.
     //This keeps new installs from downloading the same version as
     //an upgrade
-    public static long RELEASETIME = ( 1502668084L * 1000L ) + 3600000L;
+    public static long RELEASETIME = ( 1503405255L * 1000L ) + 3600000L;
 
     //Hash cash payment values
     //Process for updating payment: Only increase payment value.
@@ -937,6 +938,13 @@ public class Wrapper
         savePropsFile ( p );
     }
 
+    /**
+        Don't read into this too much.  It is simply a convenience to turn
+        on some GUI menu options for us.  Even if you set this property in your
+        properties file and try to use the menu options they won't be accepted
+        by other nodes because they won't be signed by a developer id.
+        @return
+    */
     public static boolean getIsDeveloper ( )
     {
         Properties p = loadExistingProps();
@@ -947,6 +955,25 @@ public class Wrapper
         if ( "true".equals ( ep ) )
         {
             e = true;
+        }
+
+        return e;
+    }
+
+    public static boolean getForceUpdate0519 ( )
+    {
+        Properties p = loadExistingProps();
+
+        boolean e = false;
+        String ep = p.getProperty ( "aktie.update0519" );
+
+        if ( "true".equals ( ep ) )
+        {
+            e = true;
+
+            //Only return true once.
+            p.setProperty ( "aktie.update0519", "false" );
+            savePropsFile ( p );
         }
 
         return e;

@@ -799,6 +799,7 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
     private PrivateMessageDialog prvMsgDialog;
     private LauncherDialog launcherDialog;
     private ConnectionDialog connectionDialog;
+    private SelectIdentityDialog devIdentDialog;
 
     private PMTab pmTab;
 
@@ -1686,6 +1687,33 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
         launcherDialog.create();
         connectionDialog = new ConnectionDialog ( shell, this );
         connectionDialog.create();
+        devIdentDialog = new SelectIdentityDialog ( shell, this, new IdentitySelectedInterface()
+        {
+
+            @Override
+            public void selectedIdentity ( CObj i )
+            {
+                if ( i != null && selectedIdentity != null )
+                {
+                    boolean asure = MessageDialog.openConfirm ( shell, "New Developer?",
+                                    "Make " + i.getDisplayName() + " a developer???" );
+
+                    if ( asure )
+                    {
+                        CObj nd = new CObj();
+                        nd.setType ( CObj.DEVELOPER );
+                        nd.pushString ( CObj.IDENTITY, i.getId() );
+                        nd.pushString ( CObj.CREATOR, selectedIdentity.getId() );
+                        node.getNode().enqueue ( nd );
+                    }
+
+                }
+
+            }
+
+        } );
+
+        devIdentDialog.create();
         updateMembership();
     }
 
@@ -2135,6 +2163,33 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
         if ( Wrapper.getIsDeveloper() )
         {
+            MenuItem mntmNewdev = new MenuItem ( menu_1, SWT.NONE );
+            mntmNewdev.setText ( "NEW DEVELOPER" );
+            mntmNewdev.addSelectionListener ( new SelectionListener()
+            {
+                @Override
+                public void widgetSelected ( SelectionEvent e )
+                {
+                    if ( selectedIdentity != null )
+                    {
+                        boolean asure = MessageDialog.openConfirm ( shell, "New Developer?", "Are you sure?" );
+
+                        if ( asure )
+                        {
+                            devIdentDialog.open();
+                        }
+
+                    }
+
+                }
+
+                @Override
+                public void widgetDefaultSelected ( SelectionEvent e )
+                {
+                }
+
+            } );
+
             MenuItem mntmSpamEx = new MenuItem ( menu_1, SWT.NONE );
             mntmSpamEx.setText ( "GEN SPAM EX" );
             mntmSpamEx.addSelectionListener ( new SelectionListener()

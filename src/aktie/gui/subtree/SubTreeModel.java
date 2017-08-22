@@ -64,8 +64,52 @@ public class SubTreeModel implements ITreeContentProvider
 
     }
 
+    private boolean checkParentPath ( List<Long> l, long id )
+    {
+        if ( l.contains ( id ) )
+        {
+            return false;
+        }
+
+        Long pid = parents.get ( id );
+
+        if ( pid != null )
+        {
+            l.add ( id );
+            return checkParentPath ( l, pid );
+        }
+
+        return true;
+    }
+
     private synchronized void addSubTreeElement ( SubTreeEntity se )
     {
+        if ( se.getId() == 0 )
+        {
+            System.out.println ( "=============================================" );
+            System.out.println ( "Ident-sub tree broken.  Entity with id == 0" );
+            System.out.println ( se );
+            System.out.println ( "=============================================" );
+            return;
+        }
+
+        List<Long> parentpath = new LinkedList<Long>();
+
+        if ( !checkParentPath ( parentpath, se.getId() ) )
+        {
+            System.out.println ( "=============================================" );
+            System.out.println ( "Ident-sub tree broken.  Loop found" );
+            System.out.println ( se );
+
+            for ( Long l : parentpath )
+            {
+                System.out.println ( entities.get ( l ) );
+            }
+
+            System.out.println ( "=============================================" );
+            return;
+        }
+
         if ( se.getType() == SubTreeEntity.IDENTITY_TYPE )
         {
             se.setParent ( 0 );

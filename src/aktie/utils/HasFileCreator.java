@@ -299,6 +299,13 @@ public class HasFileCreator
                        " exists: " + oldfexists +
                        " old stillhas: " + oldsh + " new stillhas: " + newsh );
 
+            if ( newsh != null && newsh.equals ( oldsh ) && lf != null && lf.equals ( oldlf ) )
+            {
+                log.info ( "The old hasfile is the same as the new" );
+                oldfile.makeCopy ( o );
+                return true;
+            }
+
             //Can never re-use if stillhas is different
             if ( oldsh != null && oldsh.equals ( newsh ) )
             {

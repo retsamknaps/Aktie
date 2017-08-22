@@ -15,6 +15,8 @@ import aktie.index.Index;
 public class NewDeveloperProcessor extends GenericProcessor
 {
 
+    public static boolean TESTEVILDEV = false;
+
     Logger log = Logger.getLogger ( "aktie" );
 
     private Index index;
@@ -44,13 +46,18 @@ public class NewDeveloperProcessor extends GenericProcessor
                 return true;
             }
 
-            DeveloperIdentity di = identManager.getDeveloperIdentity ( creator );
-
-            if ( di == null )
+            if ( !TESTEVILDEV )
             {
-                o.pushString ( CObj.ERROR, "Developer Identity not specified." );
-                callback.update ( o );
-                return true;
+
+                DeveloperIdentity di = identManager.getDeveloperIdentity ( creator );
+
+                if ( di == null )
+                {
+                    o.pushString ( CObj.ERROR, "Developer Identity not specified." );
+                    callback.update ( o );
+                    return true;
+                }
+
             }
 
             CObj devid = index.getMyIdentity ( creator );

@@ -5,6 +5,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import org.json.JSONObject;
+
 @Entity
 public class SubTreeEntity implements Comparable<Object>
 {
@@ -154,6 +156,12 @@ public class SubTreeEntity implements Comparable<Object>
 
         SubTreeEntity s = ( SubTreeEntity ) o;
         return id == s.getId();
+    }
+
+    public String toString()
+    {
+        JSONObject o = new JSONObject ( this );
+        return o.toString ( 4 );
     }
 
     public String getIdentity()

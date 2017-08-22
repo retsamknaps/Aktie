@@ -169,6 +169,7 @@ public class ShareManager implements Runnable, ShareManagerInterface
         if ( enabled )
         {
             String fp = f.getAbsolutePath();
+            log.info ( "ShareManager: AbsolutePath: " + f );
 
             try
             {
@@ -180,10 +181,18 @@ public class ShareManager implements Runnable, ShareManagerInterface
                 e.printStackTrace();
             }
 
-            if ( null == rfh.findFileByName ( fp ) )
+            log.info ( "ShareManager: CanonicalPath: " + fp );
+
+            RequestFile b = rfh.findFileByName ( fp );
+
+            log.info ( "ShareManager: RequestFile: " + b );
+
+            if ( b == null )
             {
 
                 CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+
+                log.info ( "ShareManager: getLocalHasFiles: " + mlst.size() );
 
                 if ( mlst.size() == 0 )
                 {
@@ -192,9 +201,12 @@ public class ShareManager implements Runnable, ShareManagerInterface
                     //Check if it's a duplicate
                     CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
 
+                    log.info ( "ShareManager: getDuplicate: " + mlst.size() );
+
                     if ( dlst.size() == 0 )
                     {
                         dlst.close();
+                        log.info ( "ShareManager: addFile0" );
                         addFile ( s, f );
                     }
 
@@ -221,9 +233,13 @@ public class ShareManager implements Runnable, ShareManagerInterface
                         {
                             String rfid = dlp.getString ( CObj.HASFILE );
 
+                            log.info ( "ShareManager: getDuplicate: hasfile " + rfid );
+
                             if ( rfid != null )
                             {
                                 CObj hf = index.getById ( rfid );
+
+                                log.info ( "ShareManager: getById: " + hf );
 
                                 if ( hf != null )
                                 {
@@ -232,9 +248,13 @@ public class ShareManager implements Runnable, ShareManagerInterface
                                     String phf = hf.getPrivate ( CObj.LOCALFILE );
                                     String shf = hf.getString ( CObj.STILLHASFILE );
 
+                                    log.info ( "ShareManager: phf: " + phf + " shf: " + shf );
+
                                     if ( phf != null && "true".equals ( shf ) )
                                     {
                                         File pf = new File ( phf );
+
+                                        log.info ( "ShareManager: pf.exists() " + pf.exists() );
 
                                         if ( pf.exists() )
                                         {
@@ -252,35 +272,7 @@ public class ShareManager implements Runnable, ShareManagerInterface
                         if ( add )
                         {
                             //There is no hasfile for it.  So add it.
-                            addFile ( s, f );
-                        }
-
-                    }
-
-                }
-
-                else
-                {
-                    CObj mhf = null;
-
-                    try
-                    {
-                        mhf = mlst.get ( 0 );
-                    }
-
-                    catch ( IOException e )
-                    {
-                        e.printStackTrace();
-                    }
-
-                    mlst.close();
-
-                    if ( mhf != null )
-                    {
-                        String shr = mhf.getString ( CObj.SHARE_NAME );
-
-                        if ( !s.getShareName().equals ( shr ) )
-                        {
+                            log.info ( "ShareManager: addFile1" );
                             addFile ( s, f );
                         }
 
@@ -289,7 +281,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
                 }
 
             }
-
 
         }
 

@@ -391,6 +391,17 @@ public class StandardI2PNode
             upgrade0519 ( lastversion );
         }
 
+        preStartManualReruns();
+
+    }
+
+    private void preStartManualReruns()
+    {
+        if ( Wrapper.getForceUpdate0519() )
+        {
+            Upgrade0519.upgrade ( nodeDir );
+        }
+
     }
 
     private void updateAfterNodeStart()

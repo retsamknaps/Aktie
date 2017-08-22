@@ -112,6 +112,28 @@ public class WebSocketTest
             super ( uri );
         }
 
+        public synchronized boolean waitUntilStart()
+        {
+            int timeout = 120;
+
+            while ( !started && timeout > 0 )
+            {
+                try
+                {
+                    wait ( 1000L );
+                }
+
+                catch ( InterruptedException e )
+                {
+                    e.printStackTrace();
+                }
+
+                timeout--;
+            }
+
+            return timeout > 0;
+        }
+
         @Override
         public void onClose ( WebSocket ws, int i, String s, boolean b )
         {
@@ -133,10 +155,12 @@ public class WebSocketTest
             socket = ws;
         }
 
+        boolean started = false;
         @Override
         public void onStart()
         {
             System.out.println ( "WServer onStart!----------------------" );
+            started = true;
         }
 
         @Override
@@ -167,6 +191,8 @@ public class WebSocketTest
         {
             MServer ms = new MServer ( new InetSocketAddress ( "127.0.0.1" , 8923 ) );
             ms.start();
+
+            assertTrue ( ms.waitUntilStart() );
 
             MClient mc = new MClient ( new URI ( "ws://127.0.0.1:8923" ) );
             mc.connect();
