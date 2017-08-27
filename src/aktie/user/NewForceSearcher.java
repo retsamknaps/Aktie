@@ -1,10 +1,10 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 import aktie.index.Index;
 
-public class NewForceSearcher extends GenericProcessor
+public class NewForceSearcher extends GenericNoContextProcessor
 {
     private Index index;
 

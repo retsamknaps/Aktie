@@ -2,12 +2,12 @@ package aktie.user;
 
 import java.io.IOException;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
-public class UsrReqComProcessor extends GenericProcessor
+public class UsrReqComProcessor extends GenericNoContextProcessor
 {
 
     private IdentityManager identManager;

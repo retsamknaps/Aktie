@@ -1,12 +1,12 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.index.Index;
 
-public class NewTemplateProcessor extends GenericProcessor
+public class NewTemplateProcessor extends GenericNoContextProcessor
 {
 
     //private GuiCallback guicallback;

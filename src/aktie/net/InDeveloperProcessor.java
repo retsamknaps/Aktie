@@ -21,10 +21,9 @@ public class InDeveloperProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InDeveloperProcessor ( Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
+    public InDeveloperProcessor ( Index i, SpamTool st, IdentityManager im )
     {
         index = i;
-        connection = ct;
         identManager = im;
 
         if ( connection != null )
@@ -97,6 +96,12 @@ public class InDeveloperProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
     }
 
 

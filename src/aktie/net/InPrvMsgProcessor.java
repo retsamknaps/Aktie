@@ -24,12 +24,10 @@ public class InPrvMsgProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
+    public InPrvMsgProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im )
     {
         index = i;
         session = s;
-        guicallback = cb;
-        ConId = mid;
         identManager = im;
         validator = new DigestValidator ( index, st );
     }
@@ -140,6 +138,14 @@ public class InPrvMsgProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        ConnectionThread ct = ( ConnectionThread ) c;
+        ConId = ct.getLocalDestination().getIdentity();
+        guicallback = ct;
     }
 
 }

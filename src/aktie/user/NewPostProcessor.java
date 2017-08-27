@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 import org.hibernate.Session;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -17,7 +17,7 @@ import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.utils.SubscriptionValidator;
 
-public class NewPostProcessor extends GenericProcessor
+public class NewPostProcessor extends GenericNoContextProcessor
 {
 
     Logger log = Logger.getLogger ( "aktie" );

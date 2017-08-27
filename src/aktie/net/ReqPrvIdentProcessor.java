@@ -11,10 +11,9 @@ public class ReqPrvIdentProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqPrvIdentProcessor ( Index i, ConnectionThread c )
+    public ReqPrvIdentProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -40,6 +39,13 @@ public class ReqPrvIdentProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 

@@ -20,11 +20,10 @@ public class InSpamExProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InSpamExProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
+    public InSpamExProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im )
     {
         index = i;
         session = s;
-        connection = ct;
         identManager = im;
 
         if ( connection != null )
@@ -101,6 +100,14 @@ public class InSpamExProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        ConnectionThread ct = ( ConnectionThread ) c;
+        ConId = ct.getLocalDestination().getIdentity();
+
     }
 
 

@@ -2,7 +2,7 @@ package aktie.user;
 
 import java.io.File;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
@@ -17,7 +17,7 @@ import aktie.net.Net;
 import aktie.spam.SpamTool;
 import aktie.utils.FUtils;
 
-public class UsrStartDestinationProcessor extends GenericProcessor
+public class UsrStartDestinationProcessor extends GenericNoContextProcessor
 {
 
     private Net net;
@@ -29,16 +29,20 @@ public class UsrStartDestinationProcessor extends GenericProcessor
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
-    private SpamTool spamtool;
     private File tmpDir;
     private ProcessQueue downloadQueue;
+    private ProcessQueue preprocQueue;
+    private ProcessQueue inputQueue;
 
     public UsrStartDestinationProcessor ( Net n, ConnectionManager2 sd, HH2Session s, Index i,
                                           UpdateCallback g, UpdateCallback nc, ConnectionListener cl, DestinationListener cm,
-                                          RequestFileHandler rf, SpamTool st, ProcessQueue dl )
+                                          RequestFileHandler rf, SpamTool st,
+                                          ProcessQueue preq, ProcessQueue inq, ProcessQueue dl )
     {
         fileHandler = rf;
         downloadQueue = dl;
+        preprocQueue = preq;
+        inputQueue = inq;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
@@ -47,7 +51,6 @@ public class UsrStartDestinationProcessor extends GenericProcessor
         session = s;
         index = i;
         guicallback = g;
-        spamtool = st;
     }
 
     public void setTmpDir ( File t )
@@ -99,7 +102,7 @@ public class UsrStartDestinationProcessor extends GenericProcessor
                     if ( d != null )
                     {
                         DestinationThread dt = new DestinationThread ( d, conMan, session, index,
-                                netcallback, conListener, fileHandler, spamtool, downloadQueue );
+                                netcallback, conListener, fileHandler, preprocQueue, inputQueue, downloadQueue );
                         dt.setTmpDir ( tmpDir );
                         dt.setIdentity ( o );
                         connectionMan.addDestination ( dt );

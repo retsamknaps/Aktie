@@ -7,7 +7,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -18,7 +18,7 @@ import aktie.index.Index;
 import aktie.net.ConnectionManager2;
 import aktie.spam.SpamTool;
 
-public class NewCommunityProcessor extends GenericProcessor
+public class NewCommunityProcessor extends GenericNoContextProcessor
 {
     Logger log = Logger.getLogger ( "aktie" );
 

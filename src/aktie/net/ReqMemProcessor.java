@@ -11,10 +11,9 @@ public class ReqMemProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqMemProcessor ( Index i, ConnectionThread c )
+    public ReqMemProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -40,6 +39,12 @@ public class ReqMemProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
     }
 
 }

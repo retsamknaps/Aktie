@@ -8,9 +8,8 @@ public class EnqueueRequestProcessor  extends GenericProcessor
 
     private ConnectionThread connection;
 
-    public EnqueueRequestProcessor ( ConnectionThread c )
+    public EnqueueRequestProcessor ( )
     {
-        connection = c;
     }
 
     @Override
@@ -20,6 +19,12 @@ public class EnqueueRequestProcessor  extends GenericProcessor
         //add it to the remote request queue.
         connection.enqueueRemoteRequest ( b );
         return true;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
     }
 
 }

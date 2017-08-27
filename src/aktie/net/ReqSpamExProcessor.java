@@ -11,10 +11,9 @@ public class ReqSpamExProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqSpamExProcessor ( Index i, ConnectionThread c )
+    public ReqSpamExProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -38,6 +37,13 @@ public class ReqSpamExProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

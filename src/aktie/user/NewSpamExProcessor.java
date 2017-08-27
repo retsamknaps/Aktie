@@ -3,7 +3,7 @@ package aktie.user;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.hibernate.Session;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -17,7 +17,7 @@ import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.utils.HasFileCreator;
 
-public class NewSpamExProcessor extends GenericProcessor
+public class NewSpamExProcessor extends GenericNoContextProcessor
 {
 
     private HH2Session session;

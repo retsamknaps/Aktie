@@ -14,10 +14,41 @@ import aktie.index.Index;
 import aktie.index.IndexInterface;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
+import aktie.net.ConnectionValidatorProcessor;
 import aktie.net.DownloadFileProcessor;
+import aktie.net.EnqueueRequestProcessor;
 import aktie.net.GetSendData2;
+import aktie.net.InCheckDigProcessor;
+import aktie.net.InCheckMemSubProcessor;
+import aktie.net.InComProcessor;
+import aktie.net.InDeveloperProcessor;
+import aktie.net.InDigProcessor;
+import aktie.net.InFileModeProcessor;
+import aktie.net.InFileProcessor;
+import aktie.net.InFragProcessor;
+import aktie.net.InGlbSeqProcessor;
+import aktie.net.InHasFileProcessor;
+import aktie.net.InIdentityProcessor;
+import aktie.net.InMemProcessor;
+import aktie.net.InPostProcessor;
+import aktie.net.InPrvIdentProcessor;
+import aktie.net.InPrvMsgProcessor;
 import aktie.net.InSpamExProcessor;
+import aktie.net.InSubProcessor;
 import aktie.net.Net;
+import aktie.net.ReqComProcessor;
+import aktie.net.ReqDigProcessor;
+import aktie.net.ReqFragListProcessor;
+import aktie.net.ReqFragProcessor;
+import aktie.net.ReqGlobalSeq;
+import aktie.net.ReqHasFileProcessor;
+import aktie.net.ReqIdentProcessor;
+import aktie.net.ReqMemProcessor;
+import aktie.net.ReqPostsProcessor;
+import aktie.net.ReqPrvIdentProcessor;
+import aktie.net.ReqPrvMsgProcessor;
+import aktie.net.ReqSpamExProcessor;
+import aktie.net.ReqSubProcessor;
 import aktie.spam.SpamTool;
 import aktie.upgrade.NodeUpgrader;
 import aktie.upgrade.UpgradeControllerCallback;
@@ -57,6 +88,8 @@ public class Node implements NodeInterface
     private HH2Session session;
     private ProcessQueue userQueue;
     private ProcessQueue dlQueue;
+    private ProcessQueue preprocProcessor;
+    private ProcessQueue inProcessor;
     private IdentityManager identManager;
     private UpdateDispatcher usrCallback;
     private UpdateDispatcher netCallback;
@@ -110,12 +143,24 @@ public class Node implements NodeInterface
         dlQueue = new ProcessQueue ( "downloadQueue" );
         dlQueue.addProcessor ( new DownloadFileProcessor ( hasFileCreator ) );
 
+
+
+        preprocProcessor = new ProcessQueue ( "Network preprocProcessor" );
+        setupPreprocQueue ( preprocProcessor, session,
+                            index, identManager, spamtool,
+                            hasFileCreator, conMan );
+
+        //These process requests from the other node.
+        inProcessor = new ProcessQueue ( "Network inProcessor" );
+        setupInputQueue ( inProcessor, index, identManager );
+
         NewPushProcessor pusher = new NewPushProcessor ( index, conMan );
         userQueue.addProcessor ( new NewQueryProcessor ( index ) );
         userQueue.addProcessor ( new NewCommunityProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( nfp );
         NewIdentityProcessor nip = new NewIdentityProcessor ( network, conMan, session,
-                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool, dlQueue );
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool,
+                preprocProcessor, inProcessor, dlQueue );
         nip.setTmpDir ( tmpDir );
         userQueue.addProcessor ( nip );
         userQueue.addProcessor ( new NewMembershipProcessor ( session, conMan, index, spamtool, usrCallback ) );
@@ -125,11 +170,12 @@ public class Node implements NodeInterface
         userQueue.addProcessor ( new NewSubscriptionProcessor ( session, conMan, index, spamtool, usrCallback ) );
         userQueue.addProcessor ( new NewSpamExProcessor ( session, index, identManager, usrCallback ) ) ;
         userQueue.addProcessor ( new NewDeveloperProcessor ( index, identManager, usrCallback ) );
-        userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null, null ) );
+        userQueue.addProcessor ( new InSpamExProcessor ( session, index, spamtool, null ) );
         userQueue.addProcessor ( new NewForceSearcher ( index ) );
 
         UsrStartDestinationProcessor usdp = new UsrStartDestinationProcessor ( network, conMan, session,
-                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool, dlQueue );
+                index, usrCallback, netCallback, conCallback, conMan, requestHandler, spamtool,
+                preprocProcessor, inProcessor, dlQueue );
         usdp.setTmpDir ( tmpDir );
         userQueue.addProcessor ( usdp );
         userQueue.addProcessor ( new UsrReqComProcessor ( identManager, index ) );
@@ -149,6 +195,56 @@ public class Node implements NodeInterface
         userQueue.addProcessor ( pusher );
 
         doUpdate();
+    }
+
+    public static void setupInputQueue ( ProcessQueue inProcessor, Index index, IdentityManager identManager )
+    {
+        inProcessor.addProcessor ( new ReqGlobalSeq ( index, identManager ) );
+        inProcessor.addProcessor ( new ReqDigProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqIdentProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqFragListProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqFragProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqComProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqPrvIdentProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqPrvMsgProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqHasFileProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqMemProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqPostsProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqSubProcessor ( index ) );
+        inProcessor.addProcessor ( new ReqSpamExProcessor ( index ) );
+
+    }
+
+    public static void setupPreprocQueue ( ProcessQueue preprocProcessor, HH2Session session,
+                                           Index index, IdentityManager identManager, SpamTool spamtool,
+                                           HasFileCreator hasFileCreator, GetSendData2 conMan )
+    {
+        InIdentityProcessor ip = new InIdentityProcessor ( session, index, identManager );
+        preprocProcessor.addProcessor ( new ConnectionValidatorProcessor ( ip ) );
+        //!!!!!!!!!!!!!!!!!! InFragProcessor - should be first !!!!!!!!!!!!!!!!!!!!!!!
+        //Otherwise the list of fragments will be interate though for preceding processors
+        //that don't need to and time will be wasted.
+        preprocProcessor.addProcessor ( new InFragProcessor ( session, index ) );
+        preprocProcessor.addProcessor ( new InCheckDigProcessor ( index ) );
+        preprocProcessor.addProcessor ( new InFileModeProcessor ( ) );
+        preprocProcessor.addProcessor ( ip );
+        preprocProcessor.addProcessor ( new InFileProcessor ( ) );
+        preprocProcessor.addProcessor ( new InDigProcessor ( index ) );
+        preprocProcessor.addProcessor ( new InCheckMemSubProcessor ( ) );
+        preprocProcessor.addProcessor ( new InGlbSeqProcessor ( ) );
+        preprocProcessor.addProcessor ( new InComProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InHasFileProcessor ( session, index, identManager, hasFileCreator, spamtool ) );
+        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InPostProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InSubProcessor ( session, conMan, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, spamtool, identManager ) );
+        preprocProcessor.addProcessor ( new InDeveloperProcessor ( index, spamtool, identManager ) );
+        //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
+        //Otherwise requests from the other node will not be processed.
+        preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( ) );
+
     }
 
     public NodeUpgrader getUpgrader()
@@ -214,6 +310,8 @@ public class Node implements NodeInterface
     public void close()
     {
         dlQueue.stop();
+        preprocProcessor.stop();
+        inProcessor.stop();
         shareManager.stop();
         conMan.stop();
         userQueue.stop();

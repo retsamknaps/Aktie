@@ -1,11 +1,11 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.data.RequestFile;
 
-public class UsrCancelFileProcessor extends GenericProcessor
+public class UsrCancelFileProcessor extends GenericNoContextProcessor
 {
 
     private RequestFileHandler fileHandler;

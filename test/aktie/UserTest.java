@@ -23,6 +23,7 @@ import aktie.net.DownloadFileProcessor;
 import aktie.net.GetSendData2;
 import aktie.net.RawNet;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
@@ -59,13 +60,21 @@ public class UserTest implements UpdateCallback, GetSendData2, ConnectionListene
         {
             i.init();
             SpamTool st = new SpamTool ( i );
+
+            HasFileCreator hfc = new HasFileCreator ( sf, i, st ) ;
+            IdentityManager identManager = new IdentityManager ( sf, i );
+
             RawNet net = new RawNet ( id );
             ProcessQueue q = new ProcessQueue ( "testQueue" );
             ProcessQueue dl = new ProcessQueue ( "downloadFile" );
-            dl.addProcessor ( new DownloadFileProcessor ( new HasFileCreator ( sf, i, st ) ) );
+            ProcessQueue preproc = new ProcessQueue ( "preproc" );
+            Node.setupPreprocQueue ( preproc, sf, i, identManager, st, hfc, this );
+            ProcessQueue inq = new ProcessQueue ( "inq" );
+            Node.setupInputQueue ( inq, i, identManager );
+            dl.addProcessor ( new DownloadFileProcessor ( hfc ) );
             q.addProcessor ( new NewCommunityProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewFileProcessor ( sf, i, st, this ) );
-            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st, dl ) );
+            q.addProcessor ( new NewIdentityProcessor ( net, this, sf, i, this, this, this, this, fileHandler, st, preproc, inq, dl ) );
             q.addProcessor ( new NewMembershipProcessor ( sf, null, i, st, this ) );
             q.addProcessor ( new NewPostProcessor ( sf, i, st, this ) );
             q.addProcessor ( new NewSubscriptionProcessor ( sf, null, i, st, this ) );
@@ -281,6 +290,12 @@ public class UserTest implements UpdateCallback, GetSendData2, ConnectionListene
 
             fl.close();
             i.close();
+
+            q.stop();
+            dl.stop();
+            preproc.stop();
+            inq.stop();
+
         }
 
         catch ( Exception e )

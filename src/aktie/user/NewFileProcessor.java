@@ -8,7 +8,7 @@ import java.util.List;
 import org.bouncycastle.crypto.digests.RIPEMD256Digest;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
@@ -17,7 +17,7 @@ import aktie.index.Index;
 import aktie.spam.SpamTool;
 import aktie.utils.HasFileCreator;
 
-public class NewFileProcessor extends GenericProcessor
+public class NewFileProcessor extends GenericNoContextProcessor
 {
 
     private UpdateCallback guicallback;

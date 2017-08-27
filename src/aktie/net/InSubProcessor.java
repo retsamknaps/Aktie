@@ -27,13 +27,11 @@ public class InSubProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InSubProcessor ( HH2Session s, GetSendData2 cm, Index i, SpamTool st, IdentityManager im, ConnectionThread ct )
+    public InSubProcessor ( HH2Session s, GetSendData2 cm, Index i, SpamTool st, IdentityManager im )
     {
         session = s;
-        conThread = ct;
         index = i;
         identManager = im;
-        ConId = conThread.getLocalDestination().getIdentity();
         validator = new DigestValidator ( index, st );
         subvalidator = new SubscriptionValidator ( index );
     }
@@ -200,6 +198,13 @@ public class InSubProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+        ConId = conThread.getLocalDestination().getIdentity();
     }
 
 }

@@ -15,10 +15,9 @@ public class ReqPostsProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqPostsProcessor ( Index i, ConnectionThread c )
+    public ReqPostsProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -68,6 +67,13 @@ public class ReqPostsProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 

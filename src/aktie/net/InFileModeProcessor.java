@@ -8,9 +8,8 @@ public class InFileModeProcessor extends GenericProcessor
 
     private ConnectionThread connection;
 
-    public InFileModeProcessor ( ConnectionThread c )
+    public InFileModeProcessor ( )
     {
-        connection = c;
     }
 
     @Override
@@ -25,6 +24,13 @@ public class InFileModeProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

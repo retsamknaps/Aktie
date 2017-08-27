@@ -11,6 +11,18 @@ public abstract class GenericProcessor implements CObjProcessor
     @Override
     public boolean processObj ( Object o )
     {
+        if ( ContextObject.class.isAssignableFrom ( o.getClass() ) )
+        {
+            ContextObject co = ( ContextObject ) o;
+            setContext ( co.context );
+
+            if ( processObj ( co.obj ) )
+            {
+                co.notifyProcessed();
+            }
+
+        }
+
         if ( o instanceof CObj )
         {
             return process ( ( CObj ) o );

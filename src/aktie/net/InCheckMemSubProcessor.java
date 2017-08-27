@@ -12,9 +12,8 @@ public class InCheckMemSubProcessor extends GenericProcessor
 
     private ConnectionThread conThread;
 
-    public InCheckMemSubProcessor ( ConnectionThread ct )
+    public InCheckMemSubProcessor ( )
     {
-        conThread = ct;
     }
 
     private void log ( String msg )
@@ -63,6 +62,13 @@ public class InCheckMemSubProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+
     }
 
 }

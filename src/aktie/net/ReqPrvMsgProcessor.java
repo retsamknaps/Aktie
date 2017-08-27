@@ -10,10 +10,9 @@ public class ReqPrvMsgProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqPrvMsgProcessor ( Index i, ConnectionThread c )
+    public ReqPrvMsgProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -39,6 +38,13 @@ public class ReqPrvMsgProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

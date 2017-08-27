@@ -5,14 +5,14 @@ import java.util.logging.Logger;
 
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.DeveloperIdentity;
 import aktie.index.Index;
 
-public class NewDeveloperProcessor extends GenericProcessor
+public class NewDeveloperProcessor extends GenericNoContextProcessor
 {
 
     public static boolean TESTEVILDEV = false;

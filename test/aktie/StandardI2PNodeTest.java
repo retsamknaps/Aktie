@@ -211,7 +211,7 @@ public class StandardI2PNodeTest
             snl00.doupgrade = true;
             prepareNode ( masterDir, "stdnode001", sn00, snl00 );
 
-            pause ( 60 );
+            pause ( 120 );
 
             nlst = sn00.getNode().getIndex().getIdentities();
             assertEquals ( 2, nlst.size() );

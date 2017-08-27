@@ -14,9 +14,8 @@ public class ReqDigProcessor extends GenericProcessor
     private ConnectionThread conThread;
     private Index index;
 
-    public ReqDigProcessor ( Index i, ConnectionThread ct )
+    public ReqDigProcessor ( Index i )
     {
-        conThread = ct;
         index = i;
     }
 
@@ -146,6 +145,13 @@ public class ReqDigProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+
     }
 
 }

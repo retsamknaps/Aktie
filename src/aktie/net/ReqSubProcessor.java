@@ -16,10 +16,9 @@ public class ReqSubProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqSubProcessor ( Index i, ConnectionThread c )
+    public ReqSubProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -104,6 +103,13 @@ public class ReqSubProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

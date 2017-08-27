@@ -28,13 +28,11 @@ public class InHasFileProcessor extends GenericProcessor
     private HasFileCreator hfc;
     private IdentityManager identManager;
 
-    public InHasFileProcessor ( CObj id, HH2Session s, Index i, IdentityManager im, ConnectionThread cb, HasFileCreator h, SpamTool st )
+    public InHasFileProcessor ( HH2Session s, Index i, IdentityManager im, HasFileCreator h, SpamTool st )
     {
         hfc = h;
-        destIdent = id;
         index = i;
         session = s;
-        conThread = cb;
         identManager = im;
         validator = new DigestValidator ( index, st );
         subvalid = new SubscriptionValidator ( index );
@@ -61,7 +59,6 @@ public class InHasFileProcessor extends GenericProcessor
             if ( validator.valid ( b ) )
             {
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );
-
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
                 String comid = b.getString ( CObj.COMMUNITYID );
@@ -154,6 +151,13 @@ public class InHasFileProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+        destIdent = conThread.getLocalDestination().getIdentity();
     }
 
 }

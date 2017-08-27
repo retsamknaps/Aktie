@@ -402,7 +402,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 30L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -414,7 +414,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 30L * 1000L );
             }
 
             catch ( InterruptedException e )

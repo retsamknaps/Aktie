@@ -1,9 +1,9 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 
-public class UsrReqShareProcessor extends GenericProcessor
+public class UsrReqShareProcessor extends GenericNoContextProcessor
 {
 
     private ShareManager manager;

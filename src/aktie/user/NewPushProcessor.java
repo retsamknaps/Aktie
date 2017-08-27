@@ -3,12 +3,12 @@ package aktie.user;
 import java.util.LinkedList;
 import java.util.List;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 import aktie.index.Index;
 
-public class NewPushProcessor extends GenericProcessor
+public class NewPushProcessor extends GenericNoContextProcessor
 {
 
     private Index index;

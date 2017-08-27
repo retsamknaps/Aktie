@@ -11,9 +11,8 @@ public class InFileProcessor extends GenericProcessor
 
     private ConnectionThread connection;
 
-    public InFileProcessor ( ConnectionThread c )
+    public InFileProcessor ( )
     {
-        connection = c;
     }
 
     @Override
@@ -52,6 +51,12 @@ public class InFileProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
     }
 
 

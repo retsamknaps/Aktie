@@ -14,10 +14,9 @@ public class ReqFragProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqFragProcessor ( Index i, ConnectionThread c )
+    public ReqFragProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -69,6 +68,8 @@ public class ReqFragProcessor extends GenericProcessor
                             if ( tf.exists() && tf.canRead() &&
                                     tf.length() >= ( offset + len ) )
                             {
+                                log.info ( "REQFRAG: send to connection: " + tf +
+                                           " offset: " + offset + " len: " + len );
                                 fg.setType ( CObj.FILEF ); //Change the type to indicate we're
                                 //actually sending over the fragment.
                                 connection.enqueue ( fg );
@@ -95,6 +96,13 @@ public class ReqFragProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

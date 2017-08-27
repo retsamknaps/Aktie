@@ -1,13 +1,13 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.UpdateCallback;
 import aktie.data.CObj;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.utils.HasFileCreator;
 
-public class UsrReqSetRankProcessor extends GenericProcessor
+public class UsrReqSetRankProcessor extends GenericNoContextProcessor
 {
 
     private Index index;

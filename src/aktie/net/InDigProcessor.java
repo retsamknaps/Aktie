@@ -14,9 +14,8 @@ public class InDigProcessor extends GenericProcessor
     private ConnectionThread conThread;
     private Index index;
 
-    public InDigProcessor ( ConnectionThread ct, Index i )
+    public InDigProcessor ( Index i )
     {
-        conThread = ct;
         index = i;
     }
 
@@ -46,6 +45,12 @@ public class InDigProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
     }
 
 }

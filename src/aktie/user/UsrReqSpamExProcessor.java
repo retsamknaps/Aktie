@@ -1,9 +1,9 @@
 package aktie.user;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 
-public class UsrReqSpamExProcessor extends GenericProcessor
+public class UsrReqSpamExProcessor extends GenericNoContextProcessor
 {
 
     private IdentityManager identManager;

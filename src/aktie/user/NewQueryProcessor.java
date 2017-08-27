@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 import aktie.index.Index;
 
-public class NewQueryProcessor extends GenericProcessor
+public class NewQueryProcessor extends GenericNoContextProcessor
 {
 
     private Index index;

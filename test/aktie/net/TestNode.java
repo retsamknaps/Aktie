@@ -7,11 +7,13 @@ import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import aktie.UpdateCallback;
+import aktie.Node;
 import aktie.ProcessQueue;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.index.Index;
 import aktie.spam.SpamTool;
+import aktie.user.IdentityManager;
 import aktie.user.NewCommunityProcessor;
 import aktie.user.NewFileProcessor;
 import aktie.user.NewIdentityProcessor;
@@ -34,6 +36,9 @@ public class TestNode implements UpdateCallback, ConnectionListener, Destination
     private TestReq req = new TestReq();
     private Net net;
     private ProcessQueue userQueue = new ProcessQueue ( "testQueue" );
+    private ProcessQueue dl = new ProcessQueue ( "dlQueue" );
+    private ProcessQueue preproc = new ProcessQueue ( "preproc" );
+    private ProcessQueue inq = new ProcessQueue ( "inq" );
     private ConcurrentLinkedQueue<Object> updateQueue = new ConcurrentLinkedQueue<Object>();
 
     public TestNode ( String wkdir )
@@ -53,20 +58,26 @@ public class TestNode implements UpdateCallback, ConnectionListener, Destination
             index.setIndexdir ( id );
             index.init();
 
+            IdentityManager identManager = new IdentityManager ( session, index );
+
             SpamTool st = new SpamTool ( index );
+
+            HasFileCreator hfc = new HasFileCreator ( session, index, st );
 
             NewFileProcessor nfp = new NewFileProcessor ( session, index, st, this );
             requestFile = new RequestFileHandler ( session, wkdir + File.separator + "dl", nfp, index );
 
             RequestFileHandler fileHandler = new RequestFileHandler ( session, "tndl", null, null );
 
-            ProcessQueue dl = new ProcessQueue ( "downloadFile" );
             dl.addProcessor ( new DownloadFileProcessor ( new HasFileCreator ( session, index, st ) ) );
+
+            Node.setupPreprocQueue ( preproc, session, index, identManager, st, hfc, req );
+            Node.setupInputQueue ( inq, index, identManager );
 
             userQueue.addProcessor ( new NewCommunityProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( nfp );
             userQueue.addProcessor ( new NewIdentityProcessor ( net, req, session, index,
-                                     this, this, this, this, fileHandler, st, dl ) );
+                                     this, this, this, this, fileHandler, st, preproc, inq, dl ) );
             userQueue.addProcessor ( new NewMembershipProcessor ( session, null, index, st, this ) );
             userQueue.addProcessor ( new NewPostProcessor ( session, index, st, this ) );
             userQueue.addProcessor ( new NewSubscriptionProcessor ( session, null, index, st, this ) );
@@ -86,6 +97,9 @@ public class TestNode implements UpdateCallback, ConnectionListener, Destination
 
     public void stop()
     {
+        dl.stop();
+        preproc.stop();
+        inq.stop();
         index.close();
         userQueue.stop();
     }

@@ -29,4 +29,10 @@ public class DownloadFileProcessor extends GenericProcessor
         return false;
     }
 
+    @Override
+    public void setContext ( Object c )
+    {
+
+    }
+
 }

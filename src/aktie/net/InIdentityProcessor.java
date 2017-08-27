@@ -25,12 +25,10 @@ public class InIdentityProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InIdentityProcessor ( HH2Session s, Index i, IdentityManager im, CObj mid, UpdateCallback cb )
+    public InIdentityProcessor ( HH2Session s, Index i, IdentityManager im )
     {
         index = i;
         session = s;
-        guicallback = cb;
-        ConId = mid;
         identManager = im;
     }
 
@@ -92,7 +90,12 @@ public class InIdentityProcessor extends GenericProcessor
                         }
 
                         index.index ( b, true );
-                        guicallback.update ( b );
+
+                        if ( guicallback != null )
+                        {
+                            guicallback.update ( b );
+                        }
+
                     }
 
                 }
@@ -136,6 +139,19 @@ public class InIdentityProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    public void setCallback ( UpdateCallback cb )
+    {
+        guicallback = cb;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        ConnectionThread ct = ( ConnectionThread ) c;
+        ConId = ct.getLocalDestination().getIdentity();
+        guicallback = ct;
     }
 
 }

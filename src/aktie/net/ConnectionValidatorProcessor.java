@@ -23,10 +23,8 @@ public class ConnectionValidatorProcessor extends GenericProcessor
     private CObj endDest;
     private InIdentityProcessor IdentProcessor;
 
-    public ConnectionValidatorProcessor ( InIdentityProcessor ip, DestinationThread d, ConnectionThread c )
+    public ConnectionValidatorProcessor ( InIdentityProcessor ip )
     {
-        dest = d;
-        con = c;
         IdentProcessor = ip;
     }
 
@@ -151,6 +149,13 @@ public class ConnectionValidatorProcessor extends GenericProcessor
         }
 
         return true;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        con = ( ConnectionThread ) c;
+        dest = con.getLocalDestination();
     }
 
 }

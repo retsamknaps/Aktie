@@ -11,10 +11,9 @@ public class ReqIdentProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqIdentProcessor ( Index i, ConnectionThread c )
+    public ReqIdentProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -34,6 +33,13 @@ public class ReqIdentProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

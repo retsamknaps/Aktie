@@ -22,17 +22,13 @@ public class InPostProcessor extends GenericProcessor
     private HH2Session session;
     private DigestValidator validator;
     private SubscriptionValidator subvalidator;
-    private CObj destIdent;
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InPostProcessor ( CObj id, HH2Session s, Index i, SpamTool st, IdentityManager im, CObj mid, UpdateCallback cb )
+    public InPostProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im )
     {
-        destIdent = id;
         index = i;
         session = s;
-        guicallback = cb;
-        ConId = mid;
         identManager = im;
         validator = new DigestValidator ( index, st );
         subvalidator = new SubscriptionValidator ( index );
@@ -45,6 +41,7 @@ public class InPostProcessor extends GenericProcessor
 
         if ( CObj.POST.equals ( type ) )
         {
+
             if ( validator.valid ( b ) )
             {
                 //Make sure this identity
@@ -58,7 +55,7 @@ public class InPostProcessor extends GenericProcessor
                     return true;
                 }
 
-                CObj mysubid = subvalidator.isMyUserSubscribed ( comid, destIdent.getId() );
+                CObj mysubid = subvalidator.isMyUserSubscribed ( comid, ConId.getId() );
 
                 if ( comid != null && creatorid != null && mysubid != null && seqnum != null )
                 {
@@ -138,6 +135,14 @@ public class InPostProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        ConnectionThread ct = ( ConnectionThread ) c;
+        ConId = ct.getLocalDestination().getIdentity();
+        guicallback = ct;
     }
 
 }

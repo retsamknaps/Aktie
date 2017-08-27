@@ -12,7 +12,7 @@ public class ProcessQueue implements Runnable
 
     Logger log = Logger.getLogger ( "aktie" );
 
-    public static int MAXQUEUESIZE = 500; //Long lists should be in CObjList each one could have open indexreader!
+    public static int MAXQUEUESIZE = 1000; //Long lists should be in CObjList each one could have open indexreader!
 
     private ConcurrentLinkedDeque<Object> queue;
     private BatchProcessor processor;

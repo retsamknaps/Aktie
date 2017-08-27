@@ -15,10 +15,9 @@ public class ReqHasFileProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqHasFileProcessor ( Index i, ConnectionThread c )
+    public ReqHasFileProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -68,6 +67,13 @@ public class ReqHasFileProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 }

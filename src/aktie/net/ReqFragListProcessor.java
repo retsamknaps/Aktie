@@ -14,10 +14,9 @@ public class ReqFragListProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread connection;
 
-    public ReqFragListProcessor ( Index i, ConnectionThread c )
+    public ReqFragListProcessor ( Index i )
     {
         index = i;
-        connection = c;
     }
 
     @Override
@@ -84,6 +83,13 @@ public class ReqFragListProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        connection = ( ConnectionThread ) c;
+
     }
 
 

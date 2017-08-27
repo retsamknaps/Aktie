@@ -10,7 +10,7 @@ import org.bouncycastle.crypto.params.RSAKeyParameters;
 import org.bouncycastle.crypto.params.RSAPrivateCrtKeyParameters;
 import org.hibernate.Session;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.ProcessQueue;
 import aktie.UpdateCallback;
 import aktie.crypto.Utils;
@@ -26,7 +26,7 @@ import aktie.net.GetSendData2;
 import aktie.net.Net;
 import aktie.spam.SpamTool;
 
-public class NewIdentityProcessor extends GenericProcessor
+public class NewIdentityProcessor extends GenericNoContextProcessor
 {
     Logger log = Logger.getLogger ( "aktie" );
 
@@ -41,17 +41,20 @@ public class NewIdentityProcessor extends GenericProcessor
     private ConnectionListener conListener;
     private DestinationListener connectionMan;
     private RequestFileHandler fileHandler;
-    private SpamTool spamtool;
     private IdentityManager identManager;
     private File tmpDir;
     private ProcessQueue downloadQueue;
+    private ProcessQueue preprocQueue;
+    private ProcessQueue inputQueue;
 
     public NewIdentityProcessor ( Net n, GetSendData2 sd, HH2Session s, Index i, UpdateCallback g,
                                   UpdateCallback nc, ConnectionListener cl, DestinationListener cm, RequestFileHandler rf,
-                                  SpamTool st, ProcessQueue dl )
+                                  SpamTool st, ProcessQueue preq, ProcessQueue inq, ProcessQueue dl )
     {
         fileHandler = rf;
         downloadQueue = dl;
+        preprocQueue = preq;
+        inputQueue = inq;
         connectionMan = cm;
         netcallback = nc;
         conListener = cl;
@@ -61,7 +64,6 @@ public class NewIdentityProcessor extends GenericProcessor
         identManager = new IdentityManager ( s, i );
         index = i;
         guicallback = g;
-        spamtool = st;
     }
 
     public void setTmpDir ( File t )
@@ -102,7 +104,7 @@ public class NewIdentityProcessor extends GenericProcessor
                                    ( RSAKeyParameters ) pair.getPublic() ) );
                 Destination d = net.getNewDestination();
                 DestinationThread dt = new DestinationThread ( d, conMan, session, index, netcallback,
-                        conListener, fileHandler, spamtool, downloadQueue );
+                        conListener, fileHandler, preprocQueue, inputQueue, downloadQueue );
                 dt.setTmpDir ( tmpDir );
                 File df = d.savePrivateDestinationInfo();
                 o.pushPrivate ( CObj.DEST, df.getPath() );

@@ -28,9 +28,9 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.json.JSONObject;
 
-import aktie.BatchProcessor;
 import aktie.ProcessQueue;
 import aktie.UpdateCallback;
+import aktie.WaitForProcess;
 import aktie.crypto.Utils;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
@@ -38,10 +38,8 @@ import aktie.data.RequestFile;
 import aktie.index.CObjList;
 import aktie.index.Index;
 import aktie.json.CleanParser;
-import aktie.spam.SpamTool;
 import aktie.user.IdentityManager;
 import aktie.user.RequestFileHandler;
-import aktie.utils.HasFileCreator;
 
 public class ConnectionThread implements Runnable, UpdateCallback
 {
@@ -56,8 +54,8 @@ public class ConnectionThread implements Runnable, UpdateCallback
     private boolean stop;
     private boolean fileOnly;
     private Connection con;
-    private BatchProcessor preprocProcessor;
-    private BatchProcessor inProcessor;
+    private ProcessQueue preprocQueue;
+    private ProcessQueue inputQueue;
     private ConcurrentLinkedQueue<CObj> inQueue;
     private ConcurrentLinkedQueue<Object> outqueue;
     private Set<String> fillList;
@@ -73,7 +71,6 @@ public class ConnectionThread implements Runnable, UpdateCallback
     private HH2Session session;
     private UpdateCallback guicallback;
     private OutputStream outstream;
-    private HasFileCreator hfc;
     private RequestFileHandler fileHandler;
     private int listCount;
     private Set<String> accumulateTypes; //Types to combine in list before processing
@@ -99,10 +96,12 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c,
                               GetSendData2 sd, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf,
-                              boolean fo, SpamTool st, ProcessQueue dl )
+                              boolean fo, ProcessQueue preq, ProcessQueue inq, ProcessQueue dl )
     {
         This = this;
         downloadQueue = dl;
+        preprocQueue = preq;
+        inputQueue = inq;
         fileOnly = fo;
         conListener = cl;
         guicallback = cb;
@@ -125,52 +124,12 @@ public class ConnectionThread implements Runnable, UpdateCallback
         lastMyRequest = System.currentTimeMillis();
         startTime = lastMyRequest;
         IdentManager = new IdentityManager ( session, index );
-        hfc = new HasFileCreator ( session, index, st );
         outqueue = new ConcurrentLinkedQueue<Object>();
         inQueue = new ConcurrentLinkedQueue<CObj>();
         accumulateTypes = new HashSet<String>();
         accumulateTypes.add ( CObj.FRAGMENT );
-        preprocProcessor = new BatchProcessor();
-        InIdentityProcessor ip = new InIdentityProcessor ( session, index, IdentManager, dest.getIdentity(), this );
-        preprocProcessor.addProcessor ( new ConnectionValidatorProcessor ( ip, d, this ) );
-        //!!!!!!!!!!!!!!!!!! InFragProcessor - should be first !!!!!!!!!!!!!!!!!!!!!!!
-        //Otherwise the list of fragments will be interate though for preceding processors
-        //that don't need to and time will be wasted.
-        preprocProcessor.addProcessor ( new InFragProcessor ( session, index, this ) );
-        preprocProcessor.addProcessor ( new InCheckDigProcessor ( this, index ) );
-        preprocProcessor.addProcessor ( new InFileModeProcessor ( this ) );
-        preprocProcessor.addProcessor ( ip );
-        preprocProcessor.addProcessor ( new InFileProcessor ( this ) );
-        preprocProcessor.addProcessor ( new InDigProcessor ( this, index ) );
-        preprocProcessor.addProcessor ( new InCheckMemSubProcessor ( this ) );
-        preprocProcessor.addProcessor ( new InGlbSeqProcessor ( this ) );
-        preprocProcessor.addProcessor ( new InComProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InHasFileProcessor ( dest.getIdentity(), session, index, IdentManager, this, hfc, st ) );
-        preprocProcessor.addProcessor ( new InPrvIdentProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InPrvMsgProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InMemProcessor ( session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InPostProcessor ( dest.getIdentity(), session, index, st, IdentManager, dest.getIdentity(), this ) );
-        preprocProcessor.addProcessor ( new InSubProcessor ( session, conMan, index, st, IdentManager, this ) );
-        preprocProcessor.addProcessor ( new InSpamExProcessor ( session, index, st, IdentManager, this ) );
-        preprocProcessor.addProcessor ( new InDeveloperProcessor ( index, st, IdentManager, this ) );
-        //!!!!!!!!!!!!!!!!! EnqueueRequestProcessor - must be last !!!!!!!!!!!!!!!!!!!!
-        //Otherwise requests from the other node will not be processed.
-        preprocProcessor.addProcessor ( new EnqueueRequestProcessor ( this ) );
-        //These process requests from the other node.
-        inProcessor = new BatchProcessor();
-        inProcessor.addProcessor ( new ReqGlobalSeq ( i, IdentManager, this ) );
-        inProcessor.addProcessor ( new ReqDigProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqIdentProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqFragListProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqFragProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqComProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqPrvIdentProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqPrvMsgProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqHasFileProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqMemProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqPostsProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqSubProcessor ( i, this ) );
-        inProcessor.addProcessor ( new ReqSpamExProcessor ( i, this ) );
+
+
         outproc = new OutputProcessor();
         Thread t = new Thread ( this, "Input Connection Process Thread" );
         t.start();
@@ -982,7 +941,8 @@ public class ConnectionThread implements Runnable, UpdateCallback
         {
             if ( o != null )
             {
-                inProcessor.processCObj ( o );
+                WaitForProcess.waitForProcess ( this, o, inputQueue );
+                //inProcessor.processCObj ( o );
             }
 
         }
@@ -1316,6 +1276,12 @@ public class ConnectionThread implements Runnable, UpdateCallback
                                 Long offset = c.getNumber ( CObj.FRAGOFFSET );
                                 Long len = c.getNumber ( CObj.FRAGSIZE );
 
+                                if ( doLog() )
+                                {
+                                    appendOutput ( "Sending file fragment: " + lfs +
+                                                   " offset: " + offset + " len: " + len );
+                                }
+
                                 if ( lfs != null && offset != null && len != null )
                                 {
                                     byte buf[] = new byte[4096];
@@ -1427,6 +1393,11 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
     private void readFileData ( InputStream i ) throws IOException
     {
+        if ( doLog() )
+        {
+            appendInput ( "Check for file: " + loadFile );
+        }
+
         if ( loadFile )
         {
             if ( doLog() )
@@ -1898,6 +1869,11 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
             while ( !stop )
             {
+                if ( doLog() )
+                {
+                    appendInput ( ".......... wait to read ............" );
+                }
+
                 JSONObject jo = clnpar.next();
                 inBytes += clnpar.getBytesRead();
                 inNonFileBytes += clnpar.getBytesRead();
@@ -1932,7 +1908,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
                         if ( doLog() )
                         {
-                            appendInput ( Integer.toString ( listCount ) );
+                            appendInput ( "listCount0: " + Integer.toString ( listCount ) );
                         }
 
                     }
@@ -1962,7 +1938,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
                             if ( doLog() )
                             {
-                                appendInput ( Integer.toString ( listCount ) );
+                                appendInput ( "listCount1: " + Integer.toString ( listCount ) );
                             }
 
                         }
@@ -1980,12 +1956,29 @@ public class ConnectionThread implements Runnable, UpdateCallback
                     //if we're not collecting a list listCount is always zero
                     if ( listCount == 0 )
                     {
+                        if ( doLog() )
+                        {
+                            appendInput ( "listCount ZERO currentlist: " + currentList );
+                        }
+
                         if ( currentList == null )
                         {
                             //Not a list, just process it.
                             try
                             {
-                                preprocProcessor.processCObj ( r );
+                                if ( doLog() )
+                                {
+                                    appendInput ( "BEGIN WaitForProcess preprocQueue: " + r );
+                                }
+
+                                WaitForProcess.waitForProcess ( this, r, preprocQueue );
+
+                                //preprocProcessor.processCObj ( r );
+                                if ( doLog() )
+                                {
+                                    appendInput ( "END WaitForProcess preprocQueue: " + r );
+                                }
+
                             }
 
                             catch ( Exception e )
@@ -2002,7 +1995,20 @@ public class ConnectionThread implements Runnable, UpdateCallback
                             try
                             {
                                 outproc.decrFileRequests();
-                                preprocProcessor.processObj ( currentList );
+
+                                if ( doLog() )
+                                {
+                                    appendInput ( "BEGIN WaitForProcess preprocQueue2: " + r );
+                                }
+
+                                WaitForProcess.waitForProcess ( this, currentList, preprocQueue );
+                                //preprocProcessor.processObj ( currentList );
+
+                                if ( doLog() )
+                                {
+                                    appendInput ( "END WaitForProcess preprocQueue2: " + r );
+                                }
+
                             }
 
                             catch ( Exception e )

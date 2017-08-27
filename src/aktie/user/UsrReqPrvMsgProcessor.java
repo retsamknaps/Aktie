@@ -2,7 +2,7 @@ package aktie.user;
 
 import org.hibernate.Session;
 
-import aktie.GenericProcessor;
+import aktie.GenericNoContextProcessor;
 import aktie.data.CObj;
 import aktie.data.HH2Session;
 import aktie.index.CObjList;
@@ -10,7 +10,7 @@ import aktie.index.Index;
 import aktie.sequences.PrivIdentSequence;
 import aktie.sequences.PrivMsgSequence;
 
-public class UsrReqPrvMsgProcessor extends GenericProcessor
+public class UsrReqPrvMsgProcessor extends GenericNoContextProcessor
 {
 
     private Index index;

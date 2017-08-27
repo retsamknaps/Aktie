@@ -13,9 +13,8 @@ public class InGlbSeqProcessor extends GenericProcessor
 
     private ConnectionThread conThread;
 
-    public InGlbSeqProcessor ( ConnectionThread ct )
+    public InGlbSeqProcessor ( )
     {
-        conThread = ct;
     }
 
     @Override
@@ -68,6 +67,13 @@ public class InGlbSeqProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+
     }
 
 }

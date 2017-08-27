@@ -17,9 +17,8 @@ public class ReqGlobalSeq extends GenericProcessor
     private IdentityManager identManager;
     private Index index;
 
-    public ReqGlobalSeq ( Index i, IdentityManager im, ConnectionThread ct )
+    public ReqGlobalSeq ( Index i, IdentityManager im )
     {
-        conThread = ct;
         identManager = im;
         index = i;
     }
@@ -275,6 +274,13 @@ public class ReqGlobalSeq extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+
     }
 
 }

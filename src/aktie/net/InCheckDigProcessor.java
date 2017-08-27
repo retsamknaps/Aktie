@@ -17,9 +17,8 @@ public class InCheckDigProcessor extends GenericProcessor
     private Index index;
     private ConnectionThread conThread;
 
-    public InCheckDigProcessor ( ConnectionThread ct, Index i )
+    public InCheckDigProcessor ( Index i )
     {
-        conThread = ct;
         index = i;
     }
 
@@ -74,6 +73,13 @@ public class InCheckDigProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        conThread = ( ConnectionThread ) c;
+
     }
 
 }

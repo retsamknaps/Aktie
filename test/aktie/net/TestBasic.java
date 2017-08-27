@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import aktie.Wrapper;
 import aktie.data.CObj;
@@ -65,7 +67,7 @@ public class TestBasic
 
     private Object pollForData ( TestNode n )
     {
-        int trys = 1000;
+        int trys = 2000;
         Object o0 = null;
 
         while ( trys > 0 && o0 == null )
@@ -90,6 +92,9 @@ public class TestBasic
     @Test
     public void testIt()
     {
+        Logger log = Logger.getLogger ( "aktie" );
+        log.setLevel ( Level.INFO );
+
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
         ConnectionThread.MINGLOBALSEQDELAY = 1000L;
@@ -689,11 +694,16 @@ public class TestBasic
 
         RequestFile df0 = null;
 
-        while ( df0 == null || df0.getFragsComplete() < df0.getFragsTotal() )
+        long starttime = System.currentTimeMillis();
+        long maxtime = starttime + ( 60L * 1000L );
+
+        while ( ( df0 == null || df0.getFragsComplete() < df0.getFragsTotal() ) &&
+                ( System.currentTimeMillis() < maxtime ) )
         {
             o0 = pollForData ( Tn1 );
 
-            while ( ! ( o0 instanceof RequestFile ) )
+            while ( ( ! ( o0 instanceof RequestFile ) ) &&
+                    ( System.currentTimeMillis() < maxtime ) )
             {
                 o0 = pollForData ( Tn1 );
             }
@@ -703,6 +713,8 @@ public class TestBasic
             df0 = ( RequestFile ) o0;
             System.out.println ( "DF: " + df0.getFragsComplete() + " from: " + df0.getFragsTotal() );
         }
+
+        assertTrue ( ( System.currentTimeMillis() < maxtime ) );
 
         assertNotEquals ( df0.getLocalFile(), nf );
         System.out.println ( "DF0: " + df0.getLocalFile() + " Exp: " + nf );

@@ -31,13 +31,11 @@ public class InComProcessor extends GenericProcessor
     private CObj ConId;
     private IdentityManager identManager;
 
-    public InComProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im, CObj id, UpdateCallback cb )
+    public InComProcessor ( HH2Session s, Index i, SpamTool st, IdentityManager im )
     {
         index = i;
         session = s;
-        guicallback = cb;
         spamtool = st;
-        ConId = id;
         identManager = im;
         validator = new DigestValidator ( index, spamtool );
     }
@@ -188,6 +186,20 @@ public class InComProcessor extends GenericProcessor
         }
 
         return false;
+    }
+
+    public void setCallback ( UpdateCallback cb )
+    {
+        guicallback = cb;
+    }
+
+    @Override
+    public void setContext ( Object c )
+    {
+        ConnectionThread ct = ( ConnectionThread ) c;
+        guicallback = ct;
+        ConId = ct.getLocalDestination().getIdentity();
+
     }
 
 }
