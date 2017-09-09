@@ -16,6 +16,8 @@ import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.IdentityData;
 import aktie.index.CObjList;
+import aktie.index.DumpIndexUtil;
+import aktie.index.Index;
 import aktie.net.ConnectionFileManager;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
@@ -185,7 +187,7 @@ public class TestNode implements UpgradeControllerCallback
     public static void setTestConsts()
     {
         Logger log = Logger.getLogger ( "aktie" );
-        log.setLevel ( Level.INFO );
+        log.setLevel ( Level.SEVERE );
 
         RST_OLDPAYMENT                      = Wrapper.OLDPAYMENT                                    ;
         RST_NEWPAYMENT                      = Wrapper.NEWPAYMENT                                    ;
@@ -205,7 +207,7 @@ public class TestNode implements UpgradeControllerCallback
         Wrapper.OLDPAYMENT = 0;
         Wrapper.NEWPAYMENT = 0x0400004000000000L;
         ConnectionManager2.MIN_TIME_TO_NEW_CONNECTION = 13L * 1000L;
-        ConnectionManager2.MAX_CONNECTION_TIME = 10L * 1000L;
+        ConnectionManager2.MAX_CONNECTION_TIME = 15L * 1000L;
         ConnectionManager2.DECODE_AND_NEW_CONNECTION_DELAY = 1000L;
         ConnectionManager2.REQUEST_UPDATE_DELAY = 200L;
         ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 30L * 1000L;
@@ -414,7 +416,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 30L * 1000L );
+                Thread.sleep ( 60L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -527,7 +529,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 60000L );
+                Thread.sleep ( 90L * 1000L );
             }
 
             catch ( InterruptedException e3 )
@@ -655,7 +657,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 60L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -669,7 +671,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 10L * 1000L );
+                Thread.sleep ( 60L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -740,7 +742,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 120000 );
+                Thread.sleep ( 210000 );
             }
 
             catch ( InterruptedException e )
@@ -985,7 +987,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 90000 );
+                Thread.sleep ( 180000 );
             }
 
             catch ( InterruptedException e )
@@ -1039,7 +1041,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 90000 );
+                Thread.sleep ( 150000 );
             }
 
             catch ( InterruptedException e )
@@ -1537,6 +1539,50 @@ public class TestNode implements UpgradeControllerCallback
             assertEquals ( 1, clst.size() );
             clst.close();
 
+            System.out.println ( "DELETE FILE ................................ " + nf );
+            assertTrue ( nf.delete() );
+            assertFalse ( nf.exists() );
+
+            try
+            {
+                Thread.sleep ( 180L * 1000L );
+            }
+
+            catch ( InterruptedException e2 )
+            {
+                e2.printStackTrace();
+            }
+
+            System.out.println ( ">INDEX 000 =====================================" );
+            DumpIndexUtil.dumpIndex ( ( Index ) n0.getIndex() );
+            System.out.println ( "<INDEX=====================================" );
+            System.out.println ( ">INDEX 333 =====================================" );
+            DumpIndexUtil.dumpIndex ( ( Index ) n3.getIndex() );
+            System.out.println ( "<INDEX=====================================" );
+
+            clst = n0.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 1, clst.size() );
+            CObj shf = clst.get ( 0 );
+            System.out.println ( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
+            System.out.println ( shf );
+            System.out.println ( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
+            assertEquals ( "false", shf.getString ( CObj.STILLHASFILE ) );
+            clst.close();
+
+            clst = n1.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 0, clst.size() );
+            clst.close();
+
+            clst = n2.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 0, clst.size() );
+            clst.close();
+
+            clst = n3.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
+            assertEquals ( 1, clst.size() );
+            shf = clst.get ( 0 );
+            assertEquals ( "false", shf.getString ( CObj.STILLHASFILE ) );
+            clst.close();
+
 
             //subscribe wtih seed0b
             CObj sub0b = new CObj();
@@ -1773,7 +1819,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 40L * 1000L );
+                Thread.sleep ( 100L * 1000L );
             }
 
             catch ( InterruptedException e )
@@ -1987,15 +2033,15 @@ public class TestNode implements UpgradeControllerCallback
             clst.close();
 
             System.out.println ( "DOWNLOAD FILE2 .............. " + n0seed.getId() );
-            nlf = File.createTempFile ( "download", ".dat" );
+            File nlf2 = File.createTempFile ( "download", ".dat" );
             hf0.setType ( CObj.USR_DOWNLOAD_FILE );
             hf0.pushString ( CObj.CREATOR, n0seed.getId() );
-            hf0.pushPrivate ( CObj.LOCALFILE, nlf.getPath() );
+            hf0.pushPrivate ( CObj.LOCALFILE, nlf2.getPath() );
             n0.enqueue ( hf0 );
 
             try
             {
-                Thread.sleep ( 300000 );
+                Thread.sleep ( 360000 );
             }
 
             catch ( InterruptedException e )
@@ -2003,8 +2049,8 @@ public class TestNode implements UpgradeControllerCallback
                 e.printStackTrace();
             }
 
-            System.out.println ( "DLFILE: " + nlf.getPath() + " from file: " + nf.getPath() );
-            assertTrue ( FUtils.diff ( nf, nlf ) );
+            System.out.println ( "DLFILE: " + nlf2.getPath() + " from file: " + nlf.getPath() );
+            assertTrue ( FUtils.diff ( nlf, nlf2 ) );
 
             CObj newhf = null;
             clst = n0.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );

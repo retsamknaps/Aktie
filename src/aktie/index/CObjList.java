@@ -212,4 +212,28 @@ public class CObjList implements Closeable, AutoCloseable
 
     }
 
+    public String toString()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append ( "CObjList:[" );
+
+        for ( int c = 0; c < this.size(); c++ )
+        {
+            try
+            {
+                sb.append ( this.get ( c ) );
+            }
+
+            catch ( IOException e )
+            {
+                e.printStackTrace();
+            }
+
+            sb.append ( "," );
+        }
+
+        sb.append ( "]" );
+        return sb.toString();
+    }
+
 }

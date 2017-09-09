@@ -221,6 +221,8 @@ public class HasFileCreator
         String digofdigs = o.getString ( CObj.FRAGDIGEST );
         String wholedig = o.getString ( CObj.FILEDIGEST );
 
+        String newsh = o.getString ( CObj.STILLHASFILE );
+
         CObj myid = validator.isMyUserSubscribed ( comid, creator );
 
         if ( myid == null )
@@ -280,7 +282,11 @@ public class HasFileCreator
             {
                 if ( "true".equals ( oldsh ) || oldlf != null )
                 {
-                    wtfHasFileWithoutfile ( oldfile );
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        wtfHasFileWithoutfile ( oldfile );
+                    }
+
                 }
 
             }
@@ -292,12 +298,6 @@ public class HasFileCreator
                 File oldf = new File ( oldlf );
                 oldfexists = oldf.exists();
             }
-
-            String newsh = o.getString ( CObj.STILLHASFILE );
-
-            log.info ( "Old hasfile found: " + oldlf + " name: " + oldfile.getString ( CObj.NAME ) +
-                       " exists: " + oldfexists +
-                       " old stillhas: " + oldsh + " new stillhas: " + newsh );
 
             if ( newsh != null && newsh.equals ( oldsh ) && lf != null && lf.equals ( oldlf ) )
             {
@@ -521,12 +521,6 @@ public class HasFileCreator
 
         //Sign it.
         spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
-
-        if ( Level.INFO.equals ( log.getLevel() ) )
-        {
-            log.info ( "FILE CREATED: " + creator + " DIG " + o.getDig() + " COMID: " +
-                       o.getString ( CObj.COMMUNITYID ) + " SEQ: " + sq );
-        }
 
         try
         {

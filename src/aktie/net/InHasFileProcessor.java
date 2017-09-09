@@ -51,11 +51,6 @@ public class InHasFileProcessor extends GenericProcessor
 
         if ( CObj.HASFILE.equals ( type ) )
         {
-            if ( Level.INFO.equals ( log.getLevel() ) )
-            {
-                logIt ( "New HasFile: " + b.getDig() );
-            }
-
             if ( validator.valid ( b ) )
             {
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );
@@ -64,13 +59,6 @@ public class InHasFileProcessor extends GenericProcessor
                 String comid = b.getString ( CObj.COMMUNITYID );
                 String wdig = b.getString ( CObj.FILEDIGEST );
                 String ddig = b.getString ( CObj.FRAGDIGEST );
-                String upgrade = b.getString ( CObj.UPGRADEFLAG );
-
-                if ( Level.INFO.equals ( log.getLevel() ) )
-                {
-                    logIt ( "IS VALID: isnew: " + isnew + " creator: " + " upgrade " + upgrade +
-                            creatorid + " comid: " + comid + " wdig: " + wdig + " seq: " + seqnum );
-                }
 
                 if ( comid != null && creatorid != null && wdig != null && ddig != null && seqnum != null )
                 {

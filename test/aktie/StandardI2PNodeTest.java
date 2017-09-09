@@ -145,7 +145,8 @@ public class StandardI2PNodeTest
         {
             TestNode.setTestConsts();
             Wrapper.TESTNODE = true;
-            ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 30L * 1000L;
+            ConnectionManager2.ALLOWGLOBALAFTERSTARTUP = 10L * 1000L;
+            ConnectionManager2.MAX_CONNECTION_TIME = 30L * 1000L;
 
             String masterDir = "stdnode000";
 

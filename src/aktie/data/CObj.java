@@ -1598,7 +1598,10 @@ public class CObj
             pushString ( CObj.PAYMENT, payment );
         }
 
-        if ( !Arrays.equals ( precalcdig, Utils.toByteArray ( dig ) ) ) { return false; }
+        if ( !Arrays.equals ( precalcdig, Utils.toByteArray ( dig ) ) )
+        {
+            return false;
+        }
 
         return true;
     }
@@ -1625,6 +1628,7 @@ public class CObj
 
         catch ( Exception e )
         {
+            e.printStackTrace();
         }
 
         return false;
@@ -1633,6 +1637,7 @@ public class CObj
     private byte[] genPayment ( long bm )
     {
 
+        strings.remove ( CObj.PAYMENT );
         byte d[] = digest();
 
         byte rb[] = new byte[d.length];
@@ -1666,6 +1671,7 @@ public class CObj
 
     private byte[] digest()
     {
+
         //Digest key-value pairs in an order independent way
         byte d[] = null;
 

@@ -5,7 +5,6 @@ import aktie.data.CObj;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BatchProcessor
@@ -45,37 +44,6 @@ public class BatchProcessor
             while ( !done && i.hasNext() )
             {
                 CObjProcessor p = i.next();
-
-                if ( Level.INFO.equals ( log.getLevel() ) )
-                {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append ( "BATCH PROCESS: " );
-                    sb.append ( p.getClass().getName() );
-                    sb.append ( " processing!>!*: " );
-
-                    if ( o instanceof CObj )
-                    {
-                        CObj co = ( CObj ) o;
-                        sb.append ( co.getType() );
-                    }
-
-                    else if ( ContextObject.class.isAssignableFrom ( o.getClass() ) )
-                    {
-                        ContextObject co = ( ContextObject ) o;
-                        sb.append ( " [" );
-                        sb.append ( co.obj );
-                        sb.append ( "] " );
-                    }
-
-                    else
-                    {
-                        sb.append ( "FUCK! *< " );
-                        sb.append ( o );
-                        sb.append ( ">* FUCK! " );
-                    }
-
-                    log.info ( sb.toString() );
-                }
 
                 done = p.processObj ( o );
             }

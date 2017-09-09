@@ -94,6 +94,11 @@ public class ConnectionThread implements Runnable, UpdateCallback
     private File tmpDir;
     private ProcessQueue downloadQueue;
 
+    //Validator context
+    private boolean confirmed;
+    private byte challenge[];
+    private CObj pendingEndDest;
+
     public ConnectionThread ( DestinationThread d, HH2Session s, Index i, Connection c,
                               GetSendData2 sd, UpdateCallback cb, ConnectionListener cl, RequestFileHandler rf,
                               boolean fo, ProcessQueue preq, ProcessQueue inq, ProcessQueue dl )
@@ -133,6 +138,13 @@ public class ConnectionThread implements Runnable, UpdateCallback
         outproc = new OutputProcessor();
         Thread t = new Thread ( this, "Input Connection Process Thread" );
         t.start();
+
+        if ( doLog() )
+        {
+            log.info ( "STARTING ConnectionThread: " + this + " at: " + startTime );
+            Thread.dumpStack();
+        }
+
     }
 
     public void setTempDir ( File tmp )
@@ -752,8 +764,9 @@ public class ConnectionThread implements Runnable, UpdateCallback
     {
         if ( doLog() )
         {
-            log.info ( "Closing connection ME: " +
+            log.info ( "Closing connection ME: " + this + " localdest: " +
                        getLocalDestination() + " to: " + getEndDestination() );
+            Thread.dumpStack();
         }
 
         boolean wasstopped = stop;
@@ -866,6 +879,10 @@ public class ConnectionThread implements Runnable, UpdateCallback
 
     public boolean enqueue ( Object o )
     {
+        if ( doLog() )
+        {
+            log.info ( "ConnectionThread: enqueue " + o );
+        }
 
         if ( outqueue.size() < MAXQUEUESIZE )
         {
@@ -941,8 +958,19 @@ public class ConnectionThread implements Runnable, UpdateCallback
         {
             if ( o != null )
             {
+                if ( doLog() )
+                {
+                    appendInput ( "BEGIN WaitForProcess inputQueue: " + o );
+                }
+
                 WaitForProcess.waitForProcess ( this, o, inputQueue );
+
                 //inProcessor.processCObj ( o );
+                if ( doLog() )
+                {
+                    appendInput ( "END WaitForProcess inputQueue: " + o );
+                }
+
             }
 
         }
@@ -1266,6 +1294,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
                                 appendOutput ( "first:   " + c.getNumber ( CObj.FIRSTNUM ) );
                                 appendOutput ( "wdig:    " + c.getString ( CObj.FILEDIGEST ) );
                                 appendOutput ( "offset:  " + c.getNumber ( CObj.FRAGOFFSET ) );
+                                appendOutput ( "dig:     " + c.getDig() );
                             }
 
                             sendCObjNoFlush ( c );
@@ -1347,6 +1376,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
                                     appendOutput ( "first:   " + sco.getNumber ( CObj.FIRSTNUM ) );
                                     appendOutput ( "wdig:    " + sco.getString ( CObj.FILEDIGEST ) );
                                     appendOutput ( "offset:  " + sco.getNumber ( CObj.FRAGOFFSET ) );
+                                    appendOutput ( "dig:     " + sco.getDig() );
                                 }
 
                                 sendCObjNoFlush ( sco );
@@ -1894,6 +1924,7 @@ public class ConnectionThread implements Runnable, UpdateCallback
                     appendInput ( "first:   " + r.getNumber ( CObj.FIRSTNUM ) );
                     appendInput ( "wdig:    " + r.getString ( CObj.FILEDIGEST ) );
                     appendInput ( "offset:  " + r.getNumber ( CObj.FRAGOFFSET ) );
+                    appendInput ( "dig:     " + r.getDig() );
                 }
 
                 if ( CObj.CON_LIST.equals ( r.getType() ) )
@@ -2321,6 +2352,36 @@ public class ConnectionThread implements Runnable, UpdateCallback
     public boolean isUpdatesubs()
     {
         return updatesubs;
+    }
+
+    public boolean isConfirmed()
+    {
+        return confirmed;
+    }
+
+    public void setConfirmed ( boolean confirmed )
+    {
+        this.confirmed = confirmed;
+    }
+
+    public byte[] getChallenge()
+    {
+        return challenge;
+    }
+
+    public void setChallenge ( byte[] challenge )
+    {
+        this.challenge = challenge;
+    }
+
+    public CObj getPendingEndDest()
+    {
+        return pendingEndDest;
+    }
+
+    public void setPendingEndDest ( CObj pendingEndDest )
+    {
+        this.pendingEndDest = pendingEndDest;
     }
 
 }

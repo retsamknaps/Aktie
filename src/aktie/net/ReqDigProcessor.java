@@ -44,10 +44,13 @@ public class ReqDigProcessor extends GenericProcessor
                 mid = conThread.getLocalDestination().getIdentity();
             }
 
+            log ( "GET DIG: " + d + " rid: " + rid + " mid: " + mid );
+
             if ( d != null && rid != null && mid != null )
             {
                 CObj o = index.getByDig ( d );
-                log ( "GET DIG: " + d + " obj: " + o );
+
+                log ( "GET DIG: o: " + o );
 
                 if ( o != null )
                 {

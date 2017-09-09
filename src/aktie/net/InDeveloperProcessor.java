@@ -25,12 +25,6 @@ public class InDeveloperProcessor extends GenericProcessor
     {
         index = i;
         identManager = im;
-
-        if ( connection != null )
-        {
-            ConId = connection.getLocalDestination().getIdentity();
-        }
-
         validator = new DigestValidator ( index, st );
     }
 
@@ -102,6 +96,7 @@ public class InDeveloperProcessor extends GenericProcessor
     public void setContext ( Object c )
     {
         connection = ( ConnectionThread ) c;
+        ConId = connection.getLocalDestination().getIdentity();
     }
 
 

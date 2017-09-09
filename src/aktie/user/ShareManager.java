@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,11 +57,13 @@ public class ShareManager implements Runnable, ShareManagerInterface
         t.start();
     }
 
+    @SuppressWarnings ( "static-access" )
     private void autoDownload()
     {
         try
         {
-            CObjList autodl = index.getAutodownloadQueries();
+            CObjList cautodl = index.getAutodownloadQueries();
+            List<CObj> autodl = index.list ( cautodl );
             log.info ( "autoDownload: found " + autodl.size() + " queries for auto download" );
 
             for ( int c = 0; c < autodl.size(); c++ )
@@ -70,7 +73,8 @@ public class ShareManager implements Runnable, ShareManagerInterface
                     CObj co = autodl.get ( c );
                     List<CObj> ql = new LinkedList<CObj>();
                     ql.add ( co );
-                    CObjList psts = index.searchPostsQuery ( ql, null );
+                    CObjList cpsts = index.searchPostsQuery ( ql, null );
+                    List<CObj> psts = Index.list ( cpsts );
                     log.info ( "autoDownload: found " + psts.size() + " matching posts" );
 
                     for ( int c0 = 0; c0 < psts.size(); c0++ )
@@ -132,7 +136,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
 
                     }
 
-                    psts.close();
                 }
 
                 catch ( Exception e )
@@ -142,7 +145,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
 
             }
 
-            autodl.close();
         }
 
         catch ( Exception e )
@@ -164,6 +166,7 @@ public class ShareManager implements Runnable, ShareManagerInterface
         fileProc.process ( hf );
     }
 
+    @SuppressWarnings ( "static-access" )
     private void checkFoundFile ( DirectoryShare s, File f )
     {
         if ( enabled )
@@ -190,22 +193,21 @@ public class ShareManager implements Runnable, ShareManagerInterface
             if ( b == null )
             {
 
-                CObjList mlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+                CObjList cmlst = index.getLocalHasFiles ( s.getCommunityId(), s.getMemberId(), fp );
+                List<CObj> mlst = index.list ( cmlst );
 
                 log.info ( "ShareManager: getLocalHasFiles: " + mlst.size() );
 
                 if ( mlst.size() == 0 )
                 {
-                    mlst.close();
-
                     //Check if it's a duplicate
-                    CObjList dlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
+                    CObjList cdlst = index.getDuplicate ( s.getCommunityId(), s.getMemberId(), fp );
+                    List<CObj> dlst = index.list ( cdlst );
 
                     log.info ( "ShareManager: getDuplicate: " + mlst.size() );
 
                     if ( dlst.size() == 0 )
                     {
-                        dlst.close();
                         log.info ( "ShareManager: addFile0" );
                         addFile ( s, f );
                     }
@@ -224,8 +226,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
                         {
                             e.printStackTrace();
                         }
-
-                        dlst.close();
 
                         boolean add = true;
 
@@ -336,7 +336,11 @@ public class ShareManager implements Runnable, ShareManagerInterface
 
         else
         {
-            HasFileCreator.wtfHasFileWithoutfile ( hf );
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                HasFileCreator.wtfHasFileWithoutfile ( hf );
+            }
+
             hf.pushString ( CObj.STILLHASFILE, "false" );
             hfc.createHasFile ( hf );
             hfc.updateFileInfo ( hf );
@@ -636,7 +640,8 @@ public class ShareManager implements Runnable, ShareManagerInterface
         if ( enabled )
         {
 
-            CObjList myhf = index.getAllMyHasFiles();
+            CObjList cmyhf = index.getAllMyHasFiles();
+            List<CObj> myhf = Index.list ( cmyhf );
 
             try
             {
@@ -653,7 +658,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
                 e.printStackTrace();
             }
 
-            myhf.close();
         }
 
     }
@@ -663,7 +667,8 @@ public class ShareManager implements Runnable, ShareManagerInterface
         if ( enabled )
         {
 
-            CObjList myhf = index.getAllMyDuplicates();
+            CObjList cmyhf = index.getAllMyDuplicates();
+            List<CObj> myhf = Index.list ( cmyhf );
 
             try
             {
@@ -680,7 +685,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
                 e.printStackTrace();
             }
 
-            myhf.close();
         }
 
     }
@@ -736,8 +740,9 @@ public class ShareManager implements Runnable, ShareManagerInterface
                 if ( rlp.exists() && enabled )
                 {
                     //Find the fragments that haven't been requested yet.
-                    CObjList cl = index.getFragmentsToRequest ( rf.getCommunityId(),
-                                  rf.getWholeDigest(), rf.getFragmentDigest() );
+                    CObjList ccl = index.getFragmentsToRequest ( rf.getCommunityId(),
+                                   rf.getWholeDigest(), rf.getFragmentDigest() );
+                    List<CObj> cl = Index.list ( ccl );
 
                     if ( cl.size() == 0 )
                     {
@@ -745,15 +750,15 @@ public class ShareManager implements Runnable, ShareManagerInterface
                         //then let's reset the ones that in the req status, and not
                         //complete, in case we just failed to get it back after
                         //requesting.
-                        cl.close();
-                        cl = index.getFragmentsToReset ( rf.getCommunityId(),
-                                                         rf.getWholeDigest(), rf.getFragmentDigest() );
+                        ccl = index.getFragmentsToReset ( rf.getCommunityId(),
+                                                          rf.getWholeDigest(), rf.getFragmentDigest() );
+                        cl = Index.list ( ccl );
 
                         if ( cl.size() == 0 )
                         {
                             //Welp, that sucks.  Let's make sure they're really done.
-                            cl.close();
-                            cl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
+                            ccl = index.getFragments ( rf.getWholeDigest(), rf.getFragmentDigest() );
+                            cl = Index.list ( ccl );
                             log.warning ( "FOUND FILE TO CHECK FRAGMENTS: " + rf.getLocalFile() + " checking: " + cl.size() + " vs " + rf.getFragsTotal() );
 
                             if ( rf.getFragsTotal() != cl.size() &&
@@ -822,8 +827,6 @@ public class ShareManager implements Runnable, ShareManagerInterface
                         }
 
                     }
-
-                    cl.close();
 
                 }
 

@@ -478,6 +478,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
                 if ( !dt.isConnected ( id.getId(), fm ) && dest != null )
                 {
+                    if ( log.isLoggable ( Level.INFO ) )
+                    {
+                        log.info ( "CONNECTING ME: " + dt.getIdentity().getId() + " TO: " + id.getId() );
+                    }
+
                     recentAttempts.put ( id.getId() + fm, ct );
                     dt.connect ( dest, fm );
                     return true;
@@ -1219,8 +1224,11 @@ public class ConnectionManager2 implements GetSendData2, DestinationListener, Pu
 
         if ( !AllowGlobalReuqests )
         {
-            AllowGlobalReuqests = ( System.currentTimeMillis() - ALLOWGLOBALAFTERSTARTUP )
-                                  > FirstConnection;
+            long curcut = System.currentTimeMillis() - ALLOWGLOBALAFTERSTARTUP;
+            log.info ( "nextNonFile: Allow global First: " +
+                       FirstConnection + " < " + curcut +
+                       " ALLOWGLOBAL: " + ALLOWGLOBALAFTERSTARTUP );
+            AllowGlobalReuqests = curcut > FirstConnection;
         }
 
         if ( Level.INFO.equals ( log.getLevel() ) )

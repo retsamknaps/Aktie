@@ -18,9 +18,6 @@ public class ConnectionValidatorProcessor extends GenericProcessor
 
     private DestinationThread dest;
     private ConnectionThread con;
-    private boolean confirmed;
-    private byte challenge[];
-    private CObj endDest;
     private InIdentityProcessor IdentProcessor;
 
     public ConnectionValidatorProcessor ( InIdentityProcessor ip )
@@ -31,7 +28,7 @@ public class ConnectionValidatorProcessor extends GenericProcessor
     @Override
     public boolean process ( CObj b )
     {
-        if ( confirmed )
+        if ( con.isConfirmed() )
         {
             return false;
         }
@@ -47,10 +44,11 @@ public class ConnectionValidatorProcessor extends GenericProcessor
 
             else
             {
-                endDest = b;
+                con.setPendingEndDest ( b );
                 RSAKeyParameters pk = Utils.publicKeyFromString ( pubkey );
-                challenge = new byte[32];
+                byte challenge[] = new byte[32];
                 Utils.Random.nextBytes ( challenge );
+                con.setChallenge ( challenge );
                 byte enc[] = Utils.anonymousAsymEncode ( pk, CKEY0, CKEY1, challenge );
                 CObj clng = new CObj();
                 clng.setType ( CObj.CON_CHALLENGE );
@@ -105,16 +103,16 @@ public class ConnectionValidatorProcessor extends GenericProcessor
             else
             {
                 byte [] crpy = Utils.toByteArray ( rpy );
-                confirmed = Arrays.equals ( crpy, challenge );
+                con.setConfirmed ( Arrays.equals ( crpy, con.getChallenge() ) );
 
-                if ( !confirmed )
+                if ( !con.isConfirmed() )
                 {
                     con.stop();
                 }
 
                 else
                 {
-                    con.setEndDestination ( endDest );
+                    con.setEndDestination ( con.getPendingEndDest() );
 
                     if ( con.isFileMode() )
                     {
@@ -135,7 +133,7 @@ public class ConnectionValidatorProcessor extends GenericProcessor
                     }
 
                     dest.addEstablishedConnection ( con );
-                    IdentProcessor.process ( endDest );
+                    IdentProcessor.process ( con.getPendingEndDest() );
                     con.poke();
                 }
 
@@ -156,6 +154,7 @@ public class ConnectionValidatorProcessor extends GenericProcessor
     {
         con = ( ConnectionThread ) c;
         dest = con.getLocalDestination();
+
     }
 
 }

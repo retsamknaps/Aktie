@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import aktie.ProcessQueue;
@@ -146,6 +147,12 @@ public class DestinationThread implements Runnable
                 }
 
                 l.add ( con );
+
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    log.info ( "DestinationThread: add connection: " + d + " NUM: " + l.size() );
+                }
+
             }
 
         }
@@ -158,6 +165,11 @@ public class DestinationThread implements Runnable
 
         synchronized ( connections )
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "DestinationThread: closeConnection: " + id );
+            }
+
             List<ConnectionThread> l = connections.get ( id );
 
             if ( l != null )
@@ -234,6 +246,11 @@ public class DestinationThread implements Runnable
             {
                 synchronized ( connections )
                 {
+                    if ( Level.INFO.equals ( log.getLevel() ) )
+                    {
+                        log.info ( "DestinationThread: connectionClosed: " + d );
+                    }
+
                     List<ConnectionThread> l = connections.get ( d );
 
                     if ( l != null )
@@ -302,6 +319,11 @@ public class DestinationThread implements Runnable
     {
         synchronized ( connections )
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "DestinationThread isConnected: " + id );
+            }
+
             List<ConnectionThread> clst = connections.get ( id );
 
             if ( clst == null ) { return false; }
@@ -356,6 +378,11 @@ public class DestinationThread implements Runnable
 
         else
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "buildConnection: ME: " + getIdentity().getId() );
+            }
+
             ConnectionThread ct = new ConnectionThread ( this, session, index, c, conMan,
                     callback, conListener, fileHandler, filemode, preprocQueue, inputQueue, downloadQueue );
             ct.setTempDir ( tmpDir );

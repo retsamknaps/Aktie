@@ -42,6 +42,12 @@ public class ReqGlobalSeq extends GenericProcessor
                     seqnum = gseq;
                 }
 
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    log.info ( "filterObjects: seqnum: " + seqnum + " gseq: " +
+                               gseq + " rseq: " + rlst.size() + " otype: " + o.getType() );
+                }
+
                 if ( seqnum != gseq )
                 {
                     if ( rlst.size() > 0 )
@@ -140,6 +146,11 @@ public class ReqGlobalSeq extends GenericProcessor
 
         }
 
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            log.info ( "ReqGlobalSeq: seqnum: " + seqnum + " last; " + last + " rlst: " + rlst );
+        }
+
         if ( seqnum != -1 && seqnum <= last )
         {
             if ( rlst.size() > 0 )
@@ -184,7 +195,7 @@ public class ReqGlobalSeq extends GenericProcessor
         if ( Level.INFO.equals ( log.getLevel() ) )
         {
             log ( "SEND: rq: " + rn + " sn: " + sn + " : " + dig  + " comid: " +
-                  d.getString ( CObj.COMMUNITYID ) );
+                  d.getString ( CObj.COMMUNITYID ) + " type: " + d.getType() );
         }
 
     }
