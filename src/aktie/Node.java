@@ -309,11 +309,11 @@ public class Node implements NodeInterface
 
     public void close()
     {
+        shareManager.stop();
+        conMan.stop();
         dlQueue.stop();
         preprocProcessor.stop();
         inProcessor.stop();
-        shareManager.stop();
-        conMan.stop();
         userQueue.stop();
         index.close();
         session.close();

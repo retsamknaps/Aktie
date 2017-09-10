@@ -67,7 +67,7 @@ public class TestBasic
 
     private Object pollForData ( TestNode n )
     {
-        int trys = 2000;
+        int trys = 4000;
         Object o0 = null;
 
         while ( trys > 0 && o0 == null )

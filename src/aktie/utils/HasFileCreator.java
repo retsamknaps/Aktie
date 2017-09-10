@@ -522,6 +522,11 @@ public class HasFileCreator
         //Sign it.
         spamtool.finalize ( Utils.privateKeyFromString ( myid.getPrivate ( CObj.PRIVATEKEY ) ), o );
 
+        if ( Level.INFO.equals ( log.getLevel() ) )
+        {
+            log.info ( "HasFileCreator: CREATED: " + o );
+        }
+
         try
         {
             index.index ( o );

@@ -1637,7 +1637,11 @@ public class CObj
     private byte[] genPayment ( long bm )
     {
 
-        strings.remove ( CObj.PAYMENT );
+        if ( strings != null )
+        {
+            strings.remove ( CObj.PAYMENT );
+        }
+
         byte d[] = digest();
 
         byte rb[] = new byte[d.length];

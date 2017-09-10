@@ -16,8 +16,6 @@ import aktie.data.CObj;
 import aktie.data.DirectoryShare;
 import aktie.data.IdentityData;
 import aktie.index.CObjList;
-import aktie.index.DumpIndexUtil;
-import aktie.index.Index;
 import aktie.net.ConnectionFileManager;
 import aktie.net.ConnectionListener;
 import aktie.net.ConnectionManager2;
@@ -987,7 +985,7 @@ public class TestNode implements UpgradeControllerCallback
 
             try
             {
-                Thread.sleep ( 180000 );
+                Thread.sleep ( 210000 );
             }
 
             catch ( InterruptedException e )
@@ -1540,12 +1538,13 @@ public class TestNode implements UpgradeControllerCallback
             clst.close();
 
             System.out.println ( "DELETE FILE ................................ " + nf );
+
             assertTrue ( nf.delete() );
             assertFalse ( nf.exists() );
 
             try
             {
-                Thread.sleep ( 180L * 1000L );
+                Thread.sleep ( 210L * 1000L );
             }
 
             catch ( InterruptedException e2 )
@@ -1553,19 +1552,9 @@ public class TestNode implements UpgradeControllerCallback
                 e2.printStackTrace();
             }
 
-            System.out.println ( ">INDEX 000 =====================================" );
-            DumpIndexUtil.dumpIndex ( ( Index ) n0.getIndex() );
-            System.out.println ( "<INDEX=====================================" );
-            System.out.println ( ">INDEX 333 =====================================" );
-            DumpIndexUtil.dumpIndex ( ( Index ) n3.getIndex() );
-            System.out.println ( "<INDEX=====================================" );
-
             clst = n0.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             CObj shf = clst.get ( 0 );
-            System.out.println ( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
-            System.out.println ( shf );
-            System.out.println ( "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" );
             assertEquals ( "false", shf.getString ( CObj.STILLHASFILE ) );
             clst.close();
 
@@ -1959,7 +1948,7 @@ public class TestNode implements UpgradeControllerCallback
             //Test backup and restore
             System.out.println ( "==================== TEST BACKUP RESTORE =================" );
             List<CObjEq> origlist = new LinkedList<CObjEq>();
-            clst = n0.getIndex().getAllCObj();
+            clst = n3.getIndex().getAllCObj();
 
             for ( int c = 0; c < clst.size(); c++ )
             {
@@ -1968,27 +1957,27 @@ public class TestNode implements UpgradeControllerCallback
 
             clst.close();
 
-            n0.close();
+            n3.close();
 
             IdentityBackupRestore bres = new IdentityBackupRestore();
-            bres.init ( "testnode0", "testnode0" );
-            bres.saveIdentity ( new File ( "testnode0.backup.dat" ) );
+            bres.init ( "testnode3", "testnode3" );
+            bres.saveIdentity ( new File ( "testnode3.backup.dat" ) );
             bres.close();
 
-            FUtils.deleteDir ( new File ( "testnode0" ) );
-            FUtils.deleteDir ( new File ( "testnode0restore" ) );
-            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0, this );
-            clst = n0.getIndex().getAllCObj();
+            FUtils.deleteDir ( new File ( "testnode3" ) );
+            FUtils.deleteDir ( new File ( "testnode3restore" ) );
+            n3 = new Node ( "testnode3restore", net3, cb3, cb3, cn3, this );
+            clst = n3.getIndex().getAllCObj();
             assertEquals ( 0, clst.size() );
             clst.close();
-            n0.close();
+            n3.close();
 
             bres = new IdentityBackupRestore();
-            bres.init ( "testnode0restore", "testnode0restore" );
-            bres.loadIdentity ( new File ( "testnode0.backup.dat" ) );
+            bres.init ( "testnode3restore", "testnode3restore" );
+            bres.loadIdentity ( new File ( "testnode3.backup.dat" ) );
             bres.close();
 
-            n0 = new Node ( "testnode0restore", net0, cb0, cb0, cn0, this );
+            n3 = new Node ( "testnode3restore", net3, cb3, cb3, cn3, this );
 
             clst = n1.getIndex().getMyIdentities();
             assertTrue ( clst.size() > 0 );
@@ -1997,10 +1986,10 @@ public class TestNode implements UpgradeControllerCallback
             n1seed.getPrivatedata().clear();
             n1seed.getPrivateNumbers().clear();
             n1seed.setType ( CObj.USR_SEED );
-            n0.enqueue ( n1seed );
-            n0.newDeveloperIdentity ( n0seed.getId() );
+            n3.enqueue ( n1seed );
+            n3.newDeveloperIdentity ( n0seed.getId() );
 
-            clst = n0.getIndex().getMyIdentities();
+            clst = n3.getIndex().getMyIdentities();
             assertEquals ( 2, clst.size() );
             CObj strt0 = clst.get ( 0 );
             CObj strt1 = clst.get ( 1 );
@@ -2012,8 +2001,8 @@ public class TestNode implements UpgradeControllerCallback
             strt1.setType ( CObj.USR_START_DEST );
             strt1.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
 
-            n0.enqueue ( strt0 );
-            n0.enqueue ( strt1 );
+            n3.enqueue ( strt0 );
+            n3.enqueue ( strt1 );
 
             try
             {
@@ -2028,16 +2017,16 @@ public class TestNode implements UpgradeControllerCallback
             clst = n2.getIndex().getAllSpamEx();
             int spamsize = clst.size();
             clst.close();
-            clst = n0.getIndex().getAllSpamEx();
+            clst = n3.getIndex().getAllSpamEx();
             assertEquals ( spamsize, clst.size() );
             clst.close();
 
             System.out.println ( "DOWNLOAD FILE2 .............. " + n0seed.getId() );
             File nlf2 = File.createTempFile ( "download", ".dat" );
             hf0.setType ( CObj.USR_DOWNLOAD_FILE );
-            hf0.pushString ( CObj.CREATOR, n0seed.getId() );
+            hf0.pushString ( CObj.CREATOR, node3b.getId() );
             hf0.pushPrivate ( CObj.LOCALFILE, nlf2.getPath() );
-            n0.enqueue ( hf0 );
+            n3.enqueue ( hf0 );
 
             try
             {
@@ -2053,22 +2042,24 @@ public class TestNode implements UpgradeControllerCallback
             assertTrue ( FUtils.diff ( nlf, nlf2 ) );
 
             CObj newhf = null;
-            clst = n0.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            clst = n0.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             newhf = clst.get ( 0 );
+            assertEquals ( "true", newhf.getString ( CObj.STILLHASFILE ) );
             clst.close();
 
-            clst = n1.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            clst = n1.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 0, clst.size() );
             clst.close();
 
-            clst = n2.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            clst = n2.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 0, clst.size() );
             clst.close();
 
-            clst = n3.getIndex().getHasFiles ( com0n0.getDig(), n0seed.getId(), 0, Integer.MAX_VALUE );
+            clst = n3.getIndex().getHasFiles ( com0n0.getDig(), node3b.getId(), 0, Integer.MAX_VALUE );
             assertEquals ( 1, clst.size() );
             CObj chkhf = clst.get ( 0 );
+            assertEquals ( "true", chkhf.getString ( CObj.STILLHASFILE ) );
             clst.close();
 
             assertEquals ( newhf.getId(), chkhf.getId() );
@@ -2133,10 +2124,10 @@ public class TestNode implements UpgradeControllerCallback
             //Test rebuild database
             n3.close();
             RebuildDatabase rdb = new RebuildDatabase();
-            rdb.rebuild ( "testnode3/h2", "testnode3/index" );
+            rdb.rebuild ( "testnode3restore/h2", "testnode3restore/index" );
             rdb.close();
 
-            n3 = new Node ( "testnode3", net3, cb3, cb3, cn3, this );
+            n3 = new Node ( "testnode3restore", net3, cb3, cb3, cn3, this );
             clst = n3.getIndex().getMyIdentities();
             assertEquals ( 2, clst.size() );
             strt0 = clst.get ( 0 );
@@ -2145,11 +2136,9 @@ public class TestNode implements UpgradeControllerCallback
 
             strt0.setType ( CObj.USR_START_DEST );
             strt0.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
-
+            n3.enqueue ( strt0 );
             strt1.setType ( CObj.USR_START_DEST );
             strt1.pushPrivateNumber ( CObj.PRV_DEST_OPEN, 1L );
-
-            n3.enqueue ( strt0 );
             n3.enqueue ( strt1 );
 
             CObj postx = new CObj();

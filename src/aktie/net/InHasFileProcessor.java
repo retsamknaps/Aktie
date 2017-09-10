@@ -51,8 +51,18 @@ public class InHasFileProcessor extends GenericProcessor
 
         if ( CObj.HASFILE.equals ( type ) )
         {
+            if ( Level.INFO.equals ( log.getLevel() ) )
+            {
+                log.info ( "InHasFileProcessor: " + b );
+            }
+
             if ( validator.valid ( b ) )
             {
+                if ( Level.INFO.equals ( log.getLevel() ) )
+                {
+                    log.info ( "InHasFileProcessor: VALID " + b );
+                }
+
                 boolean isnew = ( null == index.getByDig ( b.getDig() ) );
                 Long seqnum = b.getNumber ( CObj.SEQNUM );
                 String creatorid = b.getString ( CObj.CREATOR );
