@@ -102,12 +102,14 @@ public abstract class CObjListTableCellLabelProvider extends AktieTableCellLabel
 
             if ( highlight != null && highlight == 1L )
             {
-                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_BLUE ) );
+                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_LIST_SELECTION_TEXT ) );
+                cell.setBackground ( Display.getDefault().getSystemColor ( SWT.COLOR_LIST_SELECTION ) );
             }
 
             else
             {
-                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_WIDGET_FOREGROUND ) );
+                cell.setForeground ( Display.getDefault().getSystemColor ( SWT.COLOR_LIST_FOREGROUND ) );
+                cell.setBackground ( Display.getDefault().getSystemColor ( SWT.COLOR_LIST_BACKGROUND ) );
             }
 
         }

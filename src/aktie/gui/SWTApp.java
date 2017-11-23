@@ -2125,24 +2125,6 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
         } );
 
         //zeroDialog
-        MenuItem mntmDumpOpen = new MenuItem ( menu_1, SWT.NONE );
-        mntmDumpOpen.setText ( "Dump Open Searchers (debug)" );
-        mntmDumpOpen.addSelectionListener ( new SelectionListener()
-        {
-            @Override
-            public void widgetSelected ( SelectionEvent e )
-            {
-                CObjList.displayAllStillOpen();
-            }
-
-            @Override
-            public void widgetDefaultSelected ( SelectionEvent e )
-            {
-            }
-
-        } );
-
-        //zeroDialog
         MenuItem mntmExit = new MenuItem ( menu_1, SWT.NONE );
         mntmExit.setText ( "Exit" );
         mntmExit.addSelectionListener ( new SelectionListener()
@@ -2163,6 +2145,23 @@ public class SWTApp implements UpdateInterface, UpgradeControllerCallback
 
         if ( Wrapper.getIsDeveloper() )
         {
+            MenuItem mntmDumpOpen = new MenuItem ( menu_1, SWT.NONE );
+            mntmDumpOpen.setText ( "Dump Open Searchers (debug)" );
+            mntmDumpOpen.addSelectionListener ( new SelectionListener()
+            {
+                @Override
+                public void widgetSelected ( SelectionEvent e )
+                {
+                    CObjList.displayAllStillOpen();
+                }
+
+                @Override
+                public void widgetDefaultSelected ( SelectionEvent e )
+                {
+                }
+
+            } );
+
             MenuItem mntmNewdev = new MenuItem ( menu_1, SWT.NONE );
             mntmNewdev.setText ( "NEW DEVELOPER" );
             mntmNewdev.addSelectionListener ( new SelectionListener()

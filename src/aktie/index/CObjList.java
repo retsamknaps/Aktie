@@ -204,6 +204,9 @@ public class CObjList implements Closeable, AutoCloseable
     {
         // Why not have the garbage collector close the searcher?
         // This should be fool proof and works well.
+        // There is no guarantee gc will be ran
+        // at any point in time.  So please make sure you explicitly
+        // call close!  This is just a back-up.
         if ( searcher != null )
         {
             searcher.closeSearch();

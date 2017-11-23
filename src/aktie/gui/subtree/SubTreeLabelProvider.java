@@ -24,7 +24,8 @@ public class SubTreeLabelProvider implements IStyledLabelProvider
             @Override
             public void applyStyles ( TextStyle a )
             {
-                a.foreground = Display.getDefault().getSystemColor ( SWT.COLOR_BLUE );
+                a.foreground = Display.getDefault().getSystemColor ( SWT.COLOR_LIST_SELECTION_TEXT );
+                a.background = Display.getDefault().getSystemColor ( SWT.COLOR_LIST_SELECTION );
             }
 
         };
